@@ -1,47 +1,81 @@
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-content {
-  background: var(--secondary-background-color);
-  padding: 20px;
-  border-radius: 10px;
-  width: 400px;
-  text-align: center;
-}
-
-.modal-content h2 {
-  margin-bottom: 10px;
-}
-
-.modal-content ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-.modal-content li {
-  padding: 10px;
-  cursor: pointer;
-  border-bottom: 1px solid #ddd;
-}
-
-.modal-content li:hover {
-  background: #606060;
-}
-
-.modal-content button {
-  margin-top: 10px;
-  padding: 10px 15px;
-  background: red;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
+/* Modal Background Overlay */
+.identify-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7); /* Dark overlay */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1001;
+  }
+  
+  /* Modal Container */
+  .identify-modal {
+    background: var(--secondary-background-color);
+    padding: 20px;
+    border-radius: 10px;
+    width: 400px;
+    text-align: center;
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+  }
+  
+  /* Close Button */
+  .identify-modal .close {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    cursor: pointer;
+    font-size: 24px;
+    color: var(--text-color);
+    transition: color 0.3s ease;
+  }
+  
+  .identify-modal .close:hover {
+    color: #aaa;
+  }
+  
+  /* Modal Header */
+  .identify-modal h2 {
+    margin-bottom: 10px;
+    color: var(--text-color);
+  }
+  
+  /* Species List */
+  .identify-modal ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 15px 0;
+  }
+  
+  .species-item {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #555;
+    color: var(--text-color);
+    transition: background 0.2s ease;
+  }
+  
+  .species-item:hover {
+    background: #444;
+  }
+  
+  /* Cancel Button */
+  .cancel-btn {
+    margin-top: 10px;
+    padding: 10px 15px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .cancel-btn:hover {
+    background: var(--secondary-color);
+  }
+  

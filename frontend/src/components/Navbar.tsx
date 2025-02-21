@@ -30,7 +30,6 @@ export default function Navbar() {
         </button>
         <div className={`nav-links ${menuOpen ? "active" : ""}`}>
           <Link to="/plants">Plants</Link>
-          <Link to="/locations">Locations</Link>
         </div>
       </div>
     </nav>

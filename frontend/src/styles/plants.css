@@ -5,37 +5,107 @@
   background-color: var(--secondary-background-color);
 }
 
-/* Create plant form section */
-.create-plant {
+/* Header Section: Plants title on the left & "+" button */
+.plants-header {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  margin-bottom: 30px;
+  justify-content: space-between;
+  padding-bottom: 20px;
 }
 
-.create-plant input {
-  margin: 10px;
-  padding: 12px;
-  border: 1px solid #ccc;
+.plants-header h1 {
+  font-size: 24px;
+  color: var(--text-color);
+  margin: 0;
+}
+
+/* Add Plant (+) Button */
+.add-plant-btn {
+  font-size: 28px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: var(--primary-color);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.add-plant-btn:hover {
+  background-color: var(--secondary-color);
+  transform: scale(1.1);
+}
+
+/* Add Plant Modal */
+.add-plant-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.add-plant-modal-content {
+  background: var(--secondary-background-color);
+  padding: 20px;
   border-radius: 8px;
-  font-size: 16px;
-  width: 300px;
+  text-align: center;
+  width: 350px;
+  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.3);
+  position: relative;
 }
 
-.create-plant button {
-  background-color: #4caf50;
+/* Close button inside modal */
+.add-plant-modal-content .close {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+  cursor: pointer;
+  font-size: 24px;
+  color: var(--text-color);
+  transition: color 0.3s ease;
+}
+
+.add-plant-modal-content .close:hover {
+  color: #aaa;
+}
+
+/* Modal Input Fields */
+.add-plant-modal-content input {
+  width: 90%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #555;
+  border-radius: 6px;
+  font-size: 16px;
+  background: #222;
+  color: var(--text-color);
+}
+
+/* Modal Button */
+.add-plant-modal-content button {
+  background-color: var(--primary-color);
   color: white;
   padding: 12px 20px;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 16px;
-  width: 320px;
+  width: 100%;
   transition: background-color 0.3s ease;
 }
 
-.create-plant button:hover {
-  background-color: #45a049;
+.add-plant-modal-content button:hover {
+  background-color: var(--secondary-color);
 }
 
 /* Plant list section */
@@ -46,74 +116,18 @@
   justify-content: center;
 }
 
-/* Container for the plant image and buttons */
-.image-container {
-  position: relative;
-  display: inline-block;
-  width: 100%;
+/* Plant card styling */
+/* Plant list section */
+.plants-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  justify-content: center;
 }
 
-/* Plant image styling */
-.plant-image {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 15px;
-}
-
-/* Upload button inside the image (top right corner) */
-.upload-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: rgba(0, 0, 0, 0.5);
-  color: white;
-  padding: 10px;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 20px;
-  transition: background-color 0.3s ease;
-}
-
-.upload-btn:hover {
-  background-color: rgba(0, 0, 0, 0.8);
-}
-
-.upload-btn i {
-  font-size: 20px;
-}
-
-/* Custom file input */
-.file-input {
-  display: none; /* Hide the native file input */
-}
-
-/* Identify button inside the image (bottom right corner) */
-.identify-btn {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  background-color: rgba(0, 0, 0, 0.5);
-  color: white;
-  padding: 10px;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 20px;
-  transition: background-color 0.3s ease;
-}
-
-.identify-btn:hover {
-  background-color: rgba(0, 0, 0, 0.8);
-}
-
-.identify-btn i {
-  font-size: 20px;
-}
-
-/* The rest of your existing CSS for the plant card */
+/* Plant card styling */
 .plant-card {
-  background: #ffffff;
+  background: var(--secondary-background-color);
   padding: 20px;
   border-radius: 12px;
   box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
@@ -121,11 +135,14 @@
   max-width: 300px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .plant-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0px 12px 20px rgba(0, 0, 0, 0.2);
+  transform: translateY(-5px);
+  box-shadow: 0px 12px 20px rgba(0, 0, 0, 0.3);
 }
 
 /* Plant image styling */
@@ -134,40 +151,57 @@
   height: 200px;
   object-fit: cover;
   border-radius: 8px;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
-/* Title and species text in the card */
+/* Title and species text should be below the image */
 .plant-card h3 {
   font-size: 20px;
-  margin-bottom: 8px;
-  color: #333;
+  margin: 5px 0;
+  color: var(--text-color);
 }
 
 .plant-card p {
   font-size: 14px;
-  color: #555;
-  margin-bottom: 12px;
+  color: #ccc;
+  margin: 3px 0;
 }
 
-/* File upload and buttons styling */
-.plant-card input[type="file"] {
-  margin: 10px 0;
+/* Upload and Identify buttons should be next to each other */
+.plant-buttons {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 10px;
 }
 
-.plant-card button {
-  margin-top: 12px;
-  background-color: #007bff;
+.plant-buttons button {
+  flex: 1;
+  margin: 5px;
+  background-color: var(--primary-color);
   color: white;
-  padding: 10px 16px;
+  padding: 10px 12px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
   transition: background-color 0.3s ease;
-  width: 100%;
 }
 
-.plant-card button:hover {
-  background-color: #0056b3;
+.plant-buttons button:hover {
+  background-color: var(--secondary-color);
+}
+
+/* Change upload button color when a file is selected */
+.plant-buttons input[type="file"]:valid + button {
+  background-color: #a7a7a7;
+}
+
+.plant-buttons input[type="file"]:valid + button:hover {
+  background-color: #535353;
+}
+
+/* Hide the file input text */
+.file-input {
+  display: none;
 }
