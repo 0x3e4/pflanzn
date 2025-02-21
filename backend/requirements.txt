@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+pydantic-settings
+passlib[argon2]
+python-dotenv
+redis
+mariadb
+jwt
+python-multipart
+requests

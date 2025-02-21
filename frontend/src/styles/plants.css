@@ -1,0 +1,173 @@
+/* Container for the entire plant section */
+.plants-container {
+  text-align: center;
+  padding: 30px;
+  background-color: var(--secondary-background-color);
+}
+
+/* Create plant form section */
+.create-plant {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.create-plant input {
+  margin: 10px;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+  width: 300px;
+}
+
+.create-plant button {
+  background-color: #4caf50;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  width: 320px;
+  transition: background-color 0.3s ease;
+}
+
+.create-plant button:hover {
+  background-color: #45a049;
+}
+
+/* Plant list section */
+.plants-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  justify-content: center;
+}
+
+/* Container for the plant image and buttons */
+.image-container {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+/* Plant image styling */
+.plant-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+/* Upload button inside the image (top right corner) */
+.upload-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 20px;
+  transition: background-color 0.3s ease;
+}
+
+.upload-btn:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.upload-btn i {
+  font-size: 20px;
+}
+
+/* Custom file input */
+.file-input {
+  display: none; /* Hide the native file input */
+}
+
+/* Identify button inside the image (bottom right corner) */
+.identify-btn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 20px;
+  transition: background-color 0.3s ease;
+}
+
+.identify-btn:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.identify-btn i {
+  font-size: 20px;
+}
+
+/* The rest of your existing CSS for the plant card */
+.plant-card {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 300px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+}
+
+.plant-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0px 12px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Plant image styling */
+.plant-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+/* Title and species text in the card */
+.plant-card h3 {
+  font-size: 20px;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.plant-card p {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 12px;
+}
+
+/* File upload and buttons styling */
+.plant-card input[type="file"] {
+  margin: 10px 0;
+}
+
+.plant-card button {
+  margin-top: 12px;
+  background-color: #007bff;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+  width: 100%;
+}
+
+.plant-card button:hover {
+  background-color: #0056b3;
+}

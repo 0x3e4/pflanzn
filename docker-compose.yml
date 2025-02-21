@@ -1,0 +1,54 @@
+services:
+  backend:
+    build: ./backend
+    expose:
+      - "8000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - mariadb
+    restart: always
+
+  frontend:
+    build: ./frontend
+    expose:
+      - "4173"
+    restart: always
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - mariadb
+      - backend
+    networks:
+      - default
+      - dmz00
+
+  mariadb:
+    image: mariadb:latest
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: ***REDACTED***
+      MARIADB_DATABASE: plants_db
+      MARIADB_USER: root
+      MARIADB_PASSWORD: ***REDACTED***
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    expose:
+      - "3306"
+
+  redis:
+    image: redis:latest
+    restart: always
+    expose:
+      - "6379"
+
+networks:
+  dmz00:
+    name: dmz00
+    external: true
+
+volumes:
+  mariadb_data:
