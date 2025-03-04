@@ -10,9 +10,10 @@ import requests
 import uuid
 import logging
 from app.core.config import settings
+from app.services.plantnet_service import identify_species_via_plantnet
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -139,30 +140,11 @@ def identify_species(plant_id: int, db: Session = Depends(get_db)):
 
     # Send request to Pl@ntNet API
     try:
-        with open(image_path, "rb") as image_file:
-            files = {
-                "images": (filename, image_file, mime_type)
-            }
-            params = {
-                "include-related-images": "false",
-                "no-reject": "false",
-                "nb-results": "10",
-                "lang": "en",
-                "api-key": settings.PLANTNET_API_KEY,
-            }
-            data = {"organs": "auto"}
-
-            response = requests.post(
-                "https://my-api.plantnet.org/v2/identify/all",
-                params=params,
-                files=files,
-                data=data,
-                headers={"accept": "application/json"},
-            )
-
-        logger.info(f"Pl@ntNet API: {response}")
-
-        result = response.json()
+        result = identify_species_via_plantnet(
+            image_path=image_path,
+            mime_type=mime_type,
+            filename=filename
+        )
 
         # Sort results by score in descending order and format as needed
         if "results" in result and len(result["results"]) > 0:

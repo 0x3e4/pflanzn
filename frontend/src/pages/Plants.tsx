@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { createPlant, uploadPlantImage, identifyPlant, updatePlant, Plant } from "../services/Plant";
 import "../styles/plants.css";
 import IdentifyResults from "../components/IdentifyResults";
@@ -63,7 +64,7 @@ export default function Plants() {
   };
 
   return (
-    <div className="plants-container">
+    <div className="container plants-container">
       {/* Header with Plants title & "+" button */}
       <div className="plants-header">
         <h1>Plants</h1>
@@ -74,20 +75,38 @@ export default function Plants() {
       <div className="plants-list">
       {plants.map((plant) => (
         <div key={plant.id} className="plant-card">
-          {/* Plant Image */}
-          <img
-            src={plant.images.length > 0 ? `/api/uploads/${plant.images[0].image_path}` : "/placeholder-plant.webp"}
-            alt={plant.name}
-            className="plant-image"
-          />
+          <Link to={`/plants/${plant.id}`} key={plant.id} 
+            onClick={(e) => {
+              // If the click originated from an element inside .plant-buttons, cancel navigation.
+              if ((e.target as HTMLElement).closest('.plant-buttons')) {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }}
+          >
+            {/* Plant Image */}
+            <div className="plant-image-container">
+              <img
+                src={plant.images.length > 0 ? `/api/uploads/${plant.images[0].image_path}` : "/placeholder-plant.webp"}
+                alt={plant.name}
+                className="plant-image"
+              />
+            </div>
 
-          {/* Plant Information */}
-          <h3>{plant.name}</h3>
-          <p><strong>Species:</strong> {plant.species || "Unknown"}</p>
-          <p><strong>Last Watered:</strong> {new Date(plant.lastWatered).toLocaleDateString()}</p>
-
+            {/* Plant Information */}
+            <div className="plant-card-text">
+              <h3>{plant.name}</h3>
+              <p><strong>Species:</strong> {plant.species || "Unknown"}</p>
+              <p><strong>Last Watered:</strong> {new Date(plant.lastWatered).toLocaleDateString()}</p>
+            </div>
+            </Link>
           {/* Upload Image & Identify Species Buttons */}
-          <div className="plant-buttons">
+          <div 
+            className="plant-buttons"
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
             {/* Hidden File Input */}
             <input 
               type="file" 
@@ -120,10 +139,14 @@ export default function Plants() {
         <IdentifyResults
           plantId={identifyResults.plantId}
           results={identifyResults.results}
-          onSelectSpecies={(plantId, species) => {
-            updatePlant(plantId, { species }).then(fetchPlants);
+          onSelectSpecies={(plantId, identifiedName, identifiedSpecies) => {
+            updatePlant(plantId, {
+              name: identifiedName,
+              species: identifiedSpecies,
+            }).then(fetchPlants);
+            
             setIdentifyResults(null);
-          }}
+          }}          
           onClose={() => setIdentifyResults(null)}
         />
       )}

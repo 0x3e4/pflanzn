@@ -4,6 +4,9 @@
 :root {
   --primary-color: #4caf50;
   --secondary-color: #2e6a31;
+  --tertiary-color: #af4c4c;
+  --quaternary-color: #6a2e2e;
+  --quinary-color: #868686;
   --background-color: #2c2c2c;
   --secondary-background-color: #333;
   --text-color: #ffffff;
@@ -34,31 +37,21 @@ main {
   justify-content: center;
   align-items: center;
   text-align: center;
+  padding-top: 80px;
 }
 
-/* Home Page */
-.home-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  padding: 20px;
-}
+@media (max-width: 768px) {
+  h1 {
+    font-size: 2rem;
+  }
 
-.home-content {
-  max-width: 800px;
-}
+  p {
+    font-size: 1rem;
+  }
 
-.home-content h1 {
-  font-size: 3rem;
-  font-weight: bold;
-  margin-bottom: 20px;
-}
-
-.home-content p {
-  font-size: 1.2rem;
-  margin-bottom: 20px;
+  .container {
+    width: 100%;
+  }
 }
 
 /* Links */

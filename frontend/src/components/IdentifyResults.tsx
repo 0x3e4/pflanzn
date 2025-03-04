@@ -3,7 +3,7 @@ import "../styles/identifyResults.css";
 interface IdentifyResultsProps {
   plantId: number;
   results: { species: string; commonName: string; score: string }[];
-  onSelectSpecies: (plantId: number, species: string) => void;
+  onSelectSpecies: (plantId: number, name: string, species: string) => void;
   onClose: () => void;
 }
 
@@ -25,7 +25,7 @@ export default function IdentifyResults({
               .map((result, index) => (
                 <li
                   key={index}
-                  onClick={() => onSelectSpecies(plantId, result.species)}
+                  onClick={() => onSelectSpecies(plantId, result.commonName, result.species)}
                   className="species-item"
                 >
                   <strong>{result.species}</strong> ({result.commonName || "No common name"}) -{" "}

@@ -9,8 +9,9 @@ class Settings(BaseSettings):
     DB_NAME: str = os.getenv("DB_NAME", "plants_db")
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your_secret_key")
     AUTH_MODE: str = os.getenv("AUTH_MODE", "local")
-    REDIS_URL: str = os.getenv("REDIS_URL", "local")
-    PLANTNET_API_KEY: str = os.getenv("PLANTNET_API_KEY", "local")
+    REDIS_URL: str = os.getenv("REDIS_URL", "localhost")
+    PLANTNET_API_KEY: str = os.getenv("PLANTNET_API_KEY")
+    PLANTNET_LANGUAGE: str = os.getenv("PLANTNET_LANGUAGE", "en")
     
     class Config:
         env_file = ".env"

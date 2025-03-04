@@ -58,7 +58,7 @@ export async function identifyPlant(plantId: number) {
   return response.json();
 }
 
-export async function updatePlant(plantId: number, data: { species?: string }) {
+export async function updatePlant(plantId: number, data: { name?: string; species?: string }) {
   const response = await fetch(`/api/plants/${plantId}`, {
     method: "PUT",
     headers: {
@@ -72,4 +72,29 @@ export async function updatePlant(plantId: number, data: { species?: string }) {
   }
 
   return response.json();
+}
+
+export async function fetchSinglePlant(plantId: number): Promise<Plant> {
+  const response = await fetch(`/api/plants/${plantId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch plant with ID ${plantId}`);
+  }
+
+  return response.json();
+}
+
+export async function deletePlant(plantId: number): Promise<void> {
+  const response = await fetch(`/api/plants/${plantId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete plant with ID ${plantId}`);
+  }
 }

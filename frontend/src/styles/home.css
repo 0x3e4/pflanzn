@@ -1,0 +1,55 @@
+/* Home Page */
+.home-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .home-content {
+    max-width: 800px;
+  }
+  
+  .home-content h1 {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  
+  .home-content p {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+  }
+
+.carousel-container {
+    margin: 20px auto;
+    max-width: 1000px;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .carousel-container {
+        max-width: 300px;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 992px) {
+  .carousel-container {
+      max-width: 600px;
+  }
+}
+
+@media (min-width: 992px) and (max-width: 1200px) {
+  .carousel-container {
+      max-width: 900px;
+  }
+}
+
+.home-plant-image {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}

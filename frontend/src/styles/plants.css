@@ -128,30 +128,42 @@
 /* Plant card styling */
 .plant-card {
   background: var(--secondary-background-color);
-  padding: 20px;
   border-radius: 12px;
   box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
-  text-align: center;
+  text-align: left !important;
   max-width: 300px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: box-shadow 0.3s ease;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  align-items: center;
+}
+
+.plant-card-text {
+  padding: 20px;
 }
 
 .plant-card:hover {
-  transform: translateY(-5px);
   box-shadow: 0px 12px 20px rgba(0, 0, 0, 0.3);
 }
 
 /* Plant image styling */
 .plant-image {
   width: 100%;
-  height: 200px;
+  height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.plant-image-container {
+  width: 100%;
+  height: 400px;
+  overflow: hidden;
   border-radius: 8px;
-  margin-bottom: 10px;
+}
+
+/* Zoom the image slightly when hovering */
+.plant-image-container:hover .plant-image {
+  transform: scale(1.1);
 }
 
 /* Title and species text should be below the image */

@@ -1,23 +1,56 @@
+import logging
 import requests
 import json
+import os
 from app.core.config import settings
 
-def identify_species(file):
-    api_url = f"https://my-api.plantnet.org/v2/identify/all?api-key={settings.PLANTNET_API_KEY}"
-    files = {"images": (file.filename, file.file, file.content_type)}
-    data = {"organs": ["auto"]}
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
+
+def identify_species_via_plantnet(
+    image_path: str,
+    mime_type: str,
+    filename: str
+) -> dict[str, any]:
+    """
+    Call the Pl@ntNet API to identify a plant from an image.
     
-    response = requests.post(api_url, files=files, data=data)
-    
-    if response.status_code == 200:
-        result = response.json()
-        if "results" in result and len(result["results"]) > 0:
-            species_data = result["results"][0]["species"]
-            return {
-                "scientific_name": species_data.get("scientificNameWithoutAuthor", "Unknown"),
-                "common_names": species_data.get("commonNames", []),
-                "genus": species_data.get("genus", {}).get("scientificNameWithoutAuthor", "Unknown"),
-                "family": species_data.get("family", {}).get("scientificNameWithoutAuthor", "Unknown"),
-                "score": result["results"][0].get("score", 0)
+    :param image_path: Absolute path to the local image file
+    :param mime_type: MIME type, e.g., 'image/png' or 'image/jpeg'
+    :param filename: Just the filename (for the multipart form)
+    :return: Parsed JSON response from the API
+    """
+    try:
+        if not os.path.exists(image_path):
+            raise FileNotFoundError(f"Image file not found at {image_path}")
+
+        with open(image_path, "rb") as image_file:
+            files = {
+                "images": (filename, image_file, mime_type)
             }
-    return {"scientific_name": "Unknown", "common_names": [], "genus": "Unknown", "family": "Unknown", "score": 0}
+            params = {
+                "include-related-images": "false",
+                "no-reject": "false",
+                "nb-results": "10",
+                "lang": settings.PLANTNET_LANGUAGE,
+                "api-key": settings.PLANTNET_API_KEY,
+            }
+            data = {
+                "organs": "auto"
+            }
+
+            response = requests.post(
+                "https://my-api.plantnet.org/v2/identify/all",
+                params=params,
+                files=files,
+                data=data,
+                headers={"accept": "application/json"},
+            )
+
+        logger.info(f"Pl@ntNet API responded with status {response.status_code}")
+        response.raise_for_status()
+        return response.json()
+
+    except Exception as e:
+        logger.exception("Error calling Pl@ntNet API")
+        raise e
