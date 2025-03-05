@@ -35,11 +35,13 @@ class PlantCreate(BaseModel):
     name: str
     species: Optional[str] = None
     location_id: Optional[int] = None
+    description: Optional[str] = None
 
 class PlantUpdate(BaseModel):
-    name: Optional[str]
+    name: Optional[str] = None
     species: Optional[str] = None
     location_id: Optional[int] = None
+    description: Optional[str] = None
 
 class PlantImageResponse(BaseModel):
     id: int
@@ -53,6 +55,7 @@ class PlantResponse(BaseModel):
     id: int
     name: str
     species: Optional[str]
+    description: Optional[str] = None
     last_watered: Optional[datetime] = None
     location_id: Optional[int]
     images: List[PlantImageResponse] = []

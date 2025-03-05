@@ -3,7 +3,6 @@
     flex-direction: column;
     gap: 1rem;
     padding-top: 15px;
-    padding-bottom: 60px;
   }
   
   .timeline-active-viewer {
@@ -129,3 +128,7 @@
   .delete-modal .delete-btn:hover {
     background-color: var(--quaternary-color);
   }
+
+h5 {
+    margin: 0px;
+}

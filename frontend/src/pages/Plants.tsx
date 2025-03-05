@@ -51,6 +51,7 @@ export default function Plants() {
         toast.warning("No species found.");
         return;
       }
+
       setIdentifyResults({
         plantId,
         results: result.identified_species.map((r: any) => ({
@@ -59,6 +60,7 @@ export default function Plants() {
           score: r.score,
         })),
       });
+
     } catch (err) {
       toast.error((err as Error).message);
     }
@@ -71,7 +73,7 @@ export default function Plants() {
       uploadPlantImage(plantId, selectedFile)
         .then(() => {
           toast.success("Image uploaded successfully!");
-          fetchPlants(); // re-fetch to update images in the list
+          fetchPlants();
         })
         .catch((err) => toast.error(err.message));
     }
@@ -181,7 +183,8 @@ export default function Plants() {
               name: identifiedName,
               species: identifiedSpecies,
             }).then(fetchPlants);
-            setIdentifyResults(null);
+              setIdentifyResults(null);
+              toast.success(`Plant identified as: ${identifiedSpecies}`);
           }}
           onClose={() => setIdentifyResults(null)}
         />

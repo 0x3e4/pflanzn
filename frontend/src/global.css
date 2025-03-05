@@ -109,3 +109,25 @@ button:hover {
 .editable-input:focus {
   border-color: var(--primary-color);
 }
+
+.editable-textarea {
+  display: block;
+  width: 100%;
+  min-height: 400px;
+  background-color: var(--secondary-background-color);
+  border: 1px solid var(--quinary-color);
+  border-radius: none;
+  border-bottom: 1px solid var(--quinary-color);
+  color: var(--text-color);
+  font-size: 1rem;
+  padding: 8px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s ease-in-out;
+}
+
+.editable-textarea:focus {
+  border-color: var(--primary-color);
+}

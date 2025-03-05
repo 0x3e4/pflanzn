@@ -18,9 +18,9 @@ export default function Footer() {
             </div>
 
             <div className="footer-column">
-                <h3>Pflanzn v1.0.0</h3>
+                <h3>Pflanzn</h3>
                 <a href="/about">About</a>
-                <a href="#">Changelog</a>
+                <a href="#">Changelog - v1.0.0</a>
             </div>
 
             <div className="footer-column">

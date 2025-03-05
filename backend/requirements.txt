@@ -12,3 +12,4 @@ python-multipart
 requests
 pillow
 pillow_heif
+huggingface_hub

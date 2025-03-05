@@ -14,6 +14,7 @@ from PIL import Image, ImageOps
 import pillow_heif
 from app.core.config import settings
 from app.services.plantnet_service import identify_species_via_plantnet
+from app.services.huggingface_service import generate_species_description
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -217,3 +218,33 @@ def delete_plant_image(plant_id: int, image_id: int, db: Session = Depends(get_d
     db.commit()
 
     return {"message": "Image deleted successfully"}
+
+@router.post("/{plant_id}/generate_description")
+def generate_species_description_for_plant(plant_id: int, db: Session = Depends(get_db)):
+    """
+    Generate and save a species description using Hugging Face for a given plant.
+    """
+    plant = db.query(Plant).filter(Plant.id == plant_id).first()
+
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+
+    if not plant.species:
+        raise HTTPException(status_code=400, detail="Species is required to generate description")
+
+    common_name = plant.name
+    species = plant.species
+
+    try:
+        description = generate_species_description(common_name, species)
+        plant.description = description
+        db.commit()
+        db.refresh(plant)
+
+        return {
+            "message": "Description generated and saved successfully.",
+            "description": description
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate description: {str(e)}")

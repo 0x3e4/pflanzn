@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -23,6 +23,7 @@ class Plant(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
     species = Column(String(255), nullable=True)
+    description = Column(Text, nullable=True)
     last_watered = Column(DateTime, nullable=True)
     location_id = Column(Integer, ForeignKey("locations.id"), nullable=True)
     location = relationship("Location", back_populates="plants")

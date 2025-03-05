@@ -8,6 +8,7 @@ export interface Plant {
   id: number;
   name: string;
   species: string | null;
+  description: string | null;
   lastWatered: string;
   location_id?: number | null;
   images: PlantImage[];
@@ -58,7 +59,8 @@ export async function identifyPlant(plantId: number) {
   return response.json();
 }
 
-export async function updatePlant(plantId: number, data: { name?: string | null; species?: string | null }) {
+// Update plant
+export async function updatePlant(plantId: number, data: { name?: string | null; species?: string | null; description?: string | null }) {
   const response = await fetch(`/api/plants/${plantId}`, {
     method: "PUT",
     headers: {
@@ -74,6 +76,7 @@ export async function updatePlant(plantId: number, data: { name?: string | null;
   return response.json();
 }
 
+// Fetch single plant
 export async function fetchSinglePlant(plantId: number): Promise<Plant> {
   const response = await fetch(`/api/plants/${plantId}`, {
     method: "GET",
@@ -89,6 +92,7 @@ export async function fetchSinglePlant(plantId: number): Promise<Plant> {
   return response.json();
 }
 
+// Delete plant
 export async function deletePlant(plantId: number): Promise<void> {
   const response = await fetch(`/api/plants/${plantId}`, {
     method: "DELETE",
@@ -99,6 +103,7 @@ export async function deletePlant(plantId: number): Promise<void> {
   }
 }
 
+// Delete plant image
 export async function deletePlantImage(plantId: number, imageId: number) {
   const response = await fetch(`/api/plants/${plantId}/images/${imageId}`, {
     method: "DELETE",
@@ -106,6 +111,19 @@ export async function deletePlantImage(plantId: number, imageId: number) {
 
   if (!response.ok) {
     throw new Error(`Failed to delete image (ID: ${imageId})`);
+  }
+
+  return response.json();
+}
+
+// Generate plant description via Hugging Face
+export async function generatePlantDescription(plantId: number): Promise<{ description: string }> {
+  const response = await fetch(`${API_BASE}/${plantId}/generate_description`, {
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to generate description for plant ID ${plantId}`);
   }
 
   return response.json();
