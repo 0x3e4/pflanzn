@@ -3,7 +3,7 @@
   position: fixed;
   top: 0;
   left: 0;
-  background-color: #333;
+  background-color: var(--background-color);
   padding: 15px 0px;
   display: flex;
   align-items: center;
@@ -105,7 +105,7 @@
     position: absolute;
     top: 70px;
     right: 10px;
-    background: #333;
+    background: var(--background-color);
     padding: 15px;
     border-radius: 5px;
     align-items: flex-start;
@@ -137,6 +137,11 @@
 
   .nav-toggle.active .hamburger::after {
     transform: translateY(-8px) rotate(-45deg);
+  }
+
+  .shrink .nav-links {
+    top: 60px;
+    padding: 10px;
   }
 }
 

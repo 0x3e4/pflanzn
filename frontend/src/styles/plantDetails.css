@@ -1,26 +1,25 @@
 .plant-container {
     text-align: center;
-    padding: 30px;
     background-color: var(--secondary-background-color);
     position: relative;
-  }
-  
-  .plant-container h2 {
+}
+
+.plant-container h2 {
     margin-top: 0px;
-  }
+}
 
-  .plant-container h5 {
+.plant-container h5 {
     margin: 0px;
-  }
+}
 
-  .plant-information {
+.plant-information {
     text-align: left !important;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-  }
-  
-  .delete-plant-btn {
+}
+
+.delete-plant-btn {
     position: absolute;
     bottom: 25px;
     right: 25px;
@@ -33,8 +32,12 @@
     cursor: pointer;
     font-size: 16px;
     transition: background-color 0.3s ease;
-  }
-  
-  .delete-plant-btn:hover {
+}
+
+.delete-plant-btn:hover {
     background-color: var(--quaternary-color);
-  }  
+}  
+
+span {
+    margin: 3px 0;
+}

@@ -10,3 +10,5 @@ mariadb
 jwt
 python-multipart
 requests
+pillow
+pillow_heif

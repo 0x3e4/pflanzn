@@ -29,20 +29,47 @@
 }
 
 @media (max-width: 768px) {
-    .carousel-container {
-        max-width: 300px;
-    }
+  .carousel-container {
+    max-width: 300px;
+  }
+  .species-wordcloud{
+    width: 100px;
+  }
+  .slick-slide {
+    width: 300px !important;
+  }
+  .home-plant-image {
+    height: 600px;
+  }
 }
 
 @media (min-width: 768px) and (max-width: 992px) {
   .carousel-container {
-      max-width: 600px;
+    max-width: 600px;
+  }
+  .species-wordcloud{
+    width: 200px;
+  }
+  .slick-slide {
+    width: 300px !important;
+  }
+  .home-plant-image {
+    height: 400px;
   }
 }
 
 @media (min-width: 992px) and (max-width: 1200px) {
   .carousel-container {
-      max-width: 900px;
+    max-width: 900px;
+  }
+  .species-wordcloud{
+    width: 300px;
+  }
+  .slick-slide {
+    width: 334px !important;
+  }
+  .home-plant-image {
+    height: 300px;
   }
 }
 
@@ -52,4 +79,38 @@
     object-fit: cover;
     border-radius: 8px;
     margin-bottom: 10px;
+}
+
+.slick-track {
+  width: 5000px !important;
+}
+
+.species-wordcloud {
+  margin-top: 2rem;
+  width: 100%;
+  max-width: 1000px;
+  color: var(--text-color);
+  text-align: center;
+}
+
+.wordcloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.wordcloud-item {
+  font-weight: bold;
+  white-space: nowrap;
+  cursor: default;
+  background-color: var(--background-color);
+  padding: 5px 10px;
+  border-radius: 4px;
+  transition: transform 0.2s ease;
+}
+
+.wordcloud-item:hover {
+  transform: scale(1.2);
+  z-index: 1;
 }

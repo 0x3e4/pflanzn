@@ -58,7 +58,7 @@ export async function identifyPlant(plantId: number) {
   return response.json();
 }
 
-export async function updatePlant(plantId: number, data: { name?: string; species?: string }) {
+export async function updatePlant(plantId: number, data: { name?: string | null; species?: string | null }) {
   const response = await fetch(`/api/plants/${plantId}`, {
     method: "PUT",
     headers: {
@@ -97,4 +97,16 @@ export async function deletePlant(plantId: number): Promise<void> {
   if (!response.ok) {
     throw new Error(`Failed to delete plant with ID ${plantId}`);
   }
+}
+
+export async function deletePlantImage(plantId: number, imageId: number) {
+  const response = await fetch(`/api/plants/${plantId}/images/${imageId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete image (ID: ${imageId})`);
+  }
+
+  return response.json();
 }

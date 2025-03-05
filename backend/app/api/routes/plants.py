@@ -6,9 +6,12 @@ from app.schemas import PlantCreate, PlantResponse, PlantUpdate, PlantImageRespo
 from typing import List
 import shutil
 import os
+import io
 import requests
 import uuid
 import logging
+from PIL import Image, ImageOps
+import pillow_heif
 from app.core.config import settings
 from app.services.plantnet_service import identify_species_via_plantnet
 
@@ -21,6 +24,8 @@ UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 PLANT_FOLDER = os.path.join(UPLOAD_FOLDER, "plants")
 
 os.makedirs(PLANT_FOLDER, exist_ok=True)
+
+pillow_heif.register_heif_opener()
 
 router = APIRouter()
 
@@ -77,30 +82,53 @@ def delete_plant(plant_id: int, db: Session = Depends(get_db)):
     return {"message": "Plant and associated images deleted successfully"}
 
 @router.post("/{plant_id}/upload_image")
-def upload_plant_image(plant_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
+def upload_plant_image(
+    plant_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
 
-    # Generate a UUID filename
-    file_extension = file.filename.split(".")[-1]
-    filename = f"{uuid.uuid4()}.{file_extension}"
-    file_path = os.path.join(PLANT_FOLDER, filename)
+    logger.debug(f"Uploading image for plant ID {plant_id}...")
 
-    logger.info(f"Uploading image for plant ID {plant_id}...")
+    new_filename = f"{uuid.uuid4()}.jpg"
+    final_file_path = os.path.join(PLANT_FOLDER, new_filename)
 
-    # Save file
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    try:
+        contents = file.file.read()
+        logger.debug(f"Uploaded file size: {len(contents)} bytes")
+        file.file.close()
 
-    # Save the relative path to DB
-    relative_path = f"plants/{filename}"  # Store as 'plants/UUID.png'
+        image_stream = io.BytesIO(contents)
+        image_stream.seek(0)
+
+        with Image.open(image_stream) as img:
+            logger.debug(f"Opened image: format={img.format}, size={img.size}")
+            img = ImageOps.exif_transpose(img)
+            img = img.convert("RGB")
+
+            max_width = 900
+            if img.width > max_width:
+                w_percent = max_width / float(img.width)
+                new_height = int(float(img.height) * float(w_percent))
+                img = img.resize((max_width, new_height), Image.LANCZOS)
+
+            img.save(final_file_path, format="JPEG", optimize=True, quality=80)
+
+        logger.debug(f"Optimized uploaded image saved for plant {plant_id}.")
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error processing image: {str(e)}")
+
+    relative_path = f"plants/{new_filename}"
     plant_image = PlantImage(plant_id=plant_id, image_path=relative_path)
     db.add(plant_image)
     db.commit()
     db.refresh(plant_image)
 
-    logger.info(f"File successfully saved to {file_path}")
+    logger.info(f"File successfully saved to {final_file_path}")
     logger.info(f"Image record added to database: {relative_path}")
 
     return {"message": "Image uploaded successfully", "image_path": relative_path}
@@ -169,3 +197,23 @@ def identify_species(plant_id: int, db: Session = Depends(get_db)):
         return {"message": f"Error: {str(e)}"}
 
     return {"message": "No species found"}
+
+@router.delete("/{plant_id}/images/{image_id}")
+def delete_plant_image(plant_id: int, image_id: int, db: Session = Depends(get_db)):
+    plant = db.query(Plant).filter(Plant.id == plant_id).first()
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+
+    image = db.query(PlantImage).filter(PlantImage.id == image_id, PlantImage.plant_id == plant_id).first()
+    if not image:
+        raise HTTPException(status_code=404, detail="Image not found for this plant")
+
+    # Remove image file from disk
+    absolute_image_path = os.path.join(BASE_DIR, "uploads", image.image_path)
+    if os.path.exists(absolute_image_path):
+        os.remove(absolute_image_path)
+
+    db.delete(image)
+    db.commit()
+
+    return {"message": "Image deleted successfully"}

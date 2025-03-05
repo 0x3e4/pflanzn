@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import "../styles/navbar.css";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const navRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -15,10 +16,26 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+
+    if (menuOpen) {
+      document.addEventListener("click", handleClickOutside);
+    } else {
+      document.removeEventListener("click", handleClickOutside);
+    }
+
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [menuOpen]);
+
   return (
-    <nav className={`navbar ${isScrolled ? "shrink" : ""}`}>
+    <nav className={`navbar ${isScrolled ? "shrink" : ""}`} ref={navRef}>
       <div className="nav-container">
-        <Link to="/" className="nav-logo">
+        <Link to="/" className="nav-logo" onClick={() => setMenuOpen(false)}>
           <img src="/logo_transparent.png" alt="Logo" />
           Pflanzn
         </Link>
@@ -29,7 +46,7 @@ export default function Navbar() {
           <span className="hamburger"></span>
         </button>
         <div className={`nav-links ${menuOpen ? "active" : ""}`}>
-          <Link to="/plants">Plants</Link>
+          <Link to="/plants" onClick={() => setMenuOpen(false)}>Plants</Link>
         </div>
       </div>
     </nav>
