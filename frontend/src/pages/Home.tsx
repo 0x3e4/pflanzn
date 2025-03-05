@@ -77,7 +77,7 @@ export default function Home() {
   const getFontSize = (species: string) => {
       const count = speciesCounts[species] || 0;
       const intensity = count / maxCount;
-      return `${0.5 + intensity}rem`;
+      return `${0.3 + intensity}rem`;
   };
 
   // Whenever plants data changes, reset counters for loading images

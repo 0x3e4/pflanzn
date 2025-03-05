@@ -1,4 +1,6 @@
 import "../styles/identifyResults.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleXmark } from "@fortawesome/free-solid-svg-icons";
 
 interface IdentifyResultsProps {
   plantId: number;
@@ -21,7 +23,7 @@ export default function IdentifyResults({
         <ul>
           {results.length > 0 ? (
             results
-              .sort((a, b) => parseFloat(b.score) - parseFloat(a.score)) // Sort by highest score
+              .sort((a, b) => parseFloat(b.score) - parseFloat(a.score))
               .map((result, index) => (
                 <li
                   key={index}
@@ -36,7 +38,9 @@ export default function IdentifyResults({
             <p>No species identified.</p>
           )}
         </ul>
-        <button className="cancel-btn" onClick={onClose}>Cancel</button>
+        <button className="cancel-btn" onClick={onClose}>
+          <FontAwesomeIcon icon={faCircleXmark} /> Cancel
+        </button>
       </div>
     </div>
   );

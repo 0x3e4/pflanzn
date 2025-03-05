@@ -1,20 +1,28 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { createPlant, uploadPlantImage, identifyPlant, updatePlant, Plant } from "../services/Plant";
+import { createPlant, uploadPlantImage, identifyPlant, updatePlant, deletePlant, Plant } from "../services/Plant";
 import "../styles/plants.css";
 import { toast } from 'react-toastify';
 import IdentifyResults from "../components/IdentifyResults";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUpload, faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import { faUpload, faPlus, faSeedling, faCircleXmark, faFingerprint } from "@fortawesome/free-solid-svg-icons";
 
 export default function Plants() {
   const [plants, setPlants] = useState<Plant[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [newPlant, setNewPlant] = useState({ name: "", species: "" });
-  const [_file, setFile] = useState<File | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [identifyResults, setIdentifyResults] = useState<{ plantId: number; results: any[] } | null>(null);
+
+  const [modalIdentifyResults, setModalIdentifyResults] = useState<
+    { species: string; commonName: string; score: string }[] | null
+  >(null);
+
+  const [plantIdentifyResults, setPlantIdentifyResults] = useState<{
+    plantId: number;
+    results: { species: string; commonName: string; score: string }[];
+  } | null>(null);
 
   useEffect(() => {
     fetchPlants();
@@ -33,139 +41,163 @@ export default function Plants() {
     }
   };
 
+  const resetModal = () => {
+    setNewPlant({ name: "", species: "" });
+    setFile(null);
+    setModalIdentifyResults(null);
+    setModalOpen(false);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0] || null;
+    setFile(selectedFile);
+    setModalIdentifyResults(null);
+  };
+
   const handleCreatePlant = async () => {
     try {
-      const plant = await createPlant(newPlant.name, newPlant.species);
-      setPlants([...plants, plant]); // Update UI
-      setNewPlant({ name: "", species: "" }); // Reset input
-      setModalOpen(false); // Close modal
+      const createdPlant = await createPlant(newPlant.name, newPlant.species);
+      toast.success("Plant created!");
+
+      if (file) {
+        await uploadPlantImage(createdPlant.id, file);
+        toast.success("Image uploaded!");
+      }
+
+      fetchPlants();
+      resetModal();
     } catch (err) {
       toast.error((err as Error).message);
     }
   };
 
-  const handleIdentifyPlant = async (plantId: number) => {
+  const handleIdentifyExistingPlant = async (plantId: number) => {
     try {
       const result = await identifyPlant(plantId);
+
       if (result.identified_species.length === 0) {
         toast.warning("No species found.");
         return;
       }
 
-      setIdentifyResults({
+      setPlantIdentifyResults({
         plantId,
         results: result.identified_species.map((r: any) => ({
           species: r.scientific_name || "Unknown",
           commonName: r.common_name || "No common name",
-          score: r.score,
+          score: r.score.toString(),
         })),
       });
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+  };
+
+  const handleUploadImageForPlant = async (plantId: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      await uploadPlantImage(plantId, file);
+      toast.success("Image uploaded!");
+      fetchPlants();
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+  };
+
+  const handleIdentifyPlant = async () => {
+    if (!file) return toast.error("Please select a file first.");
+
+    try {
+      const tempPlant = await createPlant("Temp", "");
+      await uploadPlantImage(tempPlant.id, file);
+
+      const result = await identifyPlant(tempPlant.id);
+      if (result.identified_species.length === 0) {
+        toast.warning("No species identified.");
+        await deletePlant(tempPlant.id);
+        return;
+      }
+
+      setModalIdentifyResults(result.identified_species.map((r: any) => ({
+        species: r.scientific_name || "Unknown",
+        commonName: r.common_name || "No common name",
+        score: r.score.toString(),
+      })));
+
+      await deletePlant(tempPlant.id);
 
     } catch (err) {
       toast.error((err as Error).message);
     }
   };
 
-  const handleFileChange = (plantId: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0] || null;
-    setFile(selectedFile);
-    if (selectedFile) {
-      uploadPlantImage(plantId, selectedFile)
-        .then(() => {
-          toast.success("Image uploaded successfully!");
-          fetchPlants();
-        })
-        .catch((err) => toast.error(err.message));
-    }
+  const handleSelectSpecies = (species: string, commonName: string) => {
+    setNewPlant({ name: commonName, species: species });
+    setModalIdentifyResults(null);
   };
 
-  if (loading) {
-    return <p>Loading plants...</p>;
-  }
+  const handleSelectSpeciesForExistingPlant = async (plantId: number, name: string, species: string) => {
+    await updatePlant(plantId, { name, species });
+    fetchPlants();
+    setPlantIdentifyResults(null);
+    toast.success(`Plant updated to ${name} (${species})`);
+  };
 
-  if (error) {
-    return <p style={{ color: "red" }}>{error}</p>;
-  }
+  if (loading) return <p>Loading plants...</p>;
+  if (error) return <p style={{ color: 'red' }}>{error}</p>;
 
   return (
     <div className="container plants-container">
-      {/* Header with Plants title & "+" button */}
       <div className="plants-header">
         <h1>Plants</h1>
-        <button className="add-plant-btn" onClick={() => setModalOpen(true)}>+</button>
+        <button className="add-plant-btn" onClick={() => setModalOpen(true)}>
+          <FontAwesomeIcon icon={faPlus} />
+        </button>
       </div>
 
-      {/* PLANTS LIST */}
       <div className="plants-list">
         {plants.map((plant) => {
-          // Sort images newest-first
           const sortedImages = [...(plant.images || [])].sort(
             (a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime()
           );
-          const latestImage = sortedImages.length > 0 ? sortedImages[0] : null;
-
-          // Format last watered
+          const latestImage = sortedImages[0] || null;
           const lastWateredText = plant.lastWatered
             ? new Date(plant.lastWatered).toLocaleDateString()
             : "Not watered yet";
 
           return (
             <div key={plant.id} className="plant-card">
-              <Link
-                to={`/plants/${plant.id}`}
-                key={plant.id}
-                onClick={(e) => {
-                  // If the click originated from the .plant-buttons area, cancel navigation.
-                  if ((e.target as HTMLElement).closest('.plant-buttons')) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }
-                }}
-              >
-                {/* Plant Image */}
+              <Link to={`/plants/${plant.id}`}>
                 <div className="plant-image-container">
                   <img
-                    src={
-                      latestImage
-                        ? `/api/uploads/${latestImage.image_path}`
-                        : "/placeholder-plant.webp"
-                    }
+                    src={latestImage ? `/api/uploads/${latestImage.image_path}` : "/placeholder-plant.webp"}
                     alt={plant.name}
                     className="plant-image"
                   />
                 </div>
-
-                {/* Plant Information */}
                 <div className="plant-card-text">
-                  <h3>{plant.name}</h3>
+                  <h3>{plant.name || "Unknown"}</h3>
                   <p><strong>Species:</strong> {plant.species || "Unknown"}</p>
                   <p><strong>Last Watered:</strong> {lastWateredText}</p>
                 </div>
               </Link>
-
-              {/* Upload Image & Identify Species Buttons */}
-              <div
-                className="plant-buttons"
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-              >
+              <div className="plant-buttons">
                 {/* Hidden File Input */}
                 <input
                   type="file"
                   id={`file-upload-${plant.id}`}
                   className="file-input"
-                  onChange={(e) => handleFileChange(plant.id, e)}
+                  onChange={(e) => handleUploadImageForPlant(plant.id, e)}
                 />
                 <button onClick={() => {
                   document.getElementById(`file-upload-${plant.id}`)?.click();
                 }}>
                   <FontAwesomeIcon icon={faUpload} />
                 </button>
-
-                {/* Identify Species Button */}
-                <button onClick={() => handleIdentifyPlant(plant.id)}>
-                  <FontAwesomeIcon icon={faMagnifyingGlass} />
+                <button onClick={() => handleIdentifyExistingPlant(plant.id)}>
+                  <FontAwesomeIcon icon={faFingerprint} />
                 </button>
               </div>
             </div>
@@ -173,45 +205,50 @@ export default function Plants() {
         })}
       </div>
 
-      {/* IDENTIFY RESULTS MODAL */}
-      {identifyResults && (
-        <IdentifyResults
-          plantId={identifyResults.plantId}
-          results={identifyResults.results}
-          onSelectSpecies={(plantId, identifiedName, identifiedSpecies) => {
-            updatePlant(plantId, {
-              name: identifiedName,
-              species: identifiedSpecies,
-            }).then(fetchPlants);
-              setIdentifyResults(null);
-              toast.success(`Plant identified as: ${identifiedSpecies}`);
-          }}
-          onClose={() => setIdentifyResults(null)}
-        />
-      )}
-
-      {/* CREATE PLANT MODAL */}
       {modalOpen && (
-        <div className="add-plant-modal">
-          <div className="add-plant-modal-content">
-            <span className="close" onClick={() => setModalOpen(false)}>&times;</span>
-            <h2>Add a New Plant</h2>
-            <input
-              type="text"
-              placeholder="Plant Name"
-              value={newPlant.name}
-              onChange={(e) => setNewPlant({ ...newPlant, name: e.target.value })}
-            />
-            <input
-              type="text"
-              placeholder="Species (Optional)"
-              value={newPlant.species}
-              onChange={(e) => setNewPlant({ ...newPlant, species: e.target.value })}
-            />
-            <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-            <button onClick={handleCreatePlant}>Add Plant</button>
+        <div className="add-plant-modal" onClick={resetModal}>
+          <div className="add-plant-modal-content" onClick={(e) => e.stopPropagation()}>
+            <span className="close" onClick={resetModal}>&times;</span>
+            <h2>Add Plant</h2>
+            <input type="text" placeholder="Name" value={newPlant.name} onChange={(e) => setNewPlant({ ...newPlant, name: e.target.value })} />
+            <input type="text" placeholder="Species" value={newPlant.species} onChange={(e) => setNewPlant({ ...newPlant, species: e.target.value })} />
+            <input type="file" onChange={handleFileChange} />
+            {file && <button className="modal-identify-button" onClick={handleIdentifyPlant}>
+              <FontAwesomeIcon icon={faFingerprint} /> Identify Plant
+            </button>}
+            {modalIdentifyResults && (
+              <ul className="identify-results-list">
+                {modalIdentifyResults.map((r, i) => (
+                  <li
+                    key={i}
+                    className="species-item"
+                    onClick={() => handleSelectSpecies(r.species, r.commonName)}
+                  >
+                    <strong>{r.species}</strong> ({r.commonName || "No common name"}) -{" "}
+                    {parseFloat(r.score).toFixed(2)}%
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="modal-buttons plant-buttons">
+              <button onClick={handleCreatePlant}>
+                <FontAwesomeIcon icon={faSeedling} /> Add Plant
+              </button>
+              <button className="modal-cancel-button" onClick={resetModal}>
+                <FontAwesomeIcon icon={faCircleXmark} /> Cancel
+              </button>
+            </div>
           </div>
         </div>
+      )}
+
+      {plantIdentifyResults && (
+        <IdentifyResults
+          plantId={plantIdentifyResults.plantId}
+          results={plantIdentifyResults.results}
+          onSelectSpecies={handleSelectSpeciesForExistingPlant}
+          onClose={() => setPlantIdentifyResults(null)}
+        />
       )}
     </div>
   );

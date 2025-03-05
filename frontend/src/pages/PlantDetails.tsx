@@ -110,14 +110,15 @@ export default function PlantDetails() {
             <span>No images yet.</span>
           )}
 
-          <button className="delete-plant-btn" onClick={handleDeletePlant}>
-            <FontAwesomeIcon icon={faTrash} />
-          </button>
         </div>
 
         {/* Right Column - Description */}
         <div className="plant-right-column">
           <Description plant={plant} onDescriptionUpdated={setPlant} />
+
+          <button className="delete-plant-btn" onClick={handleDeletePlant}>
+            <FontAwesomeIcon icon={faTrash} /> Delete Plant
+          </button>
         </div>
       </div>
     </div>

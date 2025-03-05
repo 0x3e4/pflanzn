@@ -220,7 +220,7 @@ def delete_plant_image(plant_id: int, image_id: int, db: Session = Depends(get_d
     return {"message": "Image deleted successfully"}
 
 @router.post("/{plant_id}/generate_description")
-def generate_species_description_for_plant(plant_id: int, db: Session = Depends(get_db)):
+async def generate_species_description_for_plant(plant_id: int, db: Session = Depends(get_db)):
     """
     Generate and save a species description using Hugging Face for a given plant.
     """
@@ -236,7 +236,7 @@ def generate_species_description_for_plant(plant_id: int, db: Session = Depends(
     species = plant.species
 
     try:
-        description = generate_species_description(common_name, species)
+        description = await generate_species_description(common_name, species)
         plant.description = description
         db.commit()
         db.refresh(plant)

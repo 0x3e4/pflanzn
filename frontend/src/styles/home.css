@@ -86,7 +86,7 @@
 }
 
 .species-wordcloud {
-  margin-top: 2rem;
+  margin-top: 1rem;
   width: 100%;
   max-width: 1000px;
   color: var(--text-color);
@@ -101,7 +101,6 @@
 }
 
 .wordcloud-item {
-  font-weight: bold;
   white-space: nowrap;
   cursor: default;
   background-color: var(--background-color);

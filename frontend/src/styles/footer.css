@@ -39,11 +39,6 @@ footer {
     gap: 0.5rem;
   }
   
-  .footer-logo small {
-    font-size: 0.875rem;
-    color: #a7a7a7;
-  }
-  
   .footer-columns {
     display: flex;
     flex-wrap: wrap;
@@ -65,7 +60,7 @@ footer {
   
   .footer-column a {
     text-decoration: none;
-    color: #a7a7a7;
+    color: var(--septimal-color);
     font-size: 0.875rem;
     transition: color 0.3s;
   }

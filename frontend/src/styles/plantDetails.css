@@ -21,22 +21,24 @@
 
 .delete-plant-btn {
     background-color: var(--tertiary-color);
+    bottom: 0px;
+    font-size: 14px;
 }
 
 .generate-description-btn {
     background-color: var(--primary-color);
+    top: 0px;
+    font-size: 10px;
 }
 
 .delete-plant-btn, .generate-description-btn {
     position: absolute;
-    top: 0px;
     right: 0px;
     color: white;
     padding: 10px 12px;
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 10px;
     transition: background-color 0.3s ease;
 }
 
@@ -88,7 +90,7 @@ h3 {
 }
 
 .description {
-    padding-bottom: 2rem;
+    padding-bottom: 4rem;
   }
   
   .description span {
