@@ -45,12 +45,12 @@ export default function WateringLogCalendar({ waterings }: Props) {
     const [hoveredDate, setHoveredDate] = useState<string | null>(null);
     const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition | null>(null);
 
-    const locale = import.meta.env.VITE_Locale || 'en-GB';
-    const timezone = import.meta.env.VITE_TZ || 'Europe/Vienna';
+    const locale = import.meta.env.VITE_Locale;
+    const timezone = import.meta.env.VITE_TZ;
 
     const wateredDates = waterings.reduce((acc, watering) => {
         const date = new Date(watering.watered_at);
-        const formatter = new Intl.DateTimeFormat('en-CA', {
+        const formatter = new Intl.DateTimeFormat(locale, {
             timeZone: timezone,
             year: 'numeric',
             month: '2-digit',
@@ -66,7 +66,7 @@ export default function WateringLogCalendar({ waterings }: Props) {
     }, {} as Record<string, PlantWatering[]>);
 
     const tileClassName = ({ date }: { date: Date }) => {
-        const formatter = new Intl.DateTimeFormat('en-CA', {
+        const formatter = new Intl.DateTimeFormat(locale, {
             timeZone: timezone,
             year: 'numeric',
             month: '2-digit',
@@ -80,7 +80,7 @@ export default function WateringLogCalendar({ waterings }: Props) {
     };
 
     const handleClickDay = (date: Date, event: React.MouseEvent) => {
-        const formatter = new Intl.DateTimeFormat('en-CA', {
+        const formatter = new Intl.DateTimeFormat(locale, {
             timeZone: timezone,
             year: 'numeric',
             month: '2-digit',
@@ -140,6 +140,7 @@ export default function WateringLogCalendar({ waterings }: Props) {
             }}
         >
             <Calendar
+                locale={locale}
                 tileClassName={tileClassName}
                 onActiveStartDateChange={() => {
                     setHoveredDate(null);

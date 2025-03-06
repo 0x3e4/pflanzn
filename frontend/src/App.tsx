@@ -5,6 +5,7 @@ import Plants from "./pages/Plants";
 import PlantDetails from "./pages/PlantDetails";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import ScrollToTopButton from './components/ScrollToTopButton';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="/plants" element={<Plants />} />
           <Route path="/plants/:plantId" element={<PlantDetails />} />
         </Routes>
+        <ScrollToTopButton />
         <ToastContainer 
           position="bottom-right" 
           autoClose={3000} 

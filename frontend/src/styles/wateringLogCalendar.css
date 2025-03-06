@@ -24,7 +24,7 @@
 }
 
 .react-calendar__tile--now:enabled:hover, .react-calendar__tile--now:enabled:focus {
-    background: var(--secondary-color);
+    background: var(--background-color);
 }
 
 .react-calendar__tile--active:enabled:hover, .react-calendar__tile--active:enabled:focus {
@@ -32,7 +32,7 @@
   }
 
 .react-calendar__tile:enabled:hover, .react-calendar__tile:enabled:focus {
-    background-color: var(--secondary-color);
+    background-color: var(--background-color);
     color: var(--text-color);
 }
 
@@ -56,10 +56,18 @@
 }
 
 .react-calendar__tile.watered-day {
-    background-color: var(--primary-color);
+    background-color: var(--octal-color);
     color: var(--text-color);
     font-weight: bold;
     border-radius: 8px;
+}
+
+.react-calendar__tile.watered-day:hover {
+    background-color: var(--nonal-color);
+}
+
+.react-calendar__tile.watered-day:enabled:hover, .react-calendar__tile.watered-day:enabled:focus {
+    background-color: var(--nonal-color);
 }
 
 .watering-tooltip-content {
@@ -75,4 +83,9 @@ li {
 .react-calendar__navigation button {
     min-width: 0;
     padding: 5px 10px;
+}
+
+.react-calendar__tile--active {
+    background: var(--background-color);
+    color: white;
 }
