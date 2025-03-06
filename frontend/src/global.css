@@ -9,9 +9,19 @@
   --quinary-color: #a7a7a7;
   --senary-color: #535353;
   --septimal-color: #c8c8c8;
+  --octal-color: #4c61af;
+  --nonal-color: #2e456a;
+  --decimal-color: #794caf;
+  --undecimal-color: #642e6a;
   --background-color: #2c2c2c;
   --secondary-background-color: #333;
   --text-color: #ffffff;
+  --border-color: #ccc;
+}
+
+::selection {
+  background-color: var(--secondary-color);
+  color: var(--text-color);
 }
 
 /* Global Styles */
@@ -49,6 +59,7 @@ main {
 
   .container {
     width: 100%;
+    max-width: 335px;
   }
 }
 

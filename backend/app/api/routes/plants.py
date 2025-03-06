@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
-from app.models import Plant, PlantImage
-from app.schemas import PlantCreate, PlantResponse, PlantUpdate, PlantImageResponse, IdentifyRequest
+from app.models import Plant, PlantImage, PlantWatering
+from app.schemas import PlantCreate, PlantResponse, PlantUpdate, PlantImageResponse, IdentifyRequest, PlantWateringCreate, PlantWateringResponse
 from typing import List
 import shutil
 import os
@@ -45,6 +45,13 @@ def create_plant(plant_data: PlantCreate, db: Session = Depends(get_db)):
 @router.get("/", response_model=List[PlantResponse])
 def get_all_plants(db: Session = Depends(get_db)):
     plants = db.query(Plant).all()
+
+    for plant in plants:
+        if plant.waterings:
+            plant.last_watered = max(watering.watered_at for watering in plant.waterings)
+        else:
+            plant.last_watered = None
+
     return plants
 
 @router.get("/{plant_id}", response_model=PlantResponse)
@@ -52,6 +59,16 @@ def get_plant(plant_id: int, db: Session = Depends(get_db)):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
+
+    latest_watering = (
+        db.query(PlantWatering)
+        .filter(PlantWatering.plant_id == plant_id)
+        .order_by(PlantWatering.watered_at.desc())
+        .first()
+    )
+
+    plant.last_watered = latest_watering.watered_at if latest_watering else None
+
     return plant
 
 @router.put("/{plant_id}", response_model=PlantResponse)
@@ -61,10 +78,12 @@ def update_plant(plant_id: int, plant_data: PlantUpdate, db: Session = Depends(g
         raise HTTPException(status_code=404, detail="Plant not found")
     
     for key, value in plant_data.dict(exclude_unset=True).items():
+        logger.debug(f"Updating {key} to {value} for plant ID {plant_id}")
         setattr(plant, key, value)
-    
+
     db.commit()
     db.refresh(plant)
+
     return plant
 
 @router.delete("/{plant_id}")
@@ -248,3 +267,23 @@ async def generate_species_description_for_plant(plant_id: int, db: Session = De
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate description: {str(e)}")
+
+@router.post("/{plant_id}/water", response_model=PlantWateringResponse)
+def water_plant(
+    plant_id: int,
+    watering_data: PlantWateringCreate,
+    db: Session = Depends(get_db)
+):
+    plant = db.query(Plant).filter(Plant.id == plant_id).first()
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+
+    watering = PlantWatering(
+        plant_id=plant_id,
+        watered_at=watering_data.watered_at or datetime.utcnow()
+    )
+    db.add(watering)
+    db.commit()
+    db.refresh(watering)
+
+    return watering

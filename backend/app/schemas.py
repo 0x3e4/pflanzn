@@ -56,12 +56,23 @@ class PlantResponse(BaseModel):
     name: str
     species: Optional[str]
     description: Optional[str] = None
-    last_watered: Optional[datetime] = None
     location_id: Optional[int]
     images: List[PlantImageResponse] = []
+    waterings: List["PlantWateringResponse"] = []
+    last_watered: Optional[datetime] = None
 
     class Config:
         from_attributes = True
 
 class IdentifyRequest(BaseModel):
     image_path: str
+
+class PlantWateringCreate(BaseModel):
+    watered_at: Optional[datetime] = None
+
+class PlantWateringResponse(BaseModel):
+    id: int
+    watered_at: datetime
+
+    class Config:
+        from_attributes = True

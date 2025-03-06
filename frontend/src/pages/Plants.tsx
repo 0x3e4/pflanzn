@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { createPlant, uploadPlantImage, identifyPlant, updatePlant, deletePlant, Plant } from "../services/Plant";
+import { createPlant, uploadPlantImage, identifyPlant, updatePlant, deletePlant, Plant, waterPlant } from "../services/Plant";
 import "../styles/plants.css";
 import { toast } from 'react-toastify';
+import { DateTime } from 'luxon';
 import IdentifyResults from "../components/IdentifyResults";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUpload, faPlus, faSeedling, faCircleXmark, faFingerprint } from "@fortawesome/free-solid-svg-icons";
+import { faUpload, faPlus, faSeedling, faCircleXmark, faFingerprint, faDroplet } from "@fortawesome/free-solid-svg-icons";
 
 export default function Plants() {
   const [plants, setPlants] = useState<Plant[]>([]);
@@ -68,6 +69,18 @@ export default function Plants() {
       resetModal();
     } catch (err) {
       toast.error((err as Error).message);
+    }
+  };
+
+  const handleWaterPlant = async (plantId: number) => {  
+    const currentDateTime = DateTime.now().toISO();
+
+    try {
+        await waterPlant(plantId, { watered_at: currentDateTime });
+        fetchPlants();
+        toast.success(`Plant watered!`);
+    } catch (err) {
+        toast.error((err as Error).message);
     }
   };
 
@@ -163,8 +176,19 @@ export default function Plants() {
             (a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime()
           );
           const latestImage = sortedImages[0] || null;
-          const lastWateredText = plant.lastWatered
-            ? new Date(plant.lastWatered).toLocaleDateString()
+
+          const timezone = import.meta.env.VITE_TZ
+          const locale = import.meta.env.VITE_Locale
+          const lastWateredText = plant.last_watered
+            ? new Date(plant.last_watered).toLocaleString(locale, {
+                timeZone: timezone,
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })
             : "Not watered yet";
 
           return (
@@ -184,7 +208,9 @@ export default function Plants() {
                 </div>
               </Link>
               <div className="plant-buttons">
-                {/* Hidden File Input */}
+                <button className="water-plant-btn" onClick={() => handleWaterPlant(plant.id)}>
+                  <FontAwesomeIcon icon={faDroplet} />
+                </button>
                 <input
                   type="file"
                   id={`file-upload-${plant.id}`}

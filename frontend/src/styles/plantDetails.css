@@ -19,45 +19,64 @@
     flex-direction: column;
 }
 
-.delete-plant-btn {
-    background-color: var(--tertiary-color);
-    bottom: 0px;
-    font-size: 14px;
+.plant-global-button-section {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 30px;
+    gap: 1rem;
 }
 
-.generate-description-btn {
-    background-color: var(--primary-color);
-    top: 0px;
-    font-size: 10px;
+.plant-global-button-left {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
-.delete-plant-btn, .generate-description-btn {
-    position: absolute;
-    right: 0px;
-    color: white;
+.delete-plant-btn, .generate-description-btn, .ai-care-helper-btn, .water-plant-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+    width: auto;
     padding: 10px 12px;
+    font-size: 14px;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
 
+.delete-plant-btn {
+    background-color: var(--tertiary-color);
+}
+
+.generate-description-btn, .ai-care-helper-btn {
+    background-color: var(--decimal-color);
+}
+
 .delete-plant-btn:hover {
     background-color: var(--quaternary-color);
 }
 
-.generate-description-btn:hover {
-    background-color: var(--secondary-color);
-}  
+.generate-description-btn:hover, .ai-care-helper-btn:hover {
+    background-color: var(--undecimal-color);
+}
+
+.water-plant-btn {
+    background-color: var(--octal-color);
+}
+
+.water-plant-btn:hover {
+    background-color: var(--nonal-color);
+}
 
 span {
     margin: 3px 0;
 }
 
 .plant-details-container {
-    display: flex;
-    justify-content: center;
     background-color: var(--secondary-background-color);
+    position: relative;
   }
   
   .plant-columns {
@@ -88,10 +107,6 @@ span {
 h3 {
     margin-bottom: 24px !important;
 }
-
-.description {
-    padding-bottom: 4rem;
-  }
   
   .description span {
       hyphens: auto; 
@@ -111,5 +126,14 @@ h3 {
     .plant-left-column, .plant-right-column {
         max-width: 100%;
         min-width: unset;
+    }
+
+    .plant-global-button-section {
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .delete-plant-btn {
+        margin-left: auto;
     }
 }

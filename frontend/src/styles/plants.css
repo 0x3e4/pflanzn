@@ -135,10 +135,13 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .plant-card-text {
-  padding: 20px;
+  padding: 10px;
+  margin-bottom: 40px;
+  box-sizing: border-box;
 }
 
 .plant-card:hover {
@@ -183,24 +186,36 @@
   display: flex;
   justify-content: space-between;
   width: 100%;
-  margin-top: 10px;
+  position: absolute;
+  bottom: 0;
 }
 
 .plant-buttons button {
   flex: 1;
-  background-color: var(--primary-color);
   color: white;
   border: none;
+  border-radius: 0;
   cursor: pointer;
   font-size: 16px;
   transition: background-color 0.3s ease;
 }
 
-.plant-buttons button:hover {
+.plant-buttons .identify-plant-btn {
+  background-color: var(--primary-color);
+}
+
+.plant-buttons .identify-plant-btn:hover {
   background-color: var(--secondary-color);
 }
 
-/* Change upload button color when a file is selected */
+.plant-buttons .water-plant-btn {
+  background-color: var(--octal-color);
+}
+
+.plant-buttons .water-plant-btn:hover {
+  background-color: var(--nonal-color);
+}
+
 .plant-buttons input[type="file"]:valid + button {
   background-color: var(--quinary-color);
 }

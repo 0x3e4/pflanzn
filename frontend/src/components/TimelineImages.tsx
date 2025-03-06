@@ -96,12 +96,22 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
         </div>
       </div>
 
-      <h5>{new Date(activeImage.uploaded_at).toLocaleString()}</h5>
+      <h5>
+      {
+        new Date(activeImage.uploaded_at).toLocaleString(import.meta.env.VITE_Locale, {
+          timeZone: import.meta.env.VITE_TZ,
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      }</h5>
 
       {/* Horizontal timeline */}
       <div className="timeline-row">
         {sortedImages.map((img, i) => {
-          const dateLabel = new Date(img.uploaded_at).toLocaleDateString();
           const isActive = i === activeIndex;
           return (
             <div
@@ -109,7 +119,16 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
               onClick={() => setActiveIndex(i)}
               className={`timeline-item ${isActive ? "active" : ""}`}
             >
-              <div className="timeline-date">{dateLabel}</div>
+              <div className="timeline-date">
+              {
+                new Date(img.uploaded_at).toLocaleString(process.env.Locale, {
+                  timeZone: process.env.timezone,
+                  year: 'numeric',
+                  month: 'numeric',
+                  day: 'numeric',
+                })
+              }
+              </div>
             </div>
           );
         })}

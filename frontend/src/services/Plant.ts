@@ -1,17 +1,23 @@
+export interface Plant {
+  id: number;
+  name: string;
+  species: string | null;
+  description: string | null;
+  last_watered: Date;
+  waterings: PlantWatering[];
+  location_id?: number | null;
+  images: PlantImage[];
+}
+
 export interface PlantImage {
   id: number;
   image_path: string;
   uploaded_at: string;
 }
 
-export interface Plant {
+export interface PlantWatering {
   id: number;
-  name: string;
-  species: string | null;
-  description: string | null;
-  lastWatered: string;
-  location_id?: number | null;
-  images: PlantImage[];
+  watered_at: string;
 }
 
 const API_BASE = "/api/plants";
@@ -60,7 +66,7 @@ export async function identifyPlant(plantId: number) {
 }
 
 // Update plant
-export async function updatePlant(plantId: number, data: { name?: string | null; species?: string | null; description?: string | null }) {
+export async function updatePlant(plantId: number, data: { name?: string | null; species?: string | null; description?: string | null; last_watered?: Date | null; }) {
   const response = await fetch(`/api/plants/${plantId}`, {
     method: "PUT",
     headers: {
@@ -128,3 +134,21 @@ export async function generatePlantDescription(plantId: number): Promise<{ descr
 
   return response.json();
 }
+
+// Water plant
+export const waterPlant = async (plantId: number, data: { watered_at?: string; notes?: string }) => {
+  const response = await fetch(`${API_BASE}/${plantId}/water`, {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+      const errorBody = await response.json();
+      throw new Error(errorBody.detail || 'Failed to water plant');
+  }
+
+  return await response.json();
+};

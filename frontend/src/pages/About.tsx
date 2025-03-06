@@ -14,10 +14,10 @@ export default function About() {
       <section className="about-features">
         <h2>Features</h2>
         <ul>
-          <li><strong>🌱 Inventory Plants:</strong> Keep track of all your plants, including names, species and images.</li>
-          <li><strong>📸 Identify Plants:</strong> Use the powerful Pl@ntNet integration to identify plants directly from photos.</li>
-          <li><strong>📅 Image & Watering Timeline:</strong> Track the history of images and watering events for each plant.</li>
-          <li><strong>🔒 Flexible Authentication:</strong> Supports no authentication, basic authentication or OIDC login.</li>
+          <li><strong>Inventory Plants:</strong> Keep track of all your plants, including names, species and images.</li>
+          <li><strong>Identify Plants:</strong> Use the powerful Pl@ntNet integration to identify plants directly from photos.</li>
+          <li><strong>Image & Watering Timeline:</strong> Track the history of images and watering events for each plant.</li>
+          <li><strong>Flexible Authentication:</strong> Supports no authentication, basic authentication or OIDC login.</li>
         </ul>
       </section>
     </div>

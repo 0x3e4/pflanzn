@@ -18,7 +18,7 @@ def generate_species_description(common_name: str, species_name: str) -> str:
     prompt = (
         f"Write a detailed botanical description for the plant species '{species_name}', "
         f"also known as '{common_name}'. Cover these aspects: habitat, appearance, care tips, and any interesting facts. "
-        f"Write the description in '{settings.HUGGINGFACE_LANGUAGE}' naturally, like a professional botanist would write for a plant catalog. "
+        f"Write the description in '{settings.LLM_LANGUAGE}' naturally, like a professional botanist would write for a plant catalog. "
         f"Do NOT include a title or markdown formatting like '**' and keep it within 2000 characters."
     )
 

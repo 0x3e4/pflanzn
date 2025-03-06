@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { fetchSinglePlant, deletePlant, updatePlant, Plant } from "../services/Plant";
+import { fetchSinglePlant, deletePlant, updatePlant, Plant, generatePlantDescription, waterPlant } from "../services/Plant";
 import TimelineImages from "../components/TimelineImages";
 import Description from "../components/Description";
+import WateringLogCalendar from "../components/WateringLogCalendar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faTrash, faWandMagicSparkles, faDroplet } from "@fortawesome/free-solid-svg-icons";
 import "../styles/plantDetails.css";
+import { DateTime } from 'luxon';
 import { toast } from 'react-toastify';
 
 export default function PlantDetails() {
@@ -14,6 +16,15 @@ export default function PlantDetails() {
 
   const [plant, setPlant] = useState<Plant | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const isAiAvailable = () => {
+    return !!(
+      import.meta.env.VITE_HUGGINGFACE_API_KEY ||
+      import.meta.env.VITE_MISTRALAI_API_KEY ||
+      import.meta.env.VITE_OPENAI_API_KEY ||
+      import.meta.env.VITE_OLLAMA_URL
+    );
+  };
 
   // Local state for editing
   const [editingName, setEditingName] = useState(false);
@@ -54,6 +65,31 @@ export default function PlantDetails() {
   const handleSpeciesBlur = () => {
     setEditingSpecies(false);
     if (localSpecies !== plant?.species) handleUpdate({ species: localSpecies });
+  };
+
+  const handleGenerateDescription = async () => {
+    try {
+      const { description } = await generatePlantDescription(Number(plantId));
+      handleUpdate({ description });
+    } catch (error) {
+      toast.error((error as Error).message || "Failed to generate description");
+    }
+  };
+
+  const handleWaterPlant = async () => {  
+    const currentDateTime = DateTime.now().toISO();
+
+    try {
+        await waterPlant(Number(plantId), { watered_at: currentDateTime });
+        
+        // After watering, fetch the updated plant data and update state
+        const updatedPlant = await fetchSinglePlant(Number(plantId));
+        setPlant(updatedPlant);
+
+        toast.success(`Plant watered!`);
+    } catch (err) {
+        toast.error((err as Error).message);
+    }
   };
 
   if (error) return <div>Error: {error}</div>;
@@ -100,7 +136,22 @@ export default function PlantDetails() {
               )}
             </span>
 
-            <span><strong>Last Watered:</strong> {plant.lastWatered ?? "Not watered yet"}</span>
+            <span>
+              <strong>Last Watered:</strong>{" "}
+              {
+                plant.last_watered
+                  ? new Date(plant.last_watered).toLocaleString(import.meta.env.VITE_Locale, {
+                      timeZone: import.meta.env.VITE_TZ,
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                  : "Not watered yet"
+              }
+            </span>
           </div>
 
           {/* Timeline Images */}
@@ -110,15 +161,38 @@ export default function PlantDetails() {
             <span>No images yet.</span>
           )}
 
+          <div className="plant-information">
+            <strong>Watering Log</strong>
+            <WateringLogCalendar waterings={plant.waterings} />
+          </div>
         </div>
 
         {/* Right Column - Description */}
         <div className="plant-right-column">
           <Description plant={plant} onDescriptionUpdated={setPlant} />
+        </div>
+      </div>
+      <div className="plant-below-column">
+        <div className="plant-global-button-section">
+              <div className="plant-global-button-left">
+                <button className="water-plant-btn" onClick={handleWaterPlant}>
+                  <FontAwesomeIcon icon={faDroplet} /> Water Plant
+                </button>
+                {isAiAvailable() && (
+                  <>
+                    <button className="ai-care-helper-btn" onClick={handleGenerateDescription}>
+                        <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Care Helper
+                    </button>
+                    <button className="generate-description-btn" onClick={handleGenerateDescription}>
+                        <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Description
+                    </button>
+                  </>
+                )}
+              </div>
 
-          <button className="delete-plant-btn" onClick={handleDeletePlant}>
-            <FontAwesomeIcon icon={faTrash} /> Delete Plant
-          </button>
+            <button className="delete-plant-btn" onClick={handleDeletePlant}>
+              <FontAwesomeIcon icon={faTrash} /> Delete Plant
+            </button>
         </div>
       </div>
     </div>

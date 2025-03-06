@@ -3,6 +3,21 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    rollupOptions: {
+        output: {
+            manualChunks(id) {
+                if (id.includes('node_modules')) {
+                    if (id.includes('react-calendar')) return 'react-calendar';
+                    if (id.includes('react-toastify')) return 'react-toastify';
+                    if (id.includes('luxon')) return 'luxon';
+                    if (id.includes('react')) return 'react';
+                    return 'vendor';
+                }
+            },
+        },
+    },
+  },
   server: {
     proxy: {
       "/api": {

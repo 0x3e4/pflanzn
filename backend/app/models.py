@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Text
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Text, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -24,10 +24,24 @@ class Plant(Base):
     name = Column(String(255), nullable=False)
     species = Column(String(255), nullable=True)
     description = Column(Text, nullable=True)
-    last_watered = Column(DateTime, nullable=True)
+
     location_id = Column(Integer, ForeignKey("locations.id"), nullable=True)
+
     location = relationship("Location", back_populates="plants")
     images = relationship("PlantImage", back_populates="plant", cascade="all, delete-orphan")
+    waterings = relationship("PlantWatering", back_populates="plant", cascade="all, delete-orphan")
+
+class PlantWatering(Base):
+    __tablename__ = "plant_waterings"
+    id = Column(Integer, primary_key=True, index=True)
+    plant_id = Column(Integer, ForeignKey("plants.id"), nullable=False)
+    watered_at = Column(DateTime, nullable=False)
+
+    plant = relationship("Plant", back_populates="waterings")
+
+    __table_args__ = (
+        Index("idx_plant_waterings_plant_id", "plant_id"),
+    )
 
 class PlantImage(Base):
     __tablename__ = "plant_images"

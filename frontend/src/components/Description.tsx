@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
-import { Plant, generatePlantDescription, updatePlant } from "../services/Plant";
+import { Plant, updatePlant } from "../services/Plant";
 import { toast } from "react-toastify";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
 
 interface Props {
   plant: Plant;
@@ -36,15 +34,6 @@ export default function Description({ plant, onDescriptionUpdated }: Props) {
     }
   };
 
-  const handleGenerateDescription = async () => {
-    try {
-      const { description } = await generatePlantDescription(plant.id);
-      handleUpdate({ description }); // This updates backend and UI
-    } catch (error) {
-      toast.error((error as Error).message || "Failed to generate description");
-    }
-  };
-
   return (
     <div className="description-container">
       <h3>Description</h3>
@@ -64,10 +53,6 @@ export default function Description({ plant, onDescriptionUpdated }: Props) {
           </span>
         )}
       </div>
-
-      <button className="generate-description-btn" onClick={handleGenerateDescription}>
-        <FontAwesomeIcon icon={faWandMagicSparkles} />
-      </button>
     </div>
   );
 }
