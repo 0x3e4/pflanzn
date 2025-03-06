@@ -181,7 +181,6 @@
   margin: 3px 0;
 }
 
-/* Upload and Identify buttons should be next to each other */
 .plant-buttons {
   display: flex;
   justify-content: space-between;
@@ -194,7 +193,6 @@
   flex: 1;
   color: white;
   border: none;
-  border-radius: 0;
   cursor: pointer;
   font-size: 16px;
   transition: background-color 0.3s ease;
@@ -210,6 +208,7 @@
 
 .plant-buttons .water-plant-btn {
   background-color: var(--octal-color);
+  border-radius: 0;
 }
 
 .plant-buttons .water-plant-btn:hover {
@@ -227,6 +226,24 @@
 /* Hide the file input text */
 .file-input {
   display: none;
+}
+
+.modal-plant-buttons {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.modal-plant-buttons button {
+  flex: 1;
+  color: white;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
 }
 
 .modal-buttons {

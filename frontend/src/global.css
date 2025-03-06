@@ -142,3 +142,8 @@ button:hover {
 .editable-textarea:focus {
   border-color: var(--primary-color);
 }
+
+img:focus,
+img:focus-visible {
+    outline: none;
+}

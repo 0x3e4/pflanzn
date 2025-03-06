@@ -77,8 +77,6 @@
     width: 100%;
     height: 400px;
     object-fit: cover;
-    border-radius: 8px;
-    margin-bottom: 10px;
 }
 
 .slick-track {
@@ -112,4 +110,9 @@
 .wordcloud-item:hover {
   transform: scale(1.2);
   z-index: 1;
+}
+
+.plant-slide:focus,
+.plant-slide:focus-visible {
+    outline: none;
 }

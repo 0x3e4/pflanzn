@@ -5,18 +5,12 @@ import TimelineImages from "../components/TimelineImages";
 import Description from "../components/Description";
 import WateringLogCalendar from "../components/WateringLogCalendar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash, faWandMagicSparkles, faDroplet } from "@fortawesome/free-solid-svg-icons";
+import { faTrash, faWandMagicSparkles, faDroplet, faCalendarAlt } from "@fortawesome/free-solid-svg-icons";
 import "../styles/plantDetails.css";
 import { DateTime } from 'luxon';
 import { toast } from 'react-toastify';
 
 export default function PlantDetails() {
-  const { plantId } = useParams();
-  const navigate = useNavigate();
-
-  const [plant, setPlant] = useState<Plant | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
   const isAiAvailable = () => {
     return !!(
       import.meta.env.VITE_HUGGINGFACE_API_KEY ||
@@ -26,25 +20,38 @@ export default function PlantDetails() {
     );
   };
 
-  // Local state for editing
+  const { plantId } = useParams();
+  const navigate = useNavigate();
+
+  const [plant, setPlant] = useState<Plant | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Local state for editing name/species
   const [editingName, setEditingName] = useState(false);
   const [editingSpecies, setEditingSpecies] = useState(false);
   const [localName, setLocalName] = useState("");
   const [localSpecies, setLocalSpecies] = useState("");
 
-  useEffect(() => {
-    if (!plantId) return;
+  // DateTime picker state - defaults to now
+  const [selectedDateTime, setSelectedDateTime] = useState<string>(
+    DateTime.now().toISO({ includeOffset: false }) ?? ""
+  );
 
-    fetchSinglePlant(parseInt(plantId)).then((data) => {
-      setPlant(data);
-      setLocalName(data.name || "");
-      setLocalSpecies(data.species || "");
-    }).catch((err) => setError(err.message));
+  useEffect(() => {
+    if (plantId) {
+      fetchSinglePlant(parseInt(plantId))
+        .then((data) => {
+          setPlant(data);
+          setLocalName(data.name || "");
+          setLocalSpecies(data.species || "");
+        })
+        .catch((err) => setError(err.message));
+    }
   }, [plantId]);
 
   const handleDeletePlant = async () => {
     if (!plantId || !confirm("Are you sure you want to delete this plant?")) return;
-    await deletePlant(parseInt(plantId));
+    await deletePlant(Number(plantId));
     toast.success("Plant deleted successfully!");
     navigate("/plants");
   };
@@ -76,19 +83,14 @@ export default function PlantDetails() {
     }
   };
 
-  const handleWaterPlant = async () => {  
-    const currentDateTime = DateTime.now().toISO();
-
+  const handleWaterPlant = async () => {
     try {
-        await waterPlant(Number(plantId), { watered_at: currentDateTime });
-        
-        // After watering, fetch the updated plant data and update state
-        const updatedPlant = await fetchSinglePlant(Number(plantId));
-        setPlant(updatedPlant);
-
-        toast.success(`Plant watered!`);
+      await waterPlant(Number(plantId), { watered_at: selectedDateTime });
+      const updatedPlant = await fetchSinglePlant(Number(plantId));
+      setPlant(updatedPlant);
+      toast.success(`Watering logged!`);
     } catch (err) {
-        toast.error((err as Error).message);
+      toast.error((err as Error).message);
     }
   };
 
@@ -138,19 +140,17 @@ export default function PlantDetails() {
 
             <span>
               <strong>Last Watered:</strong>{" "}
-              {
-                plant.last_watered
-                  ? new Date(plant.last_watered).toLocaleString(import.meta.env.VITE_Locale, {
-                      timeZone: import.meta.env.VITE_TZ,
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })
-                  : "Not watered yet"
-              }
+              {plant.last_watered
+                ? new Date(plant.last_watered).toLocaleString(import.meta.env.VITE_Locale, {
+                    timeZone: import.meta.env.VITE_TZ,
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                : "Not watered yet"}
             </span>
           </div>
 
@@ -161,6 +161,7 @@ export default function PlantDetails() {
             <span>No images yet.</span>
           )}
 
+          {/* Watering Log */}
           <div className="plant-information">
             <strong>Watering Log</strong>
             <WateringLogCalendar waterings={plant.waterings} />
@@ -172,27 +173,42 @@ export default function PlantDetails() {
           <Description plant={plant} onDescriptionUpdated={setPlant} />
         </div>
       </div>
+
+      <hr />
+
+      {/* Bottom Controls */}
       <div className="plant-below-column">
         <div className="plant-global-button-section">
-              <div className="plant-global-button-left">
-                <button className="water-plant-btn" onClick={handleWaterPlant}>
-                  <FontAwesomeIcon icon={faDroplet} /> Water Plant
-                </button>
-                {isAiAvailable() && (
-                  <>
-                    <button className="ai-care-helper-btn" onClick={handleGenerateDescription}>
-                        <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Care Helper
-                    </button>
-                    <button className="generate-description-btn" onClick={handleGenerateDescription}>
-                        <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Description
-                    </button>
-                  </>
-                )}
+          <div className="plant-global-button-left">
+            <div className="water-plant-input-container">
+              <button className="water-plant-btn" onClick={handleWaterPlant}>
+                <FontAwesomeIcon icon={faDroplet} /> Water Plant
+              </button>
+              <div className="water-plant-datetime">
+                <FontAwesomeIcon icon={faCalendarAlt} />
+                <input
+                  type="datetime-local"
+                  value={selectedDateTime.slice(0, 16)}
+                  onChange={(e) => setSelectedDateTime(e.target.value)}
+                />
               </div>
+            </div>
 
-            <button className="delete-plant-btn" onClick={handleDeletePlant}>
-              <FontAwesomeIcon icon={faTrash} /> Delete Plant
-            </button>
+            {isAiAvailable() && (
+              <>
+                <button className="ai-care-helper-btn" onClick={handleGenerateDescription}>
+                  <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Care Helper
+                </button>
+                <button className="generate-description-btn" onClick={handleGenerateDescription}>
+                  <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Description
+                </button>
+              </>
+            )}
+          </div>
+
+          <button className="delete-plant-btn" onClick={handleDeletePlant}>
+            <FontAwesomeIcon icon={faTrash} /> Delete Plant
+          </button>
         </div>
       </div>
     </div>

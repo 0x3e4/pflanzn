@@ -256,8 +256,8 @@ export default function Plants() {
                 ))}
               </ul>
             )}
-            <div className="modal-buttons plant-buttons">
-              <button onClick={handleCreatePlant}>
+            <div className="modal-buttons modal-plant-buttons">
+              <button className="modal-create-button" onClick={handleCreatePlant}>
                 <FontAwesomeIcon icon={faSeedling} /> Add Plant
               </button>
               <button className="modal-cancel-button" onClick={resetModal}>
