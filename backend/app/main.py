@@ -46,7 +46,6 @@ def root():
     logger.info("Root endpoint accessed.")
     return {"message": "Welcome to the Plant Management API!"}
 
-# Create a default admin user if none exists (only if AUTH_MODE is 'local')
 @app.on_event("startup")
 def startup_event():
     if os.getenv("AUTH_MODE") == "local":

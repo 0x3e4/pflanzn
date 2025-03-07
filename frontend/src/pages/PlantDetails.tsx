@@ -13,10 +13,7 @@ import { toast } from 'react-toastify';
 export default function PlantDetails() {
   const isAiAvailable = () => {
     return !!(
-      import.meta.env.VITE_HUGGINGFACE_API_KEY ||
-      import.meta.env.VITE_MISTRALAI_API_KEY ||
-      import.meta.env.VITE_OPENAI_API_KEY ||
-      import.meta.env.VITE_OLLAMA_URL
+      import.meta.env.VITE_LLM_PROVIDER
     );
   };
 
@@ -164,7 +161,10 @@ export default function PlantDetails() {
           {/* Watering Log */}
           <div className="plant-information">
             <strong>Watering Log</strong>
-            <WateringLogCalendar waterings={plant.waterings} />
+            <WateringLogCalendar 
+                waterings={plant.waterings} 
+                plantId={plant.id}
+            />
           </div>
         </div>
 

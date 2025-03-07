@@ -115,6 +115,10 @@ h3 {
 .description-display {
     white-space: pre-wrap;
   }
+
+.description {
+    width: 100%;
+}
   
 @media (max-width: 992px) {
     .plant-columns {

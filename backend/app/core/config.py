@@ -13,12 +13,17 @@ class Settings(BaseSettings):
     REDIS_URL: str = os.getenv("REDIS_URL", "localhost")
     PLANTNET_API_KEY: str = os.getenv("PLANTNET_API_KEY")
     PLANTNET_LANGUAGE: str = os.getenv("PLANTNET_LANGUAGE", "en")
-    HUGGINGFACE_API_KEY: str = os.getenv("VITE_HUGGINGFACE_API_KEY")
-    HUGGINGFACE_MODEL_NAME: str = os.getenv("HUGGINGFACE_MODEL_NAME")
+    LLM_PROVIDER = str = os.getenv("VITE_LLM_LANGUAGE")
     LLM_LANGUAGE: str = os.getenv("LLM_LANGUAGE", "german")
-    MISTRALAI_API_KEY: str = os.getenv("VITE_MISTRALAI_API_KEY")
-    OPENAI_API_KEY: str = os.getenv("VITE_OPENAI_API_KEY")
-    OLLAMA_URL: str = os.getenv("VITE_OLLAMA_URL")
+    HUGGINGFACE_API_KEY: str = os.getenv("HUGGINGFACE_API_KEY")
+    HUGGINGFACE_MODEL_NAME: str = os.getenv("HUGGINGFACE_MODEL_NAME")
+    MISTRALAI_API_KEY: str = os.getenv("MISTRALAI_API_KEY")
+    MISTRALAI_API_URL: str = os.getenv("MISTRALAI_API_URL")
+    MISTRALAI_MODEL_NAME: str = os.getenv("MISTRALAI_MODEL_NAME")
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
+    OPENAI_MODEL_NAME = os.getenv("OPENAI_API_KEY", "gpt-4-turbo")
+    OLLAMA_URL: str = os.getenv("OLLAMA_URL")
+    OLLAMA_MODEL_NAME: str = os.getenv("OLLAMA_MODEL_NAME")
     
     class Config:
         env_file = ".env"

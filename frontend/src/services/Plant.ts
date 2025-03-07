@@ -122,7 +122,7 @@ export async function deletePlantImage(plantId: number, imageId: number) {
   return response.json();
 }
 
-// Generate plant description via Hugging Face
+// Generate plant description via LLM provider
 export async function generatePlantDescription(plantId: number): Promise<{ description: string }> {
   const response = await fetch(`${API_BASE}/${plantId}/generate_description`, {
     method: "POST",
@@ -137,7 +137,7 @@ export async function generatePlantDescription(plantId: number): Promise<{ descr
 
 // Water plant
 export const waterPlant = async (plantId: number, data: { watered_at?: string; notes?: string }) => {
-  const response = await fetch(`${API_BASE}/${plantId}/water`, {
+  const response = await fetch(`${API_BASE}/${plantId}/watering`, {
       method: 'POST',
       headers: {
           'Content-Type': 'application/json',
@@ -151,4 +151,14 @@ export const waterPlant = async (plantId: number, data: { watered_at?: string; n
   }
 
   return await response.json();
+};
+
+// Delete watering id of plant
+export const deleteWatering = async (plantId: number, wateringId: number): Promise<void> => {
+  const response = await fetch(`${API_BASE}/${plantId}/watering/${wateringId}`, {
+      method: 'DELETE'
+  });
+  if (!response.ok) {
+      throw new Error('Failed to delete watering');
+  }
 };

@@ -4,6 +4,7 @@ import { Plant } from "../services/Plant";
 import "../styles/home.css";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import LoadingOverlay from "../components/LoadingOverlay";
 
 export default function Home() {
   const [plants, setPlants] = useState<Plant[]>([]);
@@ -116,7 +117,7 @@ export default function Home() {
   };
 
   if (loadingPlants) {
-    return <p>Loading plants...</p>;
+    return <LoadingOverlay />;
   }
 
   if (error) {

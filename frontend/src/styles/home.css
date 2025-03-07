@@ -24,7 +24,7 @@
 
 .carousel-container {
     margin: 20px auto;
-    max-width: 1000px;
+    max-width: 1150px;
     text-align: center;
 }
 
@@ -45,7 +45,7 @@
 
 @media (min-width: 768px) and (max-width: 992px) {
   .carousel-container {
-    max-width: 600px;
+    max-width: 900px;
   }
   .species-wordcloud{
     width: 200px;
@@ -60,7 +60,7 @@
 
 @media (min-width: 992px) and (max-width: 1200px) {
   .carousel-container {
-    max-width: 900px;
+    max-width: 1000px;
   }
   .species-wordcloud{
     width: 300px;

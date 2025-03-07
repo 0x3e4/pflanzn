@@ -11,7 +11,6 @@ export default function Description({ plant, onDescriptionUpdated }: Props) {
   const [editingDescription, setEditingDescription] = useState(false);
   const [localDescription, setLocalDescription] = useState(plant.description || "");
 
-  // Keep local description in sync if the parent plant object changes
   useEffect(() => {
     setLocalDescription(plant.description || "");
   }, [plant.description]);
@@ -19,8 +18,8 @@ export default function Description({ plant, onDescriptionUpdated }: Props) {
   const handleUpdate = async (updatedFields: Partial<Plant>) => {
     try {
       const updatedPlant = await updatePlant(plant.id, updatedFields);
-      onDescriptionUpdated(updatedPlant); // Update parent state
-      setLocalDescription(updatedPlant.description || ""); // Sync local state
+      onDescriptionUpdated(updatedPlant);
+      setLocalDescription(updatedPlant.description || "");
       toast.success("Description updated successfully!");
     } catch (error) {
       toast.error((error as Error).message || "Failed to update description");

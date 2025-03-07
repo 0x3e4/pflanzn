@@ -127,7 +127,6 @@ button:hover {
   min-height: 400px;
   background-color: var(--secondary-background-color);
   border: 1px solid var(--quinary-color);
-  border-radius: none;
   border-bottom: 1px solid var(--quinary-color);
   color: var(--text-color);
   font-size: 1rem;
@@ -137,6 +136,7 @@ button:hover {
   outline: none;
   resize: vertical;
   transition: border-color 0.2s ease-in-out;
+  box-sizing: border-box;
 }
 
 .editable-textarea:focus {

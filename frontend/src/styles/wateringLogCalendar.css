@@ -89,3 +89,94 @@ li {
     background: var(--background-color);
     color: white;
 }
+
+.watering-tooltip-overlay {
+    background-color: var(--secondary-background-color);
+    color: var(--text-color);
+    padding: 8px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border-color);
+}
+
+.watering-tooltip-content ul {
+    padding: 0;
+    margin: 0;
+}
+
+.watering-tooltip-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    line-height: 1.8;
+}
+
+.watering-delete-btn {
+    background: none;
+    border: none;
+    color: var(--quinary-color);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0 5px;
+}
+
+.watering-delete-btn:hover {
+    color: var(--senary-color);
+    background-color: unset;
+}
+
+.watering-delete-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.watering-delete-modal {
+    background: var(--secondary-background-color);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    color: var(--text-color);
+    text-align: center;
+    width: 90%;
+    max-width: 400px;
+}
+
+.watering-delete-modal-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    justify-content: center;
+}
+
+.watering-delete-confirm, .watering-delete-cancel {
+    padding: 10px 15px;
+    border: none;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.watering-delete-confirm {
+    background-color: var(--tertiary-color);
+    color: white;
+}
+
+.watering-delete-cancel {
+    background-color: var(--quinary-color);
+    color: white;
+}
+
+.watering-delete-confirm:hover {
+    background-color: var(--quaternary-color);
+}
+
+.watering-delete-cancel:hover {
+    background-color: var(--senary-color);
+}

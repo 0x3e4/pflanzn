@@ -13,3 +13,6 @@ requests
 pillow
 pillow_heif
 huggingface_hub
+httpx
+openai
+ollama
