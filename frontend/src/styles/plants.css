@@ -138,6 +138,25 @@
   position: relative;
 }
 
+@media (max-width: 768px) {
+  .plant-card h3 {
+    font-size: 16px !important;
+  }
+
+  .plant-card p {
+    font-size: 12px !important;
+  }
+
+  .all-plants {
+    height: 280px !important;
+  }
+
+  .plant-card {
+    flex-basis: calc(50% - 15px);
+    min-width: 140px;
+  }
+}
+
 .plant-card-text {
   padding: 10px;
   margin-bottom: 40px;

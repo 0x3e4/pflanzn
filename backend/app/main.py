@@ -34,12 +34,12 @@ app.add_middleware(
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 
-app.mount("/uploads", StaticFiles(directory=UPLOAD_FOLDER), name="uploads")
+app.mount("/api/uploads", StaticFiles(directory=UPLOAD_FOLDER), name="uploads")
 
 # Include routers
-app.include_router(auth.router, prefix="/auth", tags=["Auth"])
-app.include_router(plants.router, prefix="/plants", tags=["Plants"])
-app.include_router(locations.router, prefix="/locations", tags=["Locations"])
+app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
+app.include_router(plants.router, prefix="/api/plants", tags=["Plants"])
+app.include_router(locations.router, prefix="/api/locations", tags=["Locations"])
 
 @app.get("/")
 def root():
@@ -48,5 +48,5 @@ def root():
 
 @app.on_event("startup")
 def startup_event():
-    if os.getenv("AUTH_MODE") == "local":
+    if os.getenv("VITE_AUTH_MODE") == "local":
         create_admin_user()

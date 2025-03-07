@@ -1,0 +1,132 @@
+.profile-container {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    background-color: var(--secondary-background-color);
+    text-align: left;
+}
+
+/* Sidebar (desktop view) */
+.profile-sidebar {
+    width: 250px;
+    background-color: var(--background-color);
+    padding: 20px;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+}
+
+.profile-sidebar h3 {
+    margin-top: 0;
+    font-size: 18px;
+    margin-bottom: 16px;
+}
+
+.profile-sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.profile-sidebar li {
+    padding: 12px 15px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    color: var(--text-color);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    text-align: left;
+}
+
+.profile-sidebar li:hover,
+.profile-sidebar li.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.logout-link {
+    color: var(--tertiary-color);
+    font-weight: bold;
+}
+
+.logout-link:hover {
+    background-color: var(--quaternary-color);
+    color: white;
+}
+
+/* Main content */
+.profile-main-content {
+    flex-grow: 1;
+    padding: 0 20px;
+    background-color: var(--secondary-background-color);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    text-align: left;
+}
+
+/* Profile Info Box */
+.profile-info {
+    padding: 20px;
+    border-radius: 8px;
+    color: var(--text-color);
+    width: 100%;
+    max-width: 600px;
+}
+
+.profile-info h2 {
+    margin-top: 0;
+    font-size: 1.5rem;
+}
+
+/* --- Mobile Styles --- */
+@media (max-width: 768px) {
+    .profile-container {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .profile-sidebar {
+        width: 100%;
+        display: flex;
+        justify-content: space-around;
+        padding: 10px 0;
+        box-shadow: none;
+        border-bottom: 1px solid var(--border-color);
+        background-color: var(--background-color);
+    }
+
+    .profile-sidebar h3 {
+        display: none;
+    }
+
+    .profile-sidebar ul {
+        display: flex;
+        width: 100%;
+        justify-content: space-around;
+    }
+
+    .profile-sidebar li {
+        flex: 1;
+        text-align: center;
+        padding: 8px 0;
+        font-size: 14px;
+        margin: 0;
+        border-radius: 0;
+    }
+
+    .profile-main-content {
+        padding: 15px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .profile-info {
+        width: 100%;
+        padding: 15px;
+        box-sizing: border-box;
+    }
+}
+
+.profile-sidebar li.active {
+    position: relative;
+}

@@ -3,9 +3,10 @@ import 'react-calendar/dist/Calendar.css';
 import "../styles/wateringLogCalendar.css";
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { PlantWatering, deleteWatering } from '../services/Plant';
+import { deleteWatering } from '../services/PlantService';
+import { PlantWatering } from '../types/Plant';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faTrash, faCircleXmark } from "@fortawesome/free-solid-svg-icons";
 import { toast } from 'react-toastify';
 
 interface Props {
@@ -49,7 +50,6 @@ export default function WateringLogCalendar({ waterings, plantId }: Props) {
     const [localWaterings, setLocalWaterings] = useState<PlantWatering[]>(waterings);
     const [hoveredDate, setHoveredDate] = useState<string | null>(null);
     const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition | null>(null);
-
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [wateringToDelete, setWateringToDelete] = useState<number | null>(null);
 
@@ -124,11 +124,15 @@ export default function WateringLogCalendar({ waterings, plantId }: Props) {
 
     const handleConfirmDelete = async () => {
         if (wateringToDelete === null) return;
-        await deleteWatering(plantId, wateringToDelete);
-        setLocalWaterings((prev) => prev.filter(w => w.id !== wateringToDelete));
-        toast.success("Watering deleted successfully!");
-        setDeleteModalOpen(false);
-        setHoveredDate(null);
+        try {
+            await deleteWatering(plantId, wateringToDelete);
+            setLocalWaterings((prev) => prev.filter(w => w.id !== wateringToDelete));
+            toast.success("Watering deleted successfully!");
+            setDeleteModalOpen(false);
+            setHoveredDate(null);
+        } catch (err) {
+            toast.error((err as Error).message);
+        }
     };
 
     const handleCancelDelete = () => {
@@ -187,10 +191,10 @@ export default function WateringLogCalendar({ waterings, plantId }: Props) {
                         <p>Are you sure you want to delete this watering entry?</p>
                         <div className="watering-delete-modal-buttons">
                             <button className="watering-delete-confirm" onClick={handleConfirmDelete}>
-                                Delete
+                                <FontAwesomeIcon icon={faTrash} /> Delete
                             </button>
                             <button className="watering-delete-cancel" onClick={handleCancelDelete}>
-                                Cancel
+                                <FontAwesomeIcon icon={faCircleXmark} /> Cancel
                             </button>
                         </div>
                     </div>

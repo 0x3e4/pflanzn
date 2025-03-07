@@ -17,6 +17,7 @@
 .plant-image-container {
   position: relative;
   display: inline-block;
+  height: 400px;
 }
 
 .plant-carousel-image {

@@ -1,12 +1,29 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { createPlant, uploadPlantImage, identifyPlant, updatePlant, deletePlant, Plant, waterPlant } from "../services/Plant";
+import {
+    fetchPlants,
+    createPlant,
+    uploadPlantImage,
+    identifyPlant,
+    updatePlant,
+    deletePlant,
+    waterPlant,
+} from "../services/PlantService";
+import { Plant } from "../types/Plant";
 import "../styles/plants.css";
-import { toast } from 'react-toastify';
-import { DateTime } from 'luxon';
+import { toast } from "react-toastify";
+import { DateTime } from "luxon";
 import IdentifyResults from "../components/IdentifyResults";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUpload, faPlus, faSeedling, faCircleXmark, faFingerprint, faDroplet } from "@fortawesome/free-solid-svg-icons";
+import {
+    faUpload,
+    faPlus,
+    faSeedling,
+    faCircleXmark,
+    faFingerprint,
+    faDroplet,
+} from "@fortawesome/free-solid-svg-icons";
+import LoadingOverlay from "../components/LoadingOverlay";
 
 export default function Plants() {
   const [plants, setPlants] = useState<Plant[]>([]);
@@ -26,19 +43,18 @@ export default function Plants() {
   } | null>(null);
 
   useEffect(() => {
-    fetchPlants();
+    fetchPlantsFromService();
   }, []);
 
-  const fetchPlants = async () => {
+  const fetchPlantsFromService = async () => {
     try {
-      const response = await fetch("/api/plants/");
-      if (!response.ok) throw new Error("Failed to fetch plants.");
-      const data = await response.json();
-      setPlants(data);
+        const data = await fetchPlants();
+        setPlants(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred");
+        toast.error((err as Error).message);
+        setError((err as Error).message);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 
@@ -65,7 +81,7 @@ export default function Plants() {
         toast.success("Image uploaded!");
       }
 
-      fetchPlants();
+      fetchPlantsFromService();
       resetModal();
     } catch (err) {
       toast.error((err as Error).message);
@@ -77,7 +93,7 @@ export default function Plants() {
 
     try {
         await waterPlant(plantId, { watered_at: currentDateTime });
-        fetchPlants();
+        fetchPlantsFromService();
         toast.success(`Plant watered!`);
     } catch (err) {
         toast.error((err as Error).message);
@@ -113,7 +129,7 @@ export default function Plants() {
     try {
       await uploadPlantImage(plantId, file);
       toast.success("Image uploaded!");
-      fetchPlants();
+      fetchPlantsFromService();
     } catch (err) {
       toast.error((err as Error).message);
     }
@@ -153,12 +169,14 @@ export default function Plants() {
 
   const handleSelectSpeciesForExistingPlant = async (plantId: number, name: string, species: string) => {
     await updatePlant(plantId, { name, species });
-    fetchPlants();
+    fetchPlantsFromService();
     setPlantIdentifyResults(null);
     toast.success(`Plant updated to ${name} (${species})`);
   };
 
-  if (loading) return <p>Loading plants...</p>;
+  if (loading) {
+    return <LoadingOverlay />;
+  }
   if (error) return <p style={{ color: 'red' }}>{error}</p>;
 
   return (
@@ -193,8 +211,8 @@ export default function Plants() {
 
           return (
             <div key={plant.id} className="plant-card">
-              <Link to={`/plants/${plant.id}`}>
-                <div className="plant-image-container">
+              <Link to={`/plant/${plant.id}`}>
+                <div className="plant-image-container all-plants">
                   <img
                     src={latestImage ? `/api/uploads/${latestImage.image_path}` : "/placeholder-plant.webp"}
                     alt={plant.name}

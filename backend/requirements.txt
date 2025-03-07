@@ -7,7 +7,7 @@ passlib[argon2]
 python-dotenv
 redis
 mariadb
-jwt
+python-jose
 python-multipart
 requests
 pillow
@@ -16,3 +16,4 @@ huggingface_hub
 httpx
 openai
 ollama
+authlib

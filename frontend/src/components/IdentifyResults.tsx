@@ -1,12 +1,13 @@
 import "../styles/identifyResults.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleXmark } from "@fortawesome/free-solid-svg-icons";
+import { IdentifyResult } from "../types/IdentifyResult";
 
 interface IdentifyResultsProps {
-  plantId: number;
-  results: { species: string; commonName: string; score: string }[];
-  onSelectSpecies: (plantId: number, name: string, species: string) => void;
-  onClose: () => void;
+    plantId: number;
+    results: IdentifyResult[];
+    onSelectSpecies: (plantId: number, name: string, species: string) => void;
+    onClose: () => void;
 }
 
 export default function IdentifyResults({

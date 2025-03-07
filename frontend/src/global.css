@@ -104,43 +104,46 @@ button:hover {
 
 .editable-input {
   display: inline-block;
-  background-color: var(--secondary-background-color);
-  border: 1px solid var(--quinary-color);
-  border-radius: none;
-  border-bottom: 1px solid var(--quinary-color);
+  padding: 0;
+  border: none;
+  background: transparent;
   color: var(--text-color);
-  font-size: 1rem;
-  padding: 4px 8px;
-  margin-top: 4px;
-  margin-bottom: 4px;
-  outline: none;
-  transition: border-color 0.2s ease-in-out;
+  font-weight: bold;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
 }
 
 .editable-input:focus {
-  border-color: var(--primary-color);
-}
-
-.editable-textarea {
-  display: block;
-  width: 100%;
-  min-height: 400px;
-  background-color: var(--secondary-background-color);
-  border: 1px solid var(--quinary-color);
-  border-bottom: 1px solid var(--quinary-color);
-  color: var(--text-color);
-  font-size: 1rem;
-  padding: 8px;
-  margin-top: 4px;
-  margin-bottom: 4px;
+  cursor: text;
+  background-color: var(--background-color);
+  border: 1px solid var(--primary-color);
+  padding: 4px 8px;
   outline: none;
-  resize: vertical;
-  transition: border-color 0.2s ease-in-out;
-  box-sizing: border-box;
+  border-radius: 4px;
 }
 
-.editable-textarea:focus {
-  border-color: var(--primary-color);
+.editable-div {
+  display: block;
+  background-color: transparent;
+  color: var(--text-color);
+  padding: 0;
+  border: none;
+  white-space: pre-wrap;
+  min-height: 100px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  outline: none;
+  text-align: justify;
+  hyphens: auto;
+}
+
+.editable-div.editing {
+  background-color: var(--background-color);
+  border: 1px solid var(--primary-color);
+  padding: 8px;
+  border-radius: 4px;
+  cursor: text;
+  outline: none;
 }
 
 img:focus,

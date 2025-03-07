@@ -10,6 +10,9 @@ services:
     depends_on:
       - mariadb
     restart: always
+    networks:
+      - default
+      - dmz00
 
   frontend:
     build: ./frontend

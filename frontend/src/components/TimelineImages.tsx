@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { PlantImage, deletePlantImage } from "../services/Plant";
+import { deletePlantImage } from "../services/PlantService";
+import { PlantImage } from "../types/Plant";
 import { toast } from 'react-toastify';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faCircleXmark, faChevronLeft, faChevronRight, faExpand } from "@fortawesome/free-solid-svg-icons";

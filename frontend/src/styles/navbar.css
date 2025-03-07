@@ -34,6 +34,10 @@
   transition: all 0.3s ease-in-out;
 }
 
+.nav-logo:hover {
+  color: white;
+}
+
 .nav-logo img {
   width: 40px;
   height: 40px;
@@ -152,4 +156,8 @@
 
 .shrink .nav-logo {
   font-size: 1.2rem;
+}
+
+.nav-logout {
+  border-radius: 6px;
 }

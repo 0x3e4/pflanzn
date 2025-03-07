@@ -12,7 +12,6 @@ import uuid
 import logging
 from PIL import Image, ImageOps
 import pillow_heif
-from app.core.config import settings
 from app.services.plantnet import identify_species_via_plantnet
 from app.services.llm_client import LLMClient
 
