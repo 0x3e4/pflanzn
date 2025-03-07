@@ -3,12 +3,12 @@ import re
 import ollama
 import os
 from app.core.config import settings
-from app.utils.text_cleaner import clean_generated_text
+from app.utils.llm_text_cleaner import clean_generated_text
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-os.environ['VITE_OLLAMA_URL'] = settings.VITE_OLLAMA_URL
+os.environ['OLLAMA_URL'] = settings.OLLAMA_URL
 
 class OllamaClient:
     def generate_species_description(common_name: str, species_name: str) -> str:
@@ -23,7 +23,7 @@ class OllamaClient:
         )
 
         try:
-            logger.info(f"Requesting Ollama (remote LLM at {settings.VITE_OLLAMA_URL}) to generate description for: {species_name}")
+            logger.info(f"Requesting Ollama (remote LLM at {settings.OLLAMA_URL}) to generate description for: {species_name}")
 
             response = ollama.chat(
                 model=settings.OLLAMA_MODEL_NAME,

@@ -2,7 +2,7 @@ import logging
 import re
 from huggingface_hub import InferenceClient
 from app.core.config import settings
-from app.utils.text_cleaner import clean_generated_text
+from app.utils.llm_text_cleaner import clean_generated_text
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
