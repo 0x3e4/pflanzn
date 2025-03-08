@@ -22,7 +22,6 @@ const Profile: React.FC = () => {
 
     useEffect(() => {
         if (!user) {
-            toast.error("You must be logged in to access your profile.");
             navigate("/login");
         }
     }, [user]);

@@ -14,17 +14,20 @@ type AuthContextType = {
     login: (username: string, password: string) => Promise<void>;
     logout: () => void;
     fetchProfile: () => Promise<void>;
+    isLoggedIn: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
+    const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
     const authMode = import.meta.env.VITE_AUTH_MODE || "no";
 
     useEffect(() => {
-        if (authMode !== "no") {
+        const token = localStorage.getItem("token");
+        if (authMode !== "no" && token) {
             fetchProfile().catch(() => {});
         }
     }, [authMode]);
@@ -45,22 +48,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const fetchProfile = async () => {
-        try {
-            const response = await apiClient.get<User>("/auth/profile");
-            setUser(response.data);
-        } catch (error) {
-            localStorage.removeItem("token");
+        const token = localStorage.getItem("token");
+        if (token) {
+            try {
+                const response = await apiClient.get<User>("/auth/profile");
+                setUser(response.data);
+                setIsLoggedIn(true);
+            } catch (error) {
+                localStorage.removeItem("token");
+                setUser(null);
+                setIsLoggedIn(false);
+            }
+        } else {
             setUser(null);
+            setIsLoggedIn(false);
         }
     };
 
     const logout = () => {
         localStorage.removeItem("token");
         setUser(null);
+        setIsLoggedIn(false);
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, fetchProfile }}>
+        <AuthContext.Provider value={{ user, login, logout, fetchProfile, isLoggedIn }}>
             {children}
         </AuthContext.Provider>
     );

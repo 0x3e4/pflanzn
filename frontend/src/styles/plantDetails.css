@@ -33,7 +33,7 @@
     flex-wrap: wrap;
 }
 
-.delete-plant-btn, .generate-description-btn, .ai-care-helper-btn, .water-plant-btn {
+.delete-plant-btn, .generate-description-btn, .ai-care-helper-btn, .water-plant-btn, .identify-plant-btn {
     flex-shrink: 0;
     white-space: nowrap;
     width: auto;

@@ -7,7 +7,7 @@ import {
     identifyPlant,
     updatePlant,
     deletePlant,
-    waterPlant,
+    waterPlant
 } from "../services/PlantService";
 import { Plant } from "../types/Plant";
 import "../styles/plants.css";

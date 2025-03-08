@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.sql import func
 from app.database import get_db
 from app.models import Plant, PlantImage, PlantWatering
 from app.schemas import PlantCreate, PlantResponse, PlantUpdate, PlantImageResponse, IdentifyRequest, PlantWateringCreate, PlantWateringResponse
@@ -52,6 +53,39 @@ def get_all_plants(db: Session = Depends(get_db)):
             plant.last_watered = None
 
     return plants
+
+@router.get("/statistics")
+def get_statistics(db: Session = Depends(get_db)):
+    """
+    Fetch general statistics about plants and waterings.
+    """
+    total_plants = db.query(Plant).count()
+
+    # Get top 5 species
+    top_species = (
+        db.query(Plant.species, func.count(Plant.species).label("count"))
+        .group_by(Plant.species)
+        .order_by(func.count(Plant.species).desc())
+        .limit(5)
+        .all()
+    )
+
+    total_waterings = db.query(PlantWatering).count()
+
+    # Get the last watered plant
+    last_watered = (
+        db.query(Plant)
+        .join(PlantWatering, Plant.id == PlantWatering.plant_id)
+        .order_by(PlantWatering.watered_at.desc())
+        .first()
+    )
+
+    return {
+        "totalPlants": total_plants,
+        "topSpecies": [{"name": s[0], "count": s[1]} for s in top_species],
+        "totalWaterings": total_waterings,
+        "lastWateredPlant": {"id": last_watered.id, "name": last_watered.name} if last_watered else None,
+    }
 
 @router.get("/{plant_id}", response_model=PlantResponse)
 def get_plant(plant_id: int, db: Session = Depends(get_db)):

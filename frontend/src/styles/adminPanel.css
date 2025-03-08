@@ -1,0 +1,89 @@
+/* Stats Row (Aligned with Profile Layout) */
+.stats-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .stats-row {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+}
+
+/* Statistics Cards */
+.stats-card {
+    flex: 1;
+    background: var(--background-color);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    min-width: 180px;
+}
+
+.stats-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Icons Inside Cards */
+.stats-icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+    color: var(--primary-color);
+}
+
+/* Stats Number */
+.stats-card h3 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-color);
+    margin: 5px 0;
+}
+
+/* Stats Description */
+.stats-card p {
+    font-size: 14px;
+    color: var(--quinary-color);
+}
+
+/* Top 5 Species List */
+.stats-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.stats-card li {
+    font-size: 14px;
+    color: var(--text-color);
+    margin-bottom: 5px;
+}
+
+/* Hover Effect for Species */
+.stats-card li:hover {
+    color: var(--primary-color);
+    cursor: pointer;
+    transition: color 0.2s ease-in-out;
+}
+
+/* --- Mobile Friendly Styles --- */
+@media (max-width: 768px) {
+    .admin-panel {
+        width: 100%;
+        padding: 15px;
+        box-sizing: border-box;
+    }
+
+    .stats-card {
+        min-width: unset;
+        width: 100%;
+        box-sizing: border-box;
+    }
+}

@@ -5,18 +5,20 @@ import {
     deletePlant,
     updatePlant,
     generatePlantDescription,
-    waterPlant
+    waterPlant,
+    identifyPlant
 } from "../services/PlantService";
 import { Plant } from "../types/Plant";
 import TimelineImages from "../components/TimelineImages";
 import Description from "../components/Description";
 import WateringLogCalendar from "../components/WateringLogCalendar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash, faWandMagicSparkles, faDroplet, faCalendarAlt, faCircleXmark } from "@fortawesome/free-solid-svg-icons";
+import { faTrash, faWandMagicSparkles, faDroplet, faCalendarAlt, faFingerprint, faCircleXmark } from "@fortawesome/free-solid-svg-icons";
 import "../styles/plantDetails.css";
 import { DateTime } from 'luxon';
 import { toast } from 'react-toastify';
 import LoadingOverlay from "../components/LoadingOverlay";
+import IdentifyResults from "../components/IdentifyResults";
 
 export default function PlantDetails() {
     const { plantId } = useParams();
@@ -28,6 +30,7 @@ export default function PlantDetails() {
         DateTime.now().toISO({ includeOffset: false }) ?? ""
     );
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [identifyResults, setIdentifyResults] = useState<{ species: string; commonName: string; score: string }[] | null>(null);
 
     // Fetch plant data on load
     useEffect(() => {
@@ -45,6 +48,27 @@ export default function PlantDetails() {
             navigate("/plants"); // fallback if plant doesn't exist
         } finally {
             setLoadingPlant(false);
+        }
+    };
+
+    const handleIdentifyPlant = async () => {
+        if (!plantId) return;
+
+        try {
+            const result = await identifyPlant(Number(plantId));
+
+            if (result.identified_species.length === 0) {
+                toast.warning("No species found.");
+                return;
+            }
+
+            setIdentifyResults(result.identified_species.map((r: any) => ({
+                species: r.scientific_name || "Unknown",
+                commonName: r.common_name || "No common name",
+                score: r.score.toString(),
+            })));
+        } catch (error) {
+            toast.error((error as Error).message || "Failed to identify plant.");
         }
     };
 
@@ -185,10 +209,20 @@ export default function PlantDetails() {
                             </div>
                         </div>
 
+                        <button className="identify-plant-btn" onClick={handleIdentifyPlant}>
+                            <FontAwesomeIcon icon={faFingerprint} /> Identify Plant
+                        </button>
+
                         {import.meta.env.VITE_LLM_PROVIDER && (
-                            <button className="ai-care-helper-btn" onClick={handleGenerateDescription}>
-                                <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Description
-                            </button>
+                            <>
+                                <button className="ai-care-helper-btn" onClick={handleGenerateDescription}>
+                                    <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Care Helper
+                                </button>
+
+                                <button className="generate-description-btn" onClick={handleGenerateDescription}>
+                                    <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Description
+                                </button>
+                            </>
                         )}
                     </div>
 
@@ -197,6 +231,20 @@ export default function PlantDetails() {
                     </button>
                 </div>
             </div>
+
+            {identifyResults && (
+                <IdentifyResults
+                    plantId={Number(plantId)}
+                    results={identifyResults}
+                    onSelectSpecies={(plantId, name, species) => {
+                        updatePlant(plantId, { name, species });
+                        setIdentifyResults(null);
+                        loadPlant();
+                        toast.success(`Plant updated to ${name} (${species})`);
+                    }}
+                    onClose={() => setIdentifyResults(null)}
+                />
+            )}
 
             {/* Delete Confirmation Modal */}
             {deleteModalOpen && (

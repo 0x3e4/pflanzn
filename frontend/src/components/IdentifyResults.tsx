@@ -31,8 +31,15 @@ export default function IdentifyResults({
                   onClick={() => onSelectSpecies(plantId, result.commonName, result.species)}
                   className="species-item"
                 >
-                  <strong>{result.species}</strong> ({result.commonName || "No common name"}) -{" "}
-                  {parseFloat(result.score).toFixed(2)}%
+                  <div className="species-name">
+                    <span>
+                      <strong>{result.species}</strong>
+                    </span>
+                    <span>{result.commonName || "No common name"}</span>
+                  </div>
+                  <div className="species-percentage">
+                    <span>{parseFloat(result.score).toFixed(2)}%</span>
+                  </div>
                 </li>
               ))
           ) : (
