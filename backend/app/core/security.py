@@ -4,7 +4,7 @@ from jose import jwt
 from passlib.hash import argon2
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from fastapi import Depends, HTTPException, Security
+from fastapi import Depends, HTTPException, Security, Request
 from fastapi.security import OAuth2PasswordBearer
 from app.database import get_db
 from app.models import User
@@ -65,21 +65,21 @@ def validate_session(username: str, token: str):
     if is_session_management_enabled():
         stored_token = redis_client.get(f"session:{username}")
         if not stored_token or stored_token != token:
+            redis_client.delete(f"session:{username}")
             raise HTTPException(status_code=401, detail="Invalid or expired session")
 
 # ==============================================================================
 # Current User Helpers
 # ==============================================================================
 
-def get_current_user(token: str = Security(oauth2_scheme), db: Session = Depends(get_db)) -> User:
-    """Retrieves the current authenticated user (works for local and OIDC modes)."""
-    if AUTH_MODE == "no":
-        raise HTTPException(status_code=403, detail="Authentication is disabled")
+def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
+    """Retrieves the currently authenticated user from Secure Cookie."""
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
 
     payload = decode_token(token)
     username = payload.get("sub")
-
-    validate_session(username, token)
 
     user = db.query(User).filter(User.username == username).first()
     if not user:

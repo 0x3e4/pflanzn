@@ -43,12 +43,11 @@
 }
 
 .logout-link {
-    color: var(--tertiary-color);
     font-weight: bold;
 }
 
 .logout-link:hover {
-    background-color: var(--quaternary-color);
+    background-color: var(--quaternary-color) !important;
     color: white;
 }
 

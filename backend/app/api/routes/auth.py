@@ -1,6 +1,8 @@
 import os
+import time
 import logging
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from datetime import timedelta
 from app.database import get_db
@@ -12,6 +14,9 @@ from app.core.config import settings
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+# Store failed login attempts
+FAILED_LOGIN_ATTEMPTS = {}
 
 # Load auth mode
 AUTH_MODE = settings.VITE_AUTH_MODE
@@ -34,39 +39,34 @@ if AUTH_MODE == "oidc":
     )
 
 
-from app.schemas import LoginRequest  # Add import
+from app.schemas import LoginRequest
 
-@router.post("/login", response_model=Token)
+@router.post("/login")
 def login(user_data: LoginRequest, db: Session = Depends(get_db)):
-    """Handles user authentication based on the selected AUTH_MODE."""
+    """Handles user authentication using Secure Cookies."""
     logger.info(f"Login attempt for user: '{user_data.username}' in AUTH_MODE='{AUTH_MODE}'")
 
-    if AUTH_MODE == "no":
-        logger.warning(f"Login rejected for '{user_data.username}' because AUTH_MODE=no")
-        raise HTTPException(status_code=403, detail="Authentication is disabled.")
+    user = db.query(User).filter(User.username == user_data.username).first()
+    if not user or not verify_password(user_data.password, user.password):
+        logger.warning(f"Login failed: incorrect credentials for '{user_data.username}'")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    elif AUTH_MODE == "local":
-        user = db.query(User).filter(User.username == user_data.username).first()
-        if not user:
-            logger.warning(f"Login failed: user '{user_data.username}' not found")
-            raise HTTPException(status_code=401, detail="Invalid credentials")
+    # Create JWT token
+    access_token = create_access_token({"sub": user.username}, expires_delta=timedelta(minutes=30))
 
-        logger.info(f"User '{user.username}' found. Verifying password...")
-        if not verify_password(user_data.password, user.password):
-            logger.warning(f"Login failed: incorrect password for user '{user.username}'")
-            raise HTTPException(status_code=401, detail="Invalid credentials")
-
-        access_token = create_access_token({"sub": user.username}, expires_delta=timedelta(minutes=30))
-        logger.info(f"Login successful for '{user.username}'")
-        return {"access_token": access_token, "token_type": "bearer"}
-
-    elif AUTH_MODE == "oidc":
-        logger.warning(f"Login attempt rejected for '{user_data.username}' because AUTH_MODE=oidc (wrong endpoint)")
-        raise HTTPException(status_code=400, detail="Use the /auth/oidc-login endpoint for OIDC authentication.")
-
-    else:
-        logger.error(f"Invalid AUTH_MODE configured: '{AUTH_MODE}'")
-        raise HTTPException(status_code=500, detail="Invalid AUTH_MODE configured.")
+    # Secure HTTPOnly cookie response
+    response = JSONResponse(content={"message": "Login successful"})
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=True,
+        samesite="Strict",
+        max_age=1800,
+        path="/"
+    )
+    
+    return response
 
 @router.get("/oidc-login")
 async def oidc_login(request: Request):
@@ -95,7 +95,13 @@ def get_user_profile(current_user: User = Depends(get_current_user)):
     """Returns the currently authenticated user's profile."""
     if not current_user:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    return current_user
+    
+    return UserResponse(
+        id=current_user.id,
+        username=current_user.username,
+        email=current_user.email,
+        role=current_user.role
+    )
 
 @router.get("/admin/users", response_model=list[UserResponse])
 def list_users(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -104,3 +110,10 @@ def list_users(db: Session = Depends(get_db), current_user: User = Depends(get_c
         raise HTTPException(status_code=403, detail="Only admins can access this.")
     users = db.query(User).all()
     return users
+
+@router.post("/logout")
+def logout():
+    """Clears the authentication cookie."""
+    response = JSONResponse(content={"message": "Logout successful"})
+    response.delete_cookie("access_token")
+    return response

@@ -8,6 +8,16 @@ class UserCreate(BaseModel):
     password: str
     role: Optional[str] = "user"
 
+class UserBase(BaseModel):
+    username: str
+    email: str
+    role: str
+
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[str] = None
+    role: Optional[str] = None
+
 class UserResponse(BaseModel):
     id: int
     username: str

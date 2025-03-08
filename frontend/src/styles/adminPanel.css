@@ -87,3 +87,39 @@
         box-sizing: border-box;
     }
 }
+
+/* User List Section */
+.admin-users {
+    margin-top: 20px;
+    padding: 15px;
+    background: var(--secondary-background-color);
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.admin-users h3 {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+/* User Table */
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.users-table th, .users-table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+}
+
+.users-table th {
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.users-table tr:hover {
+    background-color: var(--quinary-color);
+}

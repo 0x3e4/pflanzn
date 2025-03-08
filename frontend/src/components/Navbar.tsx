@@ -2,14 +2,18 @@ import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import "../styles/navbar.css";
 import { useAuth } from "../context/AuthContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCamera } from "@fortawesome/free-solid-svg-icons";
+import { identifyPlant, uploadPlantImage, createPlant, deletePlant } from "../services/PlantService";
+import IdentifyResults from "./IdentifyResults";
 
 export default function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [identifyResults, setIdentifyResults] = useState<{ species: string; commonName: string; score: string }[] | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const navRef = useRef<HTMLElement | null>(null);
-
-    const { user, logout } = useAuth();
-
+    const { user } = useAuth();
     const authMode = import.meta.env.VITE_AUTH_MODE;
 
     useEffect(() => {
@@ -34,8 +38,46 @@ export default function Navbar() {
         return () => document.removeEventListener("click", handleClickOutside);
     }, [menuOpen]);
 
-    const handleLogout = () => {
-        logout();
+    const handleIdentifyClick = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
+        }
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedFile = e.target.files?.[0];
+        if (!selectedFile) return;
+        await processPlantIdentification(selectedFile);
+    };
+
+    const processPlantIdentification = async (file: File) => {
+        try {
+            // Create temporary plant
+            const tempPlant = await createPlant("Temp", "");
+
+            // Upload image
+            await uploadPlantImage(tempPlant.id, file);
+
+            // Identify plant
+            const result = await identifyPlant(tempPlant.id);
+
+            if (result.identified_species.length === 0) {
+                alert("No species identified.");
+                await deletePlant(tempPlant.id);
+                return;
+            }
+
+            setIdentifyResults(result.identified_species.map((r: any) => ({
+                species: r.scientific_name || "Unknown",
+                commonName: r.common_name || "No common name",
+                score: r.score.toString(),
+            })));
+
+            // Clean up temporary plant
+            await deletePlant(tempPlant.id);
+        } catch (error) {
+            console.error("Error identifying plant:", error);
+        }
     };
 
     return (
@@ -46,6 +88,19 @@ export default function Navbar() {
                     Pflanzn
                 </Link>
 
+                {/* Identify Button - Left of Hamburger */}
+                <button className="identify-btn" onClick={handleIdentifyClick}>
+                    <FontAwesomeIcon icon={faCamera} />
+                </button>
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    style={{ display: "none" }}
+                    accept="image/*"
+                    onChange={handleFileChange}
+                />
+
+                {/* Hamburger Menu */}
                 <button
                     className={`nav-toggle ${menuOpen ? "active" : ""}`}
                     onClick={() => setMenuOpen(!menuOpen)}
@@ -62,7 +117,6 @@ export default function Navbar() {
                                 <Link to="/profile" onClick={() => setMenuOpen(false)}>
                                     Profile
                                 </Link>
-                                <button className="nav-logout" onClick={handleLogout}>Logout</button>
                             </>
                         ) : (
                             <Link to="/login" onClick={() => setMenuOpen(false)}>Login</Link>
@@ -70,6 +124,16 @@ export default function Navbar() {
                     )}
                 </div>
             </div>
+
+            {/* Display Identify Results */}
+            {identifyResults && (
+                <IdentifyResults
+                    plantId={0} // No plant ID, just a quick scan
+                    results={identifyResults}
+                    onSelectSpecies={() => setIdentifyResults(null)} // Just close when selecting
+                    onClose={() => setIdentifyResults(null)}
+                />
+            )}
         </nav>
     );
 }

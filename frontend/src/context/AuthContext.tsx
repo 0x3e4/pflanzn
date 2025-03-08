@@ -12,7 +12,7 @@ type User = {
 type AuthContextType = {
     user: User | null;
     login: (username: string, password: string) => Promise<void>;
-    logout: () => void;
+    logout: () => Promise<void>;
     fetchProfile: () => Promise<void>;
     isLoggedIn: boolean;
 };
@@ -26,18 +26,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const authMode = import.meta.env.VITE_AUTH_MODE || "no";
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (authMode !== "no" && token) {
-            fetchProfile().catch(() => {});
-        }
+        fetchProfile().catch(() => {});
     }, [authMode]);
 
     const login = async (username: string, password: string) => {
         if (authMode === "local") {
             try {
-                const response = await apiClient.post("/auth/login", { username, password });
-                localStorage.setItem("token", response.data.access_token);
-                await fetchProfile();
+                await apiClient.post("/auth/login", { username, password });
+                await fetchProfile();  // Automatically gets user profile
             } catch (error) {
                 toast.error("Invalid credentials or login failed.");
                 throw error;
@@ -48,25 +44,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const fetchProfile = async () => {
-        const token = localStorage.getItem("token");
-        if (token) {
-            try {
-                const response = await apiClient.get<User>("/auth/profile");
-                setUser(response.data);
-                setIsLoggedIn(true);
-            } catch (error) {
-                localStorage.removeItem("token");
-                setUser(null);
-                setIsLoggedIn(false);
-            }
-        } else {
+        try {
+            const response = await apiClient.get<User>("/auth/profile");
+            setUser(response.data);
+            setIsLoggedIn(true);
+        } catch (error) {
             setUser(null);
             setIsLoggedIn(false);
         }
     };
 
-    const logout = () => {
-        localStorage.removeItem("token");
+    const logout = async () => {
+        try {
+            await apiClient.post("/auth/logout"); // Call backend to clear the cookie
+        } catch (error) {
+            console.error("Logout failed:", error);
+        }
         setUser(null);
         setIsLoggedIn(false);
     };

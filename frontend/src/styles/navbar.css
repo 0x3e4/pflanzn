@@ -158,6 +158,18 @@
   font-size: 1.2rem;
 }
 
-.nav-logout {
-  border-radius: 6px;
+/* Identify Button (Left of Hamburger) */
+.identify-btn {
+  background-color: unset;
+  border: none;
+  color: white;
+  padding: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background-color 0.2s ease-in-out, transform 0.2s;
+}
+
+.identify-btn:hover {
+  transform: scale(1.1);
 }

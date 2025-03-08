@@ -2,35 +2,47 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import AdminPanel from "../components/AdminPanel";  // Make sure you have this component
-import "../styles/profile.css";  // New profile-specific styles
+import AdminPanel from "../components/AdminPanel";
+import "../styles/profile.css";
 
 type ProfileSection = "profile" | "admin";
 
 const Profile: React.FC = () => {
-    const { user, logout, fetchProfile } = useAuth();
+    const { user, logout, fetchProfile, isLoggedIn } = useAuth();
     const navigate = useNavigate();
-
+    const [loading, setLoading] = useState(true);
     const [activeSection, setActiveSection] = useState<ProfileSection>("profile");
 
     useEffect(() => {
-        fetchProfile().catch(() => {
-            toast.error("Failed to load profile data.");
-            navigate("/login");
-        });
+        const loadProfile = async () => {
+            try {
+                await fetchProfile();
+            } catch {
+                toast.error("Failed to load profile data.");
+                navigate("/login");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadProfile();
     }, []);
 
     useEffect(() => {
-        if (!user) {
+        if (!loading && !isLoggedIn) {
             navigate("/login");
         }
-    }, [user]);
+    }, [loading, isLoggedIn]);
 
     const handleLogout = () => {
         logout();
         toast.info("You have been logged out.");
         navigate("/login");
     };
+
+    if (loading) {
+        return <div className="profile-container">Loading...</div>;
+    }
 
     return (
         <div className="profile-container">
