@@ -41,7 +41,7 @@ const Profile: React.FC = () => {
                         className={activeSection === "profile" ? "active" : ""}
                         onClick={() => setActiveSection("profile")}
                     >
-                        Profile Info
+                        User details
                     </li>
 
                     {user?.role === "admin" && (
@@ -49,7 +49,7 @@ const Profile: React.FC = () => {
                             className={activeSection === "admin" ? "active" : ""}
                             onClick={() => setActiveSection("admin")}
                         >
-                            Admin Panel
+                            Admin
                         </li>
                     )}
 
