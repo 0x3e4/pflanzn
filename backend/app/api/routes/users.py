@@ -4,7 +4,7 @@ from app.database import get_db
 from app.models import User
 from app.schemas import UserResponse, UserCreate, UserUpdate
 from typing import List
-from app.core.security import get_current_user, get_current_admin_user
+from app.core.security import hash_password, get_current_user, get_current_admin_user
 
 router = APIRouter()
 
@@ -43,18 +43,20 @@ def get_user(user_id: int, db: Session = Depends(get_db), current_user: User = D
 
 @router.post("/", response_model=UserResponse)
 def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
-    """Create a new user."""
+    """Create a new user with a securely hashed password."""
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="User with this email already exists")
 
+    hashed_password = hash_password(user_data.password)
+
     new_user = User(
         username=user_data.username,
         email=user_data.email,
-        password=user_data.password,
+        password=hashed_password,
         role=user_data.role
     )
-    
+
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
