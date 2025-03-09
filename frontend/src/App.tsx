@@ -5,7 +5,6 @@ import Plants from "./pages/Plants";
 import PlantDetails from "./pages/PlantDetails";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
-import Admin from "./pages/Admin";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ScrollToTopButton from './components/ScrollToTopButton';
@@ -26,7 +25,6 @@ export default function App() {
                         <Route path="/plant/:plantId" element={<PlantDetails />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/profile" element={<Profile />} />
-                        <Route path="/admin" element={<Admin />} />
                     </Routes>
                     <ScrollToTopButton />
                     <ToastContainer

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import "../styles/login.css";  // Add this line
+import "../styles/login.css";
 
 const Login: React.FC = () => {
     const { login } = useAuth();

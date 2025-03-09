@@ -15,6 +15,7 @@ type AuthContextType = {
     logout: () => Promise<void>;
     fetchProfile: () => Promise<void>;
     isLoggedIn: boolean;
+    loading: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,41 +23,50 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(true);
 
     const authMode = import.meta.env.VITE_AUTH_MODE || "no";
 
     useEffect(() => {
-        fetchProfile().catch(() => {});
+        fetchProfile();
     }, [authMode]);
 
     const login = async (username: string, password: string) => {
         if (authMode === "local") {
             try {
                 await apiClient.post("/auth/login", { username, password });
-                await fetchProfile();  // Automatically gets user profile
+                await fetchProfile(); // Automatically get profile after login
             } catch (error) {
                 toast.error("Invalid credentials or login failed.");
                 throw error;
             }
         } else if (authMode === "oidc") {
-            window.location.href = "/auth/oidc-login";
+            window.location.href = "/auth/oidc-login"; // Redirect to OIDC provider
         }
     };
 
     const fetchProfile = async () => {
+        setLoading(true);
+
         try {
-            const response = await apiClient.get<User>("/auth/profile");
+            const response = await apiClient.get<User>("/users/profile"); // Ensure backend route is correct
             setUser(response.data);
             setIsLoggedIn(true);
         } catch (error) {
             setUser(null);
             setIsLoggedIn(false);
+
+            if (authMode === "oidc") {
+                window.location.href = "/auth/oidc-login"; // Auto-login for OIDC
+            }
+        } finally {
+            setLoading(false);
         }
     };
 
     const logout = async () => {
         try {
-            await apiClient.post("/auth/logout"); // Call backend to clear the cookie
+            await apiClient.post("/auth/logout"); // Backend clears secure cookie
         } catch (error) {
             console.error("Logout failed:", error);
         }
@@ -65,7 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, fetchProfile, isLoggedIn }}>
+        <AuthContext.Provider value={{ user, login, logout, fetchProfile, isLoggedIn, loading }}>
             {children}
         </AuthContext.Provider>
     );

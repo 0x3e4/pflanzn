@@ -71,11 +71,11 @@
 }
 
 .plant-view-fullsize-btn {
-  background-color: var(--primary-color);
+  background-color: var(--quinary-color);
 }
 
 .plant-view-fullsize-btn:hover {
-  background-color: var(--secondary-color);
+  background-color: var(--senary-color);
 }
 
 .plant-image-delete-btn {

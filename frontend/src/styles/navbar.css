@@ -158,16 +158,15 @@
   font-size: 1.2rem;
 }
 
-/* Identify Button (Left of Hamburger) */
+/* Identify Button */
 .identify-btn {
   background-color: unset;
   border: none;
   color: white;
-  padding: 10px;
-  border-radius: 50%;
+  border-radius: 25%;
   cursor: pointer;
   font-size: 18px;
-  transition: background-color 0.2s ease-in-out, transform 0.2s;
+  transition: background-color 0.5s ease-in-out, transform 0.5s;
 }
 
 .identify-btn:hover {

@@ -61,7 +61,7 @@ export default function Navbar() {
             // Identify plant
             const result = await identifyPlant(tempPlant.id);
 
-            if (result.identified_species.length === 0) {
+            if (!result || result.identified_species.length === 0) {
                 alert("No species identified.");
                 await deletePlant(tempPlant.id);
                 return;
@@ -111,13 +111,11 @@ export default function Navbar() {
                 <div className={`nav-links ${menuOpen ? "active" : ""}`}>
                     <Link to="/plants" onClick={() => setMenuOpen(false)}>Plants</Link>
 
-                    {authMode !== "no" && (
+                    {authMode !== "oidc" && (
                         user ? (
-                            <>
-                                <Link to="/profile" onClick={() => setMenuOpen(false)}>
-                                    Profile
-                                </Link>
-                            </>
+                            <Link to="/profile" onClick={() => setMenuOpen(false)}>
+                                Profile
+                            </Link>
                         ) : (
                             <Link to="/login" onClick={() => setMenuOpen(false)}>Login</Link>
                         )

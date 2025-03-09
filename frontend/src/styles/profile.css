@@ -64,15 +64,15 @@
 }
 
 /* Profile Info Box */
-.profile-info, .admin-panel {
+.profile-info, .admin-panel, .statistics-panel {
     padding: 20px;
     border-radius: 8px;
     color: var(--text-color);
     width: 100%;
-    max-width: 1200px;
+    box-sizing: border-box;
 }
 
-.profile-info h2, .admin-panel h2 {
+.profile-info h2, .admin-panel h2, .statistics-panel h2 {
     margin-top: 0;
     font-size: 1.5rem;
 }
@@ -118,7 +118,7 @@
         box-sizing: border-box;
     }
 
-    .profile-info {
+    .profile-info, .admin-panel, .statistics-panel {
         width: 100%;
         padding: 15px;
         box-sizing: border-box;

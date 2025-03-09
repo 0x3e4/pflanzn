@@ -90,27 +90,6 @@ async def oidc_callback(request: Request):
     access_token = create_access_token({"sub": user_info["email"]}, expires_delta=timedelta(minutes=30))
     return {"access_token": access_token, "token_type": "bearer", "user_info": user_info}
 
-@router.get("/profile", response_model=UserResponse)
-def get_user_profile(current_user: User = Depends(get_current_user)):
-    """Returns the currently authenticated user's profile."""
-    if not current_user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    
-    return UserResponse(
-        id=current_user.id,
-        username=current_user.username,
-        email=current_user.email,
-        role=current_user.role
-    )
-
-@router.get("/admin/users", response_model=list[UserResponse])
-def list_users(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    """Admin endpoint to list all users."""
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Only admins can access this.")
-    users = db.query(User).all()
-    return users
-
 @router.post("/logout")
 def logout():
     """Clears the authentication cookie."""
