@@ -3,14 +3,15 @@ import 'react-calendar/dist/Calendar.css';
 import "../styles/wateringLogCalendar.css";
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { deleteWatering } from '../services/PlantService';
-import { PlantWatering } from '../types/Plant';
+import { deleteWatering, deletePlantImage } from '../services/PlantService';
+import { PlantWatering, PlantImage } from '../types/Plant';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash, faCircleXmark } from "@fortawesome/free-solid-svg-icons";
+import { faTrash, faCircleXmark, faDroplet, faCamera } from "@fortawesome/free-solid-svg-icons";
 import { toast } from 'react-toastify';
 
 interface Props {
     waterings: PlantWatering[];
+    images: PlantImage[];
     plantId: number;
 }
 
@@ -46,19 +47,32 @@ function WateringTooltipOverlay({ content, position }: { content: React.ReactNod
     );
 }
 
-export default function WateringLogCalendar({ waterings, plantId }: Props) {
+export default function WateringLogCalendar({ waterings, images, plantId }: Props) {
     const [localWaterings, setLocalWaterings] = useState<PlantWatering[]>(waterings);
+    const [uploadedImages, setUploadedImages] = useState<PlantImage[]>(images);
     const [hoveredDate, setHoveredDate] = useState<string | null>(null);
     const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition | null>(null);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-    const [wateringToDelete, setWateringToDelete] = useState<number | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<{ type: "watering" | "image"; id: number } | null>(null);
 
     useEffect(() => {
-        setLocalWaterings(waterings); // sync with parent updates
-    }, [waterings]);
+        setLocalWaterings(waterings);
+        setUploadedImages(images);
+    }, [waterings, images]);
 
     const locale = import.meta.env.VITE_Locale;
     const timezone = import.meta.env.VITE_TZ;
+
+    const formatDateKey = (date: Date) => {
+        const formatter = new Intl.DateTimeFormat(locale, {
+            timeZone: timezone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+        const parts = formatter.formatToParts(date);
+        return `${parts.find(p => p.type === 'year')?.value}-${parts.find(p => p.type === 'month')?.value}-${parts.find(p => p.type === 'day')?.value}`;
+    };
 
     const wateredDates = localWaterings.reduce((acc, watering) => {
         const date = new Date(watering.watered_at);
@@ -77,34 +91,30 @@ export default function WateringLogCalendar({ waterings, plantId }: Props) {
         return acc;
     }, {} as Record<string, PlantWatering[]>);
 
+    const imageDates = uploadedImages.reduce((acc, image) => {
+        const dateKey = formatDateKey(new Date(image.uploaded_at));
+        if (!acc[dateKey]) acc[dateKey] = [];
+        acc[dateKey].push(image);
+        return acc;
+    }, {} as Record<string, PlantImage[]>);
+
     const tileClassName = ({ date }: { date: Date }) => {
-        const formatter = new Intl.DateTimeFormat(locale, {
-            timeZone: timezone,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-        });
+        const dateKey = formatDateKey(date);
+        const hasWatering = !!wateredDates[dateKey];
+        const hasImage = !!imageDates[dateKey];
 
-        const parts = formatter.formatToParts(date);
-        const dateKey = `${parts.find(p => p.type === 'year')?.value}-${parts.find(p => p.type === 'month')?.value}-${parts.find(p => p.type === 'day')?.value}`;
-
-        return wateredDates[dateKey] ? 'watered-day' : '';
+        if (hasWatering && hasImage) return 'watered-day image-day';
+        if (hasWatering) return 'watered-day';
+        if (hasImage) return 'image-day';
+        return '';
     };
 
     const handleClickDay = (date: Date, event: React.MouseEvent) => {
-        const formatter = new Intl.DateTimeFormat(locale, {
-            timeZone: timezone,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-        });
-
-        const parts = formatter.formatToParts(date);
-        const dateKey = `${parts.find(p => p.type === 'year')?.value}-${parts.find(p => p.type === 'month')?.value}-${parts.find(p => p.type === 'day')?.value}`;
-
-        if (wateredDates[dateKey]) {
+        const dateKey = formatDateKey(date);
+    
+        if (wateredDates[dateKey] || imageDates[dateKey]) {
             setHoveredDate(dateKey);
-
+    
             const rect = (event.target as HTMLElement).getBoundingClientRect();
             setTooltipPosition({
                 top: rect.top + window.scrollY,
@@ -117,17 +127,23 @@ export default function WateringLogCalendar({ waterings, plantId }: Props) {
         }
     };
 
-    const openDeleteModal = (wateringId: number) => {
-        setWateringToDelete(wateringId);
+    const openDeleteModal = (type: "watering" | "image", id: number) => {
+        setDeleteTarget({ type, id });
         setDeleteModalOpen(true);
     };
 
     const handleConfirmDelete = async () => {
-        if (wateringToDelete === null) return;
+        if (!deleteTarget) return;
         try {
-            await deleteWatering(plantId, wateringToDelete);
-            setLocalWaterings((prev) => prev.filter(w => w.id !== wateringToDelete));
-            toast.success("Watering deleted successfully!");
+            if (deleteTarget.type === "watering") {
+                await deleteWatering(plantId, deleteTarget.id);
+                setLocalWaterings((prev) => prev.filter((w) => w.id !== deleteTarget.id));
+                toast.success("Watering deleted successfully!");
+            } else {
+                await deletePlantImage(plantId, deleteTarget.id);
+                setUploadedImages((prev) => prev.filter((img) => img.id !== deleteTarget.id));
+                toast.success("Image deleted successfully!");
+            }
             setDeleteModalOpen(false);
             setHoveredDate(null);
         } catch (err) {
@@ -137,35 +153,58 @@ export default function WateringLogCalendar({ waterings, plantId }: Props) {
 
     const handleCancelDelete = () => {
         setDeleteModalOpen(false);
-        setWateringToDelete(null);
+        setDeleteTarget(null);
     };
 
     const renderTooltip = () => {
-        if (!hoveredDate || !wateredDates[hoveredDate] || !tooltipPosition) return null;
+        if (!hoveredDate || (!wateredDates[hoveredDate] && !imageDates[hoveredDate]) || !tooltipPosition) return null;
 
         return (
             <WateringTooltipOverlay
                 position={tooltipPosition}
                 content={
                     <div className="watering-tooltip-content">
-                        <strong>Watered at:</strong>
-                        <ul style={{ paddingLeft: '0', margin: '4px 0 0 0' }}>
-                            {wateredDates[hoveredDate].map(watering => (
-                                <li key={watering.id} className="watering-tooltip-item">
-                                    {new Date(watering.watered_at).toLocaleTimeString(locale, {
-                                        timeZone: timezone,
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                    })}
-                                    <button
-                                        className="watering-delete-btn"
-                                        onClick={() => openDeleteModal(watering.id)}
-                                    >
-                                        <FontAwesomeIcon icon={faTrash} />
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
+                        {wateredDates[hoveredDate] && (
+                            <>
+                                <strong>Watered at:</strong>
+                                <ul>
+                                    {wateredDates[hoveredDate].map(watering => (
+                                        <li className="watering-tooltip-item" key={watering.id}>
+                                            <FontAwesomeIcon icon={faDroplet} className="image-icon" />
+                                            {new Date(watering.watered_at).toLocaleTimeString(locale, {
+                                                timeZone: timezone,
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                            <button className="watering-delete-btn" onClick={() => openDeleteModal("watering", watering.id)}>
+                                                <FontAwesomeIcon icon={faTrash} />
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </>
+                        )}
+
+                        {imageDates[hoveredDate] && (
+                            <>
+                                <strong>Image uploaded at:</strong>
+                                <ul>
+                                    {imageDates[hoveredDate].map(image => (
+                                        <li className="watering-tooltip-item" key={image.id}>
+                                            <FontAwesomeIcon icon={faCamera} className="image-icon" />
+                                            {new Date(image.uploaded_at).toLocaleTimeString(locale, {
+                                                timeZone: timezone,
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                            <button className="watering-delete-btn" onClick={() => openDeleteModal("image", image.id)}>
+                                                <FontAwesomeIcon icon={faTrash} />
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </>
+                        )}
                     </div>
                 }
             />
@@ -188,7 +227,7 @@ export default function WateringLogCalendar({ waterings, plantId }: Props) {
             {deleteModalOpen && (
                 <div className="watering-delete-modal-overlay">
                     <div className="watering-delete-modal">
-                        <p>Are you sure you want to delete this watering entry?</p>
+                        <p>Are you sure you want to delete this entry?</p>
                         <div className="watering-delete-modal-buttons">
                             <button className="watering-delete-confirm" onClick={handleConfirmDelete}>
                                 <FontAwesomeIcon icon={faTrash} /> Delete

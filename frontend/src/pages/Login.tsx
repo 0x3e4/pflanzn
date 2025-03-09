@@ -24,33 +24,27 @@ const Login: React.FC = () => {
         }
     };
 
-    if (authMode === "oidc") {
+    if (authMode === "local") {
         return (
-            <div className="oidc-container">
-                <button onClick={() => login("", "")}>Login with OIDC</button>
+            <div className="login-container">
+                <form className="login-form" onSubmit={handleSubmit}>
+                    <h2>Login</h2>
+                    <input
+                        placeholder="Username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                    />
+                    <input
+                        placeholder="Password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <button type="submit">Login</button>
+                </form>
             </div>
         );
-    }
-
-    return (
-        <div className="login-container">
-            <form className="login-form" onSubmit={handleSubmit}>
-                <h2>Login</h2>
-                <input
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                />
-                <input
-                    placeholder="Password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
-                <button type="submit">Login</button>
-            </form>
-        </div>
-    );
+    };
 };
 
 export default Login;

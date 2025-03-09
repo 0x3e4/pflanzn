@@ -97,42 +97,44 @@ export default function AdminPanel() {
                     </button>
                 )}
             </div>
-            <table className="users-table">
-                <thead>
-                    <tr><th>ID</th><th>Username</th><th>Email</th><th>Role</th><th></th></tr>
-                </thead>
-                <tbody>
-                    {users.length > 0 ? (
-                        users.map((u) => (
-                            <tr key={u.id}>
-                                <td>{u.id}</td>
-                                <td>{u.username}</td>
-                                <td>{u.email}</td>
-                                <td>
-                                    {users.length > 1 ? (
-                                        <select value={u.role} onChange={(e) => handleRoleChange(u.id, e.target.value)}>
-                                            {roles.map((role) => <option key={role} value={role}>{role}</option>)}
-                                        </select>
-                                    ) : (
-                                        u.role
-                                    )}
-                                </td>
-                                <td>
-                                    {users.length > 1 && u.username !== import.meta.env.VITE_ADMIN_USER && (
-                                        <button className="delete-user-btn" onClick={() => handleDeleteUser(u.id, u.username)}>
-                                            <FontAwesomeIcon icon={faTrash} />
-                                        </button>
-                                    )}
-                                </td>
+            <div className="users-table-container">
+                <table className="users-table">
+                    <thead>
+                        <tr><th>ID</th><th>Username</th><th>Email</th><th>Role</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        {users.length > 0 ? (
+                            users.map((u) => (
+                                <tr key={u.id}>
+                                    <td>{u.id}</td>
+                                    <td>{u.username}</td>
+                                    <td>{u.email}</td>
+                                    <td>
+                                        {users.length > 1 ? (
+                                            <select value={u.role} onChange={(e) => handleRoleChange(u.id, e.target.value)}>
+                                                {roles.map((role) => <option key={role} value={role}>{role}</option>)}
+                                            </select>
+                                        ) : (
+                                            u.role
+                                        )}
+                                    </td>
+                                    <td>
+                                        {users.length > 1 && u.username !== import.meta.env.VITE_ADMIN_USER && (
+                                            <button className="delete-user-btn" onClick={() => handleDeleteUser(u.id, u.username)}>
+                                                <FontAwesomeIcon icon={faTrash} />
+                                            </button>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan={5}>Loading users...</td>
                             </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td colSpan={5}>Loading users...</td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
+                        )}
+                    </tbody>
+                </table>
+            </div>
 
             {/* Add User Modal */}
             {modalOpen && (

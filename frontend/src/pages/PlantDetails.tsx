@@ -180,7 +180,7 @@ export default function PlantDetails() {
                     </div>
 
                     <TimelineImages images={plant.images} plantId={plant.id} />
-                    <WateringLogCalendar waterings={plant.waterings} plantId={plant.id} />
+                    <WateringLogCalendar waterings={plant.waterings} images={plant.images} plantId={plant.id} />
                 </div>
 
                 {/* Right Column - Description */}

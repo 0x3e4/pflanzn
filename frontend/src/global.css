@@ -85,6 +85,11 @@ button {
   transition: background-color 0.2s ease-in-out;
 }
 
+button:focus-visible, 
+input:focus-visible {
+    outline: none;
+}
+
 button:hover {
   background-color: var(--secondary-color);
 }

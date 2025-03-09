@@ -14,15 +14,22 @@
 }
 
 /* User Table */
+.users-table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
 .users-table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 300px;
 }
 
 .users-table th, .users-table td {
     padding: 10px;
     border-bottom: 1px solid var(--border-color);
     text-align: left;
+    white-space: nowrap;
 }
 
 .users-table th {
@@ -38,13 +45,17 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 20px;
+    padding-bottom: 10px;
+}
+
+.admin-user-mgmt-header h3 {
+    margin: 0 !important;
 }
 
 .add-user-btn {
-    font-size: 24px;
-    width: 42px;
-    height: 42px;
+    font-size: 18px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     border: none;
     background: var(--primary-color);
@@ -80,7 +91,7 @@
     padding: 20px;
     border-radius: 8px;
     text-align: center;
-    width: 350px;
+    width: 600px;
     box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.3);
     position: relative;
 }

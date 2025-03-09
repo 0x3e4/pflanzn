@@ -20,7 +20,11 @@ init_db()
 logger.info("Database initialized.")
 
 # Initialize FastAPI
-app = FastAPI(title="Plant Management API", version="1.0")
+app = FastAPI(
+    title="Plant Management API", 
+    version="1.0.0", 
+    docs_url="/api/docs"
+)
 
 # CORS settings
 app.add_middleware(

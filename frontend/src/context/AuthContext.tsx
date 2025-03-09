@@ -28,28 +28,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const authMode = import.meta.env.VITE_AUTH_MODE || "no";
 
     useEffect(() => {
-        fetchProfile();
+        const hasAuth = document.cookie.includes("access_token");
+    
+        if (authMode === "no" || !hasAuth) {
+            setLoading(false);
+            setUser(null);
+            setIsLoggedIn(false);
+            return;
+        }
+    
+        fetchProfile().finally(() => setLoading(false));
     }, [authMode]);
-
+    
     const login = async (username: string, password: string) => {
         if (authMode === "local") {
             try {
                 await apiClient.post("/auth/login", { username, password });
-                await fetchProfile(); // Automatically get profile after login
+                fetchProfile();
             } catch (error) {
                 toast.error("Invalid credentials or login failed.");
                 throw error;
             }
         } else if (authMode === "oidc") {
-            window.location.href = "/auth/oidc-login"; // Redirect to OIDC provider
+            window.location.href = "/auth/oidc-login";
         }
     };
 
     const fetchProfile = async () => {
         setLoading(true);
-
         try {
-            const response = await apiClient.get<User>("/users/profile"); // Ensure backend route is correct
+            const response = await apiClient.get<User>("/users/profile");
             setUser(response.data);
             setIsLoggedIn(true);
         } catch (error) {
@@ -57,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setIsLoggedIn(false);
 
             if (authMode === "oidc") {
-                window.location.href = "/auth/oidc-login"; // Auto-login for OIDC
+                window.location.href = "/auth/oidc-login";
             }
         } finally {
             setLoading(false);
@@ -66,7 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const logout = async () => {
         try {
-            await apiClient.post("/auth/logout"); // Backend clears secure cookie
+            await apiClient.post("/auth/logout");
         } catch (error) {
             console.error("Logout failed:", error);
         }

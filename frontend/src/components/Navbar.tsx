@@ -13,7 +13,7 @@ export default function Navbar() {
     const [identifyResults, setIdentifyResults] = useState<{ species: string; commonName: string; score: string }[] | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const navRef = useRef<HTMLElement | null>(null);
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
     const authMode = import.meta.env.VITE_AUTH_MODE;
 
     useEffect(() => {
@@ -111,7 +111,7 @@ export default function Navbar() {
                 <div className={`nav-links ${menuOpen ? "active" : ""}`}>
                     <Link to="/plants" onClick={() => setMenuOpen(false)}>Plants</Link>
 
-                    {authMode !== "oidc" && (
+                    {!loading && authMode !== "oidc" && (
                         user ? (
                             <Link to="/profile" onClick={() => setMenuOpen(false)}>
                                 Profile
