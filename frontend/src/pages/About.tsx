@@ -8,6 +8,10 @@ export default function About() {
       <div className="about-content">
         <h1>Pflanzn</h1>
         <p>A simple and efficient plant management system.</p>
+
+        <h2>Pronunciation & Meaning</h2>
+        <p>"Pflanzn" is pronounced as "flahn-tsən" similar to how you would say "plants" but with a unique twist. The "Pfl" at the beginning is pronounced with a soft "P" followed by an "f" sound, almost like saying "flants" but with a slight emphasis on the "P." The "a" is pronounced like the "a" in "father" and the "z" is pronounced like a "ts" sound. The name is derived from the Austrian German word "Pflanzen", which means "plants" in English. Interestingly, the verb "pflanzen" can also mean "to tease" or "to annoy" someone in Austrian German, adding a playful layer to the name. By dropping the final "e", we create a catchy and memorable name that resonates with plant enthusiasts while hinting at the lighthearted nature of caring for plants.</p>
+        <p>With Pflanzn, you can effortlessly track your plants' needs, monitor their growth, and ensure they thrive in your care. Whether you're a seasoned gardener or just starting your plant journey, Pflanzn is here to help you cultivate your green thumb!</p>
       </div>
       <hr />
       {/* Features Section */}

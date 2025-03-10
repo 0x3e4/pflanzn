@@ -34,12 +34,12 @@ export default function Plants() {
   const [modalOpen, setModalOpen] = useState(false);
 
   const [modalIdentifyResults, setModalIdentifyResults] = useState<
-    { species: string; commonName: string; score: string }[] | null
+    { species: string; commonName: string; score: string; images: string[] }[] | null
   >(null);
 
   const [plantIdentifyResults, setPlantIdentifyResults] = useState<{
     plantId: number;
-    results: { species: string; commonName: string; score: string }[];
+    results: { species: string; commonName: string; score: string, images: string[] }[];
   } | null>(null);
 
   useEffect(() => {
@@ -115,6 +115,7 @@ export default function Plants() {
           species: r.scientific_name || "Unknown",
           commonName: r.common_name || "No common name",
           score: r.score.toString(),
+          images: r.images
         })),
       });
     } catch (err) {
@@ -153,6 +154,7 @@ export default function Plants() {
         species: r.scientific_name || "Unknown",
         commonName: r.common_name || "No common name",
         score: r.score.toString(),
+        images: r.images
       })));
 
       await deletePlant(tempPlant.id);
@@ -173,6 +175,8 @@ export default function Plants() {
     setPlantIdentifyResults(null);
     toast.success(`Plant updated to ${name} (${species})`);
   };
+
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   if (loading) {
     return <LoadingOverlay />;
@@ -268,8 +272,36 @@ export default function Plants() {
                     className="species-item"
                     onClick={() => handleSelectSpecies(r.species, r.commonName)}
                   >
-                    <strong>{r.species}</strong> ({r.commonName || "No common name"}) -{" "}
-                    {parseFloat(r.score).toFixed(2)}%
+                    {/* Name & Percentage in the Same Row */}
+                    <div className="species-header">
+                      <div className="species-name">
+                        <strong>{r.species}</strong>
+                        <br />
+                        <span>{r.commonName || "No common name"}</span>
+                      </div>
+                      <div className="species-percentage">
+                        <span>{parseFloat(r.score).toFixed(2)}%</span>
+                      </div>
+                    </div>
+    
+                    {/* Display related images below */}
+                    {Array.isArray(r.images) && r.images.length > 0 && (
+                      <div className="species-images">
+                        {r.images.map((imageUrl, i) => (
+                          <div key={i} className="image-container">
+                            <img
+                              src={imageUrl}
+                              alt={`Related ${r.species}`}
+                              className="species-image"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedImage(imageUrl);
+                              }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -293,6 +325,15 @@ export default function Plants() {
           onSelectSpecies={handleSelectSpeciesForExistingPlant}
           onClose={() => setPlantIdentifyResults(null)}
         />
+      )}
+
+      {/* Large image preview modal */}
+      {selectedImage && (
+        <div className="image-modal" onClick={() => setSelectedImage(null)}>
+          <div className="image-modal-content">
+            <img src={selectedImage} alt="Full-sized" />
+          </div>
+        </div>
       )}
     </div>
   );

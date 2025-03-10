@@ -1,3 +1,4 @@
+import { useState } from "react";
 import "../styles/identifyResults.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleXmark } from "@fortawesome/free-solid-svg-icons";
@@ -16,6 +17,8 @@ export default function IdentifyResults({
   onSelectSpecies,
   onClose,
 }: IdentifyResultsProps) {
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
   return (
     <div className="identify-modal-overlay" onClick={onClose}>
       <div className="identify-modal" onClick={(e) => e.stopPropagation()}>
@@ -31,25 +34,56 @@ export default function IdentifyResults({
                   onClick={() => onSelectSpecies(plantId, result.commonName, result.species)}
                   className="species-item"
                 >
-                  <div className="species-name">
-                    <span>
+                  {/* Name & Percentage in the Same Row */}
+                  <div className="species-header">
+                    <div className="species-name">
                       <strong>{result.species}</strong>
-                    </span>
-                    <span>{result.commonName || "No common name"}</span>
+                      <br />
+                      <span>{result.commonName || "No common name"}</span>
+                    </div>
+                    <div className="species-percentage">
+                      <span>{parseFloat(result.score).toFixed(2)}%</span>
+                    </div>
                   </div>
-                  <div className="species-percentage">
-                    <span>{parseFloat(result.score).toFixed(2)}%</span>
-                  </div>
+  
+                  {/* Display related images below */}
+                  {Array.isArray(result.images) && result.images.length > 0 && (
+                    <div className="species-images">
+                      {result.images.map((imageUrl, i) => (
+                        <div key={i} className="image-container">
+                          <img
+                            src={imageUrl}
+                            alt={`Related ${result.species}`}
+                            className="species-image"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedImage(imageUrl);
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </li>
               ))
           ) : (
             <p>No species identified.</p>
           )}
         </ul>
+
         <button className="cancel-btn" onClick={onClose}>
           <FontAwesomeIcon icon={faCircleXmark} /> Cancel
         </button>
+
+        {/* Large image preview modal */}
+        {selectedImage && (
+          <div className="image-modal" onClick={() => setSelectedImage(null)}>
+            <div className="image-modal-content">
+              <img src={selectedImage} alt="Full-sized" />
+            </div>
+          </div>
+        )}
       </div>
     </div>
-  );
+  );  
 }

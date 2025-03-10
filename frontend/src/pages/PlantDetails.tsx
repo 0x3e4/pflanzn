@@ -30,7 +30,7 @@ export default function PlantDetails() {
         DateTime.now().toISO({ includeOffset: false }) ?? ""
     );
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-    const [identifyResults, setIdentifyResults] = useState<{ species: string; commonName: string; score: string }[] | null>(null);
+    const [identifyResults, setIdentifyResults] = useState<{ species: string; commonName: string; score: string; images: string[] }[] | null>(null);
 
     // Fetch plant data on load
     useEffect(() => {
@@ -66,6 +66,7 @@ export default function PlantDetails() {
                 species: r.scientific_name || "Unknown",
                 commonName: r.common_name || "No common name",
                 score: r.score.toString(),
+                images: r.images,
             })));
         } catch (error) {
             toast.error((error as Error).message || "Failed to identify plant.");

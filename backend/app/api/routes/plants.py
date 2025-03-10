@@ -236,18 +236,24 @@ def identify_species(plant_id: int, db: Session = Depends(get_db)):
             for res in sorted_results:
                 scientific_name = res["species"].get("scientificNameWithoutAuthor", "Unknown")
                 common_names = res["species"].get("commonNames", [])
-                # Check if common_names list is not empty; if empty, default to "Unknown"
                 common_name = common_names[0] if common_names else "Unknown"
+
+                images = [img["url"]["m"] for img in res.get("images", []) if "url" in img and "m" in img["url"]]
+
                 species_data.append({
                     "scientific_name": scientific_name,
                     "common_name": common_name,
-                    "score": f"{res['score'] * 100:.2f}"
+                    "score": f"{res['score'] * 100:.2f}",
+                    "images": images
                 })
             
             return {"identified_species": species_data}
 
     except Exception as e:
-        return {"message": f"Error: {str(e)}"}
+        return {
+            "identified_species": [],
+            "message": f"{str(e)}"
+        }
 
     return {"message": "No species found"}
 

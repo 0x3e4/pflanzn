@@ -6,11 +6,12 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCamera } from "@fortawesome/free-solid-svg-icons";
 import { identifyPlant, uploadPlantImage, createPlant, deletePlant } from "../services/PlantService";
 import IdentifyResults from "./IdentifyResults";
+import { toast } from "react-toastify";
 
 export default function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
-    const [identifyResults, setIdentifyResults] = useState<{ species: string; commonName: string; score: string }[] | null>(null);
+    const [identifyResults, setIdentifyResults] = useState<{ species: string; commonName: string; score: string; images: string[] }[] | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const navRef = useRef<HTMLElement | null>(null);
     const { user, loading } = useAuth();
@@ -62,7 +63,7 @@ export default function Navbar() {
             const result = await identifyPlant(tempPlant.id);
 
             if (!result || result.identified_species.length === 0) {
-                alert("No species identified.");
+                toast.warning("No species identified.");
                 await deletePlant(tempPlant.id);
                 return;
             }
@@ -71,6 +72,7 @@ export default function Navbar() {
                 species: r.scientific_name || "Unknown",
                 commonName: r.common_name || "No common name",
                 score: r.score.toString(),
+                images: r.images
             })));
 
             // Clean up temporary plant

@@ -29,9 +29,9 @@ def identify_species_via_plantnet(
                 "images": (filename, image_file, mime_type)
             }
             params = {
-                "include-related-images": "false",
+                "include-related-images": "true",
                 "no-reject": "false",
-                "nb-results": "10",
+                "nb-results": "5",
                 "lang": settings.PLANTNET_LANGUAGE,
                 "api-key": settings.PLANTNET_API_KEY,
             }
