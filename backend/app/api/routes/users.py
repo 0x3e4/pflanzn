@@ -2,15 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User
-from app.schemas import UserResponse, UserCreate, UserUpdate
+from app.schemas import UserResponse, UserCreate, UserUpdate, UserPasswordUpdate
 from typing import List
-from app.core.security import hash_password, get_current_user, get_current_admin_user
+from app.core.security import hash_password, get_current_user, get_current_admin_user, verify_password
 
 router = APIRouter()
 
-# ===============================
-# 🚀 User Profile (Non-Admin)
-# ===============================
 @router.get("/profile", response_model=UserResponse)
 def get_user_profile(current_user: User = Depends(get_current_user)):
     """Returns the authenticated user's profile."""
@@ -21,9 +18,6 @@ def get_user_profile(current_user: User = Depends(get_current_user)):
         role=current_user.role
     )
 
-# ===============================
-# 🚀 Admin: Manage Users
-# ===============================
 @router.get("/", response_model=List[UserResponse])
 def get_all_users(db: Session = Depends(get_db), current_user: User = Depends(get_current_admin_user)):
     """Fetch all users - Requires admin authentication."""
@@ -63,12 +57,24 @@ def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 @router.put("/{user_id}", response_model=UserResponse)
-def update_user(user_id: int, user_data: UserUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_admin_user)):
-    """Update user details (Admin-only)."""
+def update_user(
+    user_id: int, 
+    user_data: UserUpdate, 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    """Allow users to update their own profile, but only admins can update others."""
+    
+    # Fetch the user to be updated
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    # Authorization check: Allow self-update or admin update
+    if current_user.id != user_id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to update this user")
+
+    # Update only provided fields
     update_fields = user_data.dict(exclude_unset=True)
     for key, value in update_fields.items():
         setattr(user, key, value)
@@ -76,6 +82,34 @@ def update_user(user_id: int, user_data: UserUpdate, db: Session = Depends(get_d
     db.commit()
     db.refresh(user)
     return user
+
+@router.put("/{user_id}/changepassword")
+def update_password(
+    user_id: int, 
+    password_data: UserPasswordUpdate, 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    """Allow users to update their own password after verifying the old password."""
+    
+    # Ensure the logged-in user is only updating their own password
+    if current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="You can only update your own password")
+
+    # Fetch the user
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Verify old password using core/security.py function
+    if not verify_password(password_data.old_password, user.password):
+        raise HTTPException(status_code=400, detail="Incorrect old password")
+
+    # Hash and update the new password
+    user.password = hash_password(password_data.new_password)
+    db.commit()
+
+    return {"message": "Password updated successfully"}
 
 @router.delete("/{user_id}")
 def delete_user(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_admin_user)):

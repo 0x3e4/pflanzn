@@ -63,7 +63,7 @@ export default function Home() {
 
     const getFontSize = (species: string) => {
         const intensity = (speciesCounts[species] || 0) / maxCount;
-        return `${Math.max(0.6, 0.3 + intensity)}rem`;
+        return `${Math.max(1.0, 0.3 + intensity)}rem`;
     };
 
     useEffect(() => {

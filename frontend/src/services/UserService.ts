@@ -1,5 +1,5 @@
 import apiClient from "./apiClient";
-import { User } from "../types/User";
+import { User, UserPassword } from "../types/User";
 
 const API_BASE = "/users";
 
@@ -36,13 +36,27 @@ export const addUser = async (user: { username: string; email: string; password:
     }
 };
 
-// Update user role (Admin Only)
-export const updateUserRole = async (userId: number, role: string) => {
+// Update user
+export const updateUser = async (userId: number, data: Partial<User>) => {
     try {
-        const response = await apiClient.put(`${API_BASE}/${userId}`, { role });
+        const response = await apiClient.put(`${API_BASE}/${userId}`, data );
         return response.data;
     } catch (error) {
-        console.error("Failed to update user role:", error);
+        console.error("Failed to update user:", error);
+        throw error;
+    }
+};
+
+// Update user password
+export const updateUserPassword = async (userId: number, data: Partial<UserPassword>) => {
+    try {
+        const response = await apiClient.put(`${API_BASE}/${userId}/changepassword`, {
+            old_password: data.oldPassword,
+            new_password: data.newPassword, 
+        } );
+        return response.data;
+    } catch (error) {
+        console.error("Failed to update user password:", error);
         throw error;
     }
 };

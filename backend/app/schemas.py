@@ -1,10 +1,10 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 from datetime import datetime
 
 class UserCreate(BaseModel):
     username: str
-    email: str
+    email: EmailStr
     password: str
     role: Optional[str] = "user"
 
@@ -17,6 +17,10 @@ class UserUpdate(BaseModel):
     username: Optional[str] = None
     email: Optional[str] = None
     role: Optional[str] = None
+
+class UserPasswordUpdate(BaseModel):
+    old_password: str = Field(..., min_length=6, description="Current password of the user")
+    new_password: str = Field(..., min_length=8, description="New password with at least 8 characters")
 
 class UserResponse(BaseModel):
     id: int

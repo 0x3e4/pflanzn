@@ -11,7 +11,7 @@ import {
 import { Plant } from "../types/Plant";
 import TimelineImages from "../components/TimelineImages";
 import Description from "../components/Description";
-import WateringLogCalendar from "../components/WateringLogCalendar";
+import Calendar from "../components/Calendar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faWandMagicSparkles, faDroplet, faCalendarAlt, faFingerprint, faCircleXmark } from "@fortawesome/free-solid-svg-icons";
 import "../styles/plantDetails.css";
@@ -152,6 +152,7 @@ export default function PlantDetails() {
                                 {plant.name || "Unnamed Plant"}
                             </span>
                         </h2>
+                        <small>#{plant.id}</small>
                         <span>
                             <strong>Species:</strong>{" "}
                             <span
@@ -181,7 +182,7 @@ export default function PlantDetails() {
                     </div>
 
                     <TimelineImages images={plant.images} plantId={plant.id} />
-                    <WateringLogCalendar waterings={plant.waterings} images={plant.images} plantId={plant.id} />
+                    <Calendar waterings={plant.waterings} images={plant.images} plantId={plant.id} />
                 </div>
 
                 {/* Right Column - Description */}
@@ -216,7 +217,7 @@ export default function PlantDetails() {
 
                         {import.meta.env.VITE_LLM_PROVIDER && (
                             <>
-                                <button className="ai-care-helper-btn" onClick={handleGenerateDescription}>
+                                <button className="ai-care-helper-btn" onClick={handleGenerateDescription}> {/* WORK IN PROGRESS */}
                                     <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Care Helper
                                 </button>
 

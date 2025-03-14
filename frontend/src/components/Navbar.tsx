@@ -4,7 +4,7 @@ import "../styles/navbar.css";
 import { useAuth } from "../context/AuthContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCamera } from "@fortawesome/free-solid-svg-icons";
-import { identifyPlant, uploadPlantImage, createPlant, deletePlant } from "../services/PlantService";
+import { identifyPlantFromImage } from "../services/PlantService";
 import IdentifyResults from "./IdentifyResults";
 import { toast } from "react-toastify";
 
@@ -53,18 +53,11 @@ export default function Navbar() {
 
     const processPlantIdentification = async (file: File) => {
         try {
-            // Create temporary plant
-            const tempPlant = await createPlant("Temp", "");
-
-            // Upload image
-            await uploadPlantImage(tempPlant.id, file);
-
-            // Identify plant
-            const result = await identifyPlant(tempPlant.id);
+            // Identify plant directly from uploaded image without saving
+            const result = await identifyPlantFromImage(file);
 
             if (!result || result.identified_species.length === 0) {
                 toast.warning("No species identified.");
-                await deletePlant(tempPlant.id);
                 return;
             }
 
@@ -74,11 +67,8 @@ export default function Navbar() {
                 score: r.score.toString(),
                 images: r.images
             })));
-
-            // Clean up temporary plant
-            await deletePlant(tempPlant.id);
         } catch (error) {
-            console.error("Error identifying plant:", error);
+            toast.error("Error identifying plant. Please try again.");
         }
     };
 

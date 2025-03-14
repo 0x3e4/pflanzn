@@ -17,6 +17,7 @@
 .about-content p {
     font-size: 1.2rem;
     margin-bottom: 20px;
+    text-align: justify;
 }
 
 hr {

@@ -225,6 +225,7 @@ export default function Plants() {
                 </div>
                 <div className="plant-card-text">
                   <h3>{plant.name || "Unknown"}</h3>
+                  <small>#{plant.id}</small>
                   <p><strong>Species:</strong> {plant.species || "Unknown"}</p>
                   <p><strong>Last Watered:</strong> {lastWateredText}</p>
                 </div>

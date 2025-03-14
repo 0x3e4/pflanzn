@@ -13,6 +13,7 @@ import uuid
 import logging
 from PIL import Image, ImageOps
 import pillow_heif
+import mimetypes
 from app.services.plantnet import identify_species_via_plantnet
 from app.services.llm_client import LLMClient
 
@@ -127,8 +128,10 @@ def delete_plant(plant_id: int, db: Session = Depends(get_db)):
 
     # Remove associated images from storage
     for image in plant.images:
-        if os.path.exists(image.image_path):
-            os.remove(image.image_path)
+        # Remove image file from disk
+        absolute_image_path = os.path.join(BASE_DIR, "uploads", image.image_path)
+        if os.path.exists(absolute_image_path):
+            os.remove(absolute_image_path)
 
     db.delete(plant)
     db.commit()
@@ -210,14 +213,14 @@ def identify_species(plant_id: int, db: Session = Depends(get_db)):
     filename = os.path.basename(image_path)
     extension = os.path.splitext(filename)[1].lower()
 
-    logger.info(f"Extension of image {extension}...")
+    # Get MIME type dynamically
+    mime_type, _ = mimetypes.guess_type(image_path)
 
-    if extension == '.png':
-        mime_type = 'image/png'
-    elif extension in ['.jpg', '.jpeg']:
-        mime_type = 'image/jpeg'
+    if not mime_type:
+        raise HTTPException(status_code=400, detail="Unsupported image format. Only JPG and PNG allowed.")
 
-    logger.info(f"MIME type of image {mime_type}...")
+    logger.info(f"Identifying plant from image: {filename}")
+    logger.info(f"Detected MIME type: {mime_type}")
 
     # Send request to Pl@ntNet API
     try:
@@ -250,12 +253,114 @@ def identify_species(plant_id: int, db: Session = Depends(get_db)):
             return {"identified_species": species_data}
 
     except Exception as e:
+        logger.error(f"Error identifying plant: {str(e)}")
         return {
             "identified_species": [],
             "message": f"{str(e)}"
         }
 
     return {"message": "No species found"}
+
+@router.post("/identify")
+async def identify_species_from_image(file: UploadFile = File(...)):
+    """
+    Identify a plant species from an uploaded image using the Pl@ntNet API
+    without saving it to the database.
+    """
+    logger.debug("Received request to identify plant from uploaded image.")
+
+    try:
+        # Read file content
+        contents = await file.read()
+        if not contents:
+            logger.warning("Uploaded file is empty.")
+            raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+
+        logger.debug(f"Uploaded file: {file.filename}, Size: {len(contents)} bytes")
+
+        # Convert file to image
+        image_stream = io.BytesIO(contents)
+        image_stream.seek(0)
+
+        try:
+            with Image.open(image_stream) as img:
+                logger.debug(f"Opened image: format={img.format}, size={img.size}")
+
+                # Ensure the image format is valid
+                if img.format is None:
+                    raise ValueError("Invalid image format. Please upload a valid image.")
+
+                # Correct EXIF orientation and convert to RGB
+                img = ImageOps.exif_transpose(img)
+                img = img.convert("RGB")
+
+                # Detect file extension and MIME type
+                ext = file.filename.split(".")[-1].lower() if file.filename else None
+                if ext not in ["jpg", "jpeg", "png"]:
+                    raise HTTPException(status_code=400, detail="Unsupported image format. Only JPG and PNG allowed.")
+                
+                mime_type = mimetypes.types_map.get(f".{ext}", "image/jpeg")  # Default to JPEG
+                temp_file_path = f"/tmp/{uuid.uuid4()}.{ext}"  # Keep original format
+                
+                # Save in correct format
+                img.save(temp_file_path, format=img.format, optimize=True, quality=80)
+                logger.debug(f"Image saved to temporary path: {temp_file_path}")
+
+        except Exception as e:
+            logger.error(f"Error processing image: {str(e)}")
+            raise HTTPException(status_code=400, detail=f"Error processing image: {str(e)}")
+
+        # Send request to Pl@ntNet API
+        logger.debug("Sending image to Pl@ntNet for identification...")
+        try:
+            result = identify_species_via_plantnet(
+                image_path=temp_file_path,
+                mime_type=mime_type,
+                filename=file.filename or "uploaded_image"
+            )
+            logger.debug("Received response from Pl@ntNet API.")
+        except Exception as e:
+            logger.error(f"Error contacting Pl@ntNet API: {str(e)}")
+            raise HTTPException(status_code=500, detail="Failed to communicate with Pl@ntNet API.")
+
+        # Process and sort results
+        if "results" in result and len(result["results"]) > 0:
+            sorted_results = sorted(result["results"], key=lambda x: x["score"], reverse=True)
+            
+            species_data = []
+            for res in sorted_results:
+                scientific_name = res["species"].get("scientificNameWithoutAuthor", "Unknown")
+                common_names = res["species"].get("commonNames", [])
+                common_name = common_names[0] if common_names else "Unknown"
+
+                images = [img["url"]["m"] for img in res.get("images", []) if "url" in img and "m" in img["url"]]
+
+                species_data.append({
+                    "scientific_name": scientific_name,
+                    "common_name": common_name,
+                    "score": f"{res['score'] * 100:.2f}",
+                    "images": images
+                })
+
+            logger.debug(f"Identified {len(species_data)} species from image.")
+
+            # Remove temporary file
+            if os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
+                logger.info(f"Temporary file {temp_file_path} deleted.")
+
+            return {"identified_species": species_data}
+
+        else:
+            logger.warning("No species identified from the image.")
+            return {"identified_species": [], "message": "No species found"}
+
+    except Exception as e:
+        logger.error(f"Error identifying plant: {str(e)}")
+        return {
+            "identified_species": [],
+            "message": f"Error identifying species: {str(e)}"
+        }
 
 @router.delete("/{plant_id}/images/{image_id}")
 def delete_plant_image(plant_id: int, image_id: int, db: Session = Depends(get_db)):

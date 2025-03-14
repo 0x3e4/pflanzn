@@ -28,7 +28,6 @@
 .users-table th, .users-table td {
     padding: 10px;
     border-bottom: 1px solid var(--border-color);
-    text-align: left;
     white-space: nowrap;
 }
 
@@ -110,20 +109,6 @@
     color: #aaa;
 }
 
-.delete-user-btn {
-    background: var(--tertiary-color);
-    color: white;
-    border: none;
-    padding: 6px 10px;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background 0.3s ease;
-}
-
-.delete-user-btn:hover {
-    background: var(--quaternary-color);
-}
-
 /* Add User Modal Input Fields */
 .add-user-modal-content input,
 .add-user-modal-content select {
@@ -171,4 +156,118 @@
 
 .add-user-modal-content button:hover {
     background-color: var(--secondary-color);
+}
+
+/* 🌱 Plant Management Section */
+.admin-plant-mgmt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    margin-top: 20px;
+}
+
+.admin-plant-mgmt-header h3 {
+    margin: 0 !important;
+}
+
+/* 🌱 Plant Table */
+.plants-table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.plants-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 300px;
+}
+
+.plants-table th, .plants-table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.plants-table th {
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.plants-table tr:hover {
+    background-color: var(--senary-color);
+}
+
+.admin-update-plant-btn,
+.admin-update-user-btn,
+.admin-delete-plant-btn,
+.admin-delete-user-btn,
+.admin-view-plant-btn {
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 6px 10px;
+    transition: background 0.3s ease;
+    margin: 0 3px;
+}
+
+.admin-view-plant-btn {
+    background: var(--quinary-color);
+}
+
+.admin-view-plant-btn:hover {
+    background: var(--background-color);
+}
+
+.admin-update-plant-btn,
+.admin-update-user-btn {
+    background: var(--primary-color);
+    color: white;
+}
+
+.admin-delete-plant-btn,
+.admin-delete-user-btn {
+    background: var(--tertiary-color);
+    color: white;
+}
+
+.admin-update-plant-btn:hover,
+.admin-update-user-btn:hover {
+    background: var(--secondary-color);
+}
+
+.admin-delete-plant-btn:hover,
+.admin-delete-user-btn:hover {
+    background: var(--quaternary-color);
+}
+
+.action-buttons {
+    text-align: right;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.pagination button {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.3s ease;
+}
+
+.pagination button:disabled {
+    cursor: not-allowed;
+    background: var(--senary-color);
+}
+
+.pagination span {
+    font-weight: bold;
 }

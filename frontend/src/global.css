@@ -155,3 +155,52 @@ img:focus,
 img:focus-visible {
     outline: none;
 }
+
+/* Dropdown Styling */
+select {
+  width: 100%;
+  padding: 4px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 14px;
+  background: var(--background-color);
+  color: var(--text-color);
+  cursor: pointer;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Focus & Hover Effects */
+select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0px 0px 5px var(--primary-color);
+  outline: none;
+}
+
+select:hover {
+  border-color: var(--secondary-color);
+}
+
+/* Dropdown Arrow */
+select::-ms-expand {
+  display: none;
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23ffffff" d="M2 0L0 2h4zM2 5L0 3h4z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 10px;
+  padding-right: 30px;
+  min-width: 100px;
+}
+
+small {
+  color: #ccc;
+}
+
+small:hover {
+  color: #ccc;
+}

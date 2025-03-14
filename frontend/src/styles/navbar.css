@@ -115,6 +115,7 @@
     align-items: flex-start;
     width: 200px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--text-color);
   }
 
   .nav-links a {

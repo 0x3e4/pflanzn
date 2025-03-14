@@ -1,6 +1,6 @@
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import "../styles/wateringLogCalendar.css";
+import "../styles/Calendar.css";
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { deleteWatering, deletePlantImage } from '../services/PlantService';

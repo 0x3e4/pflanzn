@@ -30,6 +30,18 @@ export const identifyPlant = async (plantId: number) => {
     return response.data;
 };
 
+// Identify from uploaded image
+export const identifyPlantFromImage = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await apiClient.post(`${API_BASE}/identify`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    return response.data;
+};
+
 // Update plant
 export const updatePlant = async (plantId: number, data: Partial<Plant>) => {
     const response = await apiClient.put(`${API_BASE}/${plantId}`, data);

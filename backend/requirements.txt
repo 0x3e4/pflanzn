@@ -3,6 +3,7 @@ uvicorn
 sqlalchemy
 pydantic
 pydantic-settings
+pydantic[email]
 passlib[argon2]
 python-dotenv
 redis

@@ -1,33 +1,67 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { fetchUsers, addUser, updateUserRole, deleteUser } from "../services/UserService";
+import { fetchUsers, addUser, updateUser, deleteUser } from "../services/UserService";
+import { fetchPlants, updatePlant, deletePlant } from "../services/PlantService";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faTrash, faSave, faPlus, faEye, faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 import "../styles/adminPanel.css";
-
-type User = {
-    id: number;
-    username: string;
-    email: string;
-    role: string;
-};
+import { User } from "../types/User";
+import { Plant } from "../types/Plant";
 
 const roles = ["user", "admin"];
 
 export default function AdminPanel() {
+    const navigate = useNavigate();
     const { user } = useAuth();
     const [users, setUsers] = useState<User[]>([]);
+    const [plants, setPlants] = useState<Plant[]>([]);
     const [newUser, setNewUser] = useState({ username: "", email: "", password: "", role: "user" });
     const [modalOpen, setModalOpen] = useState(false);
-    const authMode = import.meta.env.VITE_AUTH_MODE;
+    const [editedPlant, setEditedPlant] = useState<Partial<Plant>>({});
+    const [editedUser, setEditedUser] = useState<Partial<User>>({});
 
+    const [currentPage, setCurrentPage] = useState({ users: 1, plants: 1 });
+    const itemsPerPage = 20; // You can adjust this for both
+    
+    // Calculate total pages
+    const totalUserPages = Math.ceil(users.length / itemsPerPage);
+    const totalPlantPages = Math.ceil(plants.length / itemsPerPage);
+    
+    // Get paginated users
+    const indexOfLastUser = currentPage.users * itemsPerPage;
+    const indexOfFirstUser = indexOfLastUser - itemsPerPage;
+    const currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
+    
+    // Get paginated plants
+    const indexOfLastPlant = currentPage.plants * itemsPerPage;
+    const indexOfFirstPlant = indexOfLastPlant - itemsPerPage;
+    const currentPlants = plants.slice(indexOfFirstPlant, indexOfLastPlant);    
+    
     useEffect(() => {
         if (user?.role === "admin") {
             fetchUsers().then(setUsers).catch(() => toast.error("Failed to load users."));
+            fetchPlants().then((plants) =>
+                setPlants(plants.map((p) => ({ ...p, species: p.species ?? "" })))
+            );            
         }
     }, [user]);
 
+    const handleNavigateToPlant = (plantId: number) => {
+        navigate(`/plant/${plantId}`);
+    };
+
+    const handlePageChange = (type: "users" | "plants", direction: "prev" | "next") => {
+        setCurrentPage((prev) => ({
+            ...prev,
+            [type]: direction === "next" 
+                ? Math.min(prev[type] + 1, type === "users" ? totalUserPages : totalPlantPages) 
+                : Math.max(prev[type] - 1, 1)
+        }));
+    };    
+
+    // Add User
     const handleAddUser = async () => {
         if (!newUser.username || !newUser.email || !newUser.password) {
             toast.error("Please fill all fields.");
@@ -45,31 +79,34 @@ export default function AdminPanel() {
         }
     };
 
-    const handleRoleChange = async (userId: number, role: string) => {
+    // Update User
+    const handleUpdateUser = async (userId: number) => {
         try {
-            await updateUserRole(userId, role);
-            toast.success("Role updated successfully.");
-            fetchUsers().then(setUsers);
+            await updateUser(userId, editedUser);
+    
+            toast.success("User updated successfully.");
+            fetchUsers().then(setUsers).catch(() => toast.error("Failed to load users."));
+            setEditedUser({});
         } catch {
-            toast.error("Failed to update role.");
+            toast.error(`Failed to update user.`);
         }
     };
 
+    // Delete User
     const handleDeleteUser = async (userId: number, username: string) => {
         if (username === import.meta.env.VITE_ADMIN_USER) {
             toast.error("Cannot delete the default admin.");
             return;
         }
-    
-        // Check if this is the last admin
+
         const adminCount = users.filter((u) => u.role === "admin").length;
         if (adminCount === 1 && users.find((u) => u.id === userId)?.role === "admin") {
             toast.error("Cannot delete the last admin user.");
             return;
         }
-    
+
         if (!window.confirm(`Are you sure you want to delete ${username}?`)) return;
-    
+
         try {
             await deleteUser(userId);
             toast.success("User deleted successfully.");
@@ -78,7 +115,36 @@ export default function AdminPanel() {
             toast.error("Failed to delete user.");
         }
     };
-    
+
+    // Update Plant
+    const handleUpdatePlant = async (plantId: number) => {
+        try {
+            await updatePlant(plantId, editedPlant);
+            toast.success("Plant updated successfully.");
+            fetchPlants().then((plants) =>
+                setPlants(plants.map(p => ({ ...p, species: p.species ?? "" })))
+            );
+            setEditedPlant({});
+        } catch {
+            toast.error("Failed to update plant.");
+        }
+    };
+
+    // Delete Plant
+    const handleDeletePlant = async (plantId: number) => {
+        if (!window.confirm("Are you sure you want to delete this plant?")) return;
+
+        try {
+            await deletePlant(plantId);
+            toast.success("Plant deleted successfully.");
+            fetchPlants().then((plants) =>
+                setPlants(plants.map((p) => ({ ...p, species: p.species ?? "" })))
+            );            
+        } catch {
+            toast.error("Failed to delete plant.");
+        }
+    };
+
     if (user?.role !== "admin") {
         return <p>Access denied</p>;
     }
@@ -91,11 +157,9 @@ export default function AdminPanel() {
             {/* User Management Table */}
             <div className="admin-user-mgmt-header">
                 <h3>User Management</h3>
-                {authMode === "local" && (
-                    <button className="add-user-btn" onClick={() => setModalOpen(true)}>
-                        <FontAwesomeIcon icon={faPlus} />
-                    </button>
-                )}
+                <button className="add-user-btn" onClick={() => setModalOpen(true)}>
+                    <FontAwesomeIcon icon={faPlus} />
+                </button>
             </div>
             <div className="users-table-container">
                 <table className="users-table">
@@ -103,37 +167,124 @@ export default function AdminPanel() {
                         <tr><th>ID</th><th>Username</th><th>Email</th><th>Role</th><th></th></tr>
                     </thead>
                     <tbody>
-                        {users.length > 0 ? (
-                            users.map((u) => (
-                                <tr key={u.id}>
-                                    <td>{u.id}</td>
-                                    <td>{u.username}</td>
-                                    <td>{u.email}</td>
-                                    <td>
-                                        {users.length > 1 ? (
-                                            <select value={u.role} onChange={(e) => handleRoleChange(u.id, e.target.value)}>
-                                                {roles.map((role) => <option key={role} value={role}>{role}</option>)}
-                                            </select>
-                                        ) : (
-                                            u.role
-                                        )}
-                                    </td>
-                                    <td>
-                                        {users.length > 1 && u.username !== import.meta.env.VITE_ADMIN_USER && (
-                                            <button className="delete-user-btn" onClick={() => handleDeleteUser(u.id, u.username)}>
-                                                <FontAwesomeIcon icon={faTrash} />
-                                            </button>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan={5}>Loading users...</td>
+                        {currentUsers.map((u) => (
+                            <tr key={u.id}>
+                                <td>
+                                    {u.id}
+                                </td>
+                                <td>
+                                    <input
+                                        type="text"
+                                        value={editedUser.username ?? u.username}
+                                        onChange={(e) => setEditedUser({ ...editedUser, username: e.target.value })}
+                                        className="editable-input"
+                                    />
+                                </td>
+                                <td>
+                                    <input
+                                        type="email"
+                                        value={editedUser.email ?? u.email}
+                                        onChange={(e) => setEditedUser({ ...editedUser, email: e.target.value })}
+                                        className="editable-input"
+                                    />
+                                </td>
+                                <td>
+                                    <select value={editedUser.role ?? u.role} onChange={(e) => setEditedUser({ ...editedUser, role: e.target.value })}>
+                                        {roles.map((role) => <option key={role} value={role}>{role}</option>)}
+                                    </select>
+                                </td>
+                                <td className="action-buttons">
+                                    <button className="admin-update-user-btn" onClick={() => handleUpdateUser(u.id)}>
+                                        <FontAwesomeIcon icon={faSave} />
+                                    </button>
+                                    <button className="admin-delete-user-btn" onClick={() => handleDeleteUser(u.id, u.username)}>
+                                        <FontAwesomeIcon icon={faTrash} />
+                                    </button>
+                                </td>
                             </tr>
-                        )}
+                        ))}
                     </tbody>
                 </table>
+                <div className="pagination">
+                    <button 
+                        onClick={() => handlePageChange("users", "prev")}
+                        disabled={currentPage.users === 1}
+                    >
+                        <FontAwesomeIcon icon={faChevronLeft} />
+                    </button>
+                    <span>{currentPage.users} of {totalUserPages}</span>
+                    <button 
+                        onClick={() => handlePageChange("users", "next")}
+                        disabled={currentPage.users === totalUserPages}
+                    >
+                        <FontAwesomeIcon icon={faChevronRight} />
+                    </button>
+                </div>
+            </div>
+
+            <hr />
+            
+            {/* Plant Management Table */}
+            <div className="admin-plant-mgmt-header">
+                <h3>Plant Management</h3>
+            </div>
+            <div className="plants-table-container">
+                <table className="plants-table">
+                    <thead>
+                        <tr><th>ID</th><th>Name</th><th>Species</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        {currentPlants.map((p) => (
+                            <tr key={p.id}>
+                                <td>
+                                    {p.id}
+                                </td>
+                                <td>
+                                    <input 
+                                        type="text" 
+                                        value={editedPlant.name ?? p.name} 
+                                        onChange={(e) => setEditedUser((prev) => ({ ...prev, name: e.target.value }))} 
+                                        className="editable-input"
+                                    />
+                                </td>
+                                <td>
+                                    <input 
+                                        type="text" 
+                                        value={editedPlant.species ?? p.species} 
+                                        onChange={(e) => setEditedUser((prev) => ({ ...prev, species: e.target.value }))} 
+                                        className="editable-input"
+                                    />
+                                </td>
+                                <td className="action-buttons">
+                                    <button className="admin-view-plant-btn" onClick={() => handleNavigateToPlant(p.id)}>
+                                        <FontAwesomeIcon icon={faEye} />
+                                    </button>
+                                    <button className="admin-update-plant-btn" onClick={() => handleUpdatePlant(p.id)}>
+                                        <FontAwesomeIcon icon={faSave} />
+                                    </button>
+                                    <button className="admin-delete-plant-btn" onClick={() => handleDeletePlant(p.id)}>
+                                        <FontAwesomeIcon icon={faTrash} />
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                <div className="pagination">
+                    <button 
+                        onClick={() => handlePageChange("plants", "prev")}
+                        disabled={currentPage.plants === 1}
+                    >
+                        <FontAwesomeIcon icon={faChevronLeft} />
+                    </button>
+                    <span>{currentPage.plants} of {totalPlantPages}</span>
+                    <button 
+                        onClick={() => handlePageChange("plants", "next")}
+                        disabled={currentPage.plants === totalPlantPages}
+                    >
+                        <FontAwesomeIcon icon={faChevronRight} />
+                    </button>
+                </div>
             </div>
 
             {/* Add User Modal */}
@@ -145,18 +296,18 @@ export default function AdminPanel() {
 
                         <div className="input-row">
                             <input type="text" placeholder="Username" value={newUser.username} 
-                                onChange={(e) => setNewUser({ ...newUser, username: e.target.value })} />
+                                onChange={(e) => setNewUser((prev) => ({ ...prev, username: e.target.value }))} />
                             <input type="email" placeholder="Email" value={newUser.email} 
-                                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} />
+                                onChange={(e) => setNewUser((prev) => ({ ...prev, email: e.target.value }))} />
                         </div>
 
                         <div className="input-row">
                             <input type="password" placeholder="Password" value={newUser.password} 
-                                onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} />
+                                onChange={(e) => setNewUser((prev) => ({ ...prev, password: e.target.value }))} />
                         </div>
 
                         <div className="input-row">
-                            <select value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}>
+                            <select value={newUser.role} onChange={(e) => setNewUser((prev) => ({ ...prev, role: e.target.value }))}>
                                 {roles.map((role) => <option key={role} value={role}>{role}</option>)}
                             </select>
                         </div>
@@ -165,6 +316,7 @@ export default function AdminPanel() {
                     </div>
                 </div>
             )}
+
         </div>
     );
 }

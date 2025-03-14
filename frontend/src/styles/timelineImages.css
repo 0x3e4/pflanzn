@@ -27,6 +27,16 @@
   outline: none;
 }
 
+@media (max-width: 768px) {
+  .plant-image-container {
+    height: 450px;
+  }
+
+  .plant-carousel-image {
+    max-width: 340px;
+  }
+}
+
 .plant-uploaded-date-overlay {
   position: absolute;
   bottom: 0;

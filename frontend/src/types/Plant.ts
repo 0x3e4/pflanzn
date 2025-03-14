@@ -1,7 +1,7 @@
 export interface Plant {
   id: number;
   name: string;
-  species: string | null;
+  species: string;
   description: string | null;
   last_watered: Date;
   waterings: PlantWatering[];
