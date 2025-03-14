@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import apiClient from "../services/apiClient";
-import { toast } from "react-toastify";
 
 type User = {
     id: number;
@@ -46,7 +45,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 await apiClient.post("/auth/login", { username, password });
                 fetchProfile();
             } catch (error) {
-                toast.error("Invalid credentials or login failed.");
                 throw error;
             }
         } else if (authMode === "oidc") {

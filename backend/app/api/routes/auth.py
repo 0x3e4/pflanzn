@@ -1,12 +1,13 @@
 import os
 import time
 import logging
+import redis
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from datetime import timedelta
 from app.database import get_db
-from app.core.security import get_current_user, verify_password, create_access_token
+from app.core.security import get_current_user, verify_password, create_access_token, create_refresh_token
 from app.models import User
 from app.schemas import UserCreate, UserResponse, Token, LoginRequest
 from authlib.integrations.starlette_client import OAuth
@@ -26,6 +27,10 @@ OIDC_PROVIDER_URL = settings.OIDC_PROVIDER_URL
 OIDC_CLIENT_ID = settings.OIDC_CLIENT_ID
 OIDC_CLIENT_SECRET = settings.OIDC_CLIENT_SECRET
 OIDC_REDIRECT_URI = settings.OIDC_REDIRECT_URI
+
+# Redis client
+REDIS_URL = settings.REDIS_URL
+redis_client = redis.StrictRedis.from_url(REDIS_URL, decode_responses=True)
 
 # Initialize OAuth for OIDC
 oauth = OAuth()

@@ -17,7 +17,7 @@ SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = "HS256"
 AUTH_MODE = settings.VITE_AUTH_MODE.lower()  # "no", "local", "oidc"
 
-# Redis client (optional)
+# Redis client
 REDIS_URL = settings.REDIS_URL
 redis_client = redis.StrictRedis.from_url(REDIS_URL, decode_responses=True)
 
