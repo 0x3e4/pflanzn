@@ -39,17 +39,30 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # ==============================================================================
 
 def create_access_token(data: dict, expires_delta: timedelta) -> str:
-    """Create JWT token and optionally store in Redis if session management is enabled."""
+    """Create JWT token and enforce session rotation in Redis."""
     to_encode = data.copy()
     expire = datetime.utcnow() + expires_delta
     to_encode.update({"exp": expire})
 
-    token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    new_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    username = to_encode.get("sub")
 
     if is_session_management_enabled():
-        redis_client.setex(f"session:{to_encode['sub']}", int(expires_delta.total_seconds()), token)
+        # Invalidate previous session
+        redis_client.delete(f"session:{username}")  
+        
+        # Store new session
+        redis_client.setex(f"session:{username}", int(expires_delta.total_seconds()), new_token)
 
-    return token
+    return new_token
+
+def create_refresh_token(data: dict) -> str:
+    """Creates a long-lived refresh token (e.g., 24 hours)."""
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(days=1)
+    to_encode.update({"exp": expire})
+
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def decode_token(token: str) -> dict:
     """Decodes a JWT token and returns the payload."""
@@ -60,13 +73,28 @@ def decode_token(token: str) -> dict:
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-def validate_session(username: str, token: str):
-    """Checks if the token is valid in Redis session store (if enabled)."""
+def validate_session(username: str, token: str, request: Request):
+    """Checks if session is valid and detects token theft."""
     if is_session_management_enabled():
         stored_token = redis_client.get(f"session:{username}")
         if not stored_token or stored_token != token:
             redis_client.delete(f"session:{username}")
             raise HTTPException(status_code=401, detail="Invalid or expired session")
+
+        # Optional: Compare User-Agent/IP for anomaly detection
+        user_agent = request.headers.get("User-Agent", "unknown")
+        client_ip = request.client.host
+
+        session_fingerprint = redis_client.get(f"session_fingerprint:{username}")
+        expected_fingerprint = f"{client_ip}|{user_agent}"
+
+        if session_fingerprint and session_fingerprint != expected_fingerprint:
+            redis_client.delete(f"session:{username}")  # Kill session
+            raise HTTPException(status_code=401, detail="Session anomaly detected")
+            logger.warning(f"Session anomaly detected for {username}")
+
+        # Store fingerprint
+        redis_client.setex(f"session_fingerprint:{username}", 1800, expected_fingerprint)
 
 # ==============================================================================
 # Current User Helpers
