@@ -267,7 +267,3 @@
     cursor: not-allowed;
     background: var(--senary-color);
 }
-
-.pagination span {
-    font-weight: bold;
-}

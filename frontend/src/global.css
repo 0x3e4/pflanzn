@@ -113,7 +113,6 @@ button:hover {
   border: none;
   background: transparent;
   color: var(--text-color);
-  font-weight: bold;
   transition: all 0.2s ease-in-out;
   cursor: pointer;
 }

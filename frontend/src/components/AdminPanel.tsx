@@ -205,21 +205,25 @@ export default function AdminPanel() {
                         ))}
                     </tbody>
                 </table>
-                <div className="pagination">
-                    <button 
-                        onClick={() => handlePageChange("users", "prev")}
-                        disabled={currentPage.users === 1}
-                    >
-                        <FontAwesomeIcon icon={faChevronLeft} />
-                    </button>
-                    <span>{currentPage.users} of {totalUserPages}</span>
-                    <button 
-                        onClick={() => handlePageChange("users", "next")}
-                        disabled={currentPage.users === totalUserPages}
-                    >
-                        <FontAwesomeIcon icon={faChevronRight} />
-                    </button>
-                </div>
+                {totalUserPages > 1 && (
+                    <>
+                        <div className="pagination">
+                            <button 
+                                onClick={() => handlePageChange("users", "prev")}
+                                disabled={currentPage.users === 1}
+                            >
+                                <FontAwesomeIcon icon={faChevronLeft} />
+                            </button>
+                            <span>{currentPage.users} of {totalUserPages}</span>
+                            <button 
+                                onClick={() => handlePageChange("users", "next")}
+                                disabled={currentPage.users === totalUserPages}
+                            >
+                                <FontAwesomeIcon icon={faChevronRight} />
+                            </button>
+                        </div>
+                    </>
+                )}
             </div>
 
             <hr />
@@ -270,21 +274,25 @@ export default function AdminPanel() {
                         ))}
                     </tbody>
                 </table>
-                <div className="pagination">
-                    <button 
-                        onClick={() => handlePageChange("plants", "prev")}
-                        disabled={currentPage.plants === 1}
-                    >
-                        <FontAwesomeIcon icon={faChevronLeft} />
-                    </button>
-                    <span>{currentPage.plants} of {totalPlantPages}</span>
-                    <button 
-                        onClick={() => handlePageChange("plants", "next")}
-                        disabled={currentPage.plants === totalPlantPages}
-                    >
-                        <FontAwesomeIcon icon={faChevronRight} />
-                    </button>
-                </div>
+                {totalPlantPages > 1 && (
+                    <>
+                        <div className="pagination">
+                            <button 
+                                onClick={() => handlePageChange("plants", "prev")}
+                                disabled={currentPage.plants === 1}
+                            >
+                                <FontAwesomeIcon icon={faChevronLeft} />
+                            </button>
+                            <span>{currentPage.plants} of {totalPlantPages}</span>
+                            <button 
+                                onClick={() => handlePageChange("plants", "next")}
+                                disabled={currentPage.plants === totalPlantPages}
+                            >
+                                <FontAwesomeIcon icon={faChevronRight} />
+                            </button>
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Add User Modal */}
