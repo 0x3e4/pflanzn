@@ -82,6 +82,8 @@ export default function PlantDetails() {
             return;
         }
 
+        setLoadingPlant(true);
+
         try {
             const result = await identifyPlant(Number(plantId));
 
@@ -98,6 +100,8 @@ export default function PlantDetails() {
             })));
         } catch (error) {
             toast.error((error as Error).message || "Failed to identify plant.");
+        } finally {
+            setLoadingPlant(false);
         }
     };
 
