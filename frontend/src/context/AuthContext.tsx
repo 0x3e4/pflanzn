@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
 import apiClient from "../services/apiClient";
 
 type User = {
@@ -25,25 +25,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [loading, setLoading] = useState<boolean>(true);
 
     const authMode = import.meta.env.VITE_AUTH_MODE || "no";
+    const isAuthDisabled = authMode === "no";
 
     useEffect(() => {
-        const hasAuth = document.cookie.includes("access_token");
+        const checkAuth = async () => {
+            setLoading(true);
     
-        if (authMode === "no" || !hasAuth) {
+            if (authMode === "no") {
+                setLoading(false);
+                setUser(null);
+                setIsLoggedIn(false);
+                return;
+            }
+    
+            try {
+                await fetchProfile();
+            } catch (error) {
+                console.error("Error fetching profile:", error);
+                setUser(null);
+                setIsLoggedIn(false);
+            }
             setLoading(false);
-            setUser(null);
-            setIsLoggedIn(false);
-            return;
-        }
+        };
     
-        fetchProfile().finally(() => setLoading(false));
+        checkAuth();
     }, [authMode]);
     
     const login = async (username: string, password: string) => {
         if (authMode === "local") {
             try {
                 await apiClient.post("/auth/login", { username, password });
-                fetchProfile();
+                await fetchProfile();
             } catch (error) {
                 throw error;
             }
@@ -52,24 +64,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const refreshToken = async () => {
+        if (isLoggedIn) {
+            try {
+                const response = await apiClient.post("/auth/refresh");
+                return response.data;
+            } catch (error) {
+                console.error("Refresh token failed:", error);
+                return null;
+            }
+        }
+    };
+
     const fetchProfile = async () => {
-        setLoading(true);
         try {
             const response = await apiClient.get<User>("/users/profile");
-            setUser(response.data);
-            setIsLoggedIn(true);
-        } catch (error) {
-            setUser(null);
-            setIsLoggedIn(false);
-
-            if (authMode === "oidc") {
-                window.location.href = "/auth/oidc-login";
+            if (response.data) {
+                if (!user || user.id !== response.data.id) {
+                    setUser(response.data);
+                    setIsLoggedIn(true);
+                }
+                // Refresh token only if the user is authenticated
+                await refreshToken();
+            } else {
+                setUser(null);
+                setIsLoggedIn(false);
+            }
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                setUser(null);
+                setIsLoggedIn(false);                  
+                if (authMode === "oidc") {
+                    window.location.href = "/auth/oidc-login";
+                }
+            } else {
+                console.error("Unexpected error fetching profile:", error);
             }
         } finally {
             setLoading(false);
         }
     };
-
+    
     const logout = async () => {
         try {
             await apiClient.post("/auth/logout");
@@ -80,8 +115,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoggedIn(false);
     };
 
+    const authValue = useMemo(() => ({
+        user,
+        login,
+        logout,
+        fetchProfile,
+        isLoggedIn: isAuthDisabled || isLoggedIn,
+        loading
+    }), [user, isLoggedIn, loading, isAuthDisabled]);
+
     return (
-        <AuthContext.Provider value={{ user, login, logout, fetchProfile, isLoggedIn, loading }}>
+        <AuthContext.Provider value={authValue}>
             {children}
         </AuthContext.Provider>
     );
@@ -89,6 +133,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
-    if (!context) throw new Error("useAuth must be used within AuthProvider");
+    if (!context) {
+        return { user: null, isLoggedIn: false, loading: true, login: async () => {}, logout: async () => {}, fetchProfile: async () => {} };
+    }
     return context;
 };

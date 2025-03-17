@@ -8,6 +8,7 @@ import { PlantWatering, PlantImage } from '../types/Plant';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faCircleXmark, faDroplet, faCamera } from "@fortawesome/free-solid-svg-icons";
 import { toast } from 'react-toastify';
+import { useAuth } from "../context/AuthContext";
 
 interface Props {
     waterings: PlantWatering[];
@@ -48,6 +49,8 @@ function WateringTooltipOverlay({ content, position }: { content: React.ReactNod
 }
 
 export default function WateringLogCalendar({ waterings, images, plantId }: Props) {
+    const { isLoggedIn } = useAuth();
+
     const [localWaterings, setLocalWaterings] = useState<PlantWatering[]>(waterings);
     const [uploadedImages, setUploadedImages] = useState<PlantImage[]>(images);
     const [hoveredDate, setHoveredDate] = useState<string | null>(null);
@@ -133,6 +136,11 @@ export default function WateringLogCalendar({ waterings, images, plantId }: Prop
     };
 
     const handleConfirmDelete = async () => {
+        if (!isLoggedIn) {
+            toast.error("You must be logged in to delete events.");
+            return;
+        }
+
         if (!deleteTarget) return;
         try {
             if (deleteTarget.type === "watering") {
@@ -176,9 +184,17 @@ export default function WateringLogCalendar({ waterings, images, plantId }: Prop
                                                 hour: '2-digit',
                                                 minute: '2-digit'
                                             })}
-                                            <button className="watering-delete-btn" onClick={() => openDeleteModal("watering", watering.id)}>
-                                                <FontAwesomeIcon icon={faTrash} />
-                                            </button>
+                                            {isLoggedIn ? (
+                                                <>
+                                                    <button className="watering-delete-btn" onClick={() => openDeleteModal("watering", watering.id)}>
+                                                        <FontAwesomeIcon icon={faTrash} />
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <button className="watering-delete-btn" onClick={() => toast.warning("You must be logged in to delete watering events.")}>
+                                                    <FontAwesomeIcon icon={faTrash} />
+                                                </button>
+                                            )}
                                         </li>
                                     ))}
                                 </ul>
@@ -197,9 +213,17 @@ export default function WateringLogCalendar({ waterings, images, plantId }: Prop
                                                 hour: '2-digit',
                                                 minute: '2-digit'
                                             })}
-                                            <button className="watering-delete-btn" onClick={() => openDeleteModal("image", image.id)}>
-                                                <FontAwesomeIcon icon={faTrash} />
-                                            </button>
+                                            {isLoggedIn ? (
+                                                <>
+                                                    <button className="watering-delete-btn" onClick={() => openDeleteModal("image", image.id)}>
+                                                        <FontAwesomeIcon icon={faTrash} />
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <button className="watering-delete-btn" onClick={() => toast.warning("You must be logged in to delete uploaded image events.")}>
+                                                    <FontAwesomeIcon icon={faTrash} />
+                                                </button>
+                                            )}
                                         </li>
                                     ))}
                                 </ul>

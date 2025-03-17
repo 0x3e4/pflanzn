@@ -107,7 +107,7 @@ button:hover {
   justify-content: center;
 }
 
-.editable-input {
+.editable-input, .editable-input-noauth {
   display: inline-block;
   padding: 0;
   border: none;
@@ -126,7 +126,7 @@ button:hover {
   border-radius: 4px;
 }
 
-.editable-div {
+.editable-div, .editable-div-noauth {
   display: block;
   background-color: transparent;
   color: var(--text-color);
@@ -139,6 +139,10 @@ button:hover {
   outline: none;
   text-align: justify;
   hyphens: auto;
+}
+
+.editable-input-noauth, .editable-div-noauth {
+  cursor: default !important;
 }
 
 .editable-div.editing {
@@ -202,4 +206,8 @@ small {
 
 small:hover {
   color: #ccc;
+}
+
+.Toastify {
+  text-align: left;
 }

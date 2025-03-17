@@ -13,6 +13,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from "./context/AuthContext";
 
 export default function App() {
+const authMode = import.meta.env.VITE_AUTH_MODE || "no";
+
     return (
         <AuthProvider>
             <Router>
@@ -23,7 +25,7 @@ export default function App() {
                         <Route path="/about" element={<About />} />
                         <Route path="/plants" element={<Plants />} />
                         <Route path="/plant/:plantId" element={<PlantDetails />} />
-                        <Route path="/login" element={<Login />} />
+                        {authMode === "local" && <Route path="/login" element={<Login />} />}
                         <Route path="/profile" element={<Profile />} />
                     </Routes>
                     <ScrollToTopButton />

@@ -46,7 +46,7 @@ if AUTH_MODE == "oidc":
 @router.post("/login")
 def login(user_data: LoginRequest, db: Session = Depends(get_db)):
     """Handles user authentication and issues access & refresh tokens."""
-    logger.info(f"Login attempt for user: '{user_data.username}'")
+    logger.debug(f"Login attempt for user: '{user_data.username}'")
 
     user = db.query(User).filter(User.username == user_data.username).first()
     if not user or not verify_password(user_data.password, user.password):
@@ -57,7 +57,7 @@ def login(user_data: LoginRequest, db: Session = Depends(get_db)):
     refresh_token = create_refresh_token({"sub": user.username})
 
     # Store refresh token in Redis
-    redis_client.setex(f"refresh:{user.username}", 86400, refresh_token)  # 1-day expiration
+    redis_client.setex(f"refresh:{user.username}", 86400, refresh_token)
 
     # Secure response with HTTP-only cookies
     response = JSONResponse(content={"message": "Login successful"})
@@ -98,34 +98,59 @@ def logout():
     """Clears the authentication cookie."""
     response = JSONResponse(content={"message": "Logout successful"})
     response.delete_cookie("access_token")
+    response.delete_cookie("refresh_token")
     return response
 
 @router.post("/refresh")
 def refresh_token(request: Request):
-    """Handles token refresh by rotating session ID and issuing new access tokens."""
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
+        logger.debug("No refresh token found in request")
         raise HTTPException(status_code=401, detail="No valid refresh token")
 
     try:
         payload = decode_token(refresh_token)
         username = payload.get("sub")
 
-        # Validate stored refresh token in Redis
         stored_refresh_token = redis_client.get(f"refresh:{username}")
-        if not stored_refresh_token or stored_refresh_token != refresh_token:
+
+        logger.debug(f"Stored refresh token: {stored_refresh_token}")
+        logger.debug(f"Received refresh token: {refresh_token}")
+
+        if not stored_refresh_token or stored_refresh_token.strip() != refresh_token.strip():
             redis_client.delete(f"refresh:{username}")
+            logger.debug(f"Invalid refresh token for user {username}")
             raise HTTPException(status_code=401, detail="Invalid refresh token")
 
-        # Generate a new access token
         new_access_token = create_access_token({"sub": username}, expires_delta=timedelta(minutes=30))
+        new_refresh_token = create_refresh_token({"sub": username})
 
-        # Securely set new access token in HTTP-only cookies
+        redis_client.setex(f"refresh:{username}", 86400, new_refresh_token)
+
         response = JSONResponse(content={"message": "Access token refreshed"})
-        response.set_cookie(key="access_token", value=new_access_token, httponly=True, secure=True, samesite="Strict", max_age=1800, path="/")
+        response.set_cookie(
+            key="access_token",
+            value=new_access_token,
+            httponly=True,
+            secure=True,
+            samesite="None",
+            max_age=1800,
+            path="/"
+        )
+        response.set_cookie(
+            key="refresh_token",
+            value=new_refresh_token,
+            httponly=True,
+            secure=True,
+            samesite="None",
+            max_age=86400,
+            path="/"
+        )
 
         return response
     except jwt.ExpiredSignatureError:
+        logger.debug(f"Refresh token expired for user {username}")
         raise HTTPException(status_code=401, detail="Refresh token expired, please login again")
-    except jwt.PyJWTError:
+    except jwt.PyJWTError as e:
+        logger.error(f"JWT Error: {str(e)}")
         raise HTTPException(status_code=401, detail="Invalid refresh token")

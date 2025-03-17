@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 # Initialize database
 init_db()
-logger.info("Database initialized.")
+logger.debug("Database initialized.")
 
 # Initialize FastAPI
 app = FastAPI(
@@ -48,7 +48,7 @@ app.include_router(locations.router, prefix="/api/locations", tags=["Locations"]
 
 @app.get("/")
 def root():
-    logger.info("Root endpoint accessed.")
+    logger.debug("Root endpoint accessed.")
     return {"message": "Welcome to the Plant Management API!"}
 
 @app.on_event("startup")

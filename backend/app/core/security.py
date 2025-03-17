@@ -104,10 +104,13 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
     """Retrieves the currently authenticated user from Secure Cookie."""
     token = request.cookies.get("access_token")
     if not token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+        return None
 
     payload = decode_token(token)
     username = payload.get("sub")
+
+    # Validate session using Redis before returning the user
+    validate_session(username, token, request)
 
     user = db.query(User).filter(User.username == username).first()
     if not user:

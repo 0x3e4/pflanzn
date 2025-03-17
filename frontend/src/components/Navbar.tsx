@@ -14,7 +14,7 @@ export default function Navbar() {
     const [identifyResults, setIdentifyResults] = useState<{ species: string; commonName: string; score: string; images: string[] }[] | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const navRef = useRef<HTMLElement | null>(null);
-    const { user, loading } = useAuth();
+    const { isLoggedIn, loading } = useAuth();
     const authMode = import.meta.env.VITE_AUTH_MODE;
 
     useEffect(() => {
@@ -103,8 +103,8 @@ export default function Navbar() {
                 <div className={`nav-links ${menuOpen ? "active" : ""}`}>
                     <Link to="/plants" onClick={() => setMenuOpen(false)}>Plants</Link>
 
-                    {!loading && authMode !== "oidc" && (
-                        user ? (
+                    {!loading && authMode === "local" && (
+                        isLoggedIn ? (
                             <Link to="/profile" onClick={() => setMenuOpen(false)}>
                                 Profile
                             </Link>

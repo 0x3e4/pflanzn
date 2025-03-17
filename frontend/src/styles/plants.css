@@ -236,11 +236,12 @@
   background-color: var(--nonal-color);
 }
 
-.plant-buttons input[type="file"]:valid + button {
+.plant-buttons .file-input-plant-btn {
   background-color: var(--quinary-color);
+  border-radius: 0;
 }
 
-.plant-buttons input[type="file"]:valid + button:hover {
+.plant-buttons .file-input-plant-btn:hover {
   background-color: var(--senary-color);
 }
 

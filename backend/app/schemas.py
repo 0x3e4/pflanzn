@@ -19,8 +19,8 @@ class UserUpdate(BaseModel):
     role: Optional[str] = None
 
 class UserPasswordUpdate(BaseModel):
-    old_password: str = Field(..., min_length=6, description="Current password of the user")
-    new_password: str = Field(..., min_length=8, description="New password with at least 8 characters")
+    old_password: str = Field(..., description="Current password of the user")
+    new_password: str = Field(..., description="New password of the user")
 
 class UserResponse(BaseModel):
     id: int

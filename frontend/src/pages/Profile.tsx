@@ -31,21 +31,24 @@ const Profile: React.FC = () => {
 
     useEffect(() => {
         const loadProfile = async () => {
-            try {
-                await fetchProfile();
-            } catch {
-                toast.error("Failed to load profile data.");
-            } finally {
-                setLoading(false);
+            if (!user) {
+                try {
+                    await fetchProfile();
+                } catch {
+                    toast.error("Failed to load profile data.");
+                }
             }
+    
+            setLoading(false);
         };
     
         loadProfile();
-    }, []);
+    }, [user]) 
     
     useEffect(() => {
         if (user) {
             setEditedUser({
+                id: user.id,
                 username: user.username,
                 email: user.email
             });
@@ -71,6 +74,11 @@ const Profile: React.FC = () => {
                 return;
             }
     
+            if (user!.id === 1) {
+                toast.warning("Cannot update the default admin.");
+                return;
+            }
+
             // Ensure the logged-in user only updates their own profile
             if (user!.id !== editedUser.id) {
                 toast.error("You can only update your own profile.");
@@ -85,6 +93,11 @@ const Profile: React.FC = () => {
     };    
 
     const handleChangePassword = async () => {
+        if (user!.id === 1) {
+            toast.warning("Cannot update the default admin.");
+            return;
+        }
+
         if (!passwords.oldPassword || !passwords.newPassword || !passwords.confirmPassword) {
             toast.error("Please fill all fields.");
             return;

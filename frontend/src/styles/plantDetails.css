@@ -33,7 +33,7 @@
     flex-wrap: wrap;
 }
 
-.delete-plant-btn, .generate-description-btn, .ai-care-helper-btn, .water-plant-btn, .identify-plant-btn {
+.delete-plant-btn, .generate-description-btn, .ai-care-helper-btn, .water-plant-btn, .identify-plant-btn, .file-input-plant-btn {
     flex-shrink: 0;
     white-space: nowrap;
     width: auto;
@@ -43,6 +43,14 @@
     border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+}
+
+.file-input-plant-btn {
+    background-color: var(--quinary-color);
+}
+  
+.file-input-plant-btn:hover {
+    background-color: var(--senary-color);
 }
 
 .delete-plant-btn {

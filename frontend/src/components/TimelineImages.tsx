@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faCircleXmark, faChevronLeft, faChevronRight, faExpand } from "@fortawesome/free-solid-svg-icons";
 import "../styles/timelineImages.css";
+import { useAuth } from "../context/AuthContext";
 
 interface TimelineImagesProps {
     images: PlantImage[];
@@ -12,6 +13,8 @@ interface TimelineImagesProps {
 }
 
 export default function TimelineImages({ images, plantId }: TimelineImagesProps) {
+    const { isLoggedIn } = useAuth();
+
     const [localImages, setLocalImages] = useState<PlantImage[]>(images);
 
     useEffect(() => {
@@ -55,7 +58,7 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
     const goToNext = () => setActiveIndex((prev) => (prev < sortedImages.length - 1 ? prev + 1 : 0));
 
     if (sortedImages.length === 0) {
-        return <div>No images yet.</div>;
+        return;
     }
 
     const formattedDate = new Date(activeImage.uploaded_at).toLocaleString(import.meta.env.VITE_Locale, {
@@ -115,9 +118,19 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
                         <button className="plant-view-fullsize-btn" onClick={openFullSizeModal}>
                             <FontAwesomeIcon icon={faExpand} />
                         </button>
-                        <button className="plant-image-delete-btn" onClick={openDeleteModal}>
-                            <FontAwesomeIcon icon={faTrash} />
-                        </button>
+                        {isLoggedIn ? (
+                            <>
+                                <button className="plant-image-delete-btn" onClick={openDeleteModal}>
+                                    <FontAwesomeIcon icon={faTrash} />
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <button className="plant-image-delete-btn" onClick={() => toast.warning("You must be logged in to delete images.")}>
+                                    <FontAwesomeIcon icon={faTrash} />
+                                </button>
+                            </>
+                        )}
                     </div>
 
                     <div className="plant-uploaded-date-overlay">

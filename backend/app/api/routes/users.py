@@ -1,16 +1,24 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User
 from app.schemas import UserResponse, UserCreate, UserUpdate, UserPasswordUpdate
-from typing import List
+from typing import List, Optional
 from app.core.security import hash_password, get_current_user, get_current_admin_user, verify_password
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-@router.get("/profile", response_model=UserResponse)
-def get_user_profile(current_user: User = Depends(get_current_user)):
+@router.get("/profile", response_model=Optional[UserResponse])
+def get_user_profile(current_user: Optional[User] = Depends(get_current_user)):
     """Returns the authenticated user's profile."""
+    if not current_user:
+        return None
+
     return UserResponse(
         id=current_user.id,
         username=current_user.username,

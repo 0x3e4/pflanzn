@@ -44,4 +44,4 @@ def init_db():
     """
     from app import models
     models.Base.metadata.create_all(bind=engine)
-    logger.info("Database tables ensured.")
+    logger.debug("Database tables ensured.")

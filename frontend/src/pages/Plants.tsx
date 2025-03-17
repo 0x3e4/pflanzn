@@ -24,6 +24,7 @@ import {
     faDroplet,
 } from "@fortawesome/free-solid-svg-icons";
 import LoadingOverlay from "../components/LoadingOverlay";
+import { useAuth } from "../context/AuthContext";
 
 export default function Plants() {
   const [plants, setPlants] = useState<Plant[]>([]);
@@ -41,6 +42,8 @@ export default function Plants() {
     plantId: number;
     results: { species: string; commonName: string; score: string, images: string[] }[];
   } | null>(null);
+
+  const { isLoggedIn } = useAuth();
 
   useEffect(() => {
     fetchPlantsFromService();
@@ -72,6 +75,11 @@ export default function Plants() {
   };
 
   const handleCreatePlant = async () => {
+    if (!isLoggedIn) {
+      toast.error("You must be logged in to add plants.");
+      return;
+    }
+
     try {
       const createdPlant = await createPlant(newPlant.name, newPlant.species);
       toast.success("Plant created!");
@@ -89,6 +97,11 @@ export default function Plants() {
   };
 
   const handleWaterPlant = async (plantId: number) => {  
+    if (!isLoggedIn) {
+      toast.error("You must be logged in to water plants.");
+      return;
+    }
+
     const currentDateTime = DateTime.now().toISO();
 
     try {
@@ -101,6 +114,11 @@ export default function Plants() {
   };
 
   const handleIdentifyExistingPlant = async (plantId: number) => {
+    if (!isLoggedIn) {
+      toast.error("You must be logged in to identify plants.");
+      return;
+    }
+
     try {
       const result = await identifyPlant(plantId);
 
@@ -124,6 +142,11 @@ export default function Plants() {
   };
 
   const handleUploadImageForPlant = async (plantId: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isLoggedIn) {
+      toast.error("You must be logged in to add images to plants.");
+      return;
+    }
+
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -187,11 +210,16 @@ export default function Plants() {
     <div className="container plants-container">
       <div className="plants-header">
         <h1>Plants</h1>
-        <button className="add-plant-btn" onClick={() => setModalOpen(true)}>
-          <FontAwesomeIcon icon={faPlus} />
-        </button>
+        {isLoggedIn ? (
+            <button className="add-plant-btn" onClick={() => setModalOpen(true)}>
+                <FontAwesomeIcon icon={faPlus} />
+            </button>
+        ) : (
+            <button className="add-plant-btn" onClick={() => toast.warning("You must be logged in to add plants.")}>
+                <FontAwesomeIcon icon={faPlus} />
+            </button>
+        )}
       </div>
-
       <div className="plants-list">
         {plants.map((plant) => {
           const sortedImages = [...(plant.images || [])].sort(
@@ -231,23 +259,43 @@ export default function Plants() {
                 </div>
               </Link>
               <div className="plant-buttons">
-                <button className="water-plant-btn" onClick={() => handleWaterPlant(plant.id)}>
-                  <FontAwesomeIcon icon={faDroplet} />
-                </button>
-                <input
-                  type="file"
-                  id={`file-upload-${plant.id}`}
-                  className="file-input"
-                  onChange={(e) => handleUploadImageForPlant(plant.id, e)}
-                />
-                <button onClick={() => {
-                  document.getElementById(`file-upload-${plant.id}`)?.click();
-                }}>
-                  <FontAwesomeIcon icon={faUpload} />
-                </button>
-                <button onClick={() => handleIdentifyExistingPlant(plant.id)}>
-                  <FontAwesomeIcon icon={faFingerprint} />
-                </button>
+              {isLoggedIn ? (
+                  <button className="water-plant-btn" onClick={() => handleWaterPlant(plant.id)}>
+                      <FontAwesomeIcon icon={faDroplet} />
+                  </button>
+              ) : (
+                  <button className="water-plant-btn" onClick={() => toast.warning("You must be logged in to water plants.")}>
+                      <FontAwesomeIcon icon={faDroplet} />
+                  </button>
+              )}
+
+              {isLoggedIn ? (
+                  <>
+                      <input
+                          type="file"
+                          id={`file-upload-${plant.id}`}
+                          className="file-input"
+                          onChange={(e) => handleUploadImageForPlant(plant.id, e)}
+                      />
+                      <button className="file-input-plant-btn" onClick={() => document.getElementById(`file-upload-${plant.id}`)?.click()}>
+                          <FontAwesomeIcon icon={faUpload} />
+                      </button>
+                  </>
+              ) : (
+                  <button className="file-input-plant-btn" onClick={() => toast.warning("You must be logged in to upload images.")}>
+                      <FontAwesomeIcon icon={faUpload} />
+                  </button>
+              )}
+
+              {isLoggedIn ? (
+                  <button onClick={() => handleIdentifyExistingPlant(plant.id)}>
+                      <FontAwesomeIcon icon={faFingerprint} />
+                  </button>
+              ) : (
+                  <button onClick={() => toast.warning("You must be logged in to identify plants.")}>
+                      <FontAwesomeIcon icon={faFingerprint} />
+                  </button>
+              )}
               </div>
             </div>
           );

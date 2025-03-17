@@ -6,21 +6,25 @@ import {
     updatePlant,
     generatePlantDescription,
     waterPlant,
-    identifyPlant
+    identifyPlant,
+    uploadPlantImage
 } from "../services/PlantService";
 import { Plant } from "../types/Plant";
 import TimelineImages from "../components/TimelineImages";
 import Description from "../components/Description";
 import Calendar from "../components/Calendar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash, faWandMagicSparkles, faDroplet, faCalendarAlt, faFingerprint, faCircleXmark } from "@fortawesome/free-solid-svg-icons";
+import { faTrash, faWandMagicSparkles, faDroplet, faCalendarAlt, faFingerprint, faCircleXmark, faUpload } from "@fortawesome/free-solid-svg-icons";
 import "../styles/plantDetails.css";
 import { DateTime } from 'luxon';
 import { toast } from 'react-toastify';
 import LoadingOverlay from "../components/LoadingOverlay";
 import IdentifyResults from "../components/IdentifyResults";
+import { useAuth } from "../context/AuthContext";
 
 export default function PlantDetails() {
+    const { isLoggedIn } = useAuth();
+
     const { plantId } = useParams();
     const navigate = useNavigate();
 
@@ -51,8 +55,32 @@ export default function PlantDetails() {
         }
     };
 
+    const handleUploadImageForPlant = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!plantId) return;
+
+        if (!isLoggedIn) {
+            toast.error("You must be logged in to add images to plants.");
+            return;
+        }
+
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            await uploadPlantImage(Number(plantId), file);
+            toast.success("Image uploaded!");
+        } catch (err) {
+            toast.error((err as Error).message || "Failed to upload the image.");
+        }
+    };
+
     const handleIdentifyPlant = async () => {
         if (!plantId) return;
+
+        if (!isLoggedIn) {
+            toast.error("You must be logged in to identify plants.");
+            return;
+        }
 
         try {
             const result = await identifyPlant(Number(plantId));
@@ -76,6 +104,11 @@ export default function PlantDetails() {
     // Handle updating plant (name/species/description/etc.)
     const handleUpdate = async (updatedFields: Partial<Plant>) => {
       if (!plant || !plantId) return;
+
+      if (!isLoggedIn) {
+        toast.error("You must be logged in to update plants.");
+        return;
+        }
   
       const hasChanges = Object.keys(updatedFields).some((key) => {
           const fieldKey = key as keyof Plant;
@@ -95,6 +128,11 @@ export default function PlantDetails() {
 
     // Handle delete plant via confirmation modal
     const handleConfirmDelete = async () => {
+        if (!isLoggedIn) {
+            toast.error("You must be logged in to delete plants.");
+            return;
+        }
+
         try {
             await deletePlant(Number(plantId));
             toast.success("Plant deleted successfully!");
@@ -108,6 +146,11 @@ export default function PlantDetails() {
 
     // Water the plant (log watering date)
     const handleWaterPlant = async () => {
+        if (!isLoggedIn) {
+            toast.error("You must be logged in to water plants.");
+            return;
+        }
+
         try {
             await waterPlant(Number(plantId), { watered_at: selectedDateTime });
             loadPlant(); // refresh after watering
@@ -119,6 +162,11 @@ export default function PlantDetails() {
 
     // Generate AI description
     const handleGenerateDescription = async () => {
+        if (!isLoggedIn) {
+            toast.error("You must be logged in to update plants.");
+            return;
+        }
+
         try {
             const { description } = await generatePlantDescription(Number(plantId));
             handleUpdate({ description });
@@ -142,28 +190,58 @@ export default function PlantDetails() {
                 <div className="plant-left-column">
                     <div className="plant-information">
                         <h2>
-                            <span 
-                                className="editable-input"
-                                contentEditable
-                                suppressContentEditableWarning
-                                onBlur={(e) => handleUpdate({ name: e.target.innerText })}
-                                tabIndex={0}
-                            >
-                                {plant.name || "Unnamed Plant"}
-                            </span>
+                            {isLoggedIn ? (
+                                <>
+                                    <span 
+                                        className="editable-input"
+                                        contentEditable
+                                        suppressContentEditableWarning
+                                        onBlur={(e) => handleUpdate({ name: e.target.innerText })}
+                                        tabIndex={0}
+                                    >
+                                        {plant.name || "Unnamed Plant"}
+                                    </span>
+                                </>
+                            ) : (
+                                <>
+                                    <span
+                                        className="editable-input-noauth"
+                                        suppressContentEditableWarning
+                                        onClick={() => toast.warning("You must be logged in to update plants.")}
+                                        tabIndex={0}
+                                    >
+                                        {plant.species || "Unknown"}
+                                    </span>
+                                </>
+                            )}
                         </h2>
                         <small>#{plant.id}</small>
                         <span>
                             <strong>Species:</strong>{" "}
-                            <span
-                                className="editable-input"
-                                contentEditable
-                                suppressContentEditableWarning
-                                onBlur={(e) => handleUpdate({ species: e.target.innerText })}
-                                tabIndex={0}
-                            >
-                                {plant.species || "Unknown"}
-                            </span>
+                            {isLoggedIn ? (
+                                <>
+                                    <span
+                                        className="editable-input"
+                                        contentEditable
+                                        suppressContentEditableWarning
+                                        onBlur={(e) => handleUpdate({ species: e.target.innerText })}
+                                        tabIndex={0}
+                                    >
+                                        {plant.species || "Unknown"}
+                                    </span>
+                                </>
+                            ) : (
+                                <>
+                                    <span
+                                        className="editable-input-noauth"
+                                        suppressContentEditableWarning
+                                        onClick={() => toast.warning("You must be logged in to update plants.")}
+                                        tabIndex={0}
+                                    >
+                                        {plant.species || "Unknown"}
+                                    </span>
+                                </>
+                            )}
                         </span>
                         <span>
                             <strong>Last Watered:</strong>{" "}
@@ -198,9 +276,17 @@ export default function PlantDetails() {
                 <div className="plant-global-button-section">
                     <div className="plant-global-button-left">
                         <div className="water-plant-input-container">
-                            <button className="water-plant-btn" onClick={handleWaterPlant}>
-                                <FontAwesomeIcon icon={faDroplet} /> Water Plant
-                            </button>
+                            {isLoggedIn ? (
+                                <>
+                                    <button className="water-plant-btn" onClick={handleWaterPlant}>
+                                        <FontAwesomeIcon icon={faDroplet} /> Water Plant
+                                    </button>
+                                </>
+                            ) : (
+                                <button className="water-plant-btn" onClick={() => toast.warning("You must be logged in to water plants.")}>
+                                    <FontAwesomeIcon icon={faDroplet} /> Water Plant
+                                </button>
+                            )}
                             <div className="water-plant-datetime">
                                 <FontAwesomeIcon icon={faCalendarAlt} />
                                 <input
@@ -211,26 +297,74 @@ export default function PlantDetails() {
                             </div>
                         </div>
 
-                        <button className="identify-plant-btn" onClick={handleIdentifyPlant}>
-                            <FontAwesomeIcon icon={faFingerprint} /> Identify Plant
-                        </button>
+                        {isLoggedIn ? (
+                            <>
+                                <input
+                                    type="file"
+                                    id={`file-upload-${plant.id}`}
+                                    className="file-input"
+                                    onChange={(e) => handleUploadImageForPlant(e)}
+                                />
+                                <button className="file-input-plant-btn" onClick={() => document.getElementById(`file-upload-${plant.id}`)?.click()}>
+                                    <FontAwesomeIcon icon={faUpload} /> Upload Image
+                                </button>
+                            </>
+                        ) : (
+                                <button className="file-input-plant-btn" onClick={() => toast.warning("You must be logged in to upload images.")}>
+                                    <FontAwesomeIcon icon={faUpload} /> Upload Image
+                                </button>
+                        )}
+
+                        {isLoggedIn ? (
+                            <>
+                                <button className="identify-plant-btn" onClick={handleIdentifyPlant}>
+                                    <FontAwesomeIcon icon={faFingerprint} /> Identify Plant
+                                </button>
+                            </>
+                        ) : (
+                                <button className="identify-plant-btn" onClick={() => toast.warning("You must be logged in to identify images.")}>
+                                    <FontAwesomeIcon icon={faFingerprint} /> Identify Plant
+                                </button>
+                        )}
 
                         {import.meta.env.VITE_LLM_PROVIDER && (
                             <>
-                                <button className="ai-care-helper-btn" onClick={handleGenerateDescription}> {/* WORK IN PROGRESS */}
-                                    <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Care Helper
-                                </button>
+                                {isLoggedIn ? (
+                                    <>
+                                        <button className="ai-care-helper-btn" onClick={handleGenerateDescription}> {/* WORK IN PROGRESS */}
+                                            <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Care Helper
+                                        </button>
 
-                                <button className="generate-description-btn" onClick={handleGenerateDescription}>
-                                    <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Description
-                                </button>
+                                        <button className="generate-description-btn" onClick={handleGenerateDescription}>
+                                            <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Description
+                                        </button>
+                                    </>
+                                ) : (
+                                        <>
+                                            <button className="ai-care-helper-btn" onClick={() => toast.warning("You must be logged in to receive tips from AI.")}> {/* WORK IN PROGRESS */}
+                                                <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Care Helper
+                                            </button>
+
+                                            <button className="generate-description-btn" onClick={() => toast.warning("You must be logged in to generate a description with AI.")}>
+                                                <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Description
+                                            </button>
+                                        </>
+                                )}
                             </>
                         )}
                     </div>
 
-                    <button className="delete-plant-btn" onClick={() => setDeleteModalOpen(true)}>
-                        <FontAwesomeIcon icon={faTrash} /> Delete Plant
-                    </button>
+                    {isLoggedIn ? (
+                        <>
+                            <button className="delete-plant-btn" onClick={() => setDeleteModalOpen(true)}>
+                                <FontAwesomeIcon icon={faTrash} /> Delete Plant
+                            </button>
+                        </>
+                    ) : (
+                        <button className="delete-plant-btn" onClick={() => toast.warning("You must be logged in to delete plants.")}>
+                            <FontAwesomeIcon icon={faTrash} /> Delete Plant
+                        </button>
+                    )}
                 </div>
             </div>
 
