@@ -1,6 +1,7 @@
 .about-container {
     text-align: left;
     background-color: var(--secondary-background-color);
+    min-height: 75vh;
 }
 
 .about-content {
@@ -8,14 +9,12 @@
 }
 
 .about-content h1 {
-    font-size: 3rem;
     font-weight: bold;
     margin-bottom: 20px;
     margin: 0;
 }
 
 .about-content p {
-    font-size: 1.2rem;
     margin-bottom: 20px;
     text-align: justify;
 }
@@ -25,7 +24,6 @@ hr {
 }
 
 .about-features h2 {
-    font-size: 1.5rem;
     margin: 0;
     margin-bottom: 10px;
 }
@@ -40,6 +38,58 @@ hr {
 }
 
 .about-features li {
-    font-size: 1.2rem;
     line-height: 1.5;
+}
+
+.about-features {
+    margin-top: 1.5rem;
+}
+
+.about-features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .about-features-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+  }
+
+.about-feature-card {
+    background-color: var(--secondary-background-color);
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease-in-out;
+}
+
+.about-feature-card:hover {
+    transform: translateY(-5px);
+}
+
+.about-feature-card strong {
+    font-size: 1.2rem;
+    display: flex;
+}
+
+.about-feature-card p {
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
+.about-feature-icon {
+    display: flex;
+    align-items: center;
+    border-left: 4px solid var(--secondary-color);
+    gap: 0.75rem;
+    padding-left: 0.5rem;
+}
+
+.about-feature-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
 }

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import About from "./pages/About";
@@ -13,7 +14,33 @@ import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from "./context/AuthContext";
 
 export default function App() {
-const authMode = import.meta.env.VITE_AUTH_MODE || "no";
+    const authMode = import.meta.env.VITE_AUTH_MODE || "no";
+
+    const [startY, setStartY] = useState<number | null>(null);
+
+    useEffect(() => {
+        const handleTouchStart = (e: TouchEvent) => {
+            setStartY(e.touches[0].clientY);
+        };
+
+        const handleTouchMove = (e: TouchEvent) => {
+            if (!startY) return;
+            const currentY = e.touches[0].clientY;
+
+            if (currentY - startY > 100) {
+                window.location.reload();
+                setStartY(null);
+            }
+        };
+
+        document.addEventListener("touchstart", handleTouchStart);
+        document.addEventListener("touchmove", handleTouchMove);
+
+        return () => {
+            document.removeEventListener("touchstart", handleTouchStart);
+            document.removeEventListener("touchmove", handleTouchMove);
+        };
+    }, [startY]);
 
     return (
         <AuthProvider>

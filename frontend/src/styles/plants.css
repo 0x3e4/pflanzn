@@ -2,6 +2,7 @@
 .plants-container {
   text-align: center;
   background-color: var(--secondary-background-color);
+  min-height: 75vh;
 }
 
 /* Header Section: Plants title on the left & "+" button */
@@ -14,7 +15,6 @@
 }
 
 .plants-header h1 {
-  font-size: 24px;
   color: var(--text-color);
   margin: 0;
 }
