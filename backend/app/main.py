@@ -3,7 +3,7 @@ import os
 from fastapi import FastAPI, Depends, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from app.api.routes import auth, plants, locations, users
+from app.api.routes import auth, plants, tags, users
 from app.database import init_db
 from app.core.security import create_admin_user
 from dotenv import load_dotenv
@@ -44,7 +44,7 @@ app.mount("/api/uploads", StaticFiles(directory=UPLOAD_FOLDER), name="uploads")
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(plants.router, prefix="/api/plants", tags=["Plants"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
-app.include_router(locations.router, prefix="/api/locations", tags=["Locations"])
+app.include_router(tags.router, prefix="/api/tags", tags=["Tags"])
 
 @app.get("/")
 def root():

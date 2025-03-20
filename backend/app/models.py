@@ -1,8 +1,15 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Text, Index
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Text, Table, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
+
+plant_tag_association = Table(
+    "plant_tag_association",
+    Base.metadata,
+    Column("plant_id", Integer, ForeignKey("plants.id"), primary_key=True),
+    Column("tag_id", Integer, ForeignKey("tags.id"), primary_key=True)
+)
 
 class User(Base):
     __tablename__ = "users"
@@ -12,12 +19,6 @@ class User(Base):
     password = Column(String(255), nullable=False)
     role = Column(String(50), default="user")
 
-class Location(Base):
-    __tablename__ = "locations"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), unique=True, nullable=False)
-    plants = relationship("Plant", back_populates="location")
-
 class Plant(Base):
     __tablename__ = "plants"
     id = Column(Integer, primary_key=True, index=True)
@@ -25,11 +26,16 @@ class Plant(Base):
     species = Column(String(255), nullable=True)
     description = Column(Text, nullable=True)
 
-    location_id = Column(Integer, ForeignKey("locations.id"), nullable=True)
-
-    location = relationship("Location", back_populates="plants")
+    tags = relationship("Tag", secondary=plant_tag_association, back_populates="plants")
     images = relationship("PlantImage", back_populates="plant", cascade="all, delete-orphan")
     waterings = relationship("PlantWatering", back_populates="plant", cascade="all, delete-orphan")
+
+class Tag(Base):
+    __tablename__ = "tags"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), unique=True, nullable=False)
+
+    plants = relationship("Plant", secondary=plant_tag_association, back_populates="tags")
 
 class PlantWatering(Base):
     __tablename__ = "plant_waterings"

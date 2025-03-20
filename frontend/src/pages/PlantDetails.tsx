@@ -7,9 +7,13 @@ import {
     generatePlantDescription,
     waterPlant,
     identifyPlant,
-    uploadPlantImage
+    uploadPlantImage,
+    assignTagToPlant,
+    removeTagFromPlant
 } from "../services/PlantService";
+import { fetchTags, deleteTag } from "../services/TagService";
 import { Plant } from "../types/Plant";
+import { Tag } from "../types/Tag";
 import TimelineImages from "../components/TimelineImages";
 import Description from "../components/Description";
 import Calendar from "../components/Calendar";
@@ -30,6 +34,12 @@ export default function PlantDetails() {
 
     const [plant, setPlant] = useState<Plant | null>(null);
     const [loadingPlant, setLoadingPlant] = useState(true);
+
+    const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+    const [filteredTags, setFilteredTags] = useState<Tag[]>([]);
+    const [newTag, setNewTag] = useState("");
+    const [showTagDropdown, setShowTagDropdown] = useState(false);
+
     const [selectedDateTime, setSelectedDateTime] = useState<string>(
         DateTime.now().toISO({ includeOffset: false }) ?? ""
     );
@@ -41,6 +51,7 @@ export default function PlantDetails() {
         if (plantId) {
             loadPlant();
         }
+        loadAvailableTags();
     }, [plantId]);
 
     const loadPlant = async () => {
@@ -179,6 +190,89 @@ export default function PlantDetails() {
         }
     };
 
+    const loadAvailableTags = async () => {
+        try {
+            const tags = await fetchTags();
+            if (!Array.isArray(tags)) {
+                console.error("Error: fetchTags() did not return an array!", tags);
+                return;
+            }
+            setAvailableTags([...tags]);
+        } catch (error) {
+            toast.error("Failed to load tags.");
+        }
+    };
+
+    const handleAddTag = async (tagName: string) => {
+        if (!plant || !tagName.trim()) return;
+        if (!isLoggedIn) {
+            toast.error("You must be logged in to manage tags.");
+            return;
+        }
+
+        try {
+            const updatedPlant = await assignTagToPlant(plant.id, tagName.trim());
+            setPlant(updatedPlant);
+            setNewTag("");
+            setShowTagDropdown(false);
+            toast.success(`Tag "${tagName}" added!`);
+        } catch (error) {
+            toast.error((error as Error).message || "Failed to add tag.");
+        }
+    };
+
+    const handleRemoveTag = async (tagId: number) => {
+        if (!plant) return;
+        if (!isLoggedIn) {
+            toast.error("You must be logged in to manage tags.");
+            return;
+        }
+
+        try {
+            const updatedPlant = await removeTagFromPlant(plant.id, tagId);
+            setPlant(updatedPlant);
+            toast.success("Tag removed!");
+        } catch (error) {
+            toast.error((error as Error).message || "Failed to remove tag.");
+        }
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const input = e.target.value;
+        setNewTag(input);
+        setShowTagDropdown(input.length > 0);
+
+        if (input.length > 0) {
+            // Filter available tags based on input
+            const filtered = availableTags
+                .filter(tag => tag.name.toLowerCase().includes(input.toLowerCase()))
+                .slice(0, 5);
+            setFilteredTags(filtered);
+        } else {
+            setFilteredTags([]);
+        }
+    };
+
+    const handleTagClick = (tagName: string) => {
+        handleAddTag(tagName);
+    };
+
+    const handleDeleteTag = async (tagId: number) => {
+        if (!isLoggedIn) {
+            toast.error("You must be logged in to delete tags.");
+            return;
+        }
+    
+        try {
+            await deleteTag(tagId);
+            setAvailableTags(prevTags => prevTags.filter(tag => tag.id !== tagId));
+            setFilteredTags(prevTags => prevTags.filter(tag => tag.id !== tagId));
+            toast.success("Tag deleted successfully!");
+        } catch (error) {
+            toast.error("Failed to delete tag.");
+        }
+    };
+
     if (loadingPlant) {
         return <LoadingOverlay />;
     }
@@ -269,6 +363,71 @@ export default function PlantDetails() {
 
                 {/* Right Column - Description */}
                 <div className="plant-right-column">
+                    {/* Tags Section */}
+                    <div className="tags-container">
+                        {plant.tags.map(tag => (
+                            <span key={tag.id} className="tag">
+                                #{tag.name}
+                                {isLoggedIn && (
+                                    <FontAwesomeIcon
+                                        icon={faTrash}
+                                        className="tag-delete-icon"
+                                        onClick={() => handleRemoveTag(tag.id)}
+                                    />
+                                )}
+                            </span>
+                        ))}
+
+                        {isLoggedIn && (
+                            <div className="tag-input-wrapper">
+                                <input
+                                    type="text"
+                                    className="tag-input"
+                                    placeholder="Add tag..."
+                                    value={newTag}
+                                    onChange={handleInputChange}
+                                    onKeyDown={(e) => e.key === "Enter" && handleAddTag(newTag)}
+                                    onBlur={() => {
+                                        if (newTag.trim()) {
+                                            handleAddTag(newTag);
+                                        }
+                                    }}
+                                />
+                                {showTagDropdown && filteredTags.length > 0 && (
+                                    <div className="tag-dropdown">
+                                        {filteredTags.map(tag => {
+                                            // Check if the tag is used in any plant
+                                            const isTagUsed = plant?.tags.some(usedTag => usedTag.id === tag.id);
+
+                                            return (
+                                                <div key={tag.id} className="tag-dropdown-item">
+                                                    <span onMouseDown={() => handleTagClick(tag.name)}>#{tag.name}</span>
+
+                                                    {isLoggedIn && (
+                                                        <FontAwesomeIcon
+                                                            icon={faTrash}
+                                                            className={`tag-delete-icon ${isTagUsed ? "disabled" : ""}`}
+                                                            onMouseDown={(e) => {
+                                                                e.stopPropagation();
+                                                                
+                                                                if (isTagUsed) {
+                                                                    toast.warning(`"${tag.name}" is assigned to a plant and cannot be deleted.`);
+                                                                } else {
+                                                                    handleDeleteTag(tag.id);
+                                                                }
+                                                            }}
+                                                            title={isTagUsed ? "This tag is used and cannot be deleted" : "Delete tag"}
+                                                        />
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
                     <Description plant={plant} onDescriptionUpdated={setPlant} />
                 </div>
             </div>

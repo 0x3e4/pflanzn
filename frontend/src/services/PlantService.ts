@@ -87,3 +87,15 @@ export const fetchStatistics = async () => {
     const response = await apiClient.get(`${API_BASE}/statistics`);
     return response.data;
 };
+
+// Assign a tag to a plant
+export const assignTagToPlant = async (plantId: number, tagName: string) => {
+    const response = await apiClient.post(`${API_BASE}/${plantId}/assign`, [tagName]);
+    return response.data;
+};
+
+// Remove a tag from a plant
+export const removeTagFromPlant = async (plantId: number, tagId: number) => {
+    const response = await apiClient.delete(`${API_BASE}/${plantId}/remove/${tagId}`);
+    return response.data;
+};

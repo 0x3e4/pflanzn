@@ -1,3 +1,5 @@
+import { Tag } from "./Tag";
+
 export interface Plant {
   id: number;
   name: string;
@@ -5,7 +7,7 @@ export interface Plant {
   description: string | null;
   last_watered: Date;
   waterings: PlantWatering[];
-  location_id?: number | null;
+  tags: Tag[];
   images: PlantImage[];
 }
 

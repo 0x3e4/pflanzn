@@ -124,6 +124,9 @@ h3 {
     white-space: pre-wrap;
 }
 
+.description-container {
+    margin-top: 1.5rem;
+}
 
 .description {
     width: 100%;
@@ -241,4 +244,113 @@ h3 {
 
 .delete-plant-cancel:hover {
     background-color: var(--senary-color);
+}
+
+/* Tags container - display as flex row */
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+/* Tag styling */
+.tag {
+    display: flex;
+    align-items: center;
+    background-color: var(--background-color);
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: default;
+    transition: background 0.3s ease-in-out;
+}
+
+.tag:hover {
+    background-color: var(--quinary-color);
+}
+
+/* Tag delete button */
+.tag-delete-icon {
+    margin-left: 6px;
+    cursor: pointer;
+    color: var(--quinary-color);
+}
+
+.tag-delete-icon:hover {
+    color: var(--senary-color);
+}
+
+.tag-delete-icon.disabled {
+    color: var(--quinary-color);
+}
+
+.tag-input-wrapper {
+    position: relative;
+}
+
+/* Input for new tags */
+.tag-input {
+    border: 1px solid var(--border-color);
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 14px;
+    outline: none;
+    min-width: 120px;
+    background-color: var(--secondary-background-color);
+    color: var(--text-color);
+}
+
+/* Dropdown container */
+.tag-dropdown {
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 100%;
+    background: var(--secondary-background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+/* Dropdown item */
+.tag-dropdown-item {
+    padding: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-color);
+    transition: background 0.3s ease;
+}
+
+.tag-dropdown-item span {
+    flex-grow: 1;
+}
+
+.tag-dropdown-item:hover {
+    background: var(--background-color);
+}
+
+/* Disabled state */
+.tag-dropdown-item.disabled {
+    color: var(--quinary-color);
+    cursor: default;
+}
+
+.tag-input:focus {
+    background-color: var(--background-color);
+    border-color: var(--primary-color);
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .tags-container {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
 }

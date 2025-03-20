@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.sql import func
 from app.database import get_db
-from app.models import Plant, PlantImage, PlantWatering
-from app.schemas import PlantCreate, PlantResponse, PlantUpdate, PlantImageResponse, IdentifyRequest, PlantWateringCreate, PlantWateringResponse
+from app.models import Plant, PlantImage, PlantWatering, Tag
+from app.schemas import PlantCreate, PlantResponse, PlantUpdate, PlantImageResponse, IdentifyRequest, PlantWateringCreate, PlantWateringResponse, TagResponse
 from typing import List
 import shutil
 import os
@@ -35,8 +35,7 @@ router = APIRouter()
 def create_plant(plant_data: PlantCreate, db: Session = Depends(get_db)):
     new_plant = Plant(
         name=plant_data.name,
-        species=plant_data.species if plant_data.species else None,
-        location_id=plant_data.location_id if plant_data.location_id else None
+        species=plant_data.species if plant_data.species else None
     )
     db.add(new_plant)
     db.commit()
@@ -456,3 +455,72 @@ def delete_watering(
     db.commit()
 
     return {"message": "Watering deleted successfully"}
+
+# Assign tags to a plant
+@router.post("/{plant_id}/assign", response_model=PlantResponse)
+def assign_tags_to_plant(plant_id: int, tag_names: List[str], db: Session = Depends(get_db)):
+    plant = db.query(Plant).filter(Plant.id == plant_id).first()
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+
+    # Fetch existing tags
+    existing_tags = db.query(Tag).filter(Tag.name.in_(tag_names)).all()
+    existing_tag_names = {tag.name for tag in existing_tags}
+
+    # Add only new tags (avoid duplicates)
+    new_tags = [Tag(name=name) for name in tag_names if name not in existing_tag_names]
+    if new_tags:
+        db.add_all(new_tags)
+        db.commit()
+
+    # Get updated list of tags
+    all_tags = db.query(Tag).filter(Tag.name.in_(tag_names)).all()
+
+    # Ensure no duplicate tag assignments
+    for tag in all_tags:
+        if tag not in plant.tags:
+            plant.tags.append(tag)
+
+    db.commit()
+    db.refresh(plant)
+
+    # Convert to Pydantic model before returning
+    return PlantResponse(
+        id=plant.id,
+        name=plant.name,
+        species=plant.species,
+        description=plant.description,
+        images=[PlantImageResponse(id=img.id, image_path=img.image_path, uploaded_at=img.uploaded_at) for img in plant.images],
+        waterings=[PlantWateringResponse(id=w.id, watered_at=w.watered_at) for w in plant.waterings],
+        last_watered=max([w.watered_at for w in plant.waterings], default=None),
+        tags=[TagResponse(id=t.id, name=t.name) for t in plant.tags]
+    )
+
+# Remove a tag from a plant
+@router.delete("/{plant_id}/remove/{tag_id}", response_model=PlantResponse)
+def remove_tag_from_plant(plant_id: int, tag_id: int, db: Session = Depends(get_db)):
+    plant = db.query(Plant).filter(Plant.id == plant_id).first()
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+
+    tag = db.query(Tag).filter(Tag.id == tag_id).first()
+    if not tag:
+        raise HTTPException(status_code=404, detail="Tag not found")
+
+    # Remove tag association
+    if tag in plant.tags:
+        plant.tags.remove(tag)
+        db.commit()
+        db.refresh(plant)
+
+    # Return updated plant object instead of empty response
+    return PlantResponse(
+        id=plant.id,
+        name=plant.name,
+        species=plant.species,
+        description=plant.description,
+        images=[PlantImageResponse(id=img.id, image_path=img.image_path, uploaded_at=img.uploaded_at) for img in plant.images],
+        waterings=[PlantWateringResponse(id=w.id, watered_at=w.watered_at) for w in plant.waterings],
+        last_watered=max([w.watered_at for w in plant.waterings], default=None),
+        tags=[TagResponse(id=t.id, name=t.name) for t in plant.tags]
+    )

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from typing import Optional, List
 from datetime import datetime
 
@@ -39,27 +39,30 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
-class LocationCreate(BaseModel):
+class TagCreate(BaseModel):
     name: str
 
-class LocationResponse(BaseModel):
+class TagResponse(BaseModel):
     id: int
     name: str
 
     class Config:
         from_attributes = True
 
+class TagListResponse(BaseModel):
+    tags: List[TagResponse]
+
 class PlantCreate(BaseModel):
     name: str
     species: Optional[str] = None
-    location_id: Optional[int] = None
     description: Optional[str] = None
+    tags: Optional[List[str]] = []
 
 class PlantUpdate(BaseModel):
     name: Optional[str] = None
     species: Optional[str] = None
-    location_id: Optional[int] = None
     description: Optional[str] = None
+    tags: Optional[List[str]] = []
 
 class PlantImageResponse(BaseModel):
     id: int
@@ -74,10 +77,10 @@ class PlantResponse(BaseModel):
     name: str
     species: Optional[str]
     description: Optional[str] = None
-    location_id: Optional[int]
     images: List[PlantImageResponse] = []
     waterings: List["PlantWateringResponse"] = []
     last_watered: Optional[datetime] = None
+    tags: Optional[List[TagResponse]] = []
 
     class Config:
         from_attributes = True
@@ -94,3 +97,5 @@ class PlantWateringResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+PlantResponse.model_rebuild()
