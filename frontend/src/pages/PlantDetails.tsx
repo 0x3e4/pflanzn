@@ -38,6 +38,7 @@ export default function PlantDetails() {
     const [availableTags, setAvailableTags] = useState<Tag[]>([]);
     const [filteredTags, setFilteredTags] = useState<Tag[]>([]);
     const [newTag, setNewTag] = useState("");
+    const [isDeletingTag, setIsDeletingTag] = useState(false);
     const [showTagDropdown, setShowTagDropdown] = useState(false);
 
     const [selectedDateTime, setSelectedDateTime] = useState<string>(
@@ -215,6 +216,11 @@ export default function PlantDetails() {
             setPlant(updatedPlant);
             setNewTag("");
             setShowTagDropdown(false);
+
+            // Refetch all tags to include the new one
+            const updatedTags = await fetchTags();
+            setAvailableTags(updatedTags);
+
             toast.success(`Tag "${tagName}" added!`);
         } catch (error) {
             toast.error((error as Error).message || "Failed to add tag.");
@@ -263,6 +269,8 @@ export default function PlantDetails() {
             return;
         }
     
+        setIsDeletingTag(true);
+        
         try {
             await deleteTag(tagId);
             setAvailableTags(prevTags => prevTags.filter(tag => tag.id !== tagId));
@@ -270,6 +278,8 @@ export default function PlantDetails() {
             toast.success("Tag deleted successfully!");
         } catch (error) {
             toast.error("Failed to delete tag.");
+        } finally {
+            setTimeout(() => setIsDeletingTag(false), 200);
         }
     };
 
@@ -388,7 +398,7 @@ export default function PlantDetails() {
                                     onChange={handleInputChange}
                                     onKeyDown={(e) => e.key === "Enter" && handleAddTag(newTag)}
                                     onBlur={() => {
-                                        if (newTag.trim()) {
+                                        if (newTag.trim() && !isDeletingTag) {
                                             handleAddTag(newTag);
                                         }
                                     }}
@@ -409,9 +419,10 @@ export default function PlantDetails() {
                                                             className={`tag-delete-icon ${isTagUsed ? "disabled" : ""}`}
                                                             onMouseDown={(e) => {
                                                                 e.stopPropagation();
-                                                                
+                                                            
                                                                 if (isTagUsed) {
                                                                     toast.warning(`"${tag.name}" is assigned to a plant and cannot be deleted.`);
+                                                                    setNewTag("");
                                                                 } else {
                                                                     handleDeleteTag(tag.id);
                                                                 }

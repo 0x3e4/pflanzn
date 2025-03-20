@@ -114,16 +114,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 30px;
-  justify-content: center;
-}
-
-/* Plant card styling */
-/* Plant list section */
-.plants-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 30px;
-  justify-content: center;
+  justify-content: left;
 }
 
 /* Plant card styling */
