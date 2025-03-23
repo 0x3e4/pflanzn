@@ -15,6 +15,9 @@ interface TimelineImagesProps {
 export default function TimelineImages({ images, plantId }: TimelineImagesProps) {
     const { isLoggedIn } = useAuth();
 
+    const [touchStartX, setTouchStartX] = useState<number | null>(null);
+    const [touchEndX, setTouchEndX] = useState<number | null>(null);
+
     const [localImages, setLocalImages] = useState<PlantImage[]>(images);
 
     useEffect(() => {
@@ -71,6 +74,38 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
         minute: '2-digit',
     });
 
+    const minSwipeDistance = 50;
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        setTouchEndX(null); // Reset previous
+        setTouchStartX(e.targetTouches[0].clientX);
+    };
+    
+    const handleTouchMove = (e: React.TouchEvent) => {
+        const currentX = e.targetTouches[0].clientX;
+    
+        setTouchEndX(currentX);
+    
+        const deltaX = currentX - (touchStartX ?? 0);
+    
+        // If mostly horizontal, prevent scrolling the page
+        if (Math.abs(deltaX) > 10) {
+            e.preventDefault();
+        }
+    };
+    
+    const handleTouchEnd = () => {
+        if (!touchStartX || !touchEndX) return;
+    
+        const distance = touchStartX - touchEndX;
+    
+        if (distance > minSwipeDistance) {
+            goToNext();
+        } else if (distance < -minSwipeDistance) {
+            goToPrevious();
+        }
+    };    
+
     return (
         <div className="plant-carousel-container">
             {deleteModalOpen && (
@@ -106,7 +141,12 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
                     </button>
                 )}
 
-                <div className="plant-image-container">
+                <div
+                    className="plant-image-container"
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                >
                     <img
                         className="plant-carousel-image"
                         src={`/api/uploads/${activeImage.image_path}`}

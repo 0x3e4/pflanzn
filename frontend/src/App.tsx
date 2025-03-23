@@ -20,28 +20,40 @@ export default function App() {
 
     useEffect(() => {
         const handleTouchStart = (e: TouchEvent) => {
-            setStartY(e.touches[0].clientY);
+            // Only trigger if at top of scroll
+            if (window.scrollY === 0) {
+                setStartY(e.touches[0].clientY);
+            }
         };
-
+    
         const handleTouchMove = (e: TouchEvent) => {
-            if (!startY) return;
+            if (startY === null) return;
+    
             const currentY = e.touches[0].clientY;
-
-            if (currentY - startY > 100) {
+            const deltaY = currentY - startY;
+    
+            // Trigger refresh only if swiped down 100px and still at top
+            if (deltaY > 100 && window.scrollY === 0) {
                 window.location.reload();
                 setStartY(null);
             }
         };
-
+    
+        const handleTouchEnd = () => {
+            setStartY(null); // Reset on end
+        };
+    
         document.addEventListener("touchstart", handleTouchStart);
         document.addEventListener("touchmove", handleTouchMove);
-
+        document.addEventListener("touchend", handleTouchEnd);
+    
         return () => {
             document.removeEventListener("touchstart", handleTouchStart);
             document.removeEventListener("touchmove", handleTouchMove);
+            document.removeEventListener("touchend", handleTouchEnd);
         };
     }, [startY]);
-
+    
     return (
         <AuthProvider>
             <Router>

@@ -106,7 +106,7 @@ export default function WateringLogCalendar({ waterings, images, plantId }: Prop
         const hasWatering = !!wateredDates[dateKey];
         const hasImage = !!imageDates[dateKey];
 
-        if (hasWatering && hasImage) return 'watered-day image-day';
+        if (hasWatering && hasImage) return 'both-day';
         if (hasWatering) return 'watered-day';
         if (hasImage) return 'image-day';
         return '';

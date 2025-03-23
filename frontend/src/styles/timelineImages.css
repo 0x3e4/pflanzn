@@ -15,6 +15,7 @@
 }
 
 .plant-image-container {
+  touch-action: none;
   position: relative;
   display: inline-block;
   height: 400px;

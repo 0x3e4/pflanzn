@@ -19,6 +19,10 @@
     flex-direction: column;
 }
 
+.plant-information h2 span {
+    font-size: 24px !important;
+}
+
 .plant-global-button-section {
     display: flex;
     flex-wrap: wrap;

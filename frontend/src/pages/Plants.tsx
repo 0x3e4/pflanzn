@@ -10,6 +10,8 @@ import {
     waterPlant
 } from "../services/PlantService";
 import { Plant } from "../types/Plant";
+import { Tag } from "../types/Tag";
+import { fetchTags } from "../services/TagService";
 import "../styles/plants.css";
 import { toast } from "react-toastify";
 import { DateTime } from "luxon";
@@ -33,6 +35,12 @@ export default function Plants() {
   const [newPlant, setNewPlant] = useState({ name: "", species: "" });
   const [file, setFile] = useState<File | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
+
+  type SortOption = "lastWateredDesc" | "lastWateredAsc" | "idDesc" | "idAsc" | "lastImageUploadedDesc" | "lastImageUploadedAsc";
+
+  const [sortBy, setSortBy] = useState<SortOption>("idDesc");
 
   const [modalIdentifyResults, setModalIdentifyResults] = useState<
     { species: string; commonName: string; score: string; images: string[] }[] | null
@@ -47,6 +55,7 @@ export default function Plants() {
 
   useEffect(() => {
     fetchPlantsFromService();
+    fetchTagsFromService();
   }, []);
 
   const fetchPlantsFromService = async () => {
@@ -58,6 +67,15 @@ export default function Plants() {
         setError((err as Error).message);
     } finally {
         setLoading(false);
+    }
+  };
+
+  const fetchTagsFromService = async () => {
+    try {
+      const tags = await fetchTags();
+      setAllTags(tags);
+    } catch (err) {
+      toast.error((err as Error).message);
     }
   };
 
@@ -224,26 +242,110 @@ export default function Plants() {
             </button>
         )}
       </div>
-      <div className="plants-list">
-        {plants.map((plant) => {
-          const sortedImages = [...(plant.images || [])].sort(
-            (a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime()
-          );
-          const latestImage = sortedImages[0] || null;
 
-          const timezone = import.meta.env.VITE_TZ
-          const locale = import.meta.env.VITE_Locale
-          const lastWateredText = plant.last_watered
-            ? new Date(plant.last_watered).toLocaleString(locale, {
-                timeZone: timezone,
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              })
-            : "Not watered yet";
+      <div className="plant-filter-sort-bar">
+        <div className="plant-tag-filter">
+          <span className={`hashtag ${selectedTagId === null ? "active" : ""}`} onClick={() => setSelectedTagId(null)}>
+            #all
+          </span>
+          {allTags.map(tag => (
+            <span
+              key={tag.id}
+              className={`hashtag ${selectedTagId === tag.id ? "active" : ""}`}
+              onClick={() => setSelectedTagId(tag.id)}
+            >
+              #{tag.name}
+            </span>
+          ))}
+        </div>
+
+        <div className="plant-sort-container">
+          <select
+            id="sort-select"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortOption)}
+          >
+            <option value="lastWateredDesc">Last Watered ↓</option>
+            <option value="lastWateredAsc">Last Watered ↑</option>
+            <option value="idDesc">Newest</option>
+            <option value="idAsc">Oldest</option>
+            <option value="lastImageUploadedDesc">Last Image Uploaded ↓</option>
+            <option value="lastImageUploadedAsc">Last Image Uploaded ↑</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="plants-list">
+        {plants
+          .filter(p => selectedTagId === null || p.tags?.some(t => t.id === selectedTagId))
+          .sort((a, b) => {
+            switch (sortBy) {
+              case "idAsc":
+                return a.id - b.id;
+              case "idDesc":
+                return b.id - a.id;
+              case "lastWateredDesc":
+                return new Date(b.last_watered || 0).getTime() - new Date(a.last_watered || 0).getTime();
+              case "lastWateredAsc":
+                return new Date(a.last_watered || 0).getTime() - new Date(b.last_watered || 0).getTime();
+              case "lastImageUploadedDesc":
+                return (
+                  new Date(
+                    (b.images.length > 0
+                      ? b.images.reduce((latest, img) =>
+                          new Date(img.uploaded_at) > new Date(latest.uploaded_at) ? img : latest
+                        )
+                      : { uploaded_at: 0 }).uploaded_at
+                  ).getTime() -
+                  new Date(
+                    (a.images.length > 0
+                      ? a.images.reduce((latest, img) =>
+                          new Date(img.uploaded_at) > new Date(latest.uploaded_at) ? img : latest
+                        )
+                      : { uploaded_at: 0 }).uploaded_at
+                  ).getTime()
+                );
+              
+              case "lastImageUploadedAsc":
+                return (
+                  new Date(
+                    (a.images.length > 0
+                      ? a.images.reduce((latest, img) =>
+                          new Date(img.uploaded_at) > new Date(latest.uploaded_at) ? img : latest
+                        )
+                      : { uploaded_at: 0 }).uploaded_at
+                  ).getTime() -
+                  new Date(
+                    (b.images.length > 0
+                      ? b.images.reduce((latest, img) =>
+                          new Date(img.uploaded_at) > new Date(latest.uploaded_at) ? img : latest
+                        )
+                      : { uploaded_at: 0 }).uploaded_at
+                  ).getTime()
+                );                
+              default:
+                return 0;
+            }
+          })
+          .map((plant) => {
+            const sortedImages = [...(plant.images || [])].sort(
+              (a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime()
+            );
+            const latestImage = sortedImages[0] || null;
+
+            const timezone = import.meta.env.VITE_TZ
+            const locale = import.meta.env.VITE_Locale
+            const lastWateredText = plant.last_watered
+              ? new Date(plant.last_watered).toLocaleString(locale, {
+                  timeZone: timezone,
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })
+              : "Not watered yet";
 
           return (
             <div key={plant.id} className="plant-card">
