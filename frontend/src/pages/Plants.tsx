@@ -281,6 +281,14 @@ export default function Plants() {
               #{tag.name}
             </span>
           ))}
+          {plants.some(p => !p.is_archived && (!p.tags || p.tags.length === 0)) && (
+            <span
+              className={`hashtag ${selectedTagId === -2 ? "active" : ""}`}
+              onClick={() => setSelectedTagId(-2)}
+            >
+              #untagged
+            </span>
+          )}
           <span
             className={`hashtag hashtag-archive ${selectedTagId === -1 ? "active" : ""}`}
             onClick={() => setSelectedTagId(-1)}
@@ -309,6 +317,7 @@ export default function Plants() {
         {plants
           .filter((p) => {
             if (selectedTagId === -1) return p.is_archived; // only archived
+            if (selectedTagId === -2) return !p.is_archived && (!p.tags || p.tags.length === 0); // untagged
             if (selectedTagId === null) return !p.is_archived; // hide archived from #all
             return !p.is_archived && p.tags?.some((t) => t.id === selectedTagId);
           })

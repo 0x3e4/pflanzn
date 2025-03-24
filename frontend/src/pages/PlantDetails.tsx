@@ -49,7 +49,6 @@ export default function PlantDetails() {
     const [availableTags, setAvailableTags] = useState<Tag[]>([]);
     const [filteredTags, setFilteredTags] = useState<Tag[]>([]);
     const [newTag, setNewTag] = useState("");
-    const [isDeletingTag, setIsDeletingTag] = useState(false);
     const [showTagDropdown, setShowTagDropdown] = useState(false);
 
     const [selectedDateTime, setSelectedDateTime] = useState<string>(
@@ -310,8 +309,6 @@ export default function PlantDetails() {
             toast.error("You must be logged in to delete tags.");
             return;
         }
-    
-        setIsDeletingTag(true);
         
         try {
             await deleteTag(tagId);
@@ -320,8 +317,6 @@ export default function PlantDetails() {
             toast.success("Tag deleted successfully!");
         } catch (error) {
             toast.error("Failed to delete tag.");
-        } finally {
-            setTimeout(() => setIsDeletingTag(false), 200);
         }
     };
 
@@ -439,13 +434,7 @@ export default function PlantDetails() {
                                     value={newTag}
                                     onChange={handleInputChange}
                                     onKeyDown={(e) => e.key === "Enter" && handleAddTag(newTag)}
-                                    onBlur={() => {
-                                        setTimeout(() => {
-                                            if (newTag.trim() && !isDeletingTag) {
-                                                handleAddTag(newTag);
-                                            }
-                                        }, 150);
-                                    }}
+                                    onBlur={() => setShowTagDropdown(false)}
                                 />
                                 {showTagDropdown && filteredTags.length > 0 && (
                                     <div className="tag-dropdown">
