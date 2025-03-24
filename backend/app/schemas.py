@@ -81,6 +81,8 @@ class PlantResponse(BaseModel):
     waterings: List["PlantWateringResponse"] = []
     last_watered: Optional[datetime] = None
     tags: Optional[List[TagResponse]] = []
+    is_archived: Optional[bool] = None
+    archive_reason: Optional[str] = None
 
     class Config:
         from_attributes = True

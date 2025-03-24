@@ -9,7 +9,8 @@ import {
     identifyPlant,
     uploadPlantImage,
     assignTagToPlant,
-    removeTagFromPlant
+    removeTagFromPlant,
+    archivePlant
 } from "../services/PlantService";
 import { fetchTags, deleteTag } from "../services/TagService";
 import { Plant } from "../types/Plant";
@@ -18,7 +19,17 @@ import TimelineImages from "../components/TimelineImages";
 import Description from "../components/Description";
 import Calendar from "../components/Calendar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash, faWandMagicSparkles, faDroplet, faCalendarAlt, faFingerprint, faCircleXmark, faUpload } from "@fortawesome/free-solid-svg-icons";
+import { 
+    faTrash, 
+    faWandMagicSparkles, 
+    faDroplet, 
+    faCalendarAlt, 
+    faFingerprint, 
+    faCircleXmark, 
+    faUpload, 
+    faBoxArchive, 
+    faTrashCanArrowUp 
+} from "@fortawesome/free-solid-svg-icons";
 import "../styles/plantDetails.css";
 import { DateTime } from 'luxon';
 import { toast } from 'react-toastify';
@@ -46,6 +57,10 @@ export default function PlantDetails() {
     );
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [identifyResults, setIdentifyResults] = useState<{ species: string; commonName: string; score: string; images: string[] }[] | null>(null);
+
+    const [archiveModalOpen, setArchiveModalOpen] = useState(false);
+    const [archiveReason, setArchiveReason] = useState("");    
+    const [isArchiving, setIsArchiving] = useState(true);
 
     // Fetch plant data on load
     useEffect(() => {
@@ -83,6 +98,28 @@ export default function PlantDetails() {
             toast.success("Image uploaded!");
         } catch (err) {
             toast.error((err as Error).message || "Failed to upload the image.");
+        }
+    };
+
+    const handleArchivePlant = async () => {
+        if (!plant) return;
+    
+        if (!isLoggedIn) {
+            toast.error("You must be logged in to archive or restore plants.");
+            return;
+        }
+    
+        if (isArchiving && !archiveReason.trim()) {
+            toast.error("Please provide a reason to archive this plant.");
+            return;
+        }
+    
+        try {
+            await archivePlant(plant.id, isArchiving, archiveReason);
+            toast.success(isArchiving ? "Plant archived!" : "Plant restored!");
+            navigate("/plants");
+        } catch (err) {
+            toast.error(`Failed to ${isArchiving ? "archive" : "restore"} plant.`);
         }
     };
 
@@ -208,6 +245,11 @@ export default function PlantDetails() {
         if (!plant || !tagName.trim()) return;
         if (!isLoggedIn) {
             toast.error("You must be logged in to manage tags.");
+            return;
+        }
+
+        if (tagName === "archive") {
+            toast.warning("Using archive as tag is not allowed.");
             return;
         }
 
@@ -398,9 +440,11 @@ export default function PlantDetails() {
                                     onChange={handleInputChange}
                                     onKeyDown={(e) => e.key === "Enter" && handleAddTag(newTag)}
                                     onBlur={() => {
-                                        if (newTag.trim() && !isDeletingTag) {
-                                            handleAddTag(newTag);
-                                        }
+                                        setTimeout(() => {
+                                            if (newTag.trim() && !isDeletingTag) {
+                                                handleAddTag(newTag);
+                                            }
+                                        }, 150);
                                     }}
                                 />
                                 {showTagDropdown && filteredTags.length > 0 && (
@@ -449,96 +493,132 @@ export default function PlantDetails() {
             <div className="plant-below-column">
                 <div className="plant-global-button-section">
                     <div className="plant-global-button-left">
-                        <div className="water-plant-input-container">
-                            {isLoggedIn ? (
-                                <>
-                                    <button className="water-plant-btn" onClick={handleWaterPlant}>
-                                        <FontAwesomeIcon icon={faDroplet} /> Water Plant
-                                    </button>
-                                </>
-                            ) : (
-                                <button className="water-plant-btn" onClick={() => toast.warning("You must be logged in to water plants.")}>
-                                    <FontAwesomeIcon icon={faDroplet} /> Water Plant
-                                </button>
-                            )}
-                            <div className="water-plant-datetime">
-                                <FontAwesomeIcon icon={faCalendarAlt} />
-                                <input
-                                    type="datetime-local"
-                                    value={selectedDateTime.slice(0, 16)}
-                                    onChange={(e) => setSelectedDateTime(e.target.value)}
-                                />
-                            </div>
-                        </div>
-
-                        {isLoggedIn ? (
+                        {!plant.is_archived && (
                             <>
-                                <input
-                                    type="file"
-                                    id={`file-upload-${plant.id}`}
-                                    className="file-input"
-                                    onChange={(e) => handleUploadImageForPlant(e)}
-                                />
-                                <button className="file-input-plant-btn" onClick={() => document.getElementById(`file-upload-${plant.id}`)?.click()}>
-                                    <FontAwesomeIcon icon={faUpload} /> Upload Image
-                                </button>
-                            </>
-                        ) : (
-                                <button className="file-input-plant-btn" onClick={() => toast.warning("You must be logged in to upload images.")}>
-                                    <FontAwesomeIcon icon={faUpload} /> Upload Image
-                                </button>
-                        )}
+                                <div className="water-plant-input-container">
+                                    {isLoggedIn ? (
+                                        <>
+                                            <button className="water-plant-btn" onClick={handleWaterPlant}>
+                                                <FontAwesomeIcon icon={faDroplet} /> Water Plant
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <button className="water-plant-btn" onClick={() => toast.warning("You must be logged in to water plants.")}>
+                                            <FontAwesomeIcon icon={faDroplet} /> Water Plant
+                                        </button>
+                                    )}
+                                    <div className="water-plant-datetime">
+                                        <FontAwesomeIcon icon={faCalendarAlt} />
+                                        <input
+                                            type="datetime-local"
+                                            value={selectedDateTime.slice(0, 16)}
+                                            onChange={(e) => setSelectedDateTime(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
 
-                        {isLoggedIn ? (
-                            <>
-                                <button className="identify-plant-btn" onClick={handleIdentifyPlant}>
-                                    <FontAwesomeIcon icon={faFingerprint} /> Identify Plant
-                                </button>
-                            </>
-                        ) : (
-                                <button className="identify-plant-btn" onClick={() => toast.warning("You must be logged in to identify images.")}>
-                                    <FontAwesomeIcon icon={faFingerprint} /> Identify Plant
-                                </button>
-                        )}
-
-                        {import.meta.env.VITE_LLM_PROVIDER && (
-                            <>
                                 {isLoggedIn ? (
                                     <>
-                                        <button className="ai-care-helper-btn" onClick={handleGenerateDescription}> {/* WORK IN PROGRESS */}
-                                            <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Care Helper
-                                        </button>
-
-                                        <button className="generate-description-btn" onClick={handleGenerateDescription}>
-                                            <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Description
+                                        <input
+                                            type="file"
+                                            id={`file-upload-${plant.id}`}
+                                            className="file-input"
+                                            onChange={(e) => handleUploadImageForPlant(e)}
+                                        />
+                                        <button className="file-input-plant-btn" onClick={() => document.getElementById(`file-upload-${plant.id}`)?.click()}>
+                                            <FontAwesomeIcon icon={faUpload} /> Upload Image
                                         </button>
                                     </>
                                 ) : (
-                                        <>
-                                            <button className="ai-care-helper-btn" onClick={() => toast.warning("You must be logged in to receive tips from AI.")}> {/* WORK IN PROGRESS */}
-                                                <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Care Helper
-                                            </button>
+                                    <button className="file-input-plant-btn" onClick={() => toast.warning("You must be logged in to upload images.")}>
+                                        <FontAwesomeIcon icon={faUpload} /> Upload Image
+                                    </button>
+                                )}
 
-                                            <button className="generate-description-btn" onClick={() => toast.warning("You must be logged in to generate a description with AI.")}>
-                                                <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Description
-                                            </button>
-                                        </>
+                                {isLoggedIn ? (
+                                    <>
+                                        <button className="identify-plant-btn" onClick={handleIdentifyPlant}>
+                                            <FontAwesomeIcon icon={faFingerprint} /> Identify Plant
+                                        </button>
+                                    </>
+                                ) : (
+                                    <button className="identify-plant-btn" onClick={() => toast.warning("You must be logged in to identify images.")}>
+                                        <FontAwesomeIcon icon={faFingerprint} /> Identify Plant
+                                    </button>
+                                )}
+
+                                {import.meta.env.VITE_LLM_PROVIDER && (
+                                    <>
+                                        {isLoggedIn ? (
+                                            <>
+                                                <button className="ai-care-helper-btn" onClick={handleGenerateDescription}> {/* WORK IN PROGRESS */}
+                                                    <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Care Helper
+                                                </button>
+
+                                                <button className="generate-description-btn" onClick={handleGenerateDescription}>
+                                                    <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Description
+                                                </button>
+                                            </>
+                                        ) : (
+                                                <>
+                                                    <button className="ai-care-helper-btn" onClick={() => toast.warning("You must be logged in to receive tips from AI.")}> {/* WORK IN PROGRESS */}
+                                                        <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Care Helper
+                                                    </button>
+
+                                                    <button className="generate-description-btn" onClick={() => toast.warning("You must be logged in to generate a description with AI.")}>
+                                                        <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Description
+                                                    </button>
+                                                </>
+                                        )}
+                                    </>
                                 )}
                             </>
                         )}
                     </div>
 
-                    {isLoggedIn ? (
-                        <>
-                            <button className="delete-plant-btn" onClick={() => setDeleteModalOpen(true)}>
+                    <div className="plant-global-button-right">
+                        {isLoggedIn ? (
+                            <>
+                            <button
+                                className="archive-plant-btn"
+                                onClick={() => {
+                                    setIsArchiving(!plant.is_archived);
+                                    setArchiveModalOpen(true);
+                                }}
+                            >
+                                <FontAwesomeIcon icon={plant.is_archived ? faTrashCanArrowUp : faBoxArchive} /> 
+                                {plant.is_archived ? " Restore Plant" : " Archive Plant"}
+                            </button>
+                            <button
+                                className="delete-plant-btn"
+                                onClick={() => setDeleteModalOpen(true)}
+                            >
                                 <FontAwesomeIcon icon={faTrash} /> Delete Plant
                             </button>
-                        </>
-                    ) : (
-                        <button className="delete-plant-btn" onClick={() => toast.warning("You must be logged in to delete plants.")}>
-                            <FontAwesomeIcon icon={faTrash} /> Delete Plant
-                        </button>
-                    )}
+                            </>
+                        ) : (
+                            <>
+                            <button
+                                className="archive-plant-btn"
+                                onClick={() => {
+                                    setIsArchiving(!plant.is_archived);
+                                    toast.warning(`You must be logged in to ${plant.is_archived ? "restore" : "archive"} plants.`);
+                                }}
+                            >
+                                <FontAwesomeIcon icon={plant.is_archived ? faTrashCanArrowUp : faBoxArchive} /> 
+                                {plant.is_archived ? " Restore Plant" : " Archive Plant"}
+                            </button>
+                            <button
+                                className="delete-plant-btn"
+                                onClick={() =>
+                                toast.warning("You must be logged in to delete plants.")
+                                }
+                            >
+                                <FontAwesomeIcon icon={faTrash} /> Delete Plant
+                            </button>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -567,6 +647,43 @@ export default function PlantDetails() {
                             </button>
                             <button className="delete-plant-cancel" onClick={() => setDeleteModalOpen(false)}>
                               <FontAwesomeIcon icon={faCircleXmark} /> Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Archive Confirmation Modal */}
+            {archiveModalOpen && (
+                <div className="archive-plant-modal-overlay">
+                    <div className="archive-plant-modal">
+                        <p>
+                            {isArchiving
+                                ? "Are you sure you want to archive this plant?"
+                                : "Are you sure you want to restore this plant?"}
+                        </p>
+
+                        {isArchiving && (
+                            <div
+                                className="editable-div"
+                                contentEditable
+                                suppressContentEditableWarning
+                                onInput={(e) => setArchiveReason((e.target as HTMLDivElement).innerText)}
+                                dangerouslySetInnerHTML={{ __html: archiveReason || "e.g. Dead, moved, donated, etc." }}
+                                onFocus={(e) => {
+                                    if (e.currentTarget.innerText === "e.g. Dead, moved, donated, etc.") {
+                                    e.currentTarget.innerText = "";
+                                    }
+                                }}
+                            />
+                        )}
+
+                        <div className="archive-plant-modal-buttons">
+                            <button className="archive-plant-confirm" onClick={handleArchivePlant}>
+                                <FontAwesomeIcon icon={isArchiving ? faBoxArchive : faTrashCanArrowUp} /> {isArchiving ? "Archive" : "Restore"}
+                            </button>
+                            <button className="archive-plant-cancel" onClick={() => setArchiveModalOpen(false)}>
+                                <FontAwesomeIcon icon={faCircleXmark} /> Cancel
                             </button>
                         </div>
                     </div>

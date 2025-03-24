@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Body
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.sql import func
 from app.database import get_db
@@ -524,3 +524,13 @@ def remove_tag_from_plant(plant_id: int, tag_id: int, db: Session = Depends(get_
         last_watered=max([w.watered_at for w in plant.waterings], default=None),
         tags=[TagResponse(id=t.id, name=t.name) for t in plant.tags]
     )
+
+@router.post("/{plant_id}/archive")
+def archive_plant(plant_id: int, reason: str = Body(...), db: Session = Depends(get_db)):
+    plant = db.query(Plant).filter(Plant.id == plant_id).first()
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+    plant.is_archived = True
+    plant.archive_reason = reason
+    db.commit()
+    return {"message": "Plant archived successfully"}

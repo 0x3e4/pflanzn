@@ -99,3 +99,14 @@ export const removeTagFromPlant = async (plantId: number, tagId: number) => {
     const response = await apiClient.delete(`${API_BASE}/${plantId}/remove/${tagId}`);
     return response.data;
 };
+
+// Archive plant
+export const archivePlant = async (plantId: number, archive: boolean = true, reason: string) => {
+    const response = await apiClient.post(`${API_BASE}/${plantId}/archive`, 
+        { reason, archive },
+        {
+            headers: { "Content-Type": "application/json" }
+        }
+    );
+    return response.data;
+}

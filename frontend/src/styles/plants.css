@@ -131,18 +131,6 @@
 }
 
 @media (max-width: 768px) {
-  .plant-card h3 {
-    font-size: 13px !important;
-  }
-
-  .plant-card p {
-    font-size: 12px !important;
-  }
-
-  .all-plants {
-    height: 280px !important;
-  }
-
   .plant-card {
     flex-basis: calc(50% - 15px);
     min-width: 140px;
@@ -235,6 +223,20 @@
   background-color: var(--senary-color);
 }
 
+.plant-buttons .archive-plant-btn {
+  background-color: var(--text-color);
+  color: var(--quaternary-color);
+  border: 1px solid var(--quaternary-color);
+  border-radius: 0;
+  z-index: 100;
+}
+
+.plant-buttons .archive-plant-btn:hover {
+  background-color: var(--septimal-color);
+  color: var(--quaternary-color);
+  border: 1px solid var(--tertiary-color);
+}
+
 /* Hide the file input text */
 .file-input {
   display: none;
@@ -317,6 +319,16 @@
   background-color: var(--secondary-color);
 }
 
+.hashtag-archive:hover {
+  background-color: var(--text-color);
+  color: var(--quaternary-color);
+}
+
+.hashtag-archive.active {
+  background-color: var(--text-color);
+  color: var(--tertiary-color);
+}
+
 .plant-sort-container {
   display: flex;
   align-items: center;
@@ -332,4 +344,19 @@
   background-color: var(--secondary-background-color);
   color: var(--text-color);
   border: 1px solid var(--border-color);
+}
+
+.plant-card.archived {
+  opacity: 0.8;
+  position: relative;
+}
+.plant-archived-label {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: var(--tertiary-color);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
 }

@@ -9,6 +9,8 @@ export interface Plant {
   waterings: PlantWatering[];
   tags: Tag[];
   images: PlantImage[];
+  is_archived: boolean;
+  archive_reason: string;
 }
 
 export interface PlantImage {

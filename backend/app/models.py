@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Text, Table, Index
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Text, Table, Index, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -25,6 +25,8 @@ class Plant(Base):
     name = Column(String(255), nullable=False)
     species = Column(String(255), nullable=True)
     description = Column(Text, nullable=True)
+    is_archived = Column(Boolean, default=False)
+    archive_reason = Column(Text, nullable=True)
 
     tags = relationship("Tag", secondary=plant_tag_association, back_populates="plants")
     images = relationship("PlantImage", back_populates="plant", cascade="all, delete-orphan")

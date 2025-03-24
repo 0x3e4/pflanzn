@@ -31,13 +31,13 @@
     gap: 1rem;
 }
 
-.plant-global-button-left {
+.plant-global-button-left, .plant-global-button-right {
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
 }
 
-.delete-plant-btn, .generate-description-btn, .ai-care-helper-btn, .water-plant-btn, .identify-plant-btn, .file-input-plant-btn {
+.delete-plant-btn, .archive-plant-btn, .generate-description-btn, .ai-care-helper-btn, .water-plant-btn, .identify-plant-btn, .file-input-plant-btn {
     flex-shrink: 0;
     white-space: nowrap;
     width: auto;
@@ -61,12 +61,24 @@
     background-color: var(--tertiary-color);
 }
 
-.generate-description-btn, .ai-care-helper-btn {
-    background-color: var(--decimal-color);
-}
-
 .delete-plant-btn:hover {
     background-color: var(--quaternary-color);
+}
+
+.archive-plant-btn {
+    background-color: var(--text-color);
+    color: var(--quaternary-color);
+    border: 1px solid var(--quaternary-color);
+}
+
+.archive-plant-btn:hover {
+    background-color: var(--septimal-color);
+    color: var(--quaternary-color);
+    border: 1px solid var(--tertiary-color);
+}
+
+.generate-description-btn, .ai-care-helper-btn {
+    background-color: var(--decimal-color);
 }
 
 .generate-description-btn:hover, .ai-care-helper-btn:hover {
@@ -194,7 +206,7 @@ h3 {
 }
 
 /* DELETE MODAL (copied & adapted from watering log) */
-.delete-plant-modal-overlay {
+.delete-plant-modal-overlay, .archive-plant-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -207,7 +219,7 @@ h3 {
     z-index: 1000;
 }
 
-.delete-plant-modal {
+.delete-plant-modal, .archive-plant-modal {
     background: var(--secondary-background-color);
     padding: 20px;
     border-radius: 8px;
@@ -218,35 +230,35 @@ h3 {
     max-width: 400px;
 }
 
-.delete-plant-modal-buttons {
+.delete-plant-modal-buttons, .archive-plant-modal-buttons {
     display: flex;
     gap: 10px;
     margin-top: 15px;
     justify-content: center;
 }
 
-.delete-plant-confirm, .delete-plant-cancel {
+.delete-plant-confirm, .delete-plant-cancel, .archive-plant-confirm, .archive-plant-cancel {
     padding: 10px 15px;
     border: none;
     cursor: pointer;
     border-radius: 6px;
 }
 
-.delete-plant-confirm {
+.delete-plant-confirm, .archive-plant-confirm  {
     background-color: var(--tertiary-color);
     color: white;
 }
 
-.delete-plant-cancel {
+.delete-plant-cancel, .archive-plant-cancel {
     background-color: var(--quinary-color);
     color: white;
 }
 
-.delete-plant-confirm:hover {
+.delete-plant-confirm:hover, .archive-plant-confirm:hover {
     background-color: var(--quaternary-color);
 }
 
-.delete-plant-cancel:hover {
+.delete-plant-cancel:hover, .archive-plant-cancel:hover {
     background-color: var(--senary-color);
 }
 

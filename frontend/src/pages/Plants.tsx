@@ -7,7 +7,8 @@ import {
     identifyPlant,
     updatePlant,
     deletePlant,
-    waterPlant
+    waterPlant,
+    archivePlant
 } from "../services/PlantService";
 import { Plant } from "../types/Plant";
 import { Tag } from "../types/Tag";
@@ -24,6 +25,7 @@ import {
     faCircleXmark,
     faFingerprint,
     faDroplet,
+    faTrashCanArrowUp
 } from "@fortawesome/free-solid-svg-icons";
 import LoadingOverlay from "../components/LoadingOverlay";
 import { useAuth } from "../context/AuthContext";
@@ -37,6 +39,9 @@ export default function Plants() {
   const [modalOpen, setModalOpen] = useState(false);
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
+  const [archiveModalOpen, setArchiveModalOpen] = useState(false);
+  const [unarchiveReason, setUnarchiveReason] = useState("");
+  const [selectedPlantToUnarchive, setSelectedPlantToUnarchive] = useState<number | null>(null);  
 
   type SortOption = "lastWateredDesc" | "lastWateredAsc" | "idDesc" | "idAsc" | "lastImageUploadedDesc" | "lastImageUploadedAsc";
 
@@ -130,6 +135,25 @@ export default function Plants() {
         toast.error((err as Error).message);
     }
   };
+
+  const handleUnarchivePlant = async () => {
+    if (!isLoggedIn || selectedPlantToUnarchive === null) {
+      toast.error("You must be logged in to restore plants.");
+      return;
+    }
+  
+    try {
+      await archivePlant(selectedPlantToUnarchive, false, unarchiveReason);
+      toast.success("Plant restored from archive!");
+      fetchPlantsFromService();
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setArchiveModalOpen(false);
+      setUnarchiveReason("");
+      setSelectedPlantToUnarchive(null);
+    }
+  };  
 
   const handleIdentifyExistingPlant = async (plantId: number) => {
     if (!isLoggedIn) {
@@ -257,6 +281,12 @@ export default function Plants() {
               #{tag.name}
             </span>
           ))}
+          <span
+            className={`hashtag hashtag-archive ${selectedTagId === -1 ? "active" : ""}`}
+            onClick={() => setSelectedTagId(-1)}
+          >
+            #archive
+          </span>
         </div>
 
         <div className="plant-sort-container">
@@ -265,10 +295,10 @@ export default function Plants() {
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortOption)}
           >
-            <option value="lastWateredDesc">Last Watered ↓</option>
-            <option value="lastWateredAsc">Last Watered ↑</option>
             <option value="idDesc">Newest</option>
             <option value="idAsc">Oldest</option>
+            <option value="lastWateredDesc">Last Watered ↓</option>
+            <option value="lastWateredAsc">Last Watered ↑</option>
             <option value="lastImageUploadedDesc">Last Image Uploaded ↓</option>
             <option value="lastImageUploadedAsc">Last Image Uploaded ↑</option>
           </select>
@@ -277,7 +307,11 @@ export default function Plants() {
 
       <div className="plants-list">
         {plants
-          .filter(p => selectedTagId === null || p.tags?.some(t => t.id === selectedTagId))
+          .filter((p) => {
+            if (selectedTagId === -1) return p.is_archived; // only archived
+            if (selectedTagId === null) return !p.is_archived; // hide archived from #all
+            return !p.is_archived && p.tags?.some((t) => t.id === selectedTagId);
+          })
           .sort((a, b) => {
             switch (sortBy) {
               case "idAsc":
@@ -348,7 +382,7 @@ export default function Plants() {
               : "Not watered yet";
 
           return (
-            <div key={plant.id} className="plant-card">
+            <div key={plant.id} className={`plant-card ${plant.is_archived ? "archived" : ""}`}>
               <Link to={`/plant/${plant.id}`}>
                 <div className="plant-image-container all-plants">
                   <img
@@ -364,45 +398,56 @@ export default function Plants() {
                   <p><strong>Last Watered:</strong> {lastWateredText}</p>
                 </div>
               </Link>
-              <div className="plant-buttons">
-              {isLoggedIn ? (
-                  <button className="water-plant-btn" onClick={() => handleWaterPlant(plant.id)}>
-                      <FontAwesomeIcon icon={faDroplet} />
-                  </button>
-              ) : (
-                  <button className="water-plant-btn" onClick={() => toast.warning("You must be logged in to water plants.")}>
-                      <FontAwesomeIcon icon={faDroplet} />
-                  </button>
-              )}
-
-              {isLoggedIn ? (
-                  <>
+              {!plant.is_archived ? (
+                <div className="plant-buttons">
+                  {isLoggedIn ? (
+                    <>
+                      <button className="water-plant-btn" onClick={() => handleWaterPlant(plant.id)}>
+                        <FontAwesomeIcon icon={faDroplet} />
+                      </button>
                       <input
-                          type="file"
-                          id={`file-upload-${plant.id}`}
-                          className="file-input"
-                          onChange={(e) => handleUploadImageForPlant(plant.id, e)}
+                        type="file"
+                        id={`file-upload-${plant.id}`}
+                        className="file-input"
+                        onChange={(e) => handleUploadImageForPlant(plant.id, e)}
                       />
                       <button className="file-input-plant-btn" onClick={() => document.getElementById(`file-upload-${plant.id}`)?.click()}>
-                          <FontAwesomeIcon icon={faUpload} />
+                        <FontAwesomeIcon icon={faUpload} />
                       </button>
-                  </>
+                      <button onClick={() => handleIdentifyExistingPlant(plant.id)}>
+                        <FontAwesomeIcon icon={faFingerprint} />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button className="water-plant-btn" onClick={() => toast.warning("You must be logged in to water plants.")}>
+                        <FontAwesomeIcon icon={faDroplet} />
+                      </button>
+                      <button className="file-input-plant-btn" onClick={() => toast.warning("You must be logged in to upload images.")}>
+                        <FontAwesomeIcon icon={faUpload} />
+                      </button>
+                      <button onClick={() => toast.warning("You must be logged in to identify plants.")}>
+                        <FontAwesomeIcon icon={faFingerprint} />
+                      </button>
+                    </>
+                  )}
+                </div>
               ) : (
-                  <button className="file-input-plant-btn" onClick={() => toast.warning("You must be logged in to upload images.")}>
-                      <FontAwesomeIcon icon={faUpload} />
-                  </button>
+                <div className="plant-buttons">
+                  {isLoggedIn ? (
+                    <button className="archive-plant-btn" onClick={() => {
+                      setSelectedPlantToUnarchive(plant.id);
+                      setArchiveModalOpen(true);
+                    }}>
+                      <FontAwesomeIcon icon={faTrashCanArrowUp} />
+                    </button>
+                  ) : (
+                    <button className="archive-plant-btn" onClick={() => toast.warning("You must be logged in to restore plants.")}>
+                      <FontAwesomeIcon icon={faTrashCanArrowUp} />
+                    </button>
+                  )}
+                </div>
               )}
-
-              {isLoggedIn ? (
-                  <button onClick={() => handleIdentifyExistingPlant(plant.id)}>
-                      <FontAwesomeIcon icon={faFingerprint} />
-                  </button>
-              ) : (
-                  <button onClick={() => toast.warning("You must be logged in to identify plants.")}>
-                      <FontAwesomeIcon icon={faFingerprint} />
-                  </button>
-              )}
-              </div>
             </div>
           );
         })}
@@ -487,6 +532,37 @@ export default function Plants() {
         <div className="image-modal" onClick={() => setSelectedImage(null)}>
           <div className="image-modal-content">
             <img src={selectedImage} alt="Full-sized" />
+          </div>
+        </div>
+      )}
+
+      {/* Archive Confirmation Modal */}
+      {archiveModalOpen && (
+        <div className="archive-plant-modal-overlay">
+          <div className="archive-plant-modal">
+            <p>Are you sure you want to restore this plant?</p>
+
+            <div
+              className="editable-div"
+              contentEditable
+              suppressContentEditableWarning
+              onInput={(e) => setUnarchiveReason((e.target as HTMLDivElement).innerText)}
+              dangerouslySetInnerHTML={{ __html: unarchiveReason || "e.g. Reason for restoration (optional)" }}
+              onFocus={(e) => {
+                if (e.currentTarget.innerText === "e.g. Reason for restoration (optional)") {
+                  e.currentTarget.innerText = "";
+                }
+              }}
+            />
+
+            <div className="archive-plant-modal-buttons">
+              <button className="archive-plant-confirm" onClick={handleUnarchivePlant}>
+                <FontAwesomeIcon icon={faTrashCanArrowUp} /> Restore
+              </button>
+              <button className="archive-plant-cancel" onClick={() => setArchiveModalOpen(false)}>
+                <FontAwesomeIcon icon={faCircleXmark} /> Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
