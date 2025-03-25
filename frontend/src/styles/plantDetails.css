@@ -117,7 +117,6 @@ span {
 
 .plant-right-column {
     flex: 1;
-    min-width: 500px;
     text-align: left !important;
     position: relative;
 }
@@ -163,7 +162,11 @@ h3 {
 
     .plant-left-column, .plant-right-column {
         max-width: 100%;
-        min-width: unset;
+        min-width: 0;
+    }
+
+    .plant-right-column {
+        overflow-x: hidden;
     }
 
     .plant-global-button-section {
@@ -368,5 +371,18 @@ h3 {
     .tags-container {
         flex-direction: row;
         flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 400px) {
+    .water-plant-input-container {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  
+    .water-plant-btn,
+    .water-plant-datetime {
+      width: 100%;
+      justify-content: center;
     }
 }

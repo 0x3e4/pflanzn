@@ -24,6 +24,10 @@
   color: var(--text-color);
 }
 
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 /* Global Styles */
 html, body {
   height: 100%;
