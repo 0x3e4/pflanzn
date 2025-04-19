@@ -25,7 +25,11 @@ import {
     faCircleXmark,
     faFingerprint,
     faDroplet,
-    faTrashCanArrowUp
+    faTrashCanArrowUp,
+    faLeaf, 
+    faFont,
+    faExpand,
+    faCompress
 } from "@fortawesome/free-solid-svg-icons";
 import LoadingOverlay from "../components/LoadingOverlay";
 import { useAuth } from "../context/AuthContext";
@@ -41,7 +45,13 @@ export default function Plants() {
   const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
   const [unarchiveReason, setUnarchiveReason] = useState("");
-  const [selectedPlantToUnarchive, setSelectedPlantToUnarchive] = useState<number | null>(null);  
+  const [selectedPlantToUnarchive, setSelectedPlantToUnarchive] = useState<number | null>(null);
+  const [isStretched, setIsStretched] = useState(false);
+  
+  type FilterMode = "species" | "name";
+
+  const [filterMode, setFilterMode] = useState<FilterMode>("species");
+  const [selectedFilterValue, setSelectedFilterValue] = useState<string | null>(null);
 
   type SortOption = "lastWateredDesc" | "lastWateredAsc" | "idDesc" | "idAsc" | "lastImageUploadedDesc" | "lastImageUploadedAsc";
 
@@ -253,9 +263,16 @@ export default function Plants() {
   if (error) return <p style={{ color: 'red' }}>{error}</p>;
 
   return (
-    <div className="container plants-container">
+    <div className={`container plants-container${isStretched ? " plants-container--stretched" : ""}`}>
       <div className="plants-header">
         <h1>Plants</h1>
+        <button
+          className="toggle-stretch-btn"
+          title={isStretched ? "Collapse container" : "Expand container"}
+          onClick={() => setIsStretched(!isStretched)}
+        >
+          <FontAwesomeIcon icon={isStretched ? faCompress : faExpand} />
+        </button>
         {isLoggedIn ? (
             <button className="add-plant-btn" onClick={() => setModalOpen(true)}>
                 <FontAwesomeIcon icon={faPlus} />
@@ -297,6 +314,40 @@ export default function Plants() {
           </span>
         </div>
 
+        <div className="filter-specie-name-container">
+          <div className="plant-filter-toggle">
+            <FontAwesomeIcon
+              icon={filterMode === "species" ? faFont : faLeaf}
+              title={`Filter by ${filterMode === "species" ? "name" : "species"}`}
+              onClick={() => setFilterMode(filterMode === "species" ? "name" : "species")}
+              className="filter-toggle-icon"
+            />
+          </div>
+
+          <div className="plant-filter-dropdown">
+            <select
+              value={selectedFilterValue || ""}
+              onChange={(e) => setSelectedFilterValue(e.target.value || null)}
+            >
+              <option value="">All {filterMode === "species" ? "Species" : "Names"}</option>
+              {[
+                ...new Set(
+                  plants
+                    .filter(p => selectedTagId === -1 || !p.is_archived) // Only show options if not archived unless archive is active
+                    .map(p => filterMode === "species" ? p.species : p.name)
+                    .filter(Boolean)
+                ),
+              ]
+                .sort()
+                .map((value, idx) => (
+                  <option key={idx} value={value}>
+                    {value}
+                  </option>
+                ))}
+            </select>
+          </div>
+        </div>
+
         <div className="plant-sort-container">
           <select
             id="sort-select"
@@ -316,10 +367,18 @@ export default function Plants() {
       <div className="plants-list">
         {plants
           .filter((p) => {
-            if (selectedTagId === -1) return p.is_archived; // only archived
-            if (selectedTagId === -2) return !p.is_archived && (!p.tags || p.tags.length === 0); // untagged
-            if (selectedTagId === null) return !p.is_archived; // hide archived from #all
-            return !p.is_archived && p.tags?.some((t) => t.id === selectedTagId);
+            const matchesTag = selectedTagId === -1
+              ? p.is_archived
+              : selectedTagId === -2
+              ? !p.is_archived && (!p.tags || p.tags.length === 0)
+              : selectedTagId === null
+              ? !p.is_archived
+              : !p.is_archived && p.tags?.some((t) => t.id === selectedTagId);
+
+            const filterValue = filterMode === "species" ? p.species : p.name;
+            const matchesFilterValue = !selectedFilterValue || filterValue === selectedFilterValue;
+
+            return matchesTag && matchesFilterValue;
           })
           .sort((a, b) => {
             switch (sortBy) {

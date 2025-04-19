@@ -87,6 +87,10 @@ class PlantResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class ArchiveRequest(BaseModel):
+    archive: bool
+    reason: str
+
 class IdentifyRequest(BaseModel):
     image_path: str
 

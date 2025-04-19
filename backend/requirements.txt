@@ -18,3 +18,4 @@ httpx
 openai
 ollama
 authlib
+itsdangerous

@@ -95,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setUser(null);
                 setIsLoggedIn(false);                  
                 if (authMode === "oidc") {
-                    window.location.href = "/auth/oidc-login";
+                    window.location.href = "/api/auth/oidc-login";
                 }
             } else {
                 console.error("Unexpected error fetching profile:", error);

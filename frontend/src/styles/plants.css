@@ -3,6 +3,7 @@
   text-align: center;
   background-color: var(--secondary-background-color);
   min-height: 77vh;
+  transition: max-width 0.3s ease-in-out;
 }
 
 /* Header Section: Plants title on the left & "+" button */
@@ -329,7 +330,7 @@
   color: var(--tertiary-color);
 }
 
-.plant-sort-container {
+.plant-sort-container, .plant-filter-dropdown {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -346,10 +347,21 @@
   border: 1px solid var(--border-color);
 }
 
+.plant-filter-dropdown select {
+  min-width: 140px;
+  padding: 6px 10px;
+  color: var(--text-color);
+}
+
+.plant-filter-dropdown {
+  border: none !important;
+}
+
 .plant-card.archived {
   opacity: 0.8;
   position: relative;
 }
+
 .plant-archived-label {
   position: absolute;
   top: 10px;
@@ -359,4 +371,106 @@
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 12px;
+}
+
+.filter-toggle-icon {
+  margin-left: 0.5rem;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: transform 0.2s ease;
+}
+
+.filter-toggle-icon:hover {
+  transform: scale(1.1);
+}
+
+.filter-specie-name-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.plant-filter-dropdown:focus {
+  box-shadow: 0 0 5px var(--primary-color);
+}
+
+.plant-filter-dropdown select {
+  border: none;
+  background-color: var(--secondary-background-color);
+}
+
+.plant-filter-dropdown select:focus {
+  box-shadow: unset;
+}
+
+.plant-filter-toggle {
+  margin-right: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .plant-filter-sort-bar {
+    flex-direction: column;
+    align-items: stretch;
+    row-gap: 0.75rem;
+  }
+
+  .filter-specie-name-container,
+  .plant-sort-container {
+    flex: 0 0 100%;
+    width: 100% !important;
+    align-self: stretch;
+  }
+
+  .filter-specie-name-container {
+    margin-bottom: 0.75rem;
+  }
+
+  .filter-specie-name-container .plant-filter-dropdown {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .filter-specie-name-container .plant-filter-dropdown select {
+    width: 100% !important;
+    min-width: 0 !important;
+    border-radius: 100%;
+  }
+
+  .filter-specie-name-container .plant-filter-toggle {
+    flex: 0 0 auto;
+  }
+}
+
+.plants-container--stretched {
+  max-width: unset !important;
+}
+
+.toggle-stretch-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.25rem;
+  color: var(--text-color);
+  opacity: 0;
+  transition: background-color .5s ease-in-out,transform .5s;
+  border-radius: 25%;
+  margin-left: 6px;
+}
+
+.toggle-stretch-btn:hover {
+  transform: scale(1.1);
+}
+
+.plants-container:hover .plants-header .toggle-stretch-btn {
+  opacity: 1;
+  transition: color .5s ease-in-out,transform .5s;
+}
+
+@media (max-width: 1200px) {
+  .toggle-stretch-btn {
+    opacity: 0 !important;
+  }
 }

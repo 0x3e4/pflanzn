@@ -3,7 +3,7 @@ import time
 import logging
 import redis
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from datetime import timedelta
 from app.database import get_db
@@ -26,7 +26,7 @@ AUTH_MODE = settings.VITE_AUTH_MODE
 OIDC_PROVIDER_URL = settings.OIDC_PROVIDER_URL
 OIDC_CLIENT_ID = settings.OIDC_CLIENT_ID
 OIDC_CLIENT_SECRET = settings.OIDC_CLIENT_SECRET
-OIDC_REDIRECT_URI = settings.OIDC_REDIRECT_URI
+OIDC_REDIRECT_URI = settings.DOMAIN + "/callback"
 
 # Redis client
 REDIS_URL = settings.REDIS_URL
@@ -39,8 +39,9 @@ if AUTH_MODE == "oidc":
         name="oidc",
         client_id=OIDC_CLIENT_ID,
         client_secret=OIDC_CLIENT_SECRET,
-        server_metadata_url=f"{OIDC_PROVIDER_URL}/.well-known/openid-configuration",
+        server_metadata_url=OIDC_PROVIDER_URL,
         client_kwargs={"scope": "openid profile email"},
+        redirect_uri=OIDC_REDIRECT_URI,
     )
 
 @router.post("/login")
@@ -49,7 +50,16 @@ def login(user_data: LoginRequest, db: Session = Depends(get_db)):
     logger.debug(f"Login attempt for user: '{user_data.username}'")
 
     user = db.query(User).filter(User.username == user_data.username).first()
+    
     if not user or not verify_password(user_data.password, user.password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    # Reject login if not 'local' user
+    if user.auth_type != "local":
+        raise HTTPException(status_code=401, detail="User must log in via OIDC")
+
+    # Reject login if password is missing
+    if not user.password or not verify_password(user_data.password, user.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     # Generate tokens
@@ -73,25 +83,47 @@ async def oidc_login(request: Request):
         raise HTTPException(status_code=400, detail="OIDC authentication is not enabled.")
     return await oauth.oidc.authorize_redirect(request, OIDC_REDIRECT_URI)
 
-@router.get("/callback")
-async def oidc_callback(request: Request):
-    """Handles OIDC login callback and retrieves refresh token if available."""
-    if AUTH_MODE != "oidc":
-        raise HTTPException(status_code=400, detail="OIDC authentication is not enabled.")
+@router.post("/oidc/code")
+async def oidc_code_exchange(request: Request, db: Session = Depends(get_db)):
+    body = await request.json()
+    code = body.get("code")
 
-    token = await oauth.oidc.authorize_access_token(request)
-    user_info = token.get("userinfo")
+    if not code:
+        raise HTTPException(status_code=400, detail="Missing code")
+
+    token = await oauth.oidc.authorize_access_token(request, code=code, redirect_uri=OIDC_REDIRECT_URI)
+    user_info = await oauth.oidc.parse_id_token(request, token)
 
     if not user_info:
-        raise HTTPException(status_code=400, detail="Failed to retrieve user information.")
+        raise HTTPException(status_code=400, detail="Failed to fetch user info")
 
-    access_token = create_access_token({"sub": user_info["email"]}, expires_delta=timedelta(minutes=30))
-    refresh_token = token.get("refresh_token")  # Store this if available
+    email = user_info.get("email")
+    username = user_info.get("preferred_username") or email.split("@")[0]
+
+    if not email:
+        raise HTTPException(status_code=400, detail="Email required")
+
+    user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        role = "admin" if db.query(User).count() == 0 else "user"
+        user = User(username=username, email=email, role=role, auth_type="oidc")
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    access_token = create_access_token({"sub": user.email}, expires_delta=timedelta(minutes=30))
+    refresh_token = token.get("refresh_token")
 
     if refresh_token:
-        redis_client.setex(f"refresh:{user_info['email']}", 86400, refresh_token)
+        redis_client.setex(f"refresh:{user.email}", 86400, refresh_token)
 
-    return {"access_token": access_token, "refresh_token": refresh_token, "user_info": user_info}
+    response = JSONResponse(content={"message": "Login successful"})
+    response.set_cookie("access_token", access_token, httponly=True, secure=True, samesite="Strict", max_age=1800, path="/")
+    if refresh_token:
+        response.set_cookie("refresh_token", refresh_token, httponly=True, secure=True, samesite="Strict", max_age=86400, path="/")
+
+    return response
 
 @router.post("/logout")
 def logout():

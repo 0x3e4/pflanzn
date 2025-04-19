@@ -30,6 +30,7 @@ import {
     faBoxArchive, 
     faTrashCanArrowUp 
 } from "@fortawesome/free-solid-svg-icons";
+import EditableDiv from "../components/EditableDiv";
 import "../styles/plantDetails.css";
 import { DateTime } from 'luxon';
 import { toast } from 'react-toastify';
@@ -106,12 +107,7 @@ export default function PlantDetails() {
         if (!isLoggedIn) {
             toast.error("You must be logged in to archive or restore plants.");
             return;
-        }
-    
-        if (isArchiving && !archiveReason.trim()) {
-            toast.error("Please provide a reason to archive this plant.");
-            return;
-        }
+        }     
     
         try {
             await archivePlant(plant.id, isArchiving, archiveReason);
@@ -473,6 +469,13 @@ export default function PlantDetails() {
                     </div>
 
                     <Description plant={plant} onDescriptionUpdated={setPlant} />
+
+                    {plant.is_archived && plant.archive_reason && (
+                        <div className="archive-reason-box mt-5">
+                            <h3>Archive Reason</h3>
+                            <span>{plant.archive_reason}</span>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -653,17 +656,11 @@ export default function PlantDetails() {
                         </p>
 
                         {isArchiving && (
-                            <div
-                                className="editable-div"
-                                contentEditable
-                                suppressContentEditableWarning
-                                onInput={(e) => setArchiveReason((e.target as HTMLDivElement).innerText)}
-                                dangerouslySetInnerHTML={{ __html: archiveReason || "e.g. Dead, moved, donated, etc." }}
-                                onFocus={(e) => {
-                                    if (e.currentTarget.innerText === "e.g. Dead, moved, donated, etc.") {
-                                    e.currentTarget.innerText = "";
-                                    }
-                                }}
+                            <EditableDiv
+                                value={archiveReason}
+                                onSave={setArchiveReason}
+                                placeholder="e.g. Dead, moved, donated, etc."
+                                className="archive-reason"
                             />
                         )}
 

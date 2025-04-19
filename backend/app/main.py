@@ -3,10 +3,12 @@ import os
 from fastapi import FastAPI, Depends, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
 from app.api.routes import auth, plants, tags, users
 from app.database import init_db
 from app.core.security import create_admin_user
 from dotenv import load_dotenv
+from app.core.config import settings
 
 # Load environment variables
 load_dotenv()
@@ -34,6 +36,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add SessionMiddleware BEFORE mounting routers
+if os.getenv("VITE_AUTH_MODE") == "oidc":
+    app.add_middleware(
+        SessionMiddleware,
+        secret_key=settings.SECRET_KEY,
+        same_site="strict",
+        https_only=True,
+    )
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")

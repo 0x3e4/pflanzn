@@ -21,7 +21,10 @@ export default defineConfig({
                 ]
             },
             workbox: {
-                globPatterns: ['**/*.{js,css,html,png,svg,ico}']
+                globPatterns: ['**/*.{js,css,png,svg,ico}'],
+                navigateFallbackDenylist: [
+                    /^\/$/
+                ],
             }
         })
     ],

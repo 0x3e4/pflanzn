@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.sql import func
 from app.database import get_db
 from app.models import Plant, PlantImage, PlantWatering, Tag
-from app.schemas import PlantCreate, PlantResponse, PlantUpdate, PlantImageResponse, IdentifyRequest, PlantWateringCreate, PlantWateringResponse, TagResponse
+from app.schemas import PlantCreate, PlantResponse, PlantUpdate, PlantImageResponse, IdentifyRequest, PlantWateringCreate, PlantWateringResponse, TagResponse, ArchiveRequest
 from typing import List
 import shutil
 import os
@@ -525,12 +525,14 @@ def remove_tag_from_plant(plant_id: int, tag_id: int, db: Session = Depends(get_
         tags=[TagResponse(id=t.id, name=t.name) for t in plant.tags]
     )
 
+# Archive or restore from archive
 @router.post("/{plant_id}/archive")
-def archive_plant(plant_id: int, reason: str = Body(...), db: Session = Depends(get_db)):
+def archive_plant(plant_id: int, data: ArchiveRequest, db: Session = Depends(get_db)):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
-    plant.is_archived = True
-    plant.archive_reason = reason
+
+    plant.is_archived = data.archive
+    plant.archive_reason = data.reason
     db.commit()
-    return {"message": "Plant archived successfully"}
+    return {"message": f"Plant {'archived' if data.archive else 'restored'} successfully"}

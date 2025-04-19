@@ -16,8 +16,9 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(255), unique=True, nullable=False)
     email = Column(String(255), unique=True, nullable=False)
-    password = Column(String(255), nullable=False)
+    password = Column(String(255), nullable=True)
     role = Column(String(50), default="user")
+    auth_type = Column(String(10), default="local", nullable=False)
 
 class Plant(Base):
     __tablename__ = "plants"

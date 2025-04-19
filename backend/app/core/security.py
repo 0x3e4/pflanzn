@@ -5,7 +5,6 @@ from passlib.hash import argon2
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException, Security, Request
-from fastapi.security import OAuth2PasswordBearer
 from app.database import get_db
 from app.models import User
 from app.schemas import UserCreate
@@ -20,9 +19,6 @@ AUTH_MODE = settings.VITE_AUTH_MODE.lower()  # "no", "local", "oidc"
 # Redis client
 REDIS_URL = settings.REDIS_URL
 redis_client = redis.StrictRedis.from_url(REDIS_URL, decode_responses=True)
-
-# OAuth2 setup for token-based login
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 # ==============================================================================
 # Password Management
@@ -67,7 +63,7 @@ def create_refresh_token(data: dict) -> str:
 def decode_token(token: str) -> dict:
     """Decodes a JWT token and returns the payload."""
     try:
-        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_aud": False})
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
     except jwt.PyJWTError:
@@ -104,7 +100,7 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
     """Retrieves the currently authenticated user from Secure Cookie."""
     token = request.cookies.get("access_token")
     if not token:
-        return None
+        raise HTTPException(status_code=401, detail="Missing access token")
 
     payload = decode_token(token)
     username = payload.get("sub")
@@ -141,7 +137,8 @@ def create_admin_user():
                 username=settings.ADMIN_USER,
                 email=settings.ADMIN_EMAIL,
                 password=hash_password(settings.ADMIN_PASSWORD),
-                role="admin"
+                role="admin",
+                auth_type="local"
             )
             db.add(new_admin)
             db.commit()

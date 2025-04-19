@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import OidcCallback from "./pages/OidcCallback";
 import ScrollToTopButton from './components/ScrollToTopButton';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -53,6 +54,14 @@ export default function App() {
             document.removeEventListener("touchend", handleTouchEnd);
         };
     }, [startY]);
+
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('SW registered:', reg))
+            .catch(err => console.error('SW registration failed:', err));
+        });
+    }      
     
     return (
         <AuthProvider>
@@ -65,6 +74,7 @@ export default function App() {
                         <Route path="/plants" element={<Plants />} />
                         <Route path="/plant/:plantId" element={<PlantDetails />} />
                         {authMode === "local" && <Route path="/login" element={<Login />} />}
+                        {authMode === "oidc" && <Route path="/callback" element={<OidcCallback />} />}
                         <Route path="/profile" element={<Profile />} />
                     </Routes>
                     <ScrollToTopButton />
