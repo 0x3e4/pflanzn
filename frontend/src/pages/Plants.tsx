@@ -10,6 +10,7 @@ import {
     waterPlant,
     archivePlant
 } from "../services/PlantService";
+import { waterPlantsByTag } from "../services/TagService"
 import { Plant } from "../types/Plant";
 import { Tag } from "../types/Tag";
 import { fetchTags } from "../services/TagService";
@@ -29,7 +30,8 @@ import {
     faLeaf, 
     faFont,
     faExpand,
-    faCompress
+    faCompress,
+    faCalendarAlt
 } from "@fortawesome/free-solid-svg-icons";
 import LoadingOverlay from "../components/LoadingOverlay";
 import { useAuth } from "../context/AuthContext";
@@ -65,6 +67,10 @@ export default function Plants() {
     plantId: number;
     results: { species: string; commonName: string; score: string, images: string[] }[];
   } | null>(null);
+
+  const [selectedDateTime, setSelectedDateTime] = useState<string>(
+    DateTime.now().toISO({ includeOffset: false }) ?? ""
+  );
 
   const { isLoggedIn } = useAuth();
 
@@ -197,6 +203,27 @@ export default function Plants() {
     }
   };
 
+  // Water the plant (log watering date)
+  const handleWaterPlantsByTag = async () => {
+    if (!isLoggedIn) {
+      toast.error("You must be logged in to water plants.");
+      return;
+    }
+
+    if (selectedTagId === null || selectedTagId < 0) {
+      toast.error("Please select a tag first.");
+      return;
+    }
+
+    try {
+        await waterPlantsByTag(selectedTagId, { watered_at: selectedDateTime });
+        toast.success("Watering logged successfully!");
+        fetchPlantsFromService();
+    } catch (error) {
+        toast.error((error as Error).message || "Failed to log watering.");
+    }
+  };
+
   const handleUploadImageForPlant = async (plantId: number, e: React.ChangeEvent<HTMLInputElement>) => {
     if (!isLoggedIn) {
       toast.error("You must be logged in to add images to plants.");
@@ -312,6 +339,28 @@ export default function Plants() {
           >
             #archive
           </span>
+        </div>
+
+        <div className="water-plant-input-container">
+          {isLoggedIn ? (
+              <>
+                  <button className="water-plant-btn" onClick={handleWaterPlantsByTag} disabled={selectedTagId === null || selectedTagId < 0}>
+                      <FontAwesomeIcon icon={faDroplet} /> Water Plants
+                  </button>
+              </>
+          ) : (
+              <button className="water-plant-btn" onClick={() => toast.warning("You must be logged in to water plants.")}>
+                  <FontAwesomeIcon icon={faDroplet} /> Water Plants
+              </button>
+          )}
+          <div className="water-plant-datetime">
+              <FontAwesomeIcon icon={faCalendarAlt} />
+              <input
+                  type="datetime-local"
+                  value={selectedDateTime.slice(0, 16)}
+                  onChange={(e) => setSelectedDateTime(e.target.value)}
+              />
+          </div>
         </div>
 
         <div className="filter-specie-name-container">

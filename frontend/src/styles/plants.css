@@ -387,7 +387,6 @@
 .filter-specie-name-container {
   display: flex;
   align-items: center;
-  gap: 10px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
 }
@@ -421,10 +420,6 @@
     flex: 0 0 100%;
     width: 100% !important;
     align-self: stretch;
-  }
-
-  .filter-specie-name-container {
-    margin-bottom: 0.75rem;
   }
 
   .filter-specie-name-container .plant-filter-dropdown {

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Tag, Plant, plant_tag_association
-from app.schemas import TagCreate, TagResponse, TagListResponse, PlantResponse
+from app.models import Tag, Plant, plant_tag_association, PlantWatering
+from app.schemas import TagCreate, TagResponse, TagListResponse, PlantResponse, PlantWateringCreate
 from typing import List
 
 router = APIRouter()
@@ -63,3 +63,28 @@ def delete_tag(tag_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Tag deleted successfully"}
+
+# Water plants by tag
+@router.post("/{tag_id}/water")
+def water_plants_by_tag(
+    tag_id: int,
+    watering_data: PlantWateringCreate,
+    db: Session = Depends(get_db)
+):
+    plants = db.query(Plant).join(Plant.tags).filter(Tag.id == tag_id, Plant.is_archived == False).all()
+
+    if not plants:
+        raise HTTPException(status_code=404, detail="No plants found with this tag")
+
+    now = watering_data.watered_at or datetime.utcnow()
+
+    for plant in plants:
+        watering = PlantWatering(
+            plant_id=plant.id,
+            watered_at=now
+        )
+        db.add(watering)
+
+    db.commit()
+
+    return {"message": f"{len(plants)} plants watered successfully."}
