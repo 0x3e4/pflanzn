@@ -112,7 +112,7 @@ export default function Home() {
                     <div className="carousel-container" style={{ visibility: allImagesLoaded ? "visible" : "hidden" }}>
                         <Slider {...sliderSettings}>
                             {plants.map((plant) => {
-                                const latestImage = plant.images?.[0];
+                                const latestImage = plant.images?.[plant.images.length - 1];
                                 const imageUrl = latestImage
                                     ? `/api/uploads/${latestImage.image_path}`
                                     : "/placeholder-plant.webp";

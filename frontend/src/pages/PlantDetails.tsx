@@ -37,6 +37,7 @@ import { toast } from 'react-toastify';
 import LoadingOverlay from "../components/LoadingOverlay";
 import IdentifyResults from "../components/IdentifyResults";
 import { useAuth } from "../context/AuthContext";
+import { setOverlayOpen } from "../overlayControl";
 
 export default function PlantDetails() {
     const { isLoggedIn } = useAuth();
@@ -315,6 +316,14 @@ export default function PlantDetails() {
             toast.error("Failed to delete tag.");
         }
     };
+
+  useEffect(() => {
+    if (identifyResults || deleteModalOpen || archiveModalOpen) {
+      setOverlayOpen(true);
+    } else {
+      setOverlayOpen(false);
+    }
+  }, [identifyResults, deleteModalOpen, archiveModalOpen]);  
 
     if (loadingPlant) {
         return <LoadingOverlay />;

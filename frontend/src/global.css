@@ -220,3 +220,44 @@ small:hover {
 .Toastify {
   text-align: left;
 }
+
+/* Pull to refresh */
+.pull-indicator {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-color);
+  transition: transform 0.2s ease-in-out;
+  z-index: 10;
+}
+
+/* Arrow styling */
+.arrow {
+  font-size: 24px;
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Flip animation when enough pulled */
+.pull-indicator.flip .arrow {
+  transform: rotate(180deg) scale(1.2);
+}
+
+/* Spinner */
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--text-color);
+  border-top: 3px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Spin keyframes */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

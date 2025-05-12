@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../styles/identifyResults.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleXmark } from "@fortawesome/free-solid-svg-icons";
 import { IdentifyResult } from "../types/IdentifyResult";
+import { setOverlayOpen } from "../overlayControl";
 
 interface IdentifyResultsProps {
     plantId: number;
@@ -18,6 +19,14 @@ export default function IdentifyResults({
   onClose,
 }: IdentifyResultsProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setOverlayOpen(true);
+
+    return () => {
+      setOverlayOpen(false);
+    };
+  }, []);
 
   return (
     <div className="identify-modal-overlay" onClick={onClose}>

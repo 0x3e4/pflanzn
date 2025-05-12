@@ -35,6 +35,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import LoadingOverlay from "../components/LoadingOverlay";
 import { useAuth } from "../context/AuthContext";
+import { setOverlayOpen } from "../overlayControl";
 
 export default function Plants() {
   const [plants, setPlants] = useState<Plant[]>([]);
@@ -283,6 +284,14 @@ export default function Plants() {
   };
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (modalOpen || plantIdentifyResults || selectedImage || archiveModalOpen) {
+      setOverlayOpen(true);
+    } else {
+      setOverlayOpen(false);
+    }
+  }, [modalOpen, plantIdentifyResults, selectedImage, archiveModalOpen]);  
 
   if (loading) {
     return <LoadingOverlay />;

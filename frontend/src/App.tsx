@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useRef } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import About from "./pages/About";
@@ -13,47 +13,23 @@ import ScrollToTopButton from './components/ScrollToTopButton';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from "./context/AuthContext";
+import { usePullToRefresh } from "./hooks/usePullToRefresh";
 
 export default function App() {
     const authMode = import.meta.env.VITE_AUTH_MODE || "no";
 
-    const [startY, setStartY] = useState<number | null>(null);
+    const ref = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        const handleTouchStart = (e: TouchEvent) => {
-            // Only trigger if at top of scroll
-            if (window.scrollY === 0) {
-                setStartY(e.touches[0].clientY);
-            }
-        };
-    
-        const handleTouchMove = (e: TouchEvent) => {
-            if (startY === null) return;
-    
-            const currentY = e.touches[0].clientY;
-            const deltaY = currentY - startY;
-    
-            // Trigger refresh only if swiped down 100px and still at top
-            if (deltaY > 100 && window.scrollY === 0) {
-                window.location.reload();
-                setStartY(null);
-            }
-        };
-    
-        const handleTouchEnd = () => {
-            setStartY(null); // Reset on end
-        };
-    
-        document.addEventListener("touchstart", handleTouchStart);
-        document.addEventListener("touchmove", handleTouchMove);
-        document.addEventListener("touchend", handleTouchEnd);
-    
-        return () => {
-            document.removeEventListener("touchstart", handleTouchStart);
-            document.removeEventListener("touchmove", handleTouchMove);
-            document.removeEventListener("touchend", handleTouchEnd);
-        };
-    }, [startY]);
+    const { refreshing, setRefreshing } = usePullToRefresh(ref, () => {
+        setTimeout(() => {
+          window.location.reload();
+          setRefreshing(false);
+        }, 1500); 
+    });
+
+    usePullToRefresh(ref, () => {
+        window.location.reload();
+    });
 
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
@@ -67,29 +43,38 @@ export default function App() {
         <AuthProvider>
             <Router>
                 <Navbar />
-                <main>
-                    <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/about" element={<About />} />
-                        <Route path="/plants" element={<Plants />} />
-                        <Route path="/plant/:plantId" element={<PlantDetails />} />
-                        {authMode === "local" && <Route path="/login" element={<Login />} />}
-                        {authMode === "oidc" && <Route path="/callback" element={<OidcCallback />} />}
-                        <Route path="/profile" element={<Profile />} />
-                    </Routes>
-                    <ScrollToTopButton />
-                    <ToastContainer
-                        position="bottom-right"
-                        autoClose={3000}
-                        hideProgressBar={false}
-                        newestOnTop={false}
-                        closeOnClick
-                        rtl={false}
-                        pauseOnFocusLoss
-                        draggable
-                        pauseOnHover
-                    />
-                </main>
+                <div ref={ref} style={{ minHeight: "100vh", position: "relative" }}>
+                    <div id="pull-indicator" className="pull-indicator" style={{ transform: "translateY(-100%)" }}>
+                        {!refreshing ? (
+                            <div className="arrow">↓</div>
+                        ) : (
+                            <div className="spinner" />
+                        )}
+                    </div>
+                    <main>
+                        <Routes>
+                            <Route path="/" element={<Home />} />
+                            <Route path="/about" element={<About />} />
+                            <Route path="/plants" element={<Plants />} />
+                            <Route path="/plant/:plantId" element={<PlantDetails />} />
+                            {authMode === "local" && <Route path="/login" element={<Login />} />}
+                            {authMode === "oidc" && <Route path="/callback" element={<OidcCallback />} />}
+                            <Route path="/profile" element={<Profile />} />
+                        </Routes>
+                        <ScrollToTopButton />
+                        <ToastContainer
+                            position="bottom-right"
+                            autoClose={3000}
+                            hideProgressBar={false}
+                            newestOnTop={false}
+                            closeOnClick
+                            rtl={false}
+                            pauseOnFocusLoss
+                            draggable
+                            pauseOnHover
+                        />
+                    </main>
+                </div>
                 <Footer />
             </Router>
         </AuthProvider>

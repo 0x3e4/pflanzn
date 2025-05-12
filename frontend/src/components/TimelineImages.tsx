@@ -6,11 +6,12 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faCircleXmark, faChevronLeft, faChevronRight, faExpand } from "@fortawesome/free-solid-svg-icons";
 import "../styles/timelineImages.css";
 import { useAuth } from "../context/AuthContext";
+import { setOverlayOpen } from "../overlayControl";
 
 interface TimelineImagesProps {
     images: PlantImage[];
     plantId: number;
-}
+}  
 
 export default function TimelineImages({ images, plantId }: TimelineImagesProps) {
     const { isLoggedIn } = useAuth();
@@ -104,7 +105,15 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
         } else if (distance < -minSwipeDistance) {
             goToPrevious();
         }
-    };    
+    };  
+    
+    useEffect(() => {
+        if (fullSizeModalOpen || deleteModalOpen) {
+          setOverlayOpen(true);
+        } else {
+          setOverlayOpen(false);
+        }
+    }, [fullSizeModalOpen, deleteModalOpen]);
 
     return (
         <div className="plant-carousel-container">
