@@ -60,7 +60,6 @@
   padding: 20px;
   border-radius: 8px;
   text-align: center;
-  width: 350px;
   box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.3);
   position: relative;
   max-height: 80vh;
@@ -84,7 +83,7 @@
 
 /* Modal Input Fields */
 .add-plant-modal-content input {
-  width: 90%;
+  width: 100%;
   padding: 10px;
   margin: 10px 0;
   border: 1px solid #555;
