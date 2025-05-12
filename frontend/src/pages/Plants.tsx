@@ -6,7 +6,7 @@ import {
     uploadPlantImage,
     identifyPlant,
     updatePlant,
-    deletePlant,
+    identifyPlantFromImage,
     waterPlant,
     archivePlant
 } from "../services/PlantService";
@@ -250,13 +250,10 @@ export default function Plants() {
     if (!file) return toast.error("Please select a file first.");
 
     try {
-      const tempPlant = await createPlant("Temp", "");
-      await uploadPlantImage(tempPlant.id, file);
+      const result = await identifyPlantFromImage(file);
 
-      const result = await identifyPlant(tempPlant.id);
       if (result.identified_species.length === 0) {
         toast.warning("No species identified.");
-        await deletePlant(tempPlant.id);
         return;
       }
 
@@ -266,8 +263,6 @@ export default function Plants() {
         score: r.score.toString(),
         images: r.images
       })));
-
-      await deletePlant(tempPlant.id);
 
     } catch (err) {
       toast.error((err as Error).message);
