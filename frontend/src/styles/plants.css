@@ -389,6 +389,7 @@
   align-items: center;
   border: 1px solid var(--border-color);
   border-radius: 8px;
+  padding: 4px;
 }
 
 .plant-filter-dropdown:focus {
@@ -408,6 +409,10 @@
   margin-right: 0.5rem;
 }
 
+#sort-select {
+  padding: 10px;
+}
+
 @media (max-width: 768px) {
   .plant-filter-sort-bar {
     flex-direction: column;
@@ -416,7 +421,8 @@
   }
 
   .filter-specie-name-container,
-  .plant-sort-container {
+  .plant-sort-container,
+  .plant-search-container {
     flex: 0 0 100%;
     width: 100% !important;
     align-self: stretch;
@@ -468,4 +474,21 @@
   .toggle-stretch-btn {
     opacity: 0 !important;
   }
+}
+
+.plant-search-input {
+  width: 100%;
+  padding: 9px;
+  border: 1px solid var(--quinary-color);
+  border-radius: 6px;
+  font-size: 16px;
+  background-color: var(--secondary-background-color);
+  color: var(--text-color);
+  outline: none;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.plant-search-input:focus {
+  border-color: var(--primary-color);
 }

@@ -73,6 +73,8 @@ export default function Plants() {
     DateTime.now().toISO({ includeOffset: false }) ?? ""
   );
 
+  const [searchTerm, setSearchTerm] = useState<string>("");
+
   const { isLoggedIn } = useAuth();
 
   useEffect(() => {
@@ -372,6 +374,16 @@ export default function Plants() {
           </div>
         </div>
 
+        <div className="plant-search-container">
+          <input
+            type="text"
+            placeholder="Search plants..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="plant-search-input"
+          />
+        </div>
+
         <div className="filter-specie-name-container">
           <div className="plant-filter-toggle">
             <FontAwesomeIcon
@@ -436,7 +448,11 @@ export default function Plants() {
             const filterValue = filterMode === "species" ? p.species : p.name;
             const matchesFilterValue = !selectedFilterValue || filterValue === selectedFilterValue;
 
-            return matchesTag && matchesFilterValue;
+            const matchesSearch = !searchTerm || 
+            (p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+             p.species?.toLowerCase().includes(searchTerm.toLowerCase()));
+          
+            return matchesTag && matchesFilterValue && matchesSearch;          
           })
           .sort((a, b) => {
             switch (sortBy) {
