@@ -74,8 +74,8 @@ export default function App() {
                             pauseOnHover
                         />
                     </main>
+                    <Footer />
                 </div>
-                <Footer />
             </Router>
         </AuthProvider>
     );
