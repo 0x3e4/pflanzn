@@ -6,22 +6,23 @@
     align-items: center;
     text-align: center;
     background-color: var(--secondary-background-color);
-  }
+    min-height: 80vh;
+}
   
-  .home-content {
+.home-content {
     max-width: 800px;
-  }
+}
   
-  .home-content h1 {
+.home-content h1 {
     font-size: 3rem;
     font-weight: bold;
     margin-bottom: 20px;
-  }
+}
   
-  .home-content p {
+.home-content p {
     font-size: 1.2rem;
     margin-bottom: 20px;
-  }
+}
 
 .carousel-container {
     margin: 20px auto;

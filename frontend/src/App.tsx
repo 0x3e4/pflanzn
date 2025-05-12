@@ -61,7 +61,6 @@ export default function App() {
                             {authMode === "oidc" && <Route path="/callback" element={<OidcCallback />} />}
                             <Route path="/profile" element={<Profile />} />
                         </Routes>
-                        <ScrollToTopButton />
                         <ToastContainer
                             position="bottom-right"
                             autoClose={3000}
@@ -76,6 +75,7 @@ export default function App() {
                     </main>
                     <Footer />
                 </div>
+                <ScrollToTopButton />
             </Router>
         </AuthProvider>
     );
