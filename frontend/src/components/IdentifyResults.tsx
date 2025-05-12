@@ -21,12 +21,12 @@ export default function IdentifyResults({
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
-    setOverlayOpen(true);
-
-    return () => {
+    if (selectedImage) {
+      setOverlayOpen(true);
+    } else {
       setOverlayOpen(false);
-    };
-  }, []);
+    }
+}, [selectedImage]);
 
   return (
     <div className="identify-modal-overlay" onClick={onClose}>
