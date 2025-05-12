@@ -7,6 +7,7 @@ import { faCamera } from "@fortawesome/free-solid-svg-icons";
 import { identifyPlantFromImage } from "../services/PlantService";
 import IdentifyResults from "./IdentifyResults";
 import { toast } from "react-toastify";
+import LoadingOverlay from "../components/LoadingOverlay";
 
 export default function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -16,6 +17,7 @@ export default function Navbar() {
     const navRef = useRef<HTMLElement | null>(null);
     const { isLoggedIn, loading } = useAuth();
     const authMode = import.meta.env.VITE_AUTH_MODE;
+    const [loadingIdentification, setLoading] = useState<boolean>(false);
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -52,6 +54,9 @@ export default function Navbar() {
     };
 
     const processPlantIdentification = async (file: File) => {
+
+        setLoading(true);
+
         try {
             // Identify plant directly from uploaded image without saving
             const result = await identifyPlantFromImage(file);
@@ -69,8 +74,14 @@ export default function Navbar() {
             })));
         } catch (error) {
             toast.error("Error identifying plant. Please try again.");
+        } finally {
+            setLoading(false);
         }
     };
+
+    if (loadingIdentification) {
+        return <LoadingOverlay />;
+    }
 
     return (
         <nav className={`navbar ${isScrolled ? "shrink" : ""}`} ref={navRef}>
