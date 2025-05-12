@@ -26,9 +26,3 @@ export const updateTag = async (tagId: number, data: Partial<Tag>) => {
 export const deleteTag = async (tagId: number) => {
     await apiClient.delete(`${API_BASE}/${tagId}`);
 };
-
-// Water all plants with a specific tag
-export const waterPlantsByTag = async (tagId: number, data: { watered_at?: string }) => {
-    const response = await apiClient.post(`${API_BASE}/${tagId}/water`, data);
-    return response.data;
-};

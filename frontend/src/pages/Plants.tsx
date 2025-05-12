@@ -10,7 +10,6 @@ import {
     waterPlant,
     archivePlant
 } from "../services/PlantService";
-import { waterPlantsByTag } from "../services/TagService"
 import { Plant } from "../types/Plant";
 import { Tag } from "../types/Tag";
 import { fetchTags } from "../services/TagService";
@@ -207,25 +206,27 @@ export default function Plants() {
   };
 
   // Water the plant (log watering date)
-  const handleWaterPlantsByTag = async () => {
+  const handleWaterVisiblePlants = async () => {
     if (!isLoggedIn) {
       toast.error("You must be logged in to water plants.");
       return;
     }
-
-    if (selectedTagId === null || selectedTagId < 0) {
-      toast.error("Please select a tag first.");
+  
+    if (filteredPlants.length === 0) {
+      toast.warning("No plants to water.");
       return;
     }
-
+  
     try {
-        await waterPlantsByTag(selectedTagId, { watered_at: selectedDateTime });
-        toast.success("Watering logged successfully!");
-        fetchPlantsFromService();
+      for (const plant of filteredPlants) {
+        await waterPlant(plant.id, { watered_at: selectedDateTime });
+      }
+      toast.success(`Watered ${filteredPlants.length} plants!`);
+      fetchPlantsFromService();
     } catch (error) {
-        toast.error((error as Error).message || "Failed to log watering.");
+      toast.error((error as Error).message || "Failed to water plants.");
     }
-  };
+  };  
 
   const handleUploadImageForPlant = async (plantId: number, e: React.ChangeEvent<HTMLInputElement>) => {
     if (!isLoggedIn) {
@@ -286,6 +287,74 @@ export default function Plants() {
   };
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const filteredPlants = plants
+  .filter((p) => {
+    const matchesTag = selectedTagId === -1
+      ? p.is_archived
+      : selectedTagId === -2
+      ? !p.is_archived && (!p.tags || p.tags.length === 0)
+      : selectedTagId === null
+      ? !p.is_archived
+      : !p.is_archived && p.tags?.some((t) => t.id === selectedTagId);
+
+    const filterValue = filterMode === "species" ? p.species : p.name;
+    const matchesFilterValue = !selectedFilterValue || filterValue === selectedFilterValue;
+
+    const matchesSearch = !searchTerm || 
+      (p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      p.species?.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    return matchesTag && matchesFilterValue && matchesSearch;
+  })
+  .sort((a, b) => {
+    switch (sortBy) {
+      case "idAsc":
+        return a.id - b.id;
+      case "idDesc":
+        return b.id - a.id;
+      case "lastWateredDesc":
+        return new Date(b.last_watered || 0).getTime() - new Date(a.last_watered || 0).getTime();
+      case "lastWateredAsc":
+        return new Date(a.last_watered || 0).getTime() - new Date(b.last_watered || 0).getTime();
+      case "lastImageUploadedDesc":
+        return (
+          new Date(
+            (b.images.length > 0
+              ? b.images.reduce((latest, img) =>
+                  new Date(img.uploaded_at) > new Date(latest.uploaded_at) ? img : latest
+                )
+              : { uploaded_at: 0 }).uploaded_at
+          ).getTime() -
+          new Date(
+            (a.images.length > 0
+              ? a.images.reduce((latest, img) =>
+                  new Date(img.uploaded_at) > new Date(latest.uploaded_at) ? img : latest
+                )
+              : { uploaded_at: 0 }).uploaded_at
+          ).getTime()
+        );
+      case "lastImageUploadedAsc":
+        return (
+          new Date(
+            (a.images.length > 0
+              ? a.images.reduce((latest, img) =>
+                  new Date(img.uploaded_at) > new Date(latest.uploaded_at) ? img : latest
+                )
+              : { uploaded_at: 0 }).uploaded_at
+          ).getTime() -
+          new Date(
+            (b.images.length > 0
+              ? b.images.reduce((latest, img) =>
+                  new Date(img.uploaded_at) > new Date(latest.uploaded_at) ? img : latest
+                )
+              : { uploaded_at: 0 }).uploaded_at
+          ).getTime()
+        );
+      default:
+        return 0;
+    }
+  });
 
   useEffect(() => {
     if (modalOpen || plantIdentifyResults || selectedImage || archiveModalOpen) {
@@ -355,7 +424,7 @@ export default function Plants() {
         <div className="water-plant-input-container">
           {isLoggedIn ? (
               <>
-                  <button className="water-plant-btn" onClick={handleWaterPlantsByTag} disabled={selectedTagId === null || selectedTagId < 0}>
+                  <button className="water-plant-btn" onClick={handleWaterVisiblePlants}>
                       <FontAwesomeIcon icon={faDroplet} /> Water Plants
                   </button>
               </>
@@ -435,75 +504,7 @@ export default function Plants() {
       </div>
 
       <div className="plants-list">
-        {plants
-          .filter((p) => {
-            const matchesTag = selectedTagId === -1
-              ? p.is_archived
-              : selectedTagId === -2
-              ? !p.is_archived && (!p.tags || p.tags.length === 0)
-              : selectedTagId === null
-              ? !p.is_archived
-              : !p.is_archived && p.tags?.some((t) => t.id === selectedTagId);
-
-            const filterValue = filterMode === "species" ? p.species : p.name;
-            const matchesFilterValue = !selectedFilterValue || filterValue === selectedFilterValue;
-
-            const matchesSearch = !searchTerm || 
-            (p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-             p.species?.toLowerCase().includes(searchTerm.toLowerCase()));
-          
-            return matchesTag && matchesFilterValue && matchesSearch;          
-          })
-          .sort((a, b) => {
-            switch (sortBy) {
-              case "idAsc":
-                return a.id - b.id;
-              case "idDesc":
-                return b.id - a.id;
-              case "lastWateredDesc":
-                return new Date(b.last_watered || 0).getTime() - new Date(a.last_watered || 0).getTime();
-              case "lastWateredAsc":
-                return new Date(a.last_watered || 0).getTime() - new Date(b.last_watered || 0).getTime();
-              case "lastImageUploadedDesc":
-                return (
-                  new Date(
-                    (b.images.length > 0
-                      ? b.images.reduce((latest, img) =>
-                          new Date(img.uploaded_at) > new Date(latest.uploaded_at) ? img : latest
-                        )
-                      : { uploaded_at: 0 }).uploaded_at
-                  ).getTime() -
-                  new Date(
-                    (a.images.length > 0
-                      ? a.images.reduce((latest, img) =>
-                          new Date(img.uploaded_at) > new Date(latest.uploaded_at) ? img : latest
-                        )
-                      : { uploaded_at: 0 }).uploaded_at
-                  ).getTime()
-                );
-              
-              case "lastImageUploadedAsc":
-                return (
-                  new Date(
-                    (a.images.length > 0
-                      ? a.images.reduce((latest, img) =>
-                          new Date(img.uploaded_at) > new Date(latest.uploaded_at) ? img : latest
-                        )
-                      : { uploaded_at: 0 }).uploaded_at
-                  ).getTime() -
-                  new Date(
-                    (b.images.length > 0
-                      ? b.images.reduce((latest, img) =>
-                          new Date(img.uploaded_at) > new Date(latest.uploaded_at) ? img : latest
-                        )
-                      : { uploaded_at: 0 }).uploaded_at
-                  ).getTime()
-                );                
-              default:
-                return 0;
-            }
-          })
-          .map((plant) => {
+        {filteredPlants.map((plant) => {
             const sortedImages = [...(plant.images || [])].sort(
               (a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime()
             );

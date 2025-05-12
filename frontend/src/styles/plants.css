@@ -300,6 +300,7 @@
   flex-wrap: wrap;
   gap: 8px;
   flex: 1 1 auto;
+  width: 100%;
 }
 
 .hashtag {
@@ -474,6 +475,11 @@
   .toggle-stretch-btn {
     opacity: 0 !important;
   }
+}
+
+.plant-search-container {
+  flex: 1;
+  min-width: 250px;
 }
 
 .plant-search-input {
