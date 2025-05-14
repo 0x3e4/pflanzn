@@ -52,6 +52,7 @@ main {
   align-items: center;
   text-align: center;
   padding-top: 80px;
+  min-height: 80vh;
 }
 
 @media (max-width: 768px) {

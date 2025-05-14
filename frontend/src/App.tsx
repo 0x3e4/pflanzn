@@ -43,7 +43,7 @@ export default function App() {
         <AuthProvider>
             <Router>
                 <Navbar />
-                <div ref={ref} style={{ minHeight: "100vh", position: "relative" }}>
+                <div ref={ref} style={{ position: "relative" }}>
                     <div id="pull-indicator" className="pull-indicator" style={{ transform: "translateY(-100%)" }}>
                         {!refreshing ? (
                             <div className="arrow">↓</div>
