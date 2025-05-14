@@ -23,7 +23,10 @@ export default function Home() {
     const loadPlants = async () => {
         try {
             const data = await fetchPlants();
-            setPlants(data);
+            
+            const nonArchivedPlants = data.filter(plant => !plant.is_archived);
+
+            setPlants(nonArchivedPlants);
 
             const speciesCountMap = data.reduce((acc, plant) => {
                 const species = plant.species ?? "Unknown";
