@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import { fetchStatistics } from "../services/PlantService";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSeedling, faList, faDroplet, faClock } from "@fortawesome/free-solid-svg-icons";
+import { 
+    faSeedling, 
+    faList, 
+    faDroplet, 
+    faClock, 
+    faArchive, 
+    faImage 
+} from "@fortawesome/free-solid-svg-icons";
 import { Plant } from "../types/Plant";
 import "../styles/statisticsPanel.css";
 
@@ -12,8 +19,10 @@ interface SpeciesStats {
 
 interface StatisticsData {
     totalPlants: number;
+    archivedPlants: number;
     topSpecies: SpeciesStats[];
     totalWaterings: number;
+    totalImages: number;
     lastWateredPlant: Plant | null;
 }
 
@@ -26,9 +35,7 @@ export default function StatisticsPanel() {
 
     const loadData = async () => {
         try {
-            const [statsData] = await Promise.all([
-                fetchStatistics(),
-            ]);
+            const statsData = await fetchStatistics();
             setStats(statsData);
         } catch (error) {
             console.error("Failed to fetch statistics data:", error);
@@ -45,7 +52,13 @@ export default function StatisticsPanel() {
                 <div className="stats-card">
                     <FontAwesomeIcon icon={faSeedling} className="stats-icon" />
                     <h3>{stats ? stats.totalPlants : "Loading..."}</h3>
-                    <p>Total Plants</p>
+                    <p>Active Plants</p>
+                </div>
+
+                <div className="stats-card">
+                    <FontAwesomeIcon icon={faArchive} className="stats-icon" />
+                    <h3>{stats ? stats.archivedPlants : "Loading..."}</h3>
+                    <p>Archived Plants</p>
                 </div>
 
                 <div className="stats-card">
@@ -66,6 +79,12 @@ export default function StatisticsPanel() {
                     <FontAwesomeIcon icon={faDroplet} className="stats-icon" />
                     <h3>{stats ? stats.totalWaterings : "Loading..."}</h3>
                     <p>Total Waterings Logged</p>
+                </div>
+
+                <div className="stats-card">
+                    <FontAwesomeIcon icon={faImage} className="stats-icon" />
+                    <h3>{stats ? stats.totalImages : "Loading..."}</h3>
+                    <p>Total Images Uploaded</p>
                 </div>
 
                 <div className="stats-card">

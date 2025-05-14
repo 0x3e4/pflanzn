@@ -114,14 +114,16 @@ export default function Navbar() {
                 <div className={`nav-links ${menuOpen ? "active" : ""}`}>
                     <Link to="/plants" onClick={() => setMenuOpen(false)}>Plants</Link>
 
-                    {!loading && authMode === "local" && (
-                        isLoggedIn ? (
-                            <Link to="/profile" onClick={() => setMenuOpen(false)}>
-                                Profile
+                    {!loading && (
+                        (authMode === "no" || authMode === "oidc" || (authMode === "local" && isLoggedIn)) ? (
+                            <Link to="/admin" onClick={() => setMenuOpen(false)}>
+                                Admin
                             </Link>
-                        ) : (
-                            <Link to="/login" onClick={() => setMenuOpen(false)}>Login</Link>
-                        )
+                        ) : authMode === "local" ? (
+                            <Link to="/login" onClick={() => setMenuOpen(false)}>
+                                Login
+                            </Link>
+                        ) : null
                     )}
                 </div>
             </div>

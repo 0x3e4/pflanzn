@@ -4,20 +4,21 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { updateUser, updateUserPassword } from "../services/UserService";
 import StatisticsPanel from "../components/StatisticsPanel";
-import AdminPanel from "../components/AdminPanel";
+import ManagementPanel from "../components/ManagementPanel";
 import "../styles/profile.css";
 import LoadingOverlay from "../components/LoadingOverlay";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPenToSquare, faUnlock } from "@fortawesome/free-solid-svg-icons";
 import { User } from "../types/User";
 
-type ProfileSection = "profile" | "statistics" | "admin";
+type AdminSection = "profile" | "statistics" | "management";
 
-const Profile: React.FC = () => {
+const Admin: React.FC = () => {
     const { user, logout, fetchProfile, isLoggedIn } = useAuth();
     const navigate = useNavigate();
+    const authMode = import.meta.env.VITE_AUTH_MODE || "no";
     const [loading, setLoading] = useState(true);
-    const [activeSection, setActiveSection] = useState<ProfileSection>("profile");
+    const [activeSection, setActiveSection] = useState<AdminSection>("statistics");
     const [editedUser, setEditedUser] = useState<Partial<User>>({
         username: user?.username || "",
         email: user?.email || ""
@@ -56,10 +57,10 @@ const Profile: React.FC = () => {
     }, [user]);    
 
     useEffect(() => {
-        if (!loading && !isLoggedIn) {
+        if (!loading && authMode === "local" && !isLoggedIn) {
             navigate("/login");
         }
-    }, [loading, isLoggedIn]);
+    }, [loading, isLoggedIn, authMode]);
 
     const handleLogout = () => {
         logout();
@@ -121,15 +122,8 @@ const Profile: React.FC = () => {
     return (
         <div className="profile-container">
             <aside className="profile-sidebar">
-                <h3>My Account</h3>
+                <h3>Details</h3>
                 <ul>
-                    <li 
-                        className={activeSection === "profile" ? "active" : ""}
-                        onClick={() => setActiveSection("profile")}
-                    >
-                        User details
-                    </li>
-
                     <li 
                         className={activeSection === "statistics" ? "active" : ""}
                         onClick={() => setActiveSection("statistics")}
@@ -137,21 +131,32 @@ const Profile: React.FC = () => {
                         Statistics
                     </li>
 
-                    {user?.role === "admin" && (
+                    {authMode !== "no" && (
                         <li 
-                            className={activeSection === "admin" ? "active" : ""}
-                            onClick={() => setActiveSection("admin")}
+                            className={activeSection === "profile" ? "active" : ""}
+                            onClick={() => setActiveSection("profile")}
                         >
-                            Admin
+                            User details
                         </li>
                     )}
 
-                    <li className="logout-link" onClick={handleLogout}>Logout</li>
+                    {(authMode === "no" || (authMode !== "no" && user?.role === "admin")) && (
+                        <li 
+                            className={activeSection === "management" ? "active" : ""}
+                            onClick={() => setActiveSection("management")}
+                        >
+                            Management
+                        </li>
+                    )}
+
+                    {authMode !== "no" && (
+                        <li className="logout-link" onClick={handleLogout}>Logout</li>
+                    )}
                 </ul>
             </aside>
 
             <main className="profile-main-content">
-                {activeSection === "profile" && (
+                {activeSection === "profile" && authMode !== "no" && (
                     <div className="profile-info">
                         <h2>User Details</h2>
                         
@@ -161,6 +166,7 @@ const Profile: React.FC = () => {
                             value={editedUser.username}
                             onChange={(e) => setEditedUser({ ...editedUser, username: e.target.value })}
                             className="profile-editable-input"
+                            disabled={authMode === "oidc"}
                         />
 
                         <label>Email</label>
@@ -169,57 +175,61 @@ const Profile: React.FC = () => {
                             value={editedUser.email}
                             onChange={(e) => setEditedUser({ ...editedUser, email: e.target.value })}
                             className="profile-editable-input"
+                            disabled={authMode === "oidc"}
                         />
 
-                        <button className="profile-update-btn" onClick={handleUpdateUserDetails}>
-                        <FontAwesomeIcon icon={faPenToSquare} /> Save Changes
-                        </button>
+                        {authMode === "local" && (
+                            <>
+                                <button className="profile-update-btn" onClick={handleUpdateUserDetails}>
+                                    <FontAwesomeIcon icon={faPenToSquare} /> Save Changes
+                                </button>
 
-                        <hr />
+                                <hr />
 
-                        <h3>Change Password</h3>
+                                <h3>Change Password</h3>
 
-                        <label>Old Password</label>
-                        <input
-                            type="password"
-                            value={passwords.oldPassword}
-                            onChange={(e) => setPasswords({ ...passwords, oldPassword: e.target.value })}
-                            className="profile-editable-input"
-                        />
+                                <label>Old Password</label>
+                                <input
+                                    type="password"
+                                    value={passwords.oldPassword}
+                                    onChange={(e) => setPasswords({ ...passwords, oldPassword: e.target.value })}
+                                    className="profile-editable-input"
+                                />
 
-                        <label>New Password</label>
-                        <input
-                            type="password"
-                            value={passwords.newPassword}
-                            onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
-                            className="profile-editable-input"
-                        />
+                                <label>New Password</label>
+                                <input
+                                    type="password"
+                                    value={passwords.newPassword}
+                                    onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
+                                    className="profile-editable-input"
+                                />
 
-                        <label>Confirm New Password</label>
-                        <input
-                            type="password"
-                            value={passwords.confirmPassword}
-                            onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
-                            className="profile-editable-input"
-                        />
+                                <label>Confirm New Password</label>
+                                <input
+                                    type="password"
+                                    value={passwords.confirmPassword}
+                                    onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
+                                    className="profile-editable-input"
+                                />
 
-                        <button className="profile-update-btn" onClick={handleChangePassword}>
-                            <FontAwesomeIcon icon={faUnlock} /> Change Password
-                        </button>
+                                <button className="profile-update-btn" onClick={handleChangePassword}>
+                                    <FontAwesomeIcon icon={faUnlock} /> Change Password
+                                </button>
+                            </>
+                        )}
                     </div>
                 )}
-
 
                 {activeSection === "statistics" && (
                     <StatisticsPanel />
                 )}
 
-                {activeSection === "admin" && user?.role === "admin" && (
-                    <AdminPanel />
+                {activeSection === "management" && (authMode === "no" || user?.role === "admin") && (
+                    <ManagementPanel />
                 )}
             </main>
         </div>
     );
 };
 
-export default Profile;
+export default Admin;

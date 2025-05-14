@@ -267,3 +267,10 @@
     cursor: not-allowed;
     background: var(--senary-color);
 }
+
+/* Make table headers clickable (sorting) */
+.users-table th,
+.plants-table th {
+    cursor: pointer;
+    user-select: none;
+}
