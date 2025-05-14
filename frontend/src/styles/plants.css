@@ -349,7 +349,7 @@
 
 .plant-filter-dropdown select {
   min-width: 140px;
-  padding: 6px 10px;
+  padding: 10px;
   color: var(--text-color);
 }
 
@@ -389,7 +389,7 @@
   align-items: center;
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 4px;
+  padding: 0px 0px 0px 4px;
 }
 
 .plant-filter-dropdown:focus {
