@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getOverlayOpen } from "../overlayControl";
+import { getOverlayOpen } from "../services/overlayControl";
 
 export function usePullToRefresh(
   ref: React.RefObject<HTMLElement | null>,

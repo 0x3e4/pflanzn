@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faCircleXmark, faChevronLeft, faChevronRight, faExpand } from "@fortawesome/free-solid-svg-icons";
 import "../styles/timelineImages.css";
 import { useAuth } from "../context/AuthContext";
-import { setOverlayOpen } from "../overlayControl";
+import { setOverlayOpen } from "../services/overlayControl";
 
 interface TimelineImagesProps {
     images: PlantImage[];

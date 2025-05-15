@@ -34,7 +34,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import LoadingOverlay from "../components/LoadingOverlay";
 import { useAuth } from "../context/AuthContext";
-import { setOverlayOpen } from "../overlayControl";
+import { setOverlayOpen } from "../services/overlayControl";
 
 export default function Plants() {
   const [plants, setPlants] = useState<Plant[]>([]);
@@ -490,10 +490,10 @@ export default function Plants() {
           >
             <option value="idDesc">Newest</option>
             <option value="idAsc">Oldest</option>
-            <option value="lastWateredDesc">Last Watered ↓</option>
-            <option value="lastWateredAsc">Last Watered ↑</option>
-            <option value="lastImageUploadedDesc">Last Image Uploaded ↓</option>
-            <option value="lastImageUploadedAsc">Last Image Uploaded ↑</option>
+            <option value="lastWateredDesc">Newest Watering ↓</option>
+            <option value="lastWateredAsc">Oldest Watering ↑</option>
+            <option value="lastImageUploadedDesc">Newest Image ↓</option>
+            <option value="lastImageUploadedAsc">Oldest Image ↑</option>
           </select>
         </div>
       </div>

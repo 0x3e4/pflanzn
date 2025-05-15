@@ -3,7 +3,7 @@ import "../styles/identifyResults.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleXmark } from "@fortawesome/free-solid-svg-icons";
 import { IdentifyResult } from "../types/IdentifyResult";
-import { setOverlayOpen } from "../overlayControl";
+import { setOverlayOpen } from "../services/overlayControl";
 
 interface IdentifyResultsProps {
     plantId: number;

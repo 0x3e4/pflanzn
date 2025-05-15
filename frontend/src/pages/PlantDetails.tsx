@@ -37,7 +37,7 @@ import { toast } from 'react-toastify';
 import LoadingOverlay from "../components/LoadingOverlay";
 import IdentifyResults from "../components/IdentifyResults";
 import { useAuth } from "../context/AuthContext";
-import { setOverlayOpen } from "../overlayControl";
+import { setOverlayOpen } from "../services/overlayControl";
 
 export default function PlantDetails() {
     const { isLoggedIn } = useAuth();
