@@ -1,19 +1,17 @@
 import logging
-import re
-import ollama
-import os
+from anthropic import Anthropic, HUMAN_PROMPT, AI_PROMPT
 from app.core.config import settings
 from app.utils.llm_text_cleaner import clean_generated_text
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-os.environ['OLLAMA_URL'] = settings.OLLAMA_URL
+anthropic_client = Anthropic(api_key=settings.CLAUDE_API_KEY)
 
-class OllamaClient:
+class ClaudeClient:
     def generate_species_description(self, common_name: str, species_name: str) -> str:
         """
-        Generate a description for a given plant species using a local/remote LLM running in Ollama.
+        Generate a description for a given plant species using Claude 3's Messages API.
         """
         prompt = (
             f"Write a detailed botanical description for the plant species '{species_name}', "
@@ -23,21 +21,24 @@ class OllamaClient:
         )
 
         try:
-            logger.info(f"Requesting Ollama (remote LLM at {settings.OLLAMA_URL}) to generate description for: {species_name}")
+            logger.info(f"Requesting Claude to generate description for: {species_name}")
 
-            response = ollama.chat(
-                model=settings.OLLAMA_MODEL_NAME,
-                messages=[{"role": "user", "content": prompt}],
-                options={"temperature": 0.7}
+            response = anthropic_client.messages.create(
+                model=settings.CLAUDE_MODEL_NAME,
+                max_tokens=1000,
+                temperature=0.7,
+                system="You are a helpful and knowledgeable botanical assistant.",
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
             )
 
-            generated_text = response['message']['content']
-
+            generated_text = response.content[0].text
             cleaned_description = clean_generated_text(generated_text)
 
-            logger.info(f"Received response from Ollama")
+            logger.info("Received response from Claude (Messages API)")
             return cleaned_description
 
         except Exception as e:
-            logger.exception(f"Error while calling Ollama: {e}")
+            logger.exception(f"Error while calling Claude Messages API: {e}")
             raise

@@ -16,6 +16,7 @@ import pillow_heif
 import mimetypes
 from app.services.plantnet import identify_species_via_plantnet
 from app.services.llm_client import LLMClient
+import traceback
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -435,6 +436,8 @@ async def generate_species_description_for_plant(plant_id: int, db: Session = De
         }
 
     except Exception as e:
+        logger.error(f"Failed to generate plant description: {e}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to generate description: {str(e)}")
 
 @router.post("/{plant_id}/watering", response_model=PlantWateringResponse)

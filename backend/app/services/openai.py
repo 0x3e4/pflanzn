@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 openai.api_key = settings.OPENAI_API_KEY
 
 class OpenAIClient:
-    def generate_species_description(common_name: str, species_name: str) -> str:
+    def generate_species_description(self, common_name: str, species_name: str) -> str:
         """
         Generate a description for a given plant species using OpenAI's GPT models.
         """

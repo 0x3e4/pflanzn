@@ -16,7 +16,7 @@ HEADERS = {
 }
 
 class MistralAIClient:
-    def generate_species_description(common_name: str, species_name: str) -> str:
+    def generate_species_description(self, common_name: str, species_name: str) -> str:
         """
         Generate a description for a given plant species using Mistral AI via their API.
         """

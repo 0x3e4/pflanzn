@@ -1,6 +1,7 @@
 from app.services.huggingface import HuggingFaceClient
 from app.services.mistralai import MistralAIClient
 from app.services.openai import OpenAIClient
+from app.services.anthropic import ClaudeClient
 from app.services.ollama import OllamaClient
 from app.core.config import settings
 
@@ -11,9 +12,11 @@ class LLMClient:
         if provider == "huggingface":
             self.client = HuggingFaceClient()
         elif provider == "mistralai":
-            self.client = MistralClient()
+            self.client = MistralAIClient()
         elif provider == "openai":
             self.client = OpenAIClient()
+        elif provider == "claude":
+            self.client = ClaudeClient()
         elif provider == "ollama":
             self.client = OllamaClient()
         else:

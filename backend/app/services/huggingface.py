@@ -13,7 +13,7 @@ client = InferenceClient(
 )
 
 class HuggingFaceClient:
-    def generate_species_description(common_name: str, species_name: str) -> str:
+    def generate_species_description(self, common_name: str, species_name: str) -> str:
         """
         Generate a description for a given plant species using Hugging Face inference API via InferenceClient.
         """

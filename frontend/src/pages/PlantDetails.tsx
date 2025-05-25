@@ -216,11 +216,15 @@ export default function PlantDetails() {
             return;
         }
 
+        setLoadingPlant(true);
+
         try {
             const { description } = await generatePlantDescription(Number(plantId));
             handleUpdate({ description });
         } catch (error) {
             toast.error((error as Error).message || "Failed to generate description.");
+        } finally {
+            setLoadingPlant(false);
         }
     };
 
