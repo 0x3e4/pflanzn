@@ -211,8 +211,8 @@ export default function ManagementPanel() {
                         )}
                     </div>
 
-                    <div className="users-table-container">
-                        <table className="users-table">
+                    <div className="users-table-container overflow-x-auto touch-pan-x">
+                        <table className="users-table min-w-max">
                             <thead>
                                 <tr>
                                     <th onClick={() => handleUserSort('id')}>ID</th>
@@ -321,8 +321,8 @@ export default function ManagementPanel() {
             <div className="admin-plant-mgmt-header">
                 <h3>Plant Management</h3>
             </div>
-            <div className="plants-table-container">
-                <table className="plants-table">
+            <div className="plants-table-container overflow-x-auto touch-pan-x">
+                <table className="plants-table min-w-max">
                     <thead>
                         <tr>
                             <th onClick={() => handlePlantSort('id')}>ID</th>
