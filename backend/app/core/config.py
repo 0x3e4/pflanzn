@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     PLANTNET_API_KEY: str = os.getenv("PLANTNET_API_KEY")
     PLANTNET_LANGUAGE: str = os.getenv("PLANTNET_LANGUAGE", "en")
     VITE_LLM_PROVIDER: str = os.getenv("VITE_LLM_PROVIDER")
-    LLM_LANGUAGE: str = os.getenv("VITE_LLM_LANGUAGE", "german")
+    LLM_LANGUAGE: str = os.getenv("LLM_LANGUAGE", "german")
     HUGGINGFACE_API_KEY: str = os.getenv("HUGGINGFACE_API_KEY")
     HUGGINGFACE_MODEL_NAME: str = os.getenv("HUGGINGFACE_MODEL_NAME")
     MISTRALAI_API_KEY: str = os.getenv("MISTRALAI_API_KEY")
