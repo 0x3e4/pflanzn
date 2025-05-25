@@ -24,7 +24,10 @@ export function usePullToRefresh(
       if (!el) return;
       if (el.scrollTop !== 0) return;
       if (getOverlayOpen()) return;
-      if (!el.contains(e.target as Node)) return;
+      const target = e.target as HTMLElement;
+      const inContainer = target.closest(".container");
+
+      if (!inContainer) return;
 
       startY = e.touches[0].clientY;
       pulling = true;
