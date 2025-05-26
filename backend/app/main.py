@@ -4,7 +4,7 @@ from fastapi import FastAPI, Depends, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
-from app.api.routes import auth, plants, tags, users
+from app.api.routes import auth, plants, tags, users, statistics
 from app.database import init_db
 from app.core.security import create_admin_user
 from dotenv import load_dotenv
@@ -55,6 +55,7 @@ app.mount("/api/uploads", StaticFiles(directory=UPLOAD_FOLDER), name="uploads")
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(plants.router, prefix="/api/plants", tags=["Plants"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
+app.include_router(statistics.router, prefix="/api/statistics", tags=["Statistics"])
 app.include_router(tags.router, prefix="/api/tags", tags=["Tags"])
 
 @app.get("/")

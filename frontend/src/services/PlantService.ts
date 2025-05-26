@@ -82,12 +82,6 @@ export const deleteWatering = async (plantId: number, wateringId: number) => {
     await apiClient.delete(`${API_BASE}/${plantId}/watering/${wateringId}`);
 };
 
-// Fetch plant statistics
-export const fetchStatistics = async () => {
-    const response = await apiClient.get(`${API_BASE}/statistics`);
-    return response.data;
-};
-
 // Assign a tag to a plant
 export const assignTagToPlant = async (plantId: number, tagName: string) => {
     const response = await apiClient.post(`${API_BASE}/${plantId}/assign`, [tagName]);

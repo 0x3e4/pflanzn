@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchStatistics } from "../services/PlantService";
+import { fetchStatistics } from "../services/StatisticService";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { 
     faSeedling, 

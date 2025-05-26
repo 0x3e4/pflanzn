@@ -55,64 +55,6 @@ def get_all_plants(db: Session = Depends(get_db)):
 
     return plants
 
-@router.get("/statistics")
-def get_statistics(db: Session = Depends(get_db)):
-    """
-    Fetch general statistics about plants, waterings, images, and archived plants.
-    """
-    # Count only active (non-archived) plants
-    total_plants = db.query(Plant).filter(Plant.is_archived == False).count()
-
-    # Count archived plants
-    archived_plants = db.query(Plant).filter(Plant.is_archived == True).count()
-
-    # Get top 5 species among active plants
-    top_species = (
-        db.query(Plant.species, func.count(Plant.species).label("count"))
-        .filter(Plant.is_archived == False)
-        .group_by(Plant.species)
-        .order_by(func.count(Plant.species).desc())
-        .limit(5)
-        .all()
-    )
-
-    # Count waterings only for active plants
-    total_waterings = (
-        db.query(PlantWatering)
-        .join(Plant, PlantWatering.plant_id == Plant.id)
-        .filter(Plant.is_archived == False)
-        .count()
-    )
-
-    # Last watered plant among active plants
-    last_watered = (
-        db.query(Plant)
-        .join(PlantWatering, Plant.id == PlantWatering.plant_id)
-        .filter(Plant.is_archived == False)
-        .order_by(PlantWatering.watered_at.desc())
-        .first()
-    )
-
-    # Total images for active plants
-    total_images = (
-        db.query(PlantImage)
-        .join(Plant, PlantImage.plant_id == Plant.id)
-        .filter(Plant.is_archived == False)
-        .count()
-    )
-
-    return {
-        "totalPlants": total_plants,
-        "archivedPlants": archived_plants,
-        "topSpecies": [{"name": s[0], "count": s[1]} for s in top_species],
-        "totalWaterings": total_waterings,
-        "totalImages": total_images,
-        "lastWateredPlant": {
-            "id": last_watered.id,
-            "name": last_watered.name
-        } if last_watered else None,
-    }
-
 @router.get("/{plant_id}", response_model=PlantResponse)
 def get_plant(plant_id: int, db: Session = Depends(get_db)):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
