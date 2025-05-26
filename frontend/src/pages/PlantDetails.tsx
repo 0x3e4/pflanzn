@@ -329,16 +329,13 @@ export default function PlantDetails() {
     }
   }, [identifyResults, deleteModalOpen, archiveModalOpen]);  
 
-    if (loadingPlant) {
-        return <LoadingOverlay />;
-    }
-
     if (!plant) {
         return <div>Plant not found.</div>;
     }
 
     return (
         <div className="container plant-details-container">
+            {loadingPlant && <LoadingOverlay />}
             <div className="plant-columns">
                 {/* Left Column - Plant Info + Images + Watering Log */}
                 <div className="plant-left-column">

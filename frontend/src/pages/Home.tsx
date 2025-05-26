@@ -99,10 +99,9 @@ export default function Home() {
         ],
     };
 
-    if (loadingPlants) return <LoadingOverlay />;
-
     return (
         <div className="container home-container">
+            {loadingPlants && <LoadingOverlay />}
             <div className="home-content">
                 <h1>Pflanzn</h1>
                 <p>A simple and efficient plant management system.</p>

@@ -359,13 +359,11 @@ export default function Plants() {
     }
   }, [modalOpen, plantIdentifyResults, selectedImage, archiveModalOpen]);  
 
-  if (loading) {
-    return <LoadingOverlay />;
-  }
   if (error) return <p style={{ color: 'red' }}>{error}</p>;
 
   return (
     <div className={`container plants-container${isStretched ? " plants-container--stretched" : ""}`}>
+      {loading && <LoadingOverlay />}
       <div className="plants-header">
         <h1>Plants</h1>
         <button

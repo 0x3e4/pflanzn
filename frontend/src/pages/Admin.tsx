@@ -115,12 +115,11 @@ const Admin: React.FC = () => {
         } catch {
             toast.error("Failed to update password.");
         }
-    };    
-
-    if (loading) return <LoadingOverlay />;
+    };
 
     return (
         <div className="container profile-container">
+            {loading && <LoadingOverlay />}
             <aside className="profile-sidebar">
                 <h3>Details</h3>
                 <ul>
