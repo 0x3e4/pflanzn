@@ -5,13 +5,14 @@ import { useNavigate } from "react-router-dom";
 import { updateUser, updateUserPassword } from "../services/UserService";
 import StatisticsPanel from "../components/StatisticsPanel";
 import ManagementPanel from "../components/ManagementPanel";
+import IdentificationsPanel from "../components/IdentificationsPanel";
 import "../styles/profile.css";
 import LoadingOverlay from "../components/LoadingOverlay";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPenToSquare, faUnlock } from "@fortawesome/free-solid-svg-icons";
 import { User } from "../types/User";
 
-type AdminSection = "profile" | "statistics" | "management";
+type AdminSection = "profile" | "statistics" | "management" | "identification";
 
 const Admin: React.FC = () => {
     const { user, logout, fetchProfile, isLoggedIn } = useAuth();
@@ -148,6 +149,15 @@ const Admin: React.FC = () => {
                         </li>
                     )}
 
+                    {(authMode === "no" || (authMode !== "no" && user?.role === "admin")) && (
+                        <li 
+                            className={activeSection === "identification" ? "active" : ""}
+                            onClick={() => setActiveSection("identification")}
+                        >
+                            Identifications
+                        </li>
+                    )}
+
                     {authMode !== "no" && (
                         <li className="logout-link" onClick={handleLogout}>Logout</li>
                     )}
@@ -225,6 +235,10 @@ const Admin: React.FC = () => {
 
                 {activeSection === "management" && (authMode === "no" || user?.role === "admin") && (
                     <ManagementPanel />
+                )}
+
+                {activeSection === "identification" && (authMode === "no" || user?.role === "admin") && (
+                    <IdentificationsPanel />
                 )}
             </main>
         </div>

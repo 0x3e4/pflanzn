@@ -59,3 +59,19 @@ class PlantImage(Base):
     image_path = Column(String(512), nullable=False)
     uploaded_at = Column(DateTime, default=func.now())
     plant = relationship("Plant", back_populates="images")
+
+class PlantIdentification(Base):
+    __tablename__ = "plant_identifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String(36), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    image_path = Column(String(512), nullable=True)
+    scientific_name = Column(String(255), nullable=False)
+    common_name = Column(String(255), nullable=True)
+    confidence_score = Column(String(10), nullable=True)
+    result_images = Column(Text, nullable=True)
+    identified_at = Column(DateTime, default=func.now())
+    is_primary = Column(Boolean, default=False)
+
+    user = relationship("User", backref="identifications")

@@ -104,4 +104,26 @@ class PlantWateringResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class PlantIdentificationCreate(BaseModel):
+    scientific_name: str
+    common_name: Optional[str] = None
+    confidence_score: Optional[str] = None
+    image_path: Optional[str] = None
+    result_images: Optional[List[str]] = []
+
+class PlantIdentificationResponse(PlantIdentificationCreate):
+    id: int
+    session_id: str
+    user_id: Optional[int]
+    image_path: str
+    scientific_name: str
+    common_name: Optional[str]
+    confidence_score: Optional[str]
+    result_images: Optional[List[str]]
+    identified_at: datetime
+    is_primary: bool
+
+    class Config:
+        from_attributes = True
+
 PlantResponse.model_rebuild()

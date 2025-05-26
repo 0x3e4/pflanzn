@@ -1,16 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Body
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Body, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.sql import func
+from app.core.security import get_optional_user
 from app.database import get_db
-from app.models import Plant, PlantImage, PlantWatering, Tag
-from app.schemas import PlantCreate, PlantResponse, PlantUpdate, PlantImageResponse, IdentifyRequest, PlantWateringCreate, PlantWateringResponse, TagResponse, ArchiveRequest
-from typing import List
+from app.models import Plant, PlantImage, PlantWatering, Tag, PlantIdentification, User
+from app.schemas import PlantCreate, PlantResponse, PlantUpdate, PlantImageResponse, IdentifyRequest, PlantWateringCreate, PlantWateringResponse, TagResponse, ArchiveRequest, PlantIdentificationCreate, PlantIdentificationResponse
+from typing import List, Optional
 import shutil
 import os
 import io
 import requests
 import uuid
 import logging
+import json
 from PIL import Image, ImageOps
 import pillow_heif
 import mimetypes
@@ -25,8 +27,10 @@ logger = logging.getLogger(__name__)
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 PLANT_FOLDER = os.path.join(UPLOAD_FOLDER, "plants")
+IDENTIFICATION_FOLDER = os.path.join(UPLOAD_FOLDER, "identifications")
 
 os.makedirs(PLANT_FOLDER, exist_ok=True)
+os.makedirs(IDENTIFICATION_FOLDER, exist_ok=True)
 
 pillow_heif.register_heif_opener()
 
@@ -54,6 +58,34 @@ def get_all_plants(db: Session = Depends(get_db)):
             plant.last_watered = None
 
     return plants
+
+@router.get("/identifications", response_model=List[PlantIdentificationResponse])
+def get_identifications(
+    db: Session = Depends(get_db),
+    user_id: Optional[int] = Query(None),
+    session_id: Optional[str] = Query(None),
+    is_primary: Optional[bool] = Query(None),
+):
+    query = db.query(PlantIdentification)
+
+    if user_id is not None:
+        query = query.filter(PlantIdentification.user_id == user_id)
+    if session_id is not None:
+        query = query.filter(PlantIdentification.session_id == session_id)
+    if is_primary is not None:
+        query = query.filter(PlantIdentification.is_primary == is_primary)
+
+    results = query.order_by(PlantIdentification.identified_at.desc()).all()
+
+    # Convert JSON string to list for `result_images`
+    for r in results:
+        if r.result_images:
+            try:
+                r.result_images = json.loads(r.result_images)
+            except:
+                r.result_images = []
+
+    return results
 
 @router.get("/{plant_id}", response_model=PlantResponse)
 def get_plant(plant_id: int, db: Session = Depends(get_db)):
@@ -164,7 +196,11 @@ def get_plant_images(plant_id: int, db: Session = Depends(get_db)):
     return plant.images
 
 @router.post("/{plant_id}/identify")
-def identify_species(plant_id: int, db: Session = Depends(get_db)):
+def identify_species(
+    plant_id: int, 
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_user)
+):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
 
     if not plant or not plant.images:
@@ -216,6 +252,24 @@ def identify_species(plant_id: int, db: Session = Depends(get_db)):
                     "score": f"{res['score'] * 100:.2f}",
                     "images": images
                 })
+
+            relative_path = latest_image.image_path
+            session_id = str(uuid.uuid4())
+
+            for i, species in enumerate(species_data):
+                identification = PlantIdentification(
+                    session_id=session_id,
+                    user_id=current_user.id if current_user else None,
+                    image_path=relative_path,
+                    scientific_name=species["scientific_name"],
+                    common_name=species["common_name"],
+                    confidence_score=species["score"],
+                    result_images=json.dumps(species["images"]),
+                    is_primary=(i == 0)
+                )
+                db.add(identification)
+
+            db.commit()
             
             return {"identified_species": species_data}
 
@@ -229,7 +283,11 @@ def identify_species(plant_id: int, db: Session = Depends(get_db)):
     return {"message": "No species found"}
 
 @router.post("/identify")
-async def identify_species_from_image(file: UploadFile = File(...)):
+async def identify_species_from_image(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_user)
+):
     """
     Identify a plant species from an uploaded image using the Pl@ntNet API
     without saving it to the database.
@@ -267,11 +325,14 @@ async def identify_species_from_image(file: UploadFile = File(...)):
                     raise HTTPException(status_code=400, detail="Unsupported image format. Only JPG and PNG allowed.")
                 
                 mime_type = mimetypes.types_map.get(f".{ext}", "image/jpeg")  # Default to JPEG
-                temp_file_path = f"/tmp/{uuid.uuid4()}.{ext}"  # Keep original format
-                
-                # Save in correct format
-                img.save(temp_file_path, format=img.format, optimize=True, quality=80)
-                logger.debug(f"Image saved to temporary path: {temp_file_path}")
+
+                id_uuid = str(uuid.uuid4())
+                filename = f"{id_uuid}.{ext}"
+                relative_path = os.path.join("identifications", filename)
+                identification_file_path = os.path.join(UPLOAD_FOLDER, relative_path)
+
+                img.save(identification_file_path, format=img.format, optimize=True, quality=80)
+                logger.debug(f"Image saved to: {identification_file_path}")
 
         except Exception as e:
             logger.error(f"Error processing image: {str(e)}")
@@ -281,7 +342,7 @@ async def identify_species_from_image(file: UploadFile = File(...)):
         logger.debug("Sending image to Pl@ntNet for identification...")
         try:
             result = identify_species_via_plantnet(
-                image_path=temp_file_path,
+                image_path=identification_file_path,
                 mime_type=mime_type,
                 filename=file.filename or "uploaded_image"
             )
@@ -311,10 +372,22 @@ async def identify_species_from_image(file: UploadFile = File(...)):
 
             logger.debug(f"Identified {len(species_data)} species from image.")
 
-            # Remove temporary file
-            if os.path.exists(temp_file_path):
-                os.remove(temp_file_path)
-                logger.info(f"Temporary file {temp_file_path} deleted.")
+            session_id = str(id_uuid)
+
+            for i, species in enumerate(species_data):
+                identification = PlantIdentification(
+                    session_id=session_id,
+                    user_id=current_user.id if current_user else None,
+                    image_path=relative_path,
+                    scientific_name=species["scientific_name"],
+                    common_name=species["common_name"],
+                    confidence_score=species["score"],
+                    result_images=json.dumps(species["images"]),
+                    is_primary=(i == 0)
+                )
+                db.add(identification)
+
+            db.commit()
 
             return {"identified_species": species_data}
 

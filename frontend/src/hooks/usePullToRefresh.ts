@@ -27,7 +27,23 @@ export function usePullToRefresh(
       const target = e.target as HTMLElement;
 
       const isInsideAllowedZone = target.closest(".container");
-      const isInsideSwipeBlock = target.closest(".plant-carousel-viewer") || target.closest(".plant-image-container");
+      const isInsideSwipeBlock = target.closest(".plant-carousel-viewer") || target.closest(".plant-image-container") || target.closest(".plants-list");
+
+      const container = target.closest(".container") as HTMLElement;
+
+      if (container) {
+        const { left, right } = container.getBoundingClientRect();
+        const styles = getComputedStyle(container);
+        const paddingLeft = parseFloat(styles.paddingLeft);
+        const paddingRight = parseFloat(styles.paddingRight);
+
+        const touchX = e.touches[0].clientX;
+
+        // Exclude if touch is in the left or right padding
+        if (touchX < left + paddingLeft || touchX > right - paddingRight) {
+          return;
+        }
+      }
 
       if (!isInsideAllowedZone || isInsideSwipeBlock) return;
 

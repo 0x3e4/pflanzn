@@ -1,5 +1,6 @@
 import apiClient from "./apiClient";
 import { Plant } from "../types/Plant";
+import { PlantIdentification } from "../types/Identification"; 
 
 const API_BASE = "/plants";
 
@@ -104,3 +105,21 @@ export const archivePlant = async (plantId: number, archive: boolean = true, rea
     );
     return response.data;
 }
+
+// Get plant identifications
+export const fetchIdentifications = async (
+  params: { user_id?: number; session_id?: string; is_primary?: number } = {}
+): Promise<PlantIdentification[]> => {
+  const stringParams = {
+    ...params,
+    ...(params.is_primary !== undefined && {
+      is_primary: 1,
+    }),
+  };
+
+  const response = await apiClient.get(`${API_BASE}/identifications`, {
+    params: stringParams,
+  });
+
+  return response.data;
+};
