@@ -114,12 +114,6 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
 
     return user
 
-def get_optional_user(request: Request, db: Session = Depends(get_db)) -> Optional[User]:
-    try:
-        return get_current_user(request, db)
-    except HTTPException:
-        return None
-
 def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:
     """Ensures the current user is an admin."""
     if current_user.role != "admin":

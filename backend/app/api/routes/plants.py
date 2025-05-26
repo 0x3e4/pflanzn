@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Body, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.sql import func
-from app.core.security import get_optional_user
 from app.database import get_db
 from app.models import Plant, PlantImage, PlantWatering, Tag, PlantIdentification, User
 from app.schemas import PlantCreate, PlantResponse, PlantUpdate, PlantImageResponse, IdentifyRequest, PlantWateringCreate, PlantWateringResponse, TagResponse, ArchiveRequest, PlantIdentificationCreate, PlantIdentificationResponse
@@ -198,8 +197,7 @@ def get_plant_images(plant_id: int, db: Session = Depends(get_db)):
 @router.post("/{plant_id}/identify")
 def identify_species(
     plant_id: int, 
-    db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_optional_user)
+    db: Session = Depends(get_db)
 ):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
 
@@ -259,7 +257,7 @@ def identify_species(
             for i, species in enumerate(species_data):
                 identification = PlantIdentification(
                     session_id=session_id,
-                    user_id=current_user.id if current_user else None,
+                    user_id=None,
                     image_path=relative_path,
                     scientific_name=species["scientific_name"],
                     common_name=species["common_name"],
@@ -285,8 +283,7 @@ def identify_species(
 @router.post("/identify")
 async def identify_species_from_image(
     file: UploadFile = File(...),
-    db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_optional_user)
+    db: Session = Depends(get_db)
 ):
     """
     Identify a plant species from an uploaded image using the Pl@ntNet API
@@ -377,7 +374,7 @@ async def identify_species_from_image(
             for i, species in enumerate(species_data):
                 identification = PlantIdentification(
                     session_id=session_id,
-                    user_id=current_user.id if current_user else None,
+                    user_id=None,
                     image_path=relative_path,
                     scientific_name=species["scientific_name"],
                     common_name=species["common_name"],
