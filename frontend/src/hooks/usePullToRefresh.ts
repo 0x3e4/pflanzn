@@ -22,12 +22,14 @@ export function usePullToRefresh(
     function handleTouchStart(e: TouchEvent) {
       const el = ref.current;
       if (!el) return;
-      if (el.scrollTop !== 0) return;
-      if (getOverlayOpen()) return;
-      const target = e.target as HTMLElement;
-      const inContainer = target.closest(".container");
+      if (el.scrollTop !== 0 || getOverlayOpen()) return;
 
-      if (!inContainer) return;
+      const target = e.target as HTMLElement;
+
+      const isInsideAllowedZone = target.closest(".container");
+      const isInsideSwipeBlock = target.closest(".plant-carousel-viewer") || target.closest(".plant-image-container");
+
+      if (!isInsideAllowedZone || isInsideSwipeBlock) return;
 
       startY = e.touches[0].clientY;
       pulling = true;

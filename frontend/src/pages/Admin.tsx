@@ -120,7 +120,7 @@ const Admin: React.FC = () => {
     if (loading) return <LoadingOverlay />;
 
     return (
-        <div className="profile-container">
+        <div className="container profile-container">
             <aside className="profile-sidebar">
                 <h3>Details</h3>
                 <ul>
