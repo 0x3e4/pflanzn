@@ -9,6 +9,7 @@ import { faTrash, faSave, faPlus, faEye, faChevronLeft, faChevronRight } from "@
 import "../styles/managementPanel.css";
 import { User } from "../types/User";
 import { Plant } from "../types/Plant";
+import LoadingOverlay from "../components/LoadingOverlay";
 
 const roles = ["user", "admin"];
 
@@ -36,6 +37,8 @@ export default function ManagementPanel() {
 
     const [plantSortField, setPlantSortField] = useState<keyof Plant>('id');
     const [plantSortDirection, setPlantSortDirection] = useState<'asc' | 'desc'>('asc');
+
+    const [loading, setLoading] = useState(true);
 
     // Sort function
     function compare<T>(a: T, b: T, field: keyof T, direction: 'asc' | 'desc') {
@@ -91,6 +94,7 @@ export default function ManagementPanel() {
                 .then((plants) => setPlants(plants.map((p) => ({ ...p, species: p.species ?? "" }))))
                 .catch(() => toast.error("Failed to load plants."));
         }
+        setLoading(false);
     }, [user]);
 
     const handleNavigateToPlant = (plantId: number) => {
@@ -196,6 +200,7 @@ export default function ManagementPanel() {
 
     return (
         <div className="admin-panel">
+            {loading && <LoadingOverlay />}
             <h2>Management Panel</h2>
             <p>Welcome to the management area. Here you can manage most settings about the Pflanzn environment.</p>
 

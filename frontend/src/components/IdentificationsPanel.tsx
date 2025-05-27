@@ -13,6 +13,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import "../styles/identificationsPanel.css";
 import { setOverlayOpen } from "../services/overlayControl";
+import LoadingOverlay from "../components/LoadingOverlay";
 
 type SortBy = "confidence" | "date" | "name";
 
@@ -27,6 +28,8 @@ export default function IdentificationsPanel() {
     const openFullSizeModal = (path: string) => setFullSizeImagePath(path);
     const closeFullSizeModal = () => setFullSizeImagePath(null);
 
+    const [loading, setLoading] = useState(true);
+
     useEffect(() => {
         loadData();
     }, []);
@@ -38,6 +41,7 @@ export default function IdentificationsPanel() {
         } catch (error) {
             console.error("Failed to fetch identifications:", error);
         }
+        setLoading(false);
     };
 
     const sorted = [...identifications].sort((a, b) => {
@@ -66,6 +70,7 @@ export default function IdentificationsPanel() {
 
     return (
         <div className="statistics-panel">
+            {loading && <LoadingOverlay />}
             <h2>Recent Identifications</h2>
             <p>These are recent identification results powered by Pl@ntNet.</p>
 

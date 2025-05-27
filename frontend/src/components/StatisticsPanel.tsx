@@ -11,6 +11,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Plant } from "../types/Plant";
 import "../styles/statisticsPanel.css";
+import LoadingOverlay from "../components/LoadingOverlay";
 
 interface SpeciesStats {
     name: string;
@@ -29,6 +30,8 @@ interface StatisticsData {
 export default function StatisticsPanel() {
     const [stats, setStats] = useState<StatisticsData | null>(null);
 
+    const [loading, setLoading] = useState(true);
+
     useEffect(() => {
         loadData();
     }, []);
@@ -40,10 +43,12 @@ export default function StatisticsPanel() {
         } catch (error) {
             console.error("Failed to fetch statistics data:", error);
         }
+        setLoading(false);
     };
 
     return (
         <div className="statistics-panel">
+            {loading && <LoadingOverlay />}
             <h2>Statistics</h2>
             <p>Here you can monitor plant statistics.</p>
 
