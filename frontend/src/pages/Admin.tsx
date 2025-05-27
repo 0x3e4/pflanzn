@@ -164,7 +164,7 @@ const Admin: React.FC = () => {
                 </ul>
             </aside>
 
-            <main className="profile-main-content">
+            <div className="profile-main-content">
                 {activeSection === "profile" && authMode !== "no" && (
                     <div className="profile-info">
                         <h2>User Details</h2>
@@ -240,7 +240,7 @@ const Admin: React.FC = () => {
                 {activeSection === "identification" && (authMode === "no" || user?.role === "admin") && (
                     <IdentificationsPanel />
                 )}
-            </main>
+            </div>
         </div>
     );
 };
