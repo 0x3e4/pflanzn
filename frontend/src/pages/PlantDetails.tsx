@@ -22,8 +22,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { 
     faTrash, 
     faWandMagicSparkles, 
-    faDroplet, 
-    faCalendarAlt, 
+    faDroplet,
     faFingerprint, 
     faCircleXmark, 
     faUpload, 
@@ -510,7 +509,6 @@ export default function PlantDetails() {
                                         </button>
                                     )}
                                     <div className="water-plant-datetime">
-                                        <FontAwesomeIcon icon={faCalendarAlt} />
                                         <input
                                             type="datetime-local"
                                             value={selectedDateTime.slice(0, 16)}

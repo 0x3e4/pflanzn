@@ -29,8 +29,7 @@ import {
     faLeaf, 
     faFont,
     faExpand,
-    faCompress,
-    faCalendarAlt
+    faCompress
 } from "@fortawesome/free-solid-svg-icons";
 import LoadingOverlay from "../components/LoadingOverlay";
 import { useAuth } from "../context/AuthContext";
@@ -427,7 +426,6 @@ export default function Plants() {
               </button>
           )}
           <div className="water-plant-datetime">
-              <FontAwesomeIcon icon={faCalendarAlt} />
               <input
                   type="datetime-local"
                   value={selectedDateTime.slice(0, 16)}

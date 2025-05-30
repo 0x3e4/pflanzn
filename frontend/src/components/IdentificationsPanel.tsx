@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { fetchIdentifications } from "../services/PlantService";
 import { PlantIdentification } from "../types/Identification";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faFingerprint,
     faPercentage,
-    faCalendarAlt,
     faSortAlphaDown,
     faChevronLeft,
     faChevronRight,
@@ -15,12 +14,13 @@ import "../styles/identificationsPanel.css";
 import { setOverlayOpen } from "../services/overlayControl";
 import LoadingOverlay from "../components/LoadingOverlay";
 
-type SortBy = "confidence" | "date" | "name";
+type SortBy = "confidence" | "name";
 
 export default function IdentificationsPanel() {
     const [identifications, setIdentifications] = useState<PlantIdentification[]>([]);
-    const [sortBy, setSortBy] = useState<SortBy>("date");
-    
+    const [sortBy, setSortBy] = useState<SortBy | null>(null);
+    const [selectedDate, setSelectedDate] = useState<string>("");
+
     const itemsPerPage = 10;
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -29,6 +29,11 @@ export default function IdentificationsPanel() {
     const closeFullSizeModal = () => setFullSizeImagePath(null);
 
     const [loading, setLoading] = useState(true);
+
+    const timezone = import.meta.env.VITE_TZ;
+    const locale = import.meta.env.VITE_Locale;
+
+    const sortRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         loadData();
@@ -44,16 +49,43 @@ export default function IdentificationsPanel() {
         setLoading(false);
     };
 
-    const sorted = [...identifications].sort((a, b) => {
-        if (sortBy === "confidence") {
-            return parseFloat(b.confidence_score) - parseFloat(a.confidence_score);
-        } else if (sortBy === "date") {
-            return new Date(b.identified_at).getTime() - new Date(a.identified_at).getTime();
-        } else if (sortBy === "name") {
-            return a.scientific_name.localeCompare(b.scientific_name);
-        }
-        return 0;
-    });
+    useEffect(() => {
+        setOverlayOpen(fullSizeImagePath !== null);
+    }, [fullSizeImagePath]);
+
+    // Click outside sort buttons resets sortBy
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+                setSortBy(null);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
+
+    // Filter by date
+    let filtered = [...identifications];
+    if (selectedDate) {
+        filtered = filtered.filter(item => {
+            const itemDate = new Date(item.identified_at).toISOString().split("T")[0];
+            return itemDate === selectedDate;
+        });
+    }
+
+    // Sort if a sort mode is active
+    const sorted = sortBy
+        ? filtered.sort((a, b) => {
+              if (sortBy === "confidence") {
+                  return parseFloat(b.confidence_score) - parseFloat(a.confidence_score);
+              } else if (sortBy === "name") {
+                  return a.scientific_name.localeCompare(b.scientific_name);
+              }
+              return 0;
+          })
+        : filtered;
 
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
@@ -61,31 +93,42 @@ export default function IdentificationsPanel() {
 
     const totalPages = Math.ceil(sorted.length / itemsPerPage);
 
-    const timezone = import.meta.env.VITE_TZ;
-    const locale = import.meta.env.VITE_Locale;
-
-    useEffect(() => {
-        setOverlayOpen(fullSizeImagePath !== null);
-    }, [fullSizeImagePath]);
-
     return (
         <div className="statistics-panel">
             {loading && <LoadingOverlay />}
             <h2>Recent Identifications</h2>
             <p>These are recent identification results powered by Pl@ntNet.</p>
 
-            {/* Sort Controls */}
-            <div style={{ marginBottom: "1rem", display: "flex", gap: "1rem", alignItems: "center" }}>
-                <span><strong>Sort by:</strong></span>
-                <button onClick={() => setSortBy("date")} className={`sort-button ${sortBy === "date" ? "active" : ""}`}>
-                    <FontAwesomeIcon icon={faCalendarAlt} /> Date
-                </button>
-                <button onClick={() => setSortBy("confidence")} className={`sort-button ${sortBy === "confidence" ? "active" : ""}`}>
-                    <FontAwesomeIcon icon={faPercentage} /> Confidence
-                </button>
-                <button onClick={() => setSortBy("name")} className={`sort-button ${sortBy === "name" ? "active" : ""}`}>
-                    <FontAwesomeIcon icon={faSortAlphaDown} /> Name
-                </button>
+            {/* Controls */}
+            <div style={{ marginBottom: "1rem", display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
+                <div className="identification-plant-input-container">
+                    <div className="identification-plant-datetime">
+                        <input
+                            id="datePicker"
+                            type="date"
+                            value={selectedDate}
+                            onChange={(e) => {
+                                setSelectedDate(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                        />
+                    </div>
+                </div>
+
+                <div ref={sortRef} style={{ display: "flex", gap: "0.5rem" }}>
+                    <button
+                        onClick={() => setSortBy("confidence")}
+                        className={`sort-button ${sortBy === "confidence" ? "active" : ""}`}
+                    >
+                        <FontAwesomeIcon icon={faPercentage} /> Confidence
+                    </button>
+                    <button
+                        onClick={() => setSortBy("name")}
+                        className={`sort-button ${sortBy === "name" ? "active" : ""}`}
+                    >
+                        <FontAwesomeIcon icon={faSortAlphaDown} /> Name
+                    </button>
+                </div>
             </div>
 
             {/* Identification List */}
@@ -101,13 +144,13 @@ export default function IdentificationsPanel() {
                                 <p><strong>Common name:</strong> {item.common_name}</p>
                                 <p><strong>Confidence:</strong> {item.confidence_score}%</p>
                                 <p><strong>Date:</strong> {new Date(item.identified_at).toLocaleString(locale, {
-                                timeZone: timezone,
-                                weekday: 'long',
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
+                                    timeZone: timezone,
+                                    weekday: 'long',
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
                                 })}</p>
                             </div>
                             {item.image_path && (
@@ -127,25 +170,29 @@ export default function IdentificationsPanel() {
                         </div>
                     ))
                 ) : (
-                    <p>No identifications found.</p>
+                    <p>No identifications found{selectedDate && ` for ${selectedDate}`}</p>
                 )}
+
+                {/* Pagination */}
                 {totalPages > 1 && (
-                <div className="pagination">
-                    <button
-                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    >
-                    <FontAwesomeIcon icon={faChevronLeft} />
-                    </button>
-                    <span>{currentPage} of {totalPages}</span>
-                    <button
-                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                    >
-                    <FontAwesomeIcon icon={faChevronRight} />
-                    </button>
-                </div>
+                    <div className="pagination">
+                        <button
+                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                        >
+                            <FontAwesomeIcon icon={faChevronLeft} />
+                        </button>
+                        <span>{currentPage} of {totalPages}</span>
+                        <button
+                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                        >
+                            <FontAwesomeIcon icon={faChevronRight} />
+                        </button>
+                    </div>
                 )}
+
+                {/* Full Size Image Modal */}
                 {fullSizeImagePath && (
                     <div className="plant-fullsize-modal-overlay" onClick={closeFullSizeModal}>
                         <img
@@ -157,6 +204,5 @@ export default function IdentificationsPanel() {
                 )}
             </div>
         </div>
-
     );
 }
