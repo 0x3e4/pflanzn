@@ -41,7 +41,7 @@ export default function Home() {
             setWordPositions(positions);
 
             // Take 5 random plants with images for the slider
-            const plantsWithImages = data.filter((plant) => plant.images?.length);
+            const plantsWithImages = nonArchivedPlants.filter((plant) => plant.images?.length);
             setPlants(shuffleArray(plantsWithImages).slice(0, 5));
         } catch (error) {
             toast.error("Failed to fetch plants.");

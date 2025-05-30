@@ -8,7 +8,7 @@ import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import OidcCallback from "./pages/OidcCallback";
+import OidcCallback from "./components/OidcCallback";
 import ScrollToTopButton from './components/ScrollToTopButton';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
