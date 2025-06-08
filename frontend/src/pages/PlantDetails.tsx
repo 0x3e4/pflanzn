@@ -10,7 +10,8 @@ import {
     uploadPlantImage,
     assignTagToPlant,
     removeTagFromPlant,
-    archivePlant
+    archivePlant,
+    generateCareAdvice
 } from "../services/PlantService";
 import { fetchTags, deleteTag } from "../services/TagService";
 import { Plant } from "../types/Plant";
@@ -61,6 +62,8 @@ export default function PlantDetails() {
     const [archiveModalOpen, setArchiveModalOpen] = useState(false);
     const [archiveReason, setArchiveReason] = useState("");    
     const [isArchiving, setIsArchiving] = useState(true);
+
+    const [toastVisible, setToastVisible] = useState(false);
 
     // Fetch plant data on load
     useEffect(() => {
@@ -227,6 +230,35 @@ export default function PlantDetails() {
         }
     };
 
+    // Generate AI Care Helper
+    const handleGenerateCareAdvice = async () => {
+        if (!isLoggedIn) {
+            toast.error("You must be logged in to receive care tips.");
+            return;
+        }
+
+        setLoadingPlant(true);
+        setToastVisible(true);  // show blur
+
+        try {
+            const result = await generateCareAdvice(Number(plantId));
+
+            toast.info(result.advice, {
+                position: "top-center",
+                autoClose: false,
+                closeOnClick: true,
+                className: "care-advice-toast",
+                onClose: () => setToastVisible(false),  // hide blur when toast closes
+            });
+
+        } catch (error) {
+            toast.error((error as Error).message || "Failed to generate care advice.");
+            setToastVisible(false);
+        } finally {
+            setLoadingPlant(false);
+        }
+    };
+
     const loadAvailableTags = async () => {
         try {
             const tags = await fetchTags();
@@ -334,6 +366,7 @@ export default function PlantDetails() {
 
     return (
         <div className="container plant-details-container">
+            {toastVisible && <div className="toast-blur-overlay" />}
             {loadingPlant && <LoadingOverlay />}
             <div className="plant-columns">
                 {/* Left Column - Plant Info + Images + Watering Log */}
@@ -551,7 +584,7 @@ export default function PlantDetails() {
                                     <>
                                         {isLoggedIn ? (
                                             <>
-                                                <button className="ai-care-helper-btn" onClick={handleGenerateDescription}> {/* WORK IN PROGRESS */}
+                                                <button className="ai-care-helper-btn" onClick={handleGenerateCareAdvice}>
                                                     <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Care Helper
                                                 </button>
 
@@ -561,7 +594,7 @@ export default function PlantDetails() {
                                             </>
                                         ) : (
                                                 <>
-                                                    <button className="ai-care-helper-btn" onClick={() => toast.warning("You must be logged in to receive tips from AI.")}> {/* WORK IN PROGRESS */}
+                                                    <button className="ai-care-helper-btn" onClick={() => toast.warning("You must be logged in to receive tips from AI.")}>
                                                         <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Care Helper
                                                     </button>
 

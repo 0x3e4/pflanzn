@@ -576,3 +576,18 @@ def archive_plant(plant_id: int, data: ArchiveRequest, db: Session = Depends(get
     plant.archive_reason = data.reason
     db.commit()
     return {"message": f"Plant {'archived' if data.archive else 'restored'} successfully"}
+
+@router.post("/{plant_id}/care_helper")
+def get_care_helper(plant_id: int, db: Session = Depends(get_db)):
+    plant = db.query(Plant).filter(Plant.id == plant_id).first()
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+
+    try:
+        llm = LLMClient()
+        advice = llm.care_helper(db, plant_id)
+        return {"message": "Care advice generated successfully", "advice": advice}
+
+    except Exception as e:
+        logger.error(f"Failed to generate care advice: {e}")
+        raise HTTPException(status_code=500, detail=f"Care helper failed: {str(e)}")

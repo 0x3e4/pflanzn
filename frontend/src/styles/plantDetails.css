@@ -390,3 +390,26 @@ h3 {
 .archive-reason-box {
     margin-top: 3rem;
 }
+
+/* Toast body styling */
+.care-advice-toast {
+    white-space: pre-wrap;
+    font-size: 0.95rem;
+    background-color: var(--background-color, #fff);
+    color: var(--text-color, #000);
+    max-width: 90vw;
+    margin: 0 auto;
+    border-radius: 12px;
+    padding: 1.5rem;
+    backdrop-filter: none;
+    z-index: 9000;
+}
+
+/* Fullscreen blurred background behind toast */
+.toast-blur-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(4px);
+    z-index: 8000;
+}

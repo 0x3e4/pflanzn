@@ -72,6 +72,12 @@ export const generatePlantDescription = async (plantId: number): Promise<{ descr
     return response.data;
 };
 
+// Care Helper
+export const generateCareAdvice = async (plantId: number): Promise<{ advice: string }> => {
+    const response = await apiClient.post(`/plants/${plantId}/care_helper`);
+    return response.data;
+};
+
 // Water plant
 export const waterPlant = async (plantId: number, data: { watered_at?: string; notes?: string }) => {
     const response = await apiClient.post(`${API_BASE}/${plantId}/watering`, data);

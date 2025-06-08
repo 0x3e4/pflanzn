@@ -4,6 +4,7 @@ from app.services.openai import OpenAIClient
 from app.services.anthropic import ClaudeClient
 from app.services.ollama import OllamaClient
 from app.core.config import settings
+from sqlalchemy.orm import Session
 
 class LLMClient:
 
@@ -24,3 +25,6 @@ class LLMClient:
 
     def generate_species_description(self, common_name: str, species_name: str) -> str:
         return self.client.generate_species_description(common_name, species_name)
+
+    def care_helper(self, db: Session, plant_id: int) -> str:
+        return self.client.care_helper(db, plant_id)
