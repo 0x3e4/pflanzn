@@ -9,6 +9,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faCircleXmark, faDroplet, faCamera } from "@fortawesome/free-solid-svg-icons";
 import { toast } from 'react-toastify';
 import { useAuth } from "../context/AuthContext";
+import { setOverlayOpen } from "../services/overlayControl";
 
 interface Props {
     waterings: PlantWatering[];
@@ -131,6 +132,11 @@ export default function WateringLogCalendar({ waterings, images, plantId }: Prop
     };
 
     const openDeleteModal = (type: "watering" | "image", id: number) => {
+        // Hide tooltip immediately before showing modal
+        setHoveredDate(null);
+        setTooltipPosition(null);
+
+        // Then show modal
         setDeleteTarget({ type, id });
         setDeleteModalOpen(true);
     };
@@ -163,6 +169,14 @@ export default function WateringLogCalendar({ waterings, images, plantId }: Prop
         setDeleteModalOpen(false);
         setDeleteTarget(null);
     };
+
+    useEffect(() => {
+        if (deleteModalOpen) {
+        setOverlayOpen(true);
+        } else {
+        setOverlayOpen(false);
+        }
+    }, [deleteModalOpen]); 
 
     const renderTooltip = () => {
         if (!hoveredDate || (!wateredDates[hoveredDate] && !imageDates[hoveredDate]) || !tooltipPosition) return null;

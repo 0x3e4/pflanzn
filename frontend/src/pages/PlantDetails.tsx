@@ -99,6 +99,7 @@ export default function PlantDetails() {
         try {
             await uploadPlantImage(Number(plantId), file);
             toast.success("Image uploaded!");
+            await loadPlant();
         } catch (err) {
             toast.error((err as Error).message || "Failed to upload the image.");
         }
@@ -352,22 +353,21 @@ export default function PlantDetails() {
         }
     };
 
-  useEffect(() => {
-    if (identifyResults || deleteModalOpen || archiveModalOpen) {
-      setOverlayOpen(true);
-    } else {
-      setOverlayOpen(false);
-    }
-  }, [identifyResults, deleteModalOpen, archiveModalOpen]);  
+    useEffect(() => {
+        if (identifyResults || deleteModalOpen || archiveModalOpen) {
+        setOverlayOpen(true);
+        } else {
+        setOverlayOpen(false);
+        }
+    }, [identifyResults, deleteModalOpen, archiveModalOpen]);  
 
-    if (!plant) {
-        return <div>Plant not found.</div>;
-    }
+    if (loadingPlant) return <LoadingOverlay />
+
+    if (!plant) return;
 
     return (
         <div className="container plant-details-container">
             {toastVisible && <div className="toast-blur-overlay" />}
-            {loadingPlant && <LoadingOverlay />}
             <div className="plant-columns">
                 {/* Left Column - Plant Info + Images + Watering Log */}
                 <div className="plant-left-column">
