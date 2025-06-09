@@ -5,7 +5,7 @@ import About from "./pages/About";
 import Plants from "./pages/Plants";
 import PlantDetails from "./pages/PlantDetails";
 import Login from "./pages/Login";
-import Admin from "./pages/Admin";
+import Manage from "./pages/Manage";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import OidcCallback from "./components/OidcCallback";
@@ -59,7 +59,7 @@ export default function App() {
                             <Route path="/plant/:plantId" element={<PlantDetails />} />
                             {authMode === "local" && <Route path="/login" element={<Login />} />}
                             {authMode === "oidc" && <Route path="/callback" element={<OidcCallback />} />}
-                            <Route path="/admin" element={<Admin />} />
+                            <Route path="/manage" element={<Manage />} />
                         </Routes>
                         <ToastContainer
                             position="bottom-right"

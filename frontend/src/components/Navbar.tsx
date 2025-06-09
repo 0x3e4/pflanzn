@@ -116,8 +116,8 @@ export default function Navbar() {
 
                     {!loading && (
                         (authMode === "no" || authMode === "oidc" || (authMode === "local" && isLoggedIn)) ? (
-                            <Link to="/admin" onClick={() => setMenuOpen(false)}>
-                                Admin
+                            <Link to="/manage" onClick={() => setMenuOpen(false)}>
+                                Manage
                             </Link>
                         ) : authMode === "local" ? (
                             <Link to="/login" onClick={() => setMenuOpen(false)}>

@@ -13,6 +13,8 @@ import {
 import "../styles/identificationsPanel.css";
 import { setOverlayOpen } from "../services/overlayControl";
 import LoadingOverlay from "../components/LoadingOverlay";
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 type SortBy = "confidence" | "name";
 
@@ -20,6 +22,7 @@ export default function IdentificationsPanel() {
     const [identifications, setIdentifications] = useState<PlantIdentification[]>([]);
     const [sortBy, setSortBy] = useState<SortBy | null>(null);
     const [selectedDate, setSelectedDate] = useState<string>("");
+    const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
 
     const itemsPerPage = 10;
     const [currentPage, setCurrentPage] = useState(1);
@@ -38,6 +41,19 @@ export default function IdentificationsPanel() {
     useEffect(() => {
         loadData();
     }, []);
+
+    // Reset loaded images when identifications change
+    useEffect(() => {
+        setLoadedImages(new Set());
+    }, [identifications]);
+
+    const handleImageLoad = (imageId: number) => {
+        setLoadedImages(prev => new Set(prev).add(imageId));
+    };
+
+    const handleImageError = (imageId: number) => {
+        setLoadedImages(prev => new Set(prev).add(imageId));
+    };
 
     const loadData = async () => {
         try {
@@ -93,6 +109,18 @@ export default function IdentificationsPanel() {
 
     const totalPages = Math.ceil(sorted.length / itemsPerPage);
 
+    const formatSelectedDate = (dateString: string) => {
+        if (!dateString) return "";
+        const date = new Date(dateString + "T00:00:00");
+        return date.toLocaleDateString(locale, {
+            timeZone: timezone,
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
     return (
         <div className="statistics-panel">
             {loading && <LoadingOverlay />}
@@ -100,7 +128,7 @@ export default function IdentificationsPanel() {
             <p>These are recent identification results powered by Pl@ntNet.</p>
 
             {/* Controls */}
-            <div style={{ marginBottom: "1rem", display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
+            <div style={{ marginBottom: "1rem", display: "flex", gap: "1rem", alignItems: "flex-start", flexWrap: "wrap" }}>
                 <div className="identification-plant-input-container">
                     <div className="identification-plant-datetime">
                         <input
@@ -134,43 +162,65 @@ export default function IdentificationsPanel() {
             {/* Identification List */}
             <div className="identification-list">
                 {currentPageData.length > 0 ? (
-                    currentPageData.map((item) => (
-                        <div className="identification-entry" key={item.id}>
-                            <div className="identification-meta">
-                                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                    <FontAwesomeIcon icon={faFingerprint} />
-                                    <h3 className="no-margin-bottom">{item.scientific_name}</h3>
-                                </div>
-                                <p><strong>Common name:</strong> {item.common_name}</p>
-                                <p><strong>Confidence:</strong> {item.confidence_score}%</p>
-                                <p><strong>Date:</strong> {new Date(item.identified_at).toLocaleString(locale, {
-                                    timeZone: timezone,
-                                    weekday: 'long',
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                })}</p>
-                            </div>
-                            {item.image_path && (
-                                <div className="identification-image-container">
-                                    <img
-                                        src={`/api/uploads/${item.image_path}`}
-                                        alt={item.scientific_name}
-                                        className="identification-image"
-                                    />
-                                    <div className="identification-image-overlay">
-                                        <button className="plant-view-fullsize-btn" onClick={() => openFullSizeModal(item.image_path!)}>
-                                            <FontAwesomeIcon icon={faExpand} />
-                                        </button>
+                    currentPageData.map((item) => {
+                        const imageLoaded = loadedImages.has(item.id);
+                        
+                        return (
+                            <div className="identification-entry" key={item.id}>
+                                <div className="identification-meta">
+                                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                        <FontAwesomeIcon icon={faFingerprint} />
+                                        <h3 className="no-margin-bottom">{item.scientific_name}</h3>
                                     </div>
+                                    <p><strong>Common name:</strong> {item.common_name}</p>
+                                    <p><strong>Confidence:</strong> {item.confidence_score}%</p>
+                                    <p><strong>Date:</strong> {new Date(item.identified_at).toLocaleString(locale, {
+                                        timeZone: timezone,
+                                        weekday: 'long',
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                    })}</p>
                                 </div>
-                            )}
-                        </div>
-                    ))
+                                {item.image_path && (
+                                    <div className="identification-image-container">
+                                        {/* Skeleton loader */}
+                                        {!imageLoaded && (
+                                            <Skeleton
+                                                height="100%"
+                                                width="100%"
+                                                baseColor="#444"
+                                                highlightColor="#666"
+                                                className="identification-image-skeleton"
+                                                style={{ borderRadius: 6 }}
+                                            />
+                                        )}
+                                        
+                                        <img
+                                            src={`/api/uploads/${item.image_path}`}
+                                            alt={item.scientific_name}
+                                            className="identification-image"
+                                            style={{ display: imageLoaded ? 'block' : 'none' }}
+                                            onLoad={() => handleImageLoad(item.id)}
+                                            onError={() => handleImageError(item.id)}
+                                        />
+                                        
+                                        {imageLoaded && (
+                                            <div className="identification-image-overlay">
+                                                <button className="plant-view-fullsize-btn" onClick={() => openFullSizeModal(item.image_path!)}>
+                                                    <FontAwesomeIcon icon={faExpand} />
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })
                 ) : (
-                    <p>No identifications found{selectedDate && ` for ${selectedDate}`}</p>
+                    <p>No identifications found{selectedDate && ` for ${formatSelectedDate(selectedDate)}`}</p>
                 )}
 
                 {/* Pagination */}

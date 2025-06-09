@@ -4,22 +4,23 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { updateUser, updateUserPassword } from "../services/UserService";
 import StatisticsPanel from "../components/StatisticsPanel";
-import ManagementPanel from "../components/ManagementPanel";
+import UsersPanel from "../components/UsersPanel";
+import PlantsPanel from "../components/PlantsPanel";
 import IdentificationsPanel from "../components/IdentificationsPanel";
-import "../styles/profile.css";
+import "../styles/manage.css";
 import LoadingOverlay from "../components/LoadingOverlay";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPenToSquare, faUnlock } from "@fortawesome/free-solid-svg-icons";
 import { User } from "../types/User";
 
-type AdminSection = "profile" | "statistics" | "management" | "identification";
+type ManageSection = "profile" | "statistics" | "identification" | "users" | "plants" ;
 
-const Admin: React.FC = () => {
+const Manage: React.FC = () => {
     const { user, logout, fetchProfile, isLoggedIn } = useAuth();
     const navigate = useNavigate();
     const authMode = import.meta.env.VITE_AUTH_MODE || "no";
     const [loading, setLoading] = useState(true);
-    const [activeSection, setActiveSection] = useState<AdminSection>("statistics");
+    const [activeSection, setActiveSection] = useState<ManageSection>("statistics");
     const [editedUser, setEditedUser] = useState<Partial<User>>({
         username: user?.username || "",
         email: user?.email || ""
@@ -122,40 +123,53 @@ const Admin: React.FC = () => {
         <div className="container profile-container">
             {loading && <LoadingOverlay />}
             <aside className="profile-sidebar">
-                <h3>Details</h3>
                 <ul>
-                    <li 
-                        className={activeSection === "statistics" ? "active" : ""}
-                        onClick={() => setActiveSection("statistics")}
-                    >
-                        Statistics
-                    </li>
-
                     {authMode !== "no" && (
-                        <li 
-                            className={activeSection === "profile" ? "active" : ""}
-                            onClick={() => setActiveSection("profile")}
-                        >
-                            User details
-                        </li>
+                        <>
+                            <h3>Details</h3>
+                            <li 
+                                className={`sidebar-subsection activeSection === "profile" ? "active" : ""`}
+                                onClick={() => setActiveSection("profile")}
+                            >
+                                Profile
+                            </li>
+                        </>
                     )}
 
                     {(authMode === "no" || (authMode !== "no" && user?.role === "admin")) && (
-                        <li 
-                            className={activeSection === "management" ? "active" : ""}
-                            onClick={() => setActiveSection("management")}
-                        >
-                            Management
-                        </li>
-                    )}
+                        <>
+                            <h3>Management</h3>
+                            
+                            {authMode !== "no" && (
+                                <li 
+                                    className={`sidebar-subsection ${activeSection === "users" ? "active" : ""}`}
+                                    onClick={() => setActiveSection("users")}
+                                >
+                                    Users
+                                </li>
+                            )}
+                            
+                            <li 
+                                className={`sidebar-subsection ${activeSection === "plants" ? "active" : ""}`}
+                                onClick={() => setActiveSection("plants")}
+                            >
+                                Plants
+                            </li>
 
-                    {(authMode === "no" || (authMode !== "no" && user?.role === "admin")) && (
-                        <li 
-                            className={activeSection === "identification" ? "active" : ""}
-                            onClick={() => setActiveSection("identification")}
-                        >
-                            Identifications
-                        </li>
+                            <li 
+                                className={`sidebar-subsection activeSection === "statistics" ? "active" : ""`}
+                                onClick={() => setActiveSection("statistics")}
+                            >
+                                Statistics
+                            </li>
+
+                            <li 
+                                className={`sidebar-subsection activeSection === "identification" ? "active" : ""`}
+                                onClick={() => setActiveSection("identification")}
+                            >
+                                Identifications
+                            </li>
+                        </>
                     )}
 
                     {authMode !== "no" && (
@@ -233,16 +247,20 @@ const Admin: React.FC = () => {
                     <StatisticsPanel />
                 )}
 
-                {activeSection === "management" && (authMode === "no" || user?.role === "admin") && (
-                    <ManagementPanel />
-                )}
-
                 {activeSection === "identification" && (authMode === "no" || user?.role === "admin") && (
                     <IdentificationsPanel />
+                )}
+
+                {activeSection === "users" && authMode !== "no" && (authMode === "no" || user?.role === "admin") && (
+                    <UsersPanel />
+                )}
+
+                {activeSection === "plants" && (authMode === "no" || user?.role === "admin") && (
+                    <PlantsPanel />
                 )}
             </div>
         </div>
     );
 };
 
-export default Admin;
+export default Manage;

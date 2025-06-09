@@ -17,6 +17,20 @@ export default function Home() {
     const [wordPositions, setWordPositions] = useState<{ species: string }[]>([]);
     const [allImagesLoaded, setAllImagesLoaded] = useState(false);
     const [loadedImagesCount, setLoadedImagesCount] = useState(0);
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+    useEffect(() => {
+        const handleResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Determine number of skeleton slides based on screen size
+    const getSkeletonCount = () => {
+        if (windowWidth <= 600) return 1; // Mobile
+        if (windowWidth <= 1024) return 2; // Tablet
+        return 3; // Desktop
+    };
 
     useEffect(() => {
         loadPlants();
@@ -113,16 +127,20 @@ export default function Home() {
                 <>
                     {/* Show skeleton while images are loading */}
                     {!allImagesLoaded && (
-                        <div className="carousel-skeleton" style={{ display: "flex", gap: "5px", justifyContent: "center" }}>
-                            {[...Array(3)].map((_, i) => (
-                                <Skeleton
-                                    key={i}
-                                    height={400}
-                                    width={380}
-                                    baseColor="#444"
-                                    highlightColor="#666"
-                                />
-                            ))}
+                        <div className="carousel-skeleton carousel-container">
+                            <div style={{ display: "flex", gap: "20px", justifyContent: "center" }}>
+                                {[...Array(getSkeletonCount())].map((_, i) => (
+                                    <div key={i} className="skeleton-slide">
+                                        <Skeleton
+                                            height="100%"
+                                            width="100%"
+                                            borderRadius={12}
+                                            baseColor="#444"
+                                            highlightColor="#666"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
 

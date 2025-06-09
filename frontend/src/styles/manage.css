@@ -1,0 +1,537 @@
+.profile-container {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    background-color: var(--secondary-background-color);
+    text-align: left;
+}
+/* Sidebar (desktop view) */
+.profile-sidebar {
+    background-color: var(--background-color);
+    padding: 20px;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+}
+.profile-sidebar h3 {
+    margin-top: 0;
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+.profile-sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.profile-sidebar li {
+    padding: 12px 15px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    color: var(--text-color);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    text-align: left;
+}
+.profile-sidebar li:hover,
+.profile-sidebar li.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* Sidebar Management Section */
+.sidebar-section-header {
+    font-weight: bold;
+    color: var(--primary-color) !important;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: default;
+    background: none !important;
+}
+
+.sidebar-section-header:hover {
+    background: none !important;
+    color: var(--primary-color) !important;
+}
+
+.sidebar-subsection {
+    padding-left: 30px !important;
+    font-size: 0.95rem;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.sidebar-subsection:hover {
+    background-color: var(--senary-color);
+    color: var(--primary-color);
+}
+
+.sidebar-subsection.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.logout-link {
+    font-weight: bold;
+}
+.logout-link:hover {
+    background-color: var(--quaternary-color) !important;
+    color: white;
+}
+/* Main content */
+.profile-main-content {
+    flex-grow: 1;
+    background-color: var(--secondary-background-color);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    text-align: left;
+}
+/* Profile Info Box */
+.profile-info, .admin-panel, .statistics-panel {
+    padding: 20px;
+    border-radius: 8px;
+    color: var(--text-color);
+    width: 100%;
+    box-sizing: border-box;
+}
+.profile-info h2, .admin-panel h2, .statistics-panel h2 {
+    margin-top: 0;
+    font-size: 1.5rem;
+}
+
+/* Panel Styles */
+.users-panel,
+.plants-panel {
+    width: 100%;
+    padding: 20px;
+    color: var(--text-color);
+}
+
+.add-btn {
+    font-size: 18px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: var(--primary-color);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.add-btn:hover {
+    background-color: var(--secondary-color);
+    transform: scale(1.1);
+}
+
+/* Table Styles */
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    background: var(--secondary-background-color);
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+}
+
+.data-table th,
+.data-table td {
+   padding: 12px 15px;
+   text-align: left;
+   border-bottom: 1px solid var(--border-color);
+   height: 56px;
+   vertical-align: middle;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+   .data-table th,
+   .data-table td {
+       padding: 8px 10px;
+       height: 48px;
+   }
+}
+
+.data-table th {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.3s ease;
+}
+
+.data-table th:hover {
+    background-color: var(--senary-color);
+}
+
+.data-table tr:hover {
+    background-color: var(--senary-color);
+}
+
+.data-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Table Input Styles - More specific positioning */
+.data-table input,
+.data-table select {
+    border: none;
+    background: transparent;
+    color: var(--text-color);
+    font-size: inherit;
+    width: 100%;
+    padding: 4px 0; /* Small padding for better appearance */
+    margin: 0;
+    outline: none;
+    line-height: 1.4;
+    box-sizing: border-box;
+}
+
+/* Ensure action buttons cell has consistent height */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    align-items: center;
+    height: 100%; /* Take full cell height */
+}
+
+.update-btn,
+.delete-btn,
+.view-btn {
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 8px 12px;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    min-width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0; /* Prevent buttons from shrinking */
+}
+
+.view-btn {
+    background: var(--quinary-color);
+    color: var(--text-color);
+}
+
+.view-btn:hover {
+    background: var(--background-color);
+}
+
+.update-btn {
+    background: var(--primary-color);
+    color: white;
+}
+
+.update-btn:hover {
+    background: var(--secondary-color);
+}
+
+.delete-btn {
+    background: var(--tertiary-color);
+    color: white;
+}
+
+.delete-btn:hover {
+    background: var(--quaternary-color);
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+    padding: 15px;
+    background: var(--background-color);
+    border-radius: 0 0 8px 8px;
+}
+
+.pagination button {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.3s ease;
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination button:hover:not(:disabled) {
+    background: var(--secondary-color);
+}
+
+.pagination button:disabled {
+    cursor: not-allowed;
+    background: var(--senary-color);
+    opacity: 0.6;
+}
+
+.pagination span {
+    font-weight: bold;
+    color: var(--text-color);
+    min-width: 80px;
+    text-align: center;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--secondary-background-color);
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+.modal-content .close {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    cursor: pointer;
+    font-size: 28px;
+    color: var(--text-color);
+    transition: color 0.3s ease;
+    line-height: 1;
+}
+
+.modal-content .close:hover {
+    color: var(--tertiary-color);
+}
+
+.modal-content h2 {
+    margin-bottom: 25px;
+    color: var(--primary-color);
+    font-size: 1.8rem;
+}
+
+/* Modal Input Fields */
+.modal-content input,
+.modal-content select {
+    width: 100%;
+    padding: 12px 15px;
+    margin: 10px 0;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 16px;
+    background: var(--background-color);
+    color: var(--text-color);
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.modal-content input:focus,
+.modal-content select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* Input Row Layout */
+.input-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.input-row input,
+.input-row select {
+    flex: 1;
+    margin: 0;
+}
+
+/* Modal Button */
+.modal-content button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 12px 25px;
+    width: 100%;
+    margin-top: 20px;
+    transition: background-color 0.3s ease;
+}
+
+.modal-content button:hover {
+    background-color: var(--secondary-color);
+}
+
+.profile-sidebar li.active {
+    position: relative;
+}
+.profile-update-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    margin-top: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+.profile-update-btn:hover {
+    background-color: var(--secondary-color);
+}
+.profile-editable-input {
+    width: 100%;
+    padding: 10px 0 10px 5px;
+    margin: 5px 0 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    background: var(--background-color);
+    display: inline-block;
+    color: var(--text-color);
+    transition: all .2s ease-in-out;
+    cursor: pointer;
+    font-family: Inter,sans-serif;
+    font-size: 16px;
+}
+.profile-editable-input:focus {
+    padding: 10px 0 10px 5px;
+    cursor: text;
+    background-color: var(--background-color);
+    border: 1px solid var(--primary-color);
+    outline: none;
+    border-radius: 4px;
+}
+
+/* Loading States */
+.users-panel:has(.loading-overlay),
+.plants-panel:has(.loading-overlay) {
+    position: relative;
+    min-height: 300px;
+}
+
+/* --- Mobile Styles --- */
+@media (max-width: 768px) {
+    .profile-container {
+        flex-direction: column;
+        width: 100%;
+    }
+    .profile-sidebar {
+        width: 100%;
+        padding: 10px 0;
+        box-shadow: none;
+        border-bottom: 1px solid var(--border-color);
+        background-color: var(--background-color);
+        overflow-x: auto;
+        overflow: hidden;
+    }
+    .profile-sidebar h3 {
+        display: none;
+    }
+    .profile-sidebar ul {
+        display: flex;
+        width: max-content; /* Allow content to determine width */
+        gap: 10px; /* Add gap between items */
+        padding: 0 10px;
+    }
+    .profile-sidebar li {
+        flex-shrink: 0; /* Prevent items from shrinking */
+        text-align: center;
+        padding: 8px 12px;
+        font-size: 14px;
+        margin: 0;
+        white-space: nowrap; /* Prevent text wrapping */
+    }
+    
+    /* Show management subsections on mobile but styled differently */
+    .sidebar-subsection {
+        padding-left: 12px !important; /* Remove the large left padding */
+        font-size: 14px !important;
+    }
+    
+    .profile-main-content {
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .profile-info, .admin-panel, .statistics-panel {
+        width: 100%;
+        padding: 15px 0;
+        box-sizing: border-box;
+    }
+    
+    .users-panel,
+    .plants-panel {
+        padding: 15px;
+    }
+    
+    .table-container {
+        font-size: 14px;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 8px 10px;
+    }
+    
+    /* Keep action buttons horizontal on mobile */
+    .action-buttons {
+        display: flex;
+        gap: 4px;
+        justify-content: flex-end;
+        align-items: center;
+    }
+    
+    /* Make action buttons smaller on mobile */
+    .update-btn,
+    .delete-btn,
+    .view-btn {
+        min-width: 30px;
+        height: 30px;
+        padding: 6px 8px;
+        font-size: 12px;
+    }
+    
+    .input-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .modal-content {
+        padding: 20px;
+        margin: 20px;
+    }
+}

@@ -7,6 +7,8 @@ import { faTrash, faCircleXmark, faChevronLeft, faChevronRight, faExpand } from 
 import "../styles/timelineImages.css";
 import { useAuth } from "../context/AuthContext";
 import { setOverlayOpen } from "../services/overlayControl";
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 interface TimelineImagesProps {
     images: PlantImage[];
@@ -20,9 +22,12 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
     const [touchEndX, setTouchEndX] = useState<number | null>(null);
 
     const [localImages, setLocalImages] = useState<PlantImage[]>(images);
+    const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
+    const [currentImageLoaded, setCurrentImageLoaded] = useState(false);
 
     useEffect(() => {
         setLocalImages(images);
+        setLoadedImages(new Set()); // Reset loaded images when images prop changes
     }, [images]);
 
     const sortedImages = [...localImages].sort(
@@ -35,6 +40,15 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
 
     const activeImage = sortedImages[activeIndex];
 
+    // Reset current image loaded state when active image changes
+    useEffect(() => {
+        if (activeImage) {
+            const isLoaded = loadedImages.has(activeImage.id);
+            setCurrentImageLoaded(isLoaded);
+            console.log('Active image:', activeImage.id, 'Loaded:', isLoaded, 'LoadedImages:', Array.from(loadedImages));
+        }
+    }, [activeIndex, activeImage, loadedImages]);
+
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [fullSizeModalOpen, setFullSizeModalOpen] = useState(false);
 
@@ -44,11 +58,30 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
     const openFullSizeModal = () => setFullSizeModalOpen(true);
     const closeFullSizeModal = () => setFullSizeModalOpen(false);
 
+    const handleImageLoad = (imageId: number) => {
+        setLoadedImages(prev => new Set(prev).add(imageId));
+        if (activeImage && imageId === activeImage.id) {
+            setCurrentImageLoaded(true);
+        }
+    };
+
+    const handleImageError = (imageId: number) => {
+        setLoadedImages(prev => new Set(prev).add(imageId));
+        if (activeImage && imageId === activeImage.id) {
+            setCurrentImageLoaded(true);
+        }
+    };
+
     const handleConfirmDelete = async () => {
         if (!activeImage) return;
         try {
             await deletePlantImage(plantId, activeImage.id);
             setLocalImages(prev => prev.filter(img => img.id !== activeImage.id));
+            setLoadedImages(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(activeImage.id);
+                return newSet;
+            });
             toast.success("Image deleted successfully!");
             setActiveIndex((prevIndex) => Math.max(0, prevIndex - 1));
         } catch (err: any) {
@@ -151,19 +184,48 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
                 )}
 
                 <div
-                    className="plant-image-container"
+                    className="plant-image-container timeline-images"
                     onTouchStart={handleTouchStart}
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}
                 >
+                    {/* Skeleton loader */}
+                    {!currentImageLoaded && (
+                        <>
+                            <Skeleton
+                                height="100%"
+                                width="100%"
+                                baseColor="#444"
+                                highlightColor="#666"
+                                className="timeline-image-skeleton"
+                            />
+                        </>
+                    )}
+
+                    {/* Hidden preloader for all images */}
+                    <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+                        {sortedImages.map((image) => (
+                            <img
+                                key={`preload-${image.id}`}
+                                src={`/api/uploads/${image.image_path}`}
+                                alt=""
+                                onLoad={() => handleImageLoad(image.id)}
+                                onError={() => handleImageError(image.id)}
+                                style={{ width: '1px', height: '1px' }}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Main image */}
                     <img
                         className="plant-carousel-image"
                         src={`/api/uploads/${activeImage.image_path}`}
                         alt="Plant Image"
                         tabIndex={-1}
+                        style={{ display: currentImageLoaded ? 'block' : 'none' }}
                     />
 
-                    <div className="plant-image-overlay">
+                    <div className="plant-image-overlay" style={{ display: currentImageLoaded ? 'block' : 'none' }}>
                         <button className="plant-view-fullsize-btn" onClick={openFullSizeModal}>
                             <FontAwesomeIcon icon={faExpand} />
                         </button>
@@ -182,7 +244,7 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
                         )}
                     </div>
 
-                    <div className="plant-uploaded-date-overlay">
+                    <div className="plant-uploaded-date-overlay" style={{ display: currentImageLoaded ? 'block' : 'none' }}>
                         {formattedDate}
                     </div>
                 </div>

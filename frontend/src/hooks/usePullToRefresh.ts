@@ -27,8 +27,11 @@ export function usePullToRefresh(
       const target = e.target as HTMLElement;
 
       const isInsideAllowedZone = target.closest(".container");
-      const isInsideSwipeBlock = target.closest(".plant-carousel-viewer") || target.closest(".plant-image-container") || target.closest(".plants-list") || target.closest(".profile-main-content");
-
+      const isInsideSwipeBlock = target.closest(".plant-carousel-viewer") || 
+                                target.closest(".plant-image-container") || 
+                                target.closest(".plants-list") || 
+                                target.closest(".profile-main-content") ||
+                                target.closest(".profile-sidebar");
       const container = target.closest(".container") as HTMLElement;
 
       if (container) {

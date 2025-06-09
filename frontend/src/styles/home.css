@@ -32,13 +32,13 @@
 
 @media (max-width: 768px) {
   .carousel-container {
-    max-width: 300px;
+    max-width: 340px;
   }
   .species-wordcloud{
     width: 100px;
   }
   .slick-slide {
-    width: 300px !important;
+    width: 340px !important;
   }
   .home-plant-image {
     height: 600px;
@@ -53,7 +53,7 @@
     width: 200px;
   }
   .slick-slide {
-    width: 300px !important;
+    width: 340px !important;
   }
   .home-plant-image {
     height: 400px;
@@ -118,48 +118,51 @@
     outline: none;
 }
 
+/* Skeleton carousel */
 .skeleton-slide {
-    width: 334px; /* Default desktop width */
-    height: 400px; /* Default height */
+    width: 334px;
+    height: 400px;
     flex-shrink: 0;
 }
 
+/* Override skeleton default styling */
+.skeleton-slide .react-loading-skeleton {
+    border-radius: 0 !important;
+    height: 100% !important;
+    width: 100% !important;
+    display: block !important;
+}
+
 /* Mobile view */
-@media (max-width: 768px) {
+@media (max-width: 600px) {
     .carousel-skeleton > div {
-        gap: 10px !important; /* Tighter gap on mobile */
+        gap: 10px !important;
+        justify-content: center !important;
     }
     
     .skeleton-slide {
-        width: 300px !important;
-        height: 600px;
-    }
-    
-    .carousel-skeleton > div {
-        justify-content: flex-start !important;
-        overflow-x: auto;
-        padding: 0 10px;
+        width: 340px !important;
     }
 }
 
 /* Tablet view */
-@media (min-width: 768px) and (max-width: 992px) {
+@media (min-width: 601px) and (max-width: 1024px) {
     .skeleton-slide {
-        width: 300px !important;
-        height: 400px;
+        width: 340px !important;
+        height: 400px !important;
     }
 }
 
 /* Large tablet/small desktop */
-@media (min-width: 992px) and (max-width: 1200px) {
+@media (min-width: 1025px) and (max-width: 1200px) {
     .skeleton-slide {
         width: 334px !important;
-        height: 300px;
+        height: 300px !important;
     }
 }
 
 /* Desktop */
-@media (min-width: 1200px) {
+@media (min-width: 1201px) {
     .skeleton-slide {
         width: 334px;
         height: 400px;
