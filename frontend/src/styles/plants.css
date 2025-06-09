@@ -497,3 +497,17 @@
 .plant-search-input:focus {
   border-color: var(--primary-color);
 }
+
+.plant-image-skeleton {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+}
+
+.plant-image-container {
+    position: relative;
+    overflow: hidden;
+}

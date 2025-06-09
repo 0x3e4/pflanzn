@@ -34,6 +34,8 @@ import {
 import LoadingOverlay from "../components/LoadingOverlay";
 import { useAuth } from "../context/AuthContext";
 import { setOverlayOpen } from "../services/overlayControl";
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 export default function Plants() {
   const [plants, setPlants] = useState<Plant[]>([]);
@@ -48,6 +50,7 @@ export default function Plants() {
   const [unarchiveReason, setUnarchiveReason] = useState("");
   const [selectedPlantToUnarchive, setSelectedPlantToUnarchive] = useState<number | null>(null);
   const [isStretched, setIsStretched] = useState(false);
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
   
   type FilterMode = "species" | "name";
 
@@ -79,6 +82,19 @@ export default function Plants() {
     fetchPlantsFromService();
     fetchTagsFromService();
   }, []);
+
+  // Reset loaded images when plants change
+  useEffect(() => {
+    setLoadedImages(new Set());
+  }, [plants]);
+
+  const handleImageLoad = (plantId: number) => {
+    setLoadedImages(prev => new Set(prev).add(plantId));
+  };
+
+  const handleImageError = (plantId: number) => {
+    setLoadedImages(prev => new Set(prev).add(plantId));
+  };
 
   const fetchPlantsFromService = async () => {
     try {
@@ -500,6 +516,7 @@ export default function Plants() {
               (a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime()
             );
             const latestImage = sortedImages[0] || null;
+            const imageLoaded = loadedImages.has(plant.id);
 
             const timezone = import.meta.env.VITE_TZ
             const locale = import.meta.env.VITE_Locale
@@ -519,10 +536,22 @@ export default function Plants() {
             <div key={plant.id} className={`plant-card ${plant.is_archived ? "archived" : ""}`}>
               <Link to={`/plant/${plant.id}`}>
                 <div className="plant-image-container all-plants">
+                  {!imageLoaded && (
+                    <Skeleton
+                      height="100%"
+                      width="100%"
+                      baseColor="#444"
+                      highlightColor="#666"
+                      className="plant-image-skeleton"
+                    />
+                  )}
                   <img
                     src={latestImage ? `/api/uploads/${latestImage.image_path}` : "/placeholder-plant.webp"}
                     alt={plant.name}
                     className="plant-image"
+                    style={{ display: imageLoaded ? 'block' : 'none' }}
+                    onLoad={() => handleImageLoad(plant.id)}
+                    onError={() => handleImageError(plant.id)}
                   />
                 </div>
                 <div className="plant-card-text">

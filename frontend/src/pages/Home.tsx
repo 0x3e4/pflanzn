@@ -7,6 +7,8 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import LoadingOverlay from "../components/LoadingOverlay";
 import { toast } from "react-toastify";
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 export default function Home() {
     const [plants, setPlants] = useState<Plant[]>([]);
@@ -14,35 +16,46 @@ export default function Home() {
     const [speciesCounts, setSpeciesCounts] = useState<Record<string, number>>({});
     const [wordPositions, setWordPositions] = useState<{ species: string }[]>([]);
     const [allImagesLoaded, setAllImagesLoaded] = useState(false);
-    const [_loadedImagesCount, setLoadedImagesCount] = useState(0);
+    const [loadedImagesCount, setLoadedImagesCount] = useState(0);
 
     useEffect(() => {
         loadPlants();
     }, []);
 
+    // Reset image loading state when plants change
+    useEffect(() => {
+        if (plants.length > 0) {
+            setLoadedImagesCount(0);
+            setAllImagesLoaded(false);
+        }
+    }, [plants]);
+
+    // Check if all images are loaded
+    useEffect(() => {
+        if (plants.length > 0 && loadedImagesCount >= plants.length) {
+            setAllImagesLoaded(true);
+        }
+    }, [loadedImagesCount, plants.length]);
+
     const loadPlants = async () => {
         try {
             const data = await fetchPlants();
-            
             const nonArchivedPlants = data.filter(plant => !plant.is_archived);
-
-            setPlants(nonArchivedPlants);
 
             const speciesCountMap = data.reduce((acc, plant) => {
                 const species = plant.species ?? "Unknown";
                 acc[species] = (acc[species] || 0) + 1;
                 return acc;
             }, {} as Record<string, number>);
-
             setSpeciesCounts(speciesCountMap);
 
             const speciesList = Object.keys(speciesCountMap);
-            const positions = generateWordPositions(speciesList);
-            setWordPositions(positions);
+            setWordPositions(generateWordPositions(speciesList));
 
-            // Take 5 random plants with images for the slider
+            // Only show 5 plants with images
             const plantsWithImages = nonArchivedPlants.filter((plant) => plant.images?.length);
-            setPlants(shuffleArray(plantsWithImages).slice(0, 5));
+            const selectedPlants = shuffleArray(plantsWithImages).slice(0, 5);
+            setPlants(selectedPlants);
         } catch (error) {
             toast.error("Failed to fetch plants.");
         } finally {
@@ -69,19 +82,8 @@ export default function Home() {
         return `${Math.max(1.0, 0.3 + intensity)}rem`;
     };
 
-    useEffect(() => {
-        if (plants.length > 0) {
-            setLoadedImagesCount(0);
-            setAllImagesLoaded(false);
-        }
-    }, [plants]);
-
     const handleImageLoad = () => {
-        setLoadedImagesCount((count) => {
-            const newCount = count + 1;
-            if (newCount === plants.length) setAllImagesLoaded(true);
-            return newCount;
-        });
+        setLoadedImagesCount((count) => count + 1);
     };
 
     const sliderSettings = {
@@ -109,30 +111,66 @@ export default function Home() {
 
             {plants.length > 0 && (
                 <>
-                    {!allImagesLoaded && <p>Images loading...</p>}
+                    {/* Show skeleton while images are loading */}
+                    {!allImagesLoaded && (
+                        <div className="carousel-skeleton" style={{ display: "flex", gap: "5px", justifyContent: "center" }}>
+                            {[...Array(3)].map((_, i) => (
+                                <Skeleton
+                                    key={i}
+                                    height={400}
+                                    width={380}
+                                    baseColor="#444"
+                                    highlightColor="#666"
+                                />
+                            ))}
+                        </div>
+                    )}
 
-                    <div className="carousel-container" style={{ visibility: allImagesLoaded ? "visible" : "hidden" }}>
-                        <Slider {...sliderSettings}>
-                            {plants.map((plant) => {
-                                const latestImage = plant.images?.[plant.images.length - 1];
-                                const imageUrl = latestImage
-                                    ? `/api/uploads/${latestImage.image_path}`
-                                    : "/placeholder-plant.webp";
+                    {/* Hidden images for preloading */}
+                    <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+                        {plants.map((plant) => {
+                            const latestImage = plant.images?.[plant.images.length - 1];
+                            const imageUrl = latestImage
+                                ? `/api/uploads/${latestImage.image_path}`
+                                : "/placeholder-plant.webp";
 
-                                return (
-                                    <div key={plant.id} className="plant-slide">
-                                        <img
-                                            src={imageUrl}
-                                            alt={plant.name}
-                                            className="home-plant-image"
-                                            onLoad={handleImageLoad}
-                                            onError={handleImageLoad}
-                                        />
-                                    </div>
-                                );
-                            })}
-                        </Slider>
+                            return (
+                                <img
+                                    key={`preload-${plant.id}`}
+                                    src={imageUrl}
+                                    alt=""
+                                    onLoad={handleImageLoad}
+                                    onError={handleImageLoad}
+                                    style={{ width: '1px', height: '1px' }}
+                                />
+                            );
+                        })}
                     </div>
+
+                    {/* Actual carousel - shown when images are loaded */}
+                    {allImagesLoaded && (
+                        <div className="carousel-container">
+                            <Slider {...sliderSettings}>
+                                {plants.map((plant) => {
+                                    const latestImage = plant.images?.[plant.images.length - 1];
+                                    const imageUrl = latestImage
+                                        ? `/api/uploads/${latestImage.image_path}`
+                                        : "/placeholder-plant.webp";
+
+                                    return (
+                                        <div key={plant.id} className="plant-slide">
+                                            <img
+                                                src={imageUrl}
+                                                alt={plant.name}
+                                                className="home-plant-image"
+                                                loading="lazy"
+                                            />
+                                        </div>
+                                    );
+                                })}
+                            </Slider>
+                        </div>
+                    )}
                 </>
             )}
 

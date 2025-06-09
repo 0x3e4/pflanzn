@@ -117,3 +117,51 @@
 .plant-slide:focus-visible {
     outline: none;
 }
+
+.skeleton-slide {
+    width: 334px; /* Default desktop width */
+    height: 400px; /* Default height */
+    flex-shrink: 0;
+}
+
+/* Mobile view */
+@media (max-width: 768px) {
+    .carousel-skeleton > div {
+        gap: 10px !important; /* Tighter gap on mobile */
+    }
+    
+    .skeleton-slide {
+        width: 300px !important;
+        height: 600px;
+    }
+    
+    .carousel-skeleton > div {
+        justify-content: flex-start !important;
+        overflow-x: auto;
+        padding: 0 10px;
+    }
+}
+
+/* Tablet view */
+@media (min-width: 768px) and (max-width: 992px) {
+    .skeleton-slide {
+        width: 300px !important;
+        height: 400px;
+    }
+}
+
+/* Large tablet/small desktop */
+@media (min-width: 992px) and (max-width: 1200px) {
+    .skeleton-slide {
+        width: 334px !important;
+        height: 300px;
+    }
+}
+
+/* Desktop */
+@media (min-width: 1200px) {
+    .skeleton-slide {
+        width: 334px;
+        height: 400px;
+    }
+}
