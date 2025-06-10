@@ -52,21 +52,28 @@
   border-bottom-right-radius: 8px;
 }
 
-.plant-image-overlay {
+/* Fullsize button - top left */
+.plant-fullsize-overlay {
     position: absolute;
     top: 5px;
-    right: 5px;
-    width: auto !important;
-    display: flex;
-    justify-content: flex-end;
-    gap: 5px;
+    left: 5px;
     opacity: 0;
     transition: opacity 0.3s ease-in-out;
     z-index: 10 !important;
-    padding: 0;
 }
 
-.plant-image-container:hover .plant-image-overlay {
+/* Delete button - top right */
+.plant-delete-overlay {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    z-index: 500 !important;
+}
+
+.plant-image-container:hover .plant-fullsize-overlay,
+.plant-image-container:hover .plant-delete-overlay {
   opacity: 1;
 }
 
@@ -294,7 +301,8 @@ h5 {
 }
 
 /* Ensure overlays stay on top */
-.plant-image-overlay {
+.plant-fullsize-overlay,
+.plant-delete-overlay {
     z-index: 10 !important;
 }
 

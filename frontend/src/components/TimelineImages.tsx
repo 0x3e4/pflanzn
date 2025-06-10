@@ -225,22 +225,22 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
                         style={{ display: currentImageLoaded ? 'block' : 'none' }}
                     />
 
-                    <div className="plant-image-overlay" style={{ display: currentImageLoaded ? 'block' : 'none' }}>
+                    <div className="plant-fullsize-overlay" style={{ display: currentImageLoaded ? 'block' : 'none' }}>
                         <button className="plant-view-fullsize-btn" onClick={openFullSizeModal}>
                             <FontAwesomeIcon icon={faExpand} />
                         </button>
+                    </div>
+
+                    {/* Delete button overlay - bottom right */}
+                    <div className="plant-delete-overlay" style={{ display: currentImageLoaded ? 'block' : 'none' }}>
                         {isLoggedIn ? (
-                            <>
-                                <button className="plant-image-delete-btn" onClick={openDeleteModal}>
-                                    <FontAwesomeIcon icon={faTrash} />
-                                </button>
-                            </>
+                            <button className="plant-image-delete-btn" onClick={openDeleteModal}>
+                                <FontAwesomeIcon icon={faTrash} />
+                            </button>
                         ) : (
-                            <>
-                                <button className="plant-image-delete-btn" onClick={() => toast.warning("You must be logged in to delete images.")}>
-                                    <FontAwesomeIcon icon={faTrash} />
-                                </button>
-                            </>
+                            <button className="plant-image-delete-btn" onClick={() => toast.warning("You must be logged in to delete images.")}>
+                                <FontAwesomeIcon icon={faTrash} />
+                            </button>
                         )}
                     </div>
 

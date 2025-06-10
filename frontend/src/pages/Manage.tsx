@@ -157,14 +157,14 @@ const Manage: React.FC = () => {
                             </li>
 
                             <li 
-                                className={`sidebar-subsection activeSection === "statistics" ? "active" : ""`}
+                                className={`sidebar-subsection ${activeSection === "statistics" ? "active" : ""}`}
                                 onClick={() => setActiveSection("statistics")}
                             >
                                 Statistics
                             </li>
 
                             <li 
-                                className={`sidebar-subsection activeSection === "identification" ? "active" : ""`}
+                                className={`sidebar-subsection ${activeSection === "identification" ? "active" : ""}`}
                                 onClick={() => setActiveSection("identification")}
                             >
                                 Identifications
