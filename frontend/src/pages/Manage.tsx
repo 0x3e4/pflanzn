@@ -140,6 +140,13 @@ const Manage: React.FC = () => {
                         <>
                             <h3>Management</h3>
                             
+                            <li 
+                                className={`sidebar-subsection ${activeSection === "statistics" ? "active" : ""}`}
+                                onClick={() => setActiveSection("statistics")}
+                            >
+                                Statistics
+                            </li>
+
                             {authMode !== "no" && (
                                 <li 
                                     className={`sidebar-subsection ${activeSection === "users" ? "active" : ""}`}
@@ -154,13 +161,6 @@ const Manage: React.FC = () => {
                                 onClick={() => setActiveSection("plants")}
                             >
                                 Plants
-                            </li>
-
-                            <li 
-                                className={`sidebar-subsection ${activeSection === "statistics" ? "active" : ""}`}
-                                onClick={() => setActiveSection("statistics")}
-                            >
-                                Statistics
                             </li>
 
                             <li 

@@ -445,7 +445,7 @@
 }
 
 /* --- Mobile Styles --- */
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
     .profile-container {
         flex-direction: column;
         width: 100%;

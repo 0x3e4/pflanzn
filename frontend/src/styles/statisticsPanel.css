@@ -1,89 +1,180 @@
-/* Stats Row (Aligned with Profile Layout) */
+/* Statistics Panel Styles */
+.statistics-panel {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: var(--secondary-background-color);
+    color: var(--text-color);
+}
+
+.statistics-panel h2 {
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.statistics-panel p {
+    color: var(--text-color);
+    margin-bottom: 2rem;
+    opacity: 0.8;
+}
+
+/* Statistics Cards Grid */
 .stats-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    justify-content: space-between;
-    margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
 }
 
-@media (max-width: 768px) {
-    .stats-row {
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-    }
-}
-
-/* Statistics Cards */
 .stats-card {
-    flex: 1;
     background: var(--background-color);
-    padding: 15px;
+    padding: 1.5rem;
     border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     text-align: center;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    min-width: 180px;
+    border: 1px solid var(--border-color);
 }
 
 .stats-card:hover {
-    transform: scale(1.03);
-    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
 }
 
-/* Icons Inside Cards */
 .stats-icon {
     font-size: 2rem;
-    margin-bottom: 8px;
     color: var(--primary-color);
+    margin-bottom: 1rem;
 }
 
-/* Stats Number */
 .stats-card h3 {
-    font-size: 22px;
-    font-weight: 800;
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0.5rem 0;
     color: var(--text-color);
-    margin: 5px 0;
 }
 
-/* Stats Description */
 .stats-card p {
-    font-size: 14px;
-    color: var(--quinary-color);
+    color: var(--text-color);
+    margin: 0;
+    font-size: 0.9rem;
+    opacity: 0.8;
 }
 
-/* Top 5 Species List */
 .stats-card ul {
     list-style: none;
     padding: 0;
     margin: 0;
+    text-align: left;
 }
 
 .stats-card li {
-    font-size: 14px;
+    padding: 0.25rem 0;
     color: var(--text-color);
-    margin-bottom: 5px;
+    font-size: 0.85rem;
+    border-bottom: 1px solid var(--border-color);
+    opacity: 0.9;
 }
 
-/* Hover Effect for Species */
+.stats-card li:last-child {
+    border-bottom: none;
+}
+
 .stats-card li:hover {
     color: var(--primary-color);
     cursor: pointer;
     transition: color 0.2s ease-in-out;
 }
 
-/* --- Mobile Friendly Styles --- */
-@media (max-width: 768px) {
-    .admin-panel {
-        width: 100%;
-        padding: 15px;
-        box-sizing: border-box;
-    }
+/* Chart Section */
+.chart-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background-color: var(--background-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
+}
 
+.chart-section h3 {
+    margin-bottom: 1rem;
+    color: var(--text-color);
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+}
+
+.chart-container {
+    width: 100%;
+    height: 420px;
+    margin-top: 1rem;
+    background-color: var(--secondary-background-color);
+    border-radius: 6px;
+    padding: 10px;
+    box-sizing: border-box;
+    overflow: hidden;
+    position: relative;
+}
+
+.chart-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: var(--text-color);
+    font-size: 1.1rem;
+    text-align: center;
+    flex-direction: column;
+}
+
+.chart-loading p {
+    margin: 0.5rem 0;
+    color: var(--text-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .statistics-panel {
+        padding: 1rem;
+    }
+    
+    .stats-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
     .stats-card {
-        min-width: unset;
-        width: 100%;
-        box-sizing: border-box;
+        padding: 1rem;
+    }
+    
+    .chart-container {
+        height: 320px;
+    }
+    
+    .chart-section {
+        padding: 1rem;
+    }
+    
+    .chart-section h3 {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .statistics-panel {
+        padding: 0.5rem;
+    }
+    
+    .stats-card h3 {
+        font-size: 1.5rem;
+    }
+    
+    .stats-icon {
+        font-size: 1.5rem;
+    }
+    
+    .chart-container {
+        height: 270px;
+        padding: 8px;
     }
 }
