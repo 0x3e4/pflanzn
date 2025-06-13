@@ -235,6 +235,7 @@ export default function IdentificationsPanel() {
                                                 baseColor="#444"
                                                 highlightColor="#666"
                                                 style={{ borderRadius: 6 }}
+                                                className="identification-plant-image-skeleton"
                                             />
                                         )}
                                         

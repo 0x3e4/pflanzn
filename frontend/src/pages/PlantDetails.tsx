@@ -408,7 +408,7 @@ export default function PlantDetails() {
                             )}
                         </h2>
                         <small>#{plant.id}</small>
-                        <span>
+                        <span className="plant-information-names">
                             <strong>Species:</strong>{" "}
                             {isLoggedIn ? (
                                 <>
@@ -435,7 +435,7 @@ export default function PlantDetails() {
                                 </>
                             )}
                         </span>
-                        <span>
+                        <span className="plant-information-names">
                             <strong>Last Watered:</strong>{" "}
                             {plant.last_watered
                                 ? new Date(plant.last_watered).toLocaleString(import.meta.env.VITE_Locale, {

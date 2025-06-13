@@ -238,7 +238,6 @@ const WateringChart = ({ data }: { data: DailyWateringData[] }) => {
             position: 'relative', 
             height: '100%', 
             width: '100%', 
-            minHeight: '350px'
         }}>
             <canvas ref={canvasRef} style={{ 
                 position: 'absolute',

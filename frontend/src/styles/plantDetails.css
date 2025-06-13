@@ -93,7 +93,7 @@
     background-color: var(--nonal-color);
 }
 
-span {
+.plant-information-names {
     margin: 3px 0;
 }
 

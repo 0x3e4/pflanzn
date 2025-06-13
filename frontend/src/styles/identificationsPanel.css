@@ -165,3 +165,21 @@
     height: 100%;
     width: 100%;
 }
+
+.identification-plant-image-skeleton {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+}
+
+.identification-image-overlay {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    z-index: 10 !important;
+}
