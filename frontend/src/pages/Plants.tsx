@@ -51,7 +51,7 @@ export default function Plants() {
   const [selectedPlantToUnarchive, setSelectedPlantToUnarchive] = useState<number | null>(null);
   const [isStretched, setIsStretched] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
-  
+
   type FilterMode = "species" | "name";
 
   const [filterMode, setFilterMode] = useState<FilterMode>("species");
@@ -83,10 +83,11 @@ export default function Plants() {
     fetchTagsFromService();
   }, []);
 
-  // Reset loaded images when plants change
   useEffect(() => {
-    setLoadedImages(new Set());
-  }, [plants]);
+    if (plants.length === 0) {
+      setLoadedImages(new Set());
+    }
+  }, [plants.length]);
 
   const handleImageLoad = (plantId: number) => {
     setLoadedImages(prev => new Set(prev).add(plantId));
@@ -162,7 +163,16 @@ export default function Plants() {
 
     try {
         await waterPlant(plantId, { watered_at: currentDateTime });
-        fetchPlantsFromService();
+
+        // Update only the specific plant's data without refetching everything
+        setPlants(prevPlants => 
+          prevPlants.map(plant => 
+            plant.id === plantId 
+              ? { ...plant, last_watered: currentDateTime }
+              : plant
+          )
+        );
+
         toast.success(`Plant watered!`);
     } catch (err) {
         toast.error((err as Error).message);
@@ -365,6 +375,39 @@ export default function Plants() {
         return 0;
     }
   });
+
+  // Add mobile-specific optimization
+  useEffect(() => {
+    // For mobile, preload images more aggressively
+    const isMobile = /Android|webOS|iPhone|iPad||Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile && filteredPlants.length > 0) {
+      // Preload visible images immediately
+      const visiblePlants = filteredPlants.slice(0, 8);
+      
+      visiblePlants.forEach(plant => {
+        if (!loadedImages.has(plant.id)) {
+          const sortedImages = [...(plant.images || [])].sort(
+            (a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime()
+          );
+          const latestImage = sortedImages[0];
+          
+          if (latestImage) {
+            const img = new Image();
+            img.onload = () => handleImageLoad(plant.id);
+            img.onerror = () => handleImageError(plant.id);
+            img.src = `/api/uploads/${latestImage.image_path}`;
+          } else {
+            // Preload placeholder
+            const img = new Image();
+            img.onload = () => handleImageLoad(plant.id);
+            img.onerror = () => handleImageError(plant.id);
+            img.src = "/placeholder-plant.webp";
+          }
+        }
+      });
+    }
+  }, [filteredPlants, loadedImages]);
 
   useEffect(() => {
     if (modalOpen || plantIdentifyResults || selectedImage || archiveModalOpen) {

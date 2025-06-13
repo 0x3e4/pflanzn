@@ -45,9 +45,8 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
         if (activeImage) {
             const isLoaded = loadedImages.has(activeImage.id);
             setCurrentImageLoaded(isLoaded);
-            console.log('Active image:', activeImage.id, 'Loaded:', isLoaded, 'LoadedImages:', Array.from(loadedImages));
         }
-    }, [activeIndex, activeImage, loadedImages]);
+    }, [activeIndex, activeImage?.id, loadedImages]);
 
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [fullSizeModalOpen, setFullSizeModalOpen] = useState(false);
@@ -59,14 +58,22 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
     const closeFullSizeModal = () => setFullSizeModalOpen(false);
 
     const handleImageLoad = (imageId: number) => {
-        setLoadedImages(prev => new Set(prev).add(imageId));
+        setLoadedImages(prev => {
+            if (prev.has(imageId)) return prev;
+            return new Set(prev).add(imageId);
+        });
+        
         if (activeImage && imageId === activeImage.id) {
             setCurrentImageLoaded(true);
         }
     };
 
     const handleImageError = (imageId: number) => {
-        setLoadedImages(prev => new Set(prev).add(imageId));
+        setLoadedImages(prev => {
+            if (prev.has(imageId)) return prev;
+            return new Set(prev).add(imageId);
+        });
+        
         if (activeImage && imageId === activeImage.id) {
             setCurrentImageLoaded(true);
         }
@@ -141,6 +148,62 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
     };  
     
     useEffect(() => {
+    // Mobile-specific aggressive preloading
+    const isMobile = /Android|webOS|iPhone|iPad|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile && sortedImages.length > 0) {
+        // On mobile, prioritize loading the current image and nearby images first
+        const priorityImages = [
+        sortedImages[activeIndex], // Current image
+        sortedImages[activeIndex - 1], // Previous
+        sortedImages[activeIndex + 1], // Next
+        ].filter(Boolean); // Remove undefined entries
+
+        priorityImages.forEach(image => {
+        if (!loadedImages.has(image.id)) {
+            const img = new Image();
+            img.onload = () => handleImageLoad(image.id);
+            img.onerror = () => handleImageError(image.id);
+            img.src = `/api/uploads/${image.image_path}`;
+        }
+        });
+
+        // Then load the rest with a small delay to prioritize visible content
+        setTimeout(() => {
+        sortedImages.forEach(image => {
+            if (!loadedImages.has(image.id) && !priorityImages.includes(image)) {
+            const img = new Image();
+            img.onload = () => handleImageLoad(image.id);
+            img.onerror = () => handleImageError(image.id);
+            img.src = `/api/uploads/${image.image_path}`;
+            }
+        });
+        }, 100);
+    }
+    }, [sortedImages, activeIndex, loadedImages]);
+
+    useEffect(() => {
+    // Immediately check if current image is loaded when component mounts
+    if (activeImage && loadedImages.has(activeImage.id)) {
+        setCurrentImageLoaded(true);
+    } else if (activeImage) {
+        setCurrentImageLoaded(false);
+        
+        // Force load the current image if not already loaded
+        const img = new Image();
+        img.onload = () => {
+        handleImageLoad(activeImage.id);
+        setCurrentImageLoaded(true);
+        };
+        img.onerror = () => {
+        handleImageError(activeImage.id);
+        setCurrentImageLoaded(true);
+        };
+        img.src = `/api/uploads/${activeImage.image_path}`;
+    }
+    }, [activeImage]);
+
+    useEffect(() => {
         if (fullSizeModalOpen || deleteModalOpen) {
           setOverlayOpen(true);
         } else {
@@ -204,15 +267,18 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
 
                     {/* Hidden preloader for all images */}
                     <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
-                        {sortedImages.map((image) => (
-                            <img
-                                key={`preload-${image.id}`}
-                                src={`/api/uploads/${image.image_path}`}
-                                alt=""
-                                onLoad={() => handleImageLoad(image.id)}
-                                onError={() => handleImageError(image.id)}
-                                style={{ width: '1px', height: '1px' }}
-                            />
+                    {sortedImages
+                        .filter(image => !loadedImages.has(image.id)) // Only preload unloaded images
+                        .slice(0, 5) // Limit concurrent preloads to prevent overwhelming mobile
+                        .map((image) => (
+                        <img
+                            key={`preload-${image.id}`}
+                            src={`/api/uploads/${image.image_path}`}
+                            alt=""
+                            onLoad={() => handleImageLoad(image.id)}
+                            onError={() => handleImageError(image.id)}
+                            style={{ width: '1px', height: '1px' }}
+                        />
                         ))}
                     </div>
 
