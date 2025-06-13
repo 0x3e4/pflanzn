@@ -204,8 +204,17 @@ export default function PlantDetails() {
         }
 
         try {
-            await waterPlant(Number(plantId), { watered_at: selectedDateTime });
-            loadPlant(); // refresh after watering
+            const newWatering = await waterPlant(Number(plantId), { watered_at: selectedDateTime });
+            
+            // Update plant state directly instead of reloading everything
+            if (plant) {
+                setPlant({
+                    ...plant,
+                    last_watered: new Date(selectedDateTime),
+                    waterings: [...(plant.waterings || []), newWatering]
+                });
+            }
+            
             toast.success("Watering logged successfully!");
         } catch (error) {
             toast.error((error as Error).message || "Failed to log watering.");
@@ -239,7 +248,7 @@ export default function PlantDetails() {
         }
 
         setLoadingPlant(true);
-        setToastVisible(true);  // show blur
+        setToastVisible(true);
 
         try {
             const result = await generateCareAdvice(Number(plantId));
@@ -249,7 +258,7 @@ export default function PlantDetails() {
                 autoClose: false,
                 closeOnClick: true,
                 className: "care-advice-toast",
-                onClose: () => setToastVisible(false),  // hide blur when toast closes
+                onClose: () => setToastVisible(false),
             });
 
         } catch (error) {

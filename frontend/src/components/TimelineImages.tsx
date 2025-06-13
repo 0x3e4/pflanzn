@@ -26,8 +26,29 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
     const [currentImageLoaded, setCurrentImageLoaded] = useState(false);
 
     useEffect(() => {
+        // Only reset loaded images if the actual image IDs have changed
+        const newImageIds = new Set(images.map(img => img.id));
+        const currentImageIds = new Set(localImages.map(img => img.id));
+        
+        // Check if the sets are different
+        const hasImageChanges = newImageIds.size !== currentImageIds.size || 
+                            [...newImageIds].some(id => !currentImageIds.has(id));
+        
         setLocalImages(images);
-        setLoadedImages(new Set()); // Reset loaded images when images prop changes
+        
+        if (hasImageChanges) {
+            // Only reset if images actually changed, not just reloaded
+            setLoadedImages(prev => {
+                const newSet = new Set<number>();
+                // Keep loaded state for images that still exist
+                prev.forEach(imageId => {
+                    if (newImageIds.has(imageId)) {
+                        newSet.add(imageId);
+                    }
+                });
+                return newSet;
+            });
+        }
     }, [images]);
 
     const sortedImages = [...localImages].sort(
