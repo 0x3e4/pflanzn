@@ -38,22 +38,11 @@ export default function IdentificationsPanel() {
 
     const sortRef = useRef<HTMLDivElement>(null);
 
+    const datePickerRef = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
         loadData();
     }, []);
-
-    // Reset loaded images when identifications change
-    useEffect(() => {
-        setLoadedImages(new Set());
-    }, [identifications]);
-
-    const handleImageLoad = (imageId: number) => {
-        setLoadedImages(prev => new Set(prev).add(imageId));
-    };
-
-    const handleImageError = (imageId: number) => {
-        setLoadedImages(prev => new Set(prev).add(imageId));
-    };
 
     const loadData = async () => {
         try {
@@ -74,6 +63,11 @@ export default function IdentificationsPanel() {
         const handleClickOutside = (e: MouseEvent) => {
             if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
                 setSortBy(null);
+            }
+            // Reset date picker when clicking outside
+            if (datePickerRef.current && !datePickerRef.current.contains(e.target as Node)) {
+                setSelectedDate("");
+                setCurrentPage(1);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
@@ -121,6 +115,54 @@ export default function IdentificationsPanel() {
         });
     };
 
+    // Reset loaded images when identifications change
+    useEffect(() => {
+        const newIds = new Set(identifications.map(item => item.id));
+        const currentIds = new Set(Array.from(loadedImages));
+        
+        // Check if we have completely different identifications
+        const hasSignificantChanges = identifications.length === 0 || 
+                                    newIds.size !== currentIds.size ||
+                                    [...newIds].some(id => !currentIds.has(id));
+        
+        if (hasSignificantChanges) {
+            setLoadedImages(new Set()); // Only reset when truly necessary
+        }
+    }, [identifications.length]);
+
+    useEffect(() => {
+        // Mobile-specific aggressive preloading for current page
+        const isMobile = /Android|webOS|iPhone|iPad|Opera Mini/i.test(navigator.userAgent);
+        
+        if (isMobile && currentPageData.length > 0) {
+            // Preload images for current page items immediately
+            const imagesToPreload = currentPageData
+                .filter(item => item.image_path && !loadedImages.has(item.id))
+                .slice(0, 6); // Limit to first 6 images on mobile
+            
+            imagesToPreload.forEach(item => {
+                const img = new Image();
+                img.onload = () => handleImageLoad(item.id);
+                img.onerror = () => handleImageError(item.id);
+                img.src = `/api/uploads/${item.image_path}`;
+            });
+        }
+    }, [currentPageData, loadedImages]);
+
+    const handleImageLoad = (imageId: number) => {
+        setLoadedImages(prev => {
+            if (prev.has(imageId)) return prev;
+            return new Set(prev).add(imageId);
+        });
+    };
+
+    const handleImageError = (imageId: number) => {
+        setLoadedImages(prev => {
+            if (prev.has(imageId)) return prev;
+            return new Set(prev).add(imageId);
+        });
+    };
+
     return (
         <div className="statistics-panel">
             {loading && <LoadingOverlay />}
@@ -129,12 +171,11 @@ export default function IdentificationsPanel() {
 
             {/* Controls */}
             <div style={{ marginBottom: "1rem", display: "flex", gap: "1rem", alignItems: "flex-start", flexWrap: "wrap" }}>
-                <div className="identification-plant-input-container">
+                <div ref={datePickerRef} className="identification-plant-input-container">
                     <div className="identification-plant-datetime">
                         <input
                             id="datePicker"
                             type="date"
-                            value={selectedDate}
                             onChange={(e) => {
                                 setSelectedDate(e.target.value);
                                 setCurrentPage(1);
@@ -193,7 +234,6 @@ export default function IdentificationsPanel() {
                                                 width="100%"
                                                 baseColor="#444"
                                                 highlightColor="#666"
-                                                className="identification-image-skeleton"
                                                 style={{ borderRadius: 6 }}
                                             />
                                         )}

@@ -264,3 +264,9 @@ small:hover {
 .no-margin-bottom {
     margin-bottom: 0 !important;
 }
+
+input[type="date"] {
+    appearance: textfield;
+    -webkit-appearance: textfield;
+    -moz-appearance: textfield;
+}
