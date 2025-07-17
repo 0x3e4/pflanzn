@@ -32,6 +32,8 @@ class Plant(Base):
     tags = relationship("Tag", secondary=plant_tag_association, back_populates="plants")
     images = relationship("PlantImage", back_populates="plant", cascade="all, delete-orphan")
     waterings = relationship("PlantWatering", back_populates="plant", cascade="all, delete-orphan")
+    care_advice = relationship("PlantCareAdvice", back_populates="plant", cascade="all, delete-orphan")
+    notes = relationship("PlantNote", back_populates="plant", cascade="all, delete-orphan")
 
 class Tag(Base):
     __tablename__ = "tags"
@@ -75,3 +77,33 @@ class PlantIdentification(Base):
     is_primary = Column(Boolean, default=False)
 
     user = relationship("User", backref="identifications")
+
+class PlantCareAdvice(Base):
+    __tablename__ = "plant_care_advice"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    plant_id = Column(Integer, ForeignKey("plants.id"), nullable=False)
+    advice_text = Column(Text, nullable=False)
+    generated_at = Column(DateTime, default=func.now())
+    
+    plant = relationship("Plant", back_populates="care_advice")
+    
+    __table_args__ = (
+        Index("idx_plant_care_advice_plant_id", "plant_id"),
+        Index("idx_plant_care_advice_generated_at", "generated_at"),
+    )
+
+class PlantNote(Base):
+    __tablename__ = "plant_notes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    plant_id = Column(Integer, ForeignKey("plants.id"), nullable=False)
+    note_text = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=func.now())
+    
+    plant = relationship("Plant", back_populates="notes")
+    
+    __table_args__ = (
+        Index("idx_plant_notes_plant_id", "plant_id"),
+        Index("idx_plant_notes_created_at", "created_at"),
+    )

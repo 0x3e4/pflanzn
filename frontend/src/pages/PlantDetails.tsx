@@ -11,7 +11,10 @@ import {
     assignTagToPlant,
     removeTagFromPlant,
     archivePlant,
-    generateCareAdvice
+    generateCareAdvice,
+    fetchPlantActivities, 
+    createPlantNote, 
+    fetchPlantNotes
 } from "../services/PlantService";
 import { fetchTags, deleteTag } from "../services/TagService";
 import { Plant } from "../types/Plant";
@@ -28,7 +31,10 @@ import {
     faCircleXmark, 
     faUpload, 
     faBoxArchive, 
-    faTrashCanArrowUp 
+    faTrashCanArrowUp,
+    faCamera, 
+    faStickyNote,
+    faPlus
 } from "@fortawesome/free-solid-svg-icons";
 import EditableDiv from "../components/EditableDiv";
 import "../styles/plantDetails.css";
@@ -41,34 +47,34 @@ import { setOverlayOpen } from "../services/overlayControl";
 
 export default function PlantDetails() {
     const { isLoggedIn } = useAuth();
-
     const { plantId } = useParams();
     const navigate = useNavigate();
-
     const [plant, setPlant] = useState<Plant | null>(null);
     const [loadingPlant, setLoadingPlant] = useState(true);
-
     const [availableTags, setAvailableTags] = useState<Tag[]>([]);
     const [filteredTags, setFilteredTags] = useState<Tag[]>([]);
     const [newTag, setNewTag] = useState("");
     const [showTagDropdown, setShowTagDropdown] = useState(false);
-
     const [selectedDateTime, setSelectedDateTime] = useState<string>(
-        DateTime.now().toISO({ includeOffset: false }) ?? ""
+        DateTime.now().setZone(import.meta.env.VITE_TZ).toISO({ includeOffset: false }) ?? ""
     );
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [identifyResults, setIdentifyResults] = useState<{ species: string; commonName: string; score: string; images: string[] }[] | null>(null);
-
     const [archiveModalOpen, setArchiveModalOpen] = useState(false);
     const [archiveReason, setArchiveReason] = useState("");    
     const [isArchiving, setIsArchiving] = useState(true);
-
     const [toastVisible, setToastVisible] = useState(false);
+    const [activities, setActivities] = useState<any[]>([]);
+    const [loadingActivities, setLoadingActivities] = useState(false);
+    const [notesModalOpen, setNotesModalOpen] = useState(false);
+    const [notes, setNotes] = useState<any[]>([]);
+    const [newNote, setNewNote] = useState("");
 
-    // Fetch plant data on load
+    // Fetch plant and activites data on load
     useEffect(() => {
         if (plantId) {
             loadPlant();
+            loadActivities();
         }
         loadAvailableTags();
     }, [plantId]);
@@ -97,9 +103,14 @@ export default function PlantDetails() {
         if (!file) return;
 
         try {
-            await uploadPlantImage(Number(plantId), file);
+            const currentDateTimeUTC = DateTime.now().toUTC().toISO({ includeOffset: false });
+            await uploadPlantImage(Number(plantId), file, currentDateTimeUTC);
             toast.success("Image uploaded!");
             await loadPlant();
+
+            // Always refresh activity feed
+            loadActivities();
+            
         } catch (err) {
             toast.error((err as Error).message || "Failed to upload the image.");
         }
@@ -204,18 +215,26 @@ export default function PlantDetails() {
         }
 
         try {
-            const newWatering = await waterPlant(Number(plantId), { watered_at: selectedDateTime });
+            const wateringDateTimeUTC = DateTime.fromISO(selectedDateTime, { zone: import.meta.env.VITE_TZ })
+                .toUTC()
+                .toISO({ includeOffset: false });
+
+            const newWatering = await waterPlant(Number(plantId), { watered_at: wateringDateTimeUTC });
             
             // Update plant state directly instead of reloading everything
             if (plant) {
                 setPlant({
                     ...plant,
-                    last_watered: new Date(selectedDateTime),
+                    last_watered: new Date(wateringDateTimeUTC),
                     waterings: [...(plant.waterings || []), newWatering]
                 });
             }
             
             toast.success("Watering logged successfully!");
+
+            // Always refresh activity feed
+            loadActivities();
+            
         } catch (error) {
             toast.error((error as Error).message || "Failed to log watering.");
         }
@@ -251,15 +270,27 @@ export default function PlantDetails() {
         setToastVisible(true);
 
         try {
-            const result = await generateCareAdvice(Number(plantId));
+            const careAdviceEntry = await generateCareAdvice(Number(plantId));
 
-            toast.info(result.advice, {
+            if (plant) {
+                setPlant({
+                    ...plant,
+                    care_advice: [careAdviceEntry, ...(plant.care_advice || [])]
+                });
+            }
+
+            toast.info(careAdviceEntry.advice_text, {
                 position: "top-center",
                 autoClose: false,
                 closeOnClick: true,
                 className: "care-advice-toast",
                 onClose: () => setToastVisible(false),
             });
+
+            toast.success("Care advice saved to your plant's history!");
+
+            // Always refresh activity feed
+            loadActivities();
 
         } catch (error) {
             toast.error((error as Error).message || "Failed to generate care advice.");
@@ -362,13 +393,174 @@ export default function PlantDetails() {
         }
     };
 
+    const loadActivities = async () => {
+        if (!plantId) return;
+        
+        setLoadingActivities(true);
+        try {
+            const data = await fetchPlantActivities(Number(plantId), { limit: 20 });
+            setActivities(data);
+        } catch (error) {
+            toast.error("Failed to load activity log.");
+        } finally {
+            setLoadingActivities(false);
+        }
+    };
+
+    const loadNotes = async () => {
+        if (!plantId) return;
+        
+        try {
+            const data = await fetchPlantNotes(Number(plantId), { limit: 10 });
+            setNotes(data);
+        } catch (error) {
+            toast.error("Failed to load notes.");
+        }
+    };
+
+    const handleCreateNote = async () => {
+        if (!plantId || !newNote.trim()) return;
+        
+        if (!isLoggedIn) {
+            toast.error("You must be logged in to create notes.");
+            return;
+        }
+
+        try {
+            const note = await createPlantNote(Number(plantId), newNote.trim());
+            setNotes([note, ...notes]);
+            setNewNote("");
+            toast.success("Note created!");
+            
+            // Always refresh activity feed
+            loadActivities();
+        } catch (error) {
+            toast.error("Failed to create note.");
+        }
+    };
+
+    const getActivityIcon = (activityType: string) => {
+        switch (activityType) {
+            case 'watering':
+                return faDroplet;
+            case 'care_advice':
+                return faWandMagicSparkles;
+            case 'image_upload':
+                return faCamera;
+            case 'note':
+                return faStickyNote;
+            default:
+                return faStickyNote;
+        }
+    };
+
+    const getActivityTitle = (activity: any) => {
+        switch (activity.activity_type) {
+            case 'watering':
+                return 'Plant Watered';
+            case 'care_advice':
+                return 'Care Advice Generated';
+            case 'image_upload':
+                return 'Image Uploaded';
+            case 'note':
+                return 'Note Added';
+            default:
+                return 'Activity';
+        }
+    };
+
+    const getActivityDescription = (activity: any) => {
+        switch (activity.activity_type) {
+            case 'watering':
+                return 'Plant was watered';
+            case 'care_advice':
+                return activity.activity_data.advice || 'AI care advice was generated';
+            case 'image_upload':
+                return 'New photo was uploaded';
+            case 'note':
+                return activity.activity_data.note || 'A new note was added';
+            default:
+                return '';
+        }
+    };
+
+    const handleOpenNotesModal = () => {
+        if (!isLoggedIn) {
+            toast.error("You must be logged in to manage notes.");
+            return;
+        }
+        setNotesModalOpen(true);
+        loadNotes();
+    };
+
     useEffect(() => {
-        if (identifyResults || deleteModalOpen || archiveModalOpen) {
+        if (identifyResults || deleteModalOpen || archiveModalOpen || notesModalOpen) {
         setOverlayOpen(true);
         } else {
         setOverlayOpen(false);
         }
-    }, [identifyResults, deleteModalOpen, archiveModalOpen]);  
+    }, [identifyResults, deleteModalOpen, archiveModalOpen, notesModalOpen]);  
+
+    const ActivityFeedSection = () => (
+        <div className="activity-log-container">
+            <div className="activity-log-header">
+                <h3>Activity Feed</h3>
+                <button 
+                    className="notes-btn"
+                    onClick={handleOpenNotesModal}
+                    title="Manage Notes"
+                >
+                    <FontAwesomeIcon icon={faStickyNote} />
+                </button>
+            </div>
+            
+            <div className="activity-log-list">
+                {loadingActivities ? (
+                    // Skeleton loading
+                    <>
+                        {[...Array(3)].map((_, index) => (
+                            <div key={index} className="activity-item activity-skeleton">
+                                <div className="activity-icon skeleton"></div>
+                                <div className="activity-content">
+                                    <div className="skeleton-header">
+                                        <div className="skeleton-line skeleton-title"></div>
+                                        <div className="skeleton-line skeleton-timestamp"></div>
+                                    </div>
+                                    <div className="skeleton-line skeleton-description"></div>
+                                </div>
+                            </div>
+                        ))}
+                    </>
+                ) : activities.length === 0 ? (
+                    <div className="activity-log-empty">No activities yet</div>
+                ) : (
+                    activities.map((activity) => (
+                        <div key={activity.id} className="activity-item">
+                            <div className={`activity-icon ${activity.activity_type}`}>
+                                <FontAwesomeIcon icon={getActivityIcon(activity.activity_type)} size="sm" />
+                            </div>
+                            <div className="activity-content">
+                                <div className="activity-header">
+                                    <p className="activity-title">{getActivityTitle(activity)}</p>
+                                    <p className="activity-timestamp">
+                                        {new Date(activity.timestamp).toLocaleString(import.meta.env.VITE_LOCALE, {
+                                            timeZone: import.meta.env.VITE_TZ,
+                                            weekday: 'short',
+                                            month: 'short',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}
+                                    </p>
+                                </div>
+                                <p className="activity-description">{getActivityDescription(activity)}</p>
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
+    );
 
     if (loadingPlant) return <LoadingOverlay />
 
@@ -438,7 +630,7 @@ export default function PlantDetails() {
                         <span className="plant-information-names">
                             <strong>Last Watered:</strong>{" "}
                             {plant.last_watered
-                                ? new Date(plant.last_watered).toLocaleString(import.meta.env.VITE_Locale, {
+                                ? new Date(plant.last_watered).toLocaleString(import.meta.env.VITE_LOCALE, {
                                     timeZone: import.meta.env.VITE_TZ,
                                     weekday: 'long',
                                     year: 'numeric',
@@ -452,7 +644,7 @@ export default function PlantDetails() {
                     </div>
 
                     <TimelineImages images={plant.images} plantId={plant.id} />
-                    <Calendar waterings={plant.waterings} images={plant.images} plantId={plant.id} />
+                    <Calendar waterings={plant.waterings} images={plant.images} careadvice={plant.care_advice} plantId={plant.id} />
                 </div>
 
                 {/* Right Column - Description */}
@@ -520,6 +712,8 @@ export default function PlantDetails() {
                     </div>
 
                     <Description plant={plant} onDescriptionUpdated={setPlant} />
+
+                    <ActivityFeedSection />
 
                     {plant.is_archived && plant.archive_reason && (
                         <div className="archive-reason-box mt-5">
@@ -682,7 +876,9 @@ export default function PlantDetails() {
             {deleteModalOpen && (
                 <div className="delete-plant-modal-overlay">
                     <div className="delete-plant-modal">
-                        <p>Are you sure you want to delete this plant?</p>
+                        <div className="delete-modal-header">
+                            <span>Are you sure you want to delete this plant?</span>
+                        </div>
                         <div className="delete-plant-modal-buttons">
                             <button className="delete-plant-confirm" onClick={handleConfirmDelete}>
                               <FontAwesomeIcon icon={faTrash} /> Delete
@@ -699,11 +895,13 @@ export default function PlantDetails() {
             {archiveModalOpen && (
                 <div className="archive-plant-modal-overlay">
                     <div className="archive-plant-modal">
-                        <p>
-                            {isArchiving
-                                ? "Are you sure you want to archive this plant?"
-                                : "Are you sure you want to restore this plant?"}
-                        </p>
+                        <div className="archive-modal-header">
+                            <span>
+                                {isArchiving
+                                    ? "Are you sure you want to archive this plant?"
+                                    : "Are you sure you want to restore this plant?"}
+                            </span>
+                        </div>
 
                         {isArchiving && (
                             <EditableDiv
@@ -721,6 +919,38 @@ export default function PlantDetails() {
                             <button className="archive-plant-cancel" onClick={() => setArchiveModalOpen(false)}>
                                 <FontAwesomeIcon icon={faCircleXmark} /> Cancel
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Notes Modal */}
+            {notesModalOpen && (
+                <div className="notes-modal-overlay">
+                    <div className="notes-modal">
+                        <div className="notes-modal-header">
+                            <span>Write a note about the plant</span>
+                        </div>
+
+                        <div className="note-input-container">
+                            <EditableDiv
+                                value={newNote}
+                                onSave={setNewNote}
+                                placeholder="Add a note about your plant..."
+                                className="note-input"
+                            />
+                            <div className="note-actions">
+                                <button 
+                                    className="save-note-btn"
+                                    onClick={handleCreateNote}
+                                    disabled={!newNote.trim()}
+                                >
+                                    <FontAwesomeIcon icon={faPlus} /> Add Note
+                                </button>
+                                <button className="notes-modal-close" onClick={() => setNotesModalOpen(false)}>
+                                    <FontAwesomeIcon icon={faCircleXmark} /> Cancel
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

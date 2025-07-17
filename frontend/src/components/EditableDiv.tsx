@@ -41,6 +41,17 @@ export default function EditableDiv({
         };
     }, [editing]);
 
+    useEffect(() => {
+        if (editing && divRef.current) {
+            // If showing placeholder, clear it
+            if (!localValue) {
+                divRef.current.innerText = '';
+            }
+            // Focus the div
+            divRef.current.focus();
+        }
+    }, [editing, localValue]);
+
     const exitEditingMode = () => {
         if (divRef.current) {
             const newValue = divRef.current.innerText.trim();

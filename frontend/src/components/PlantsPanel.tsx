@@ -4,17 +4,19 @@ import { useAuth } from "../context/AuthContext";
 import { fetchPlants, updatePlant, deletePlant } from "../services/PlantService";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash, faSave, faEye, faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
+import { faTrash, faSave, faEye, faChevronLeft, faChevronRight, faCircleXmark } from "@fortawesome/free-solid-svg-icons";
 import { Plant } from "../types/Plant";
 import LoadingOverlay from "../components/LoadingOverlay";
+import { setOverlayOpen } from "../services/overlayControl";
 
 export default function PlantsPanel() {
     const navigate = useNavigate();
     const authMode = import.meta.env.VITE_AUTH_MODE || "no";
     const { user, isLoggedIn } = useAuth();
     const [plants, setPlants] = useState<Plant[]>([]);
-    const [editedPlant, setEditedPlant] = useState<Partial<Plant>>({});
-
+    // Changed: Track edits per plant ID instead of a single editedPlant
+    const [editedPlants, setEditedPlants] = useState<{ [plantId: number]: Partial<Plant> }>({});
+    const [deleteModalOpen, setDeleteModalOpen] = useState<number | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 20;
     
@@ -76,23 +78,53 @@ export default function PlantsPanel() {
         );
     };    
 
+    // Helper function to get the current value for a field
+    const getCurrentValue = (plantId: number, field: keyof Plant, originalValue: any) => {
+        return editedPlants[plantId]?.[field] ?? originalValue;
+    };
+
+    // Helper function to update a specific plant's field
+    const updatePlantField = (plantId: number, field: keyof Plant, value: any) => {
+        setEditedPlants(prev => ({
+            ...prev,
+            [plantId]: {
+                ...prev[plantId],
+                [field]: value
+            }
+        }));
+    };
+
     // Update Plant
     const handleUpdatePlant = async (plantId: number) => {
+        const changes = editedPlants[plantId];
+        if (!changes || Object.keys(changes).length === 0) {
+            toast.info("No changes to save.");
+            return;
+        }
+
         try {
-            await updatePlant(plantId, editedPlant);
+            await updatePlant(plantId, changes);
             toast.success("Plant updated successfully.");
             fetchPlants().then((plants) =>
                 setPlants(plants.map(p => ({ ...p, species: p.species ?? "" })))
             );
-            setEditedPlant({});
+            // Clear the edits for this plant
+            setEditedPlants(prev => {
+                const updated = { ...prev };
+                delete updated[plantId];
+                return updated;
+            });
         } catch {
             toast.error("Failed to update plant.");
         }
     };
 
     // Delete Plant
-    const handleDeletePlant = async (plantId: number) => {
-        if (!window.confirm("Are you sure you want to delete this plant?")) return;
+    const handleConfirmDelete = async (plantId: number) => {
+        if (!isLoggedIn) {
+            toast.error("You must be logged in to delete plants.");
+            return;
+        }
 
         try {
             await deletePlant(plantId);
@@ -102,12 +134,22 @@ export default function PlantsPanel() {
             );            
         } catch {
             toast.error("Failed to delete plant.");
+        } finally {
+            setDeleteModalOpen(null);
         }
     };
 
     if (!isLoggedIn && authMode !== "no") {
         return <p>Access denied</p>;
     }
+
+    useEffect(() => {
+        if (deleteModalOpen) {
+        setOverlayOpen(true);
+        } else {
+        setOverlayOpen(false);
+        }
+    }, [deleteModalOpen]);  
 
     return (
         <div className="plants-panel">
@@ -133,16 +175,16 @@ export default function PlantsPanel() {
                                 <td>
                                     <input 
                                         type="text" 
-                                        value={editedPlant.name ?? p.name} 
-                                        onChange={(e) => setEditedPlant((prev) => ({ ...prev, name: e.target.value }))} 
+                                        value={getCurrentValue(p.id, 'name', p.name)} 
+                                        onChange={(e) => updatePlantField(p.id, 'name', e.target.value)} 
                                         className="editable-input"
                                     />
                                 </td>
                                 <td>
                                     <input 
                                         type="text" 
-                                        value={editedPlant.species ?? p.species} 
-                                        onChange={(e) => setEditedPlant((prev) => ({ ...prev, species: e.target.value }))} 
+                                        value={getCurrentValue(p.id, 'species', p.species)} 
+                                        onChange={(e) => updatePlantField(p.id, 'species', e.target.value)} 
                                         className="editable-input"
                                     />
                                 </td>
@@ -153,7 +195,7 @@ export default function PlantsPanel() {
                                     <button className="update-btn" onClick={() => handleUpdatePlant(p.id)}>
                                         <FontAwesomeIcon icon={faSave} />
                                     </button>
-                                    <button className="delete-btn" onClick={() => handleDeletePlant(p.id)}>
+                                    <button className="delete-btn" onClick={() => setDeleteModalOpen(p.id)}>
                                         <FontAwesomeIcon icon={faTrash} />
                                     </button>
                                 </td>
@@ -177,6 +219,25 @@ export default function PlantsPanel() {
                         >
                             <FontAwesomeIcon icon={faChevronRight} />
                         </button>
+                    </div>
+                )}
+
+                {/* Delete Confirmation Modal */}
+                {deleteModalOpen && (
+                    <div className="delete-plant-modal-overlay">
+                        <div className="delete-plant-modal">
+                            <div className="delete-modal-header">
+                                <span>Are you sure you want to delete this plant?</span>
+                            </div>
+                            <div className="delete-plant-modal-buttons">
+                                <button className="delete-plant-confirm" onClick={() => handleConfirmDelete(deleteModalOpen)}>
+                                <FontAwesomeIcon icon={faTrash} /> Delete
+                                </button>
+                                <button className="delete-plant-cancel" onClick={() => setDeleteModalOpen(null)}>
+                                <FontAwesomeIcon icon={faCircleXmark} /> Cancel
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>

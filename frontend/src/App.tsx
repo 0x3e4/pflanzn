@@ -8,16 +8,15 @@ import Login from "./pages/Login";
 import Manage from "./pages/Manage";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import OidcCallback from "./components/OidcCallback";
 import ScrollToTopButton from './components/ScrollToTopButton';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from "./context/AuthContext";
 import { usePullToRefresh } from "./hooks/usePullToRefresh";
+import { ProtectedRoute } from "./components/Protection";
 
 export default function App() {
     const authMode = import.meta.env.VITE_AUTH_MODE || "no";
-
     const ref = useRef<HTMLDivElement>(null);
 
     const { refreshing, setRefreshing } = usePullToRefresh(ref, () => {
@@ -53,13 +52,12 @@ export default function App() {
                     </div>
                     <main>
                         <Routes>
-                            <Route path="/" element={<Home />} />
-                            <Route path="/about" element={<About />} />
-                            <Route path="/plants" element={<Plants />} />
-                            <Route path="/plant/:plantId" element={<PlantDetails />} />
-                            {authMode === "local" && <Route path="/login" element={<Login />} />}
-                            {authMode === "oidc" && <Route path="/callback" element={<OidcCallback />} />}
-                            <Route path="/manage" element={<Manage />} />
+                            <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+                            <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
+                            <Route path="/plants" element={<ProtectedRoute><Plants /></ProtectedRoute>} />
+                            <Route path="/plant/:plantId" element={<ProtectedRoute><PlantDetails /></ProtectedRoute>} />
+                            {authMode !== "no" && <Route path="/login" element={<Login />} />}
+                            <Route path="/manage" element={<ProtectedRoute><Manage /></ProtectedRoute>} />
                         </Routes>
                         <ToastContainer
                             position="bottom-right"

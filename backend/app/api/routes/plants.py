@@ -1,14 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Body, Query
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy.sql import func
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, Form
+from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Plant, PlantImage, PlantWatering, Tag, PlantIdentification, User
-from app.schemas import PlantCreate, PlantResponse, PlantUpdate, PlantImageResponse, IdentifyRequest, PlantWateringCreate, PlantWateringResponse, TagResponse, ArchiveRequest, PlantIdentificationCreate, PlantIdentificationResponse
+from app.models import Plant, PlantImage, PlantWatering, PlantCareAdvice, PlantNote, Tag, PlantIdentification
+from app.schemas import (
+    PlantCreate, PlantResponse, PlantUpdate, PlantImageResponse, 
+    PlantWateringCreate, PlantWateringResponse, PlantCareAdviceResponse,
+    PlantNoteCreate, PlantNoteResponse, TagResponse, ArchiveRequest, 
+    PlantIdentificationResponse, ActivityResponse
+)
 from typing import List, Optional
-import shutil
 import os
 import io
-import requests
 import uuid
 import logging
 import json
@@ -18,6 +20,9 @@ import mimetypes
 from app.services.plantnet import identify_species_via_plantnet
 from app.services.llm_client import LLMClient
 import traceback
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo 
+from dotenv import load_dotenv
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -32,6 +37,10 @@ os.makedirs(PLANT_FOLDER, exist_ok=True)
 os.makedirs(IDENTIFICATION_FOLDER, exist_ok=True)
 
 pillow_heif.register_heif_opener()
+
+load_dotenv()
+LOCAL_TZ = os.getenv("VITE_TZ", "UTC") 
+tz = ZoneInfo(LOCAL_TZ)
 
 router = APIRouter()
 
@@ -53,6 +62,7 @@ def get_all_plants(db: Session = Depends(get_db)):
     for plant in plants:
         if plant.waterings:
             plant.last_watered = max(watering.watered_at for watering in plant.waterings)
+            plant.last_watered = plant.last_watered.replace(tzinfo=timezone.utc).astimezone(tz)
         else:
             plant.last_watered = None
 
@@ -99,7 +109,19 @@ def get_plant(plant_id: int, db: Session = Depends(get_db)):
         .first()
     )
 
-    plant.last_watered = latest_watering.watered_at if latest_watering else None
+    for image in plant.images:
+        image.uploaded_at = image.uploaded_at.replace(tzinfo=timezone.utc).astimezone(tz)
+
+    for watering in plant.waterings:
+        watering.watered_at = watering.watered_at.replace(tzinfo=timezone.utc).astimezone(tz)
+
+    for advice in plant.care_advice:
+        advice.generated_at = advice.generated_at.replace(tzinfo=timezone.utc).astimezone(tz)
+
+    if latest_watering and latest_watering.watered_at:
+        plant.last_watered = latest_watering.watered_at.replace(tzinfo=timezone.utc).astimezone(tz)
+    else:
+        plant.last_watered = None
 
     return plant
 
@@ -139,6 +161,7 @@ def delete_plant(plant_id: int, db: Session = Depends(get_db)):
 def upload_plant_image(
     plant_id: int,
     file: UploadFile = File(...),
+    uploaded_at: Optional[str] = Form(None), 
     db: Session = Depends(get_db),
 ):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
@@ -173,11 +196,25 @@ def upload_plant_image(
 
         logger.debug(f"Optimized uploaded image saved for plant {plant_id}.")
 
+        timestamp = None
+        if uploaded_at:
+            try:
+                timestamp = datetime.fromisoformat(uploaded_at)
+            except ValueError:
+                logger.warning(f"Invalid timestamp format: {uploaded_at}, using current UTC time")
+                timestamp = datetime.utcnow()
+        else:
+            timestamp = datetime.utcnow()
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error processing image: {str(e)}")
 
     relative_path = f"plants/{new_filename}"
-    plant_image = PlantImage(plant_id=plant_id, image_path=relative_path)
+    plant_image = PlantImage(
+        plant_id=plant_id, 
+        image_path=relative_path,
+        uploaded_at=timestamp
+    )
     db.add(plant_image)
     db.commit()
     db.refresh(plant_image)
@@ -190,6 +227,10 @@ def upload_plant_image(
 @router.get("/{plant_id}/images", response_model=List[PlantImageResponse])
 def get_plant_images(plant_id: int, db: Session = Depends(get_db)):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
+
+    for image in plant.images:
+        image.uploaded_at = image.uploaded_at.replace(tzinfo=timezone.utc).astimezone(tz)
+
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
     return plant.images
@@ -591,3 +632,316 @@ def get_care_helper(plant_id: int, db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f"Failed to generate care advice: {e}")
         raise HTTPException(status_code=500, detail=f"Care helper failed: {str(e)}")
+    
+@router.get("/{plant_id}/activities")
+def get_plant_activities(
+    plant_id: int,
+    db: Session = Depends(get_db),
+    limit: int = Query(20, le=50),
+    offset: int = Query(0, ge=0)
+):
+    """
+    Get activities for a specific plant.
+    Returns a unified list of activities (waterings, care advice, images, notes)
+    """
+    # Verify plant exists
+    plant = db.query(Plant).filter(Plant.id == plant_id).first()
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+    
+    activities = []
+    
+    # Get waterings for this plant
+    waterings = (
+        db.query(PlantWatering)
+        .filter(PlantWatering.plant_id == plant_id)
+        .order_by(PlantWatering.watered_at.desc())
+        .all()
+    )
+
+    for watering in waterings:
+        watering.watered_at = watering.watered_at.replace(tzinfo=timezone.utc).astimezone(tz)
+        activities.append({
+            "id": f"watering_{watering.id}",
+            "plant_id": plant_id,
+            "plant_name": plant.name,
+            "activity_type": "watering",
+            "activity_data": {"watering_id": watering.id},
+            "timestamp": watering.watered_at.isoformat()
+        })
+    
+    # Get images for this plant
+    images = (
+        db.query(PlantImage)
+        .filter(PlantImage.plant_id == plant_id)
+        .order_by(PlantImage.uploaded_at.desc())
+        .all()
+    )
+    
+    for image in images:
+        image.uploaded_at = image.uploaded_at.replace(tzinfo=timezone.utc).astimezone(tz)
+        activities.append({
+            "id": f"image_{image.id}",
+            "plant_id": plant_id,
+            "plant_name": plant.name,
+            "activity_type": "image_upload",
+            "activity_data": {
+                "image_id": image.id,
+                "image_path": image.image_path
+            },
+            "timestamp": image.uploaded_at.isoformat()
+        })
+    
+    # Get care advice for this plant (if table exists)
+    try:
+        care_advice = (
+            db.query(PlantCareAdvice)
+            .filter(PlantCareAdvice.plant_id == plant_id)
+            .order_by(PlantCareAdvice.generated_at.desc())
+            .all()
+        )
+        
+        for advice in care_advice:
+            advice.generated_at = advice.generated_at.replace(tzinfo=timezone.utc).astimezone(tz)
+            activities.append({
+                "id": f"care_{advice.id}",
+                "plant_id": plant_id,
+                "plant_name": plant.name,
+                "activity_type": "care_advice",
+                "activity_data": {
+                    "advice_id": advice.id,
+                    "advice": advice.advice_text
+                },
+                "timestamp": advice.generated_at.isoformat()
+            })
+    except Exception as e:
+        # Table might not exist yet, continue without care advice
+        logger.warning(f"Could not fetch care advice: {e}")
+    
+    # Get notes for this plant (if table exists)
+    try:
+        notes = (
+            db.query(PlantNote)
+            .filter(PlantNote.plant_id == plant_id)
+            .order_by(PlantNote.created_at.desc())
+            .all()
+        )
+        
+        for note in notes:
+            activities.append({
+                "id": f"note_{note.id}",
+                "plant_id": plant_id,
+                "plant_name": plant.name,
+                "activity_type": "note",
+                "activity_data": {
+                    "note_id": note.id,
+                    "note": note.note_text
+                },
+                "timestamp": note.created_at.isoformat()
+            })
+    except Exception as e:
+        # Table might not exist yet, continue without notes
+        logger.warning(f"Could not fetch notes: {e}")
+    
+    # Sort all activities by timestamp (newest first)
+    activities.sort(key=lambda x: x["timestamp"], reverse=True)
+    
+    # Apply pagination
+    return activities[offset:offset + limit]
+
+@router.post("/{plant_id}/care_advice", response_model=PlantCareAdviceResponse)
+def get_care_helper(
+    plant_id: int, 
+    db: Session = Depends(get_db)
+):
+    """
+    Generate and store care advice for a plant using LLM.
+    """
+    plant = db.query(Plant).filter(Plant.id == plant_id).first()
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+
+    try:
+        llm = LLMClient()
+        logger.info(f"Generating care advice for plant {plant_id}")
+        advice_text = llm.care_helper(db, plant_id)
+        logger.info(f"Generated advice text: {advice_text[:100]}...")
+        
+        # Store the care advice in the database
+        care_advice = PlantCareAdvice(
+            plant_id=plant_id,
+            advice_text=advice_text,
+            generated_at=datetime.utcnow()
+        )
+        
+        db.add(care_advice)
+        db.commit()
+        db.refresh(care_advice)
+        
+        logger.info(f"Care advice saved with ID: {care_advice.id}")
+        
+        return care_advice
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to generate care advice: {e}")
+        logger.error(f"Error type: {type(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Care helper failed: {str(e)}")
+
+@router.get("/{plant_id}/care_advice", response_model=List[PlantCareAdviceResponse])
+def get_plant_care_advice(
+    plant_id: int, 
+    db: Session = Depends(get_db),
+    limit: int = Query(10, le=50),
+    offset: int = Query(0, ge=0)
+):
+    """
+    Get all care advice entries for a specific plant.
+    """
+    plant = db.query(Plant).filter(Plant.id == plant_id).first()
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+    
+    care_advice = (
+        db.query(PlantCareAdvice)
+        .filter(PlantCareAdvice.plant_id == plant_id)
+        .order_by(PlantCareAdvice.generated_at.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+    
+    return care_advice
+
+@router.delete("/{plant_id}/care_advice/{advice_id}")
+def delete_care_advice(
+    plant_id: int,
+    advice_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Delete a specific care advice entry.
+    """
+    plant = db.query(Plant).filter(Plant.id == plant_id).first()
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+    
+    care_advice = db.query(PlantCareAdvice).filter(
+        PlantCareAdvice.id == advice_id,
+        PlantCareAdvice.plant_id == plant_id
+    ).first()
+    
+    if not care_advice:
+        raise HTTPException(status_code=404, detail="Care advice not found")
+    
+    db.delete(care_advice)
+    db.commit()
+    
+    return {"message": "Care advice deleted successfully"}
+
+@router.post("/{plant_id}/notes", response_model=PlantNoteResponse)
+def create_plant_note(
+    plant_id: int,
+    note_data: PlantNoteCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Create a new note for a plant.
+    """
+    plant = db.query(Plant).filter(Plant.id == plant_id).first()
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+    
+    note = PlantNote(
+        plant_id=plant_id,
+        note_text=note_data.note_text,
+        created_at=datetime.utcnow()
+    )
+    
+    db.add(note)
+    db.commit()
+    db.refresh(note)
+    
+    return note
+
+@router.get("/{plant_id}/notes", response_model=List[PlantNoteResponse])
+def get_plant_notes(
+    plant_id: int,
+    db: Session = Depends(get_db),
+    limit: int = Query(10, le=50),
+    offset: int = Query(0, ge=0)
+):
+    """
+    Get all notes for a specific plant.
+    """
+    plant = db.query(Plant).filter(Plant.id == plant_id).first()
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+    
+    notes = (
+        db.query(PlantNote)
+        .filter(PlantNote.plant_id == plant_id)
+        .order_by(PlantNote.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+    
+    return notes
+
+@router.put("/{plant_id}/notes/{note_id}", response_model=PlantNoteResponse)
+def update_plant_note(
+    plant_id: int,
+    note_id: int,
+    note_data: PlantNoteCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Update a specific plant note.
+    """
+    plant = db.query(Plant).filter(Plant.id == plant_id).first()
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+    
+    note = db.query(PlantNote).filter(
+        PlantNote.id == note_id,
+        PlantNote.plant_id == plant_id
+    ).first()
+    
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+    
+    note.note_text = note_data.note_text
+    db.commit()
+    db.refresh(note)
+    
+    return note
+
+@router.delete("/{plant_id}/notes/{note_id}")
+def delete_plant_note(
+    plant_id: int,
+    note_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Delete a specific plant note.
+    """
+    plant = db.query(Plant).filter(Plant.id == plant_id).first()
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+    
+    note = db.query(PlantNote).filter(
+        PlantNote.id == note_id,
+        PlantNote.plant_id == plant_id
+    ).first()
+    
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+    
+    db.delete(note)
+    db.commit()
+    
+    return {"message": "Note deleted successfully"}

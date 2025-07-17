@@ -31,7 +31,14 @@ export function usePullToRefresh(
                                 target.closest(".plant-image-container") || 
                                 target.closest(".plants-list") || 
                                 target.closest(".profile-main-content") ||
-                                target.closest(".profile-sidebar");
+                                target.closest(".profile-sidebar") ||
+                                target.closest(".activity-log-list") ||
+                                target.closest(".activity-log-container") ||
+                                target.closest(".notes-section") ||
+                                target.closest(".tag-dropdown") ||
+                                target.closest(".description") ||
+                                target.closest("textarea") ||
+                                target.closest("input");
       const container = target.closest(".container") as HTMLElement;
 
       if (container) {
@@ -116,9 +123,9 @@ export function usePullToRefresh(
       }, 300);
     }
 
-    el.addEventListener("touchstart", handleTouchStart);
-    el.addEventListener("touchmove", handleTouchMove);
-    el.addEventListener("touchend", handleTouchEnd);
+    el.addEventListener("touchstart", handleTouchStart, { passive: false });
+    el.addEventListener("touchmove", handleTouchMove, { passive: false });
+    el.addEventListener("touchend", handleTouchEnd, { passive: false });
 
     return () => {
       el.removeEventListener("touchstart", handleTouchStart);

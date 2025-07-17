@@ -85,6 +85,21 @@
     background-color: var(--senary-color);
 }
 
+.react-calendar__tile.advice-day {
+    background-color: var(--decimal-color);
+    color: var(--text-color);
+    font-weight: bold;
+    border-radius: 8px;
+}
+
+.react-calendar__tile.advice-day:hover {
+    background-color: var(--undecimal-color);
+}
+
+.react-calendar__tile.advice-day:enabled:hover, .react-calendar__tile.advice-day:enabled:focus {
+    background-color: var(--undecimal-color);
+}
+
 .both-day {
     background: linear-gradient(
         135deg,
@@ -110,6 +125,37 @@
         135deg,
         var(--nonal-color) 50%,
         var(--senary-color) 50%
+    );
+}
+
+.triple-day {
+    background: linear-gradient(
+        135deg,
+        var(--octal-color) 50%,
+        var(--quinary-color) 50%,
+        var(--decimal-color) 50%
+    );
+    border-radius: 50%;
+    color: white;
+    font-weight: bold;
+    border-radius: 8px;
+}
+
+.react-calendar__tile.triple-day:hover {
+    background: linear-gradient(
+        135deg,
+        var(--nonal-color) 50%,
+        var(--senary-color) 50%,
+        var(--undecimal-color) 50%
+    );
+}
+
+.react-calendar__tile.triple-day:enabled:hover, .react-calendar__tile.triple-day:enabled:focus {
+    background: linear-gradient(
+        135deg,
+        var(--nonal-color) 50%,
+        var(--senary-color) 50%,
+        var(--undecimal-color) 50%
     );
 }
 

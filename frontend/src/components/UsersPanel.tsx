@@ -14,8 +14,9 @@ export default function UsersPanel() {
     const { user, isLoggedIn } = useAuth();
     const [users, setUsers] = useState<User[]>([]);
     const [newUser, setNewUser] = useState({ username: "", email: "", password: "", role: "user" });
+    // Fixed: Use proper state management like PlantsPanel
+    const [editedUsers, setEditedUsers] = useState<{ [userId: number]: Partial<User> }>({});
     const [modalOpen, setModalOpen] = useState(false);
-    const [editedUser, setEditedUser] = useState<Partial<User>>({});
 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 20;
@@ -90,13 +91,40 @@ export default function UsersPanel() {
         }
     };
 
+    // Helper function to get the current value for a field
+    const getCurrentValue = (userId: number, field: keyof User, originalValue: any) => {
+        return editedUsers[userId]?.[field] ?? originalValue;
+    };
+
+    // Helper function to update a specific user's field
+    const updateUserField = (userId: number, field: keyof User, value: any) => {
+        setEditedUsers(prev => ({
+            ...prev,
+            [userId]: {
+                ...prev[userId],
+                [field]: value
+            }
+        }));
+    };
+
     // Update User
     const handleUpdateUser = async (userId: number) => {
+        const changes = editedUsers[userId];
+        if (!changes || Object.keys(changes).length === 0) {
+            toast.info("No changes to save.");
+            return;
+        }
+
         try {
-            await updateUser(userId, editedUser);
+            await updateUser(userId, changes);
             toast.success("User updated successfully.");
             fetchUsers().then(setUsers).catch(() => toast.error("Failed to load users."));
-            setEditedUser({});
+            // Clear the edits for this user
+            setEditedUsers(prev => {
+                const updated = { ...prev };
+                delete updated[userId];
+                return updated;
+            });
         } catch {
             toast.error(`Failed to update user.`);
         }
@@ -138,7 +166,7 @@ export default function UsersPanel() {
         <div className="users-panel">
             {loading && <LoadingOverlay />}
 
-            <h3>User Management</h3>
+            <h2>User Management</h2>
             {authMode === "local" && (
                 <button className="add-btn" onClick={() => setModalOpen(true)}>
                     <FontAwesomeIcon icon={faPlus} />
@@ -154,7 +182,7 @@ export default function UsersPanel() {
                             <th onClick={() => handleSort('username')}>Username</th>
                             <th onClick={() => handleSort('email')}>Email</th>
                             <th onClick={() => handleSort('role')}>Role</th>
-                            {authMode === "local" && <th></th>}
+                            {authMode !== "no" && <th></th>}
                         </tr>
                     </thead>
                     <tbody>
@@ -164,8 +192,8 @@ export default function UsersPanel() {
                                 <td>
                                     <input
                                         type="text"
-                                        value={editedUser.username ?? u.username}
-                                        onChange={(e) => setEditedUser({ ...editedUser, username: e.target.value })}
+                                        value={getCurrentValue(u.id, 'username', u.username)} 
+                                        onChange={(e) => updateUserField(u.id, 'username', e.target.value)}
                                         className="editable-input"
                                         disabled={authMode === "oidc"}
                                     />
@@ -173,17 +201,17 @@ export default function UsersPanel() {
                                 <td>
                                     <input
                                         type="email"
-                                        value={editedUser.email ?? u.email}
-                                        onChange={(e) => setEditedUser({ ...editedUser, email: e.target.value })}
+                                        value={getCurrentValue(u.id, 'email', u.email)} 
+                                        onChange={(e) => updateUserField(u.id, 'email', e.target.value)}
                                         className="editable-input"
                                         disabled={authMode === "oidc"}
                                     />
                                 </td>
                                 <td>
                                     <select
-                                        value={editedUser.role ?? u.role}
-                                        onChange={(e) => setEditedUser({ ...editedUser, role: e.target.value })}
-                                        disabled={authMode === "oidc"}
+                                        value={getCurrentValue(u.id, 'role', u.role)} 
+                                        onChange={(e) => updateUserField(u.id, 'role', e.target.value)}
+                                        disabled={authMode === "no"}
                                         className="editable-select"
                                     >
                                         {roles.map((role) => (
@@ -191,7 +219,7 @@ export default function UsersPanel() {
                                         ))}
                                     </select>
                                 </td>
-                                {authMode === "local" && (
+                                {authMode !== "no" && (
                                     <td className="action-buttons">
                                         <button className="update-btn" onClick={() => handleUpdateUser(u.id)}>
                                             <FontAwesomeIcon icon={faSave} />

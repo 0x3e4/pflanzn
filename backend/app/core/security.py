@@ -41,14 +41,14 @@ def create_access_token(data: dict, expires_delta: timedelta) -> str:
     to_encode.update({"exp": expire})
 
     new_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    username = to_encode.get("sub")
+    identifier = to_encode.get("sub")
 
     if is_session_management_enabled():
         # Invalidate previous session
-        redis_client.delete(f"session:{username}")  
+        redis_client.delete(f"session:{identifier}")  
         
         # Store new session
-        redis_client.setex(f"session:{username}", int(expires_delta.total_seconds()), new_token)
+        redis_client.setex(f"session:{identifier}", int(expires_delta.total_seconds()), new_token)
 
     return new_token
 
@@ -69,50 +69,68 @@ def decode_token(token: str) -> dict:
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-def validate_session(username: str, token: str, request: Request):
+def validate_session(identifier: str, token: str, request: Request):
     """Checks if session is valid and detects token theft."""
     if is_session_management_enabled():
-        stored_token = redis_client.get(f"session:{username}")
+        stored_token = redis_client.get(f"session:{identifier}")
         if not stored_token or stored_token != token:
-            redis_client.delete(f"session:{username}")
+            redis_client.delete(f"session:{identifier}")
             raise HTTPException(status_code=401, detail="Invalid or expired session")
 
         # Optional: Compare User-Agent/IP for anomaly detection
         user_agent = request.headers.get("User-Agent", "unknown")
         client_ip = request.client.host
 
-        session_fingerprint = redis_client.get(f"session_fingerprint:{username}")
+        session_fingerprint = redis_client.get(f"session_fingerprint:{identifier}")
         expected_fingerprint = f"{client_ip}|{user_agent}"
 
         if session_fingerprint and session_fingerprint != expected_fingerprint:
-            redis_client.delete(f"session:{username}")  # Kill session
+            redis_client.delete(f"session:{identifier}")  # Kill session
+            redis_client.delete(f"session_fingerprint:{identifier}")
             raise HTTPException(status_code=401, detail="Session anomaly detected")
-            logger.warning(f"Session anomaly detected for {username}")
 
         # Store fingerprint
-        redis_client.setex(f"session_fingerprint:{username}", 1800, expected_fingerprint)
+        redis_client.setex(f"session_fingerprint:{identifier}", 1800, expected_fingerprint)
 
 # ==============================================================================
 # Current User Helpers
 # ==============================================================================
 
-def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
+def get_current_user(request: Request, db: Session = Depends(get_db)) -> Optional[User]:
     """Retrieves the currently authenticated user from Secure Cookie."""
+    
+    # Check if auth is disabled
+    if AUTH_MODE == "no":
+        return None
+    
     token = request.cookies.get("access_token")
     if not token:
         raise HTTPException(status_code=401, detail="Missing access token")
 
-    payload = decode_token(token)
-    username = payload.get("sub")
+    try:
+        payload = decode_token(token)
+        identifier = payload.get("sub")
+        
+        if not identifier:
+            raise HTTPException(status_code=401, detail="Invalid token payload")
 
-    # Validate session using Redis before returning the user
-    validate_session(username, token, request)
+        # Validate session using Redis before returning the user
+        validate_session(identifier, token, request)
 
-    user = db.query(User).filter(User.username == username).first()
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
+        # Try to find user by both username and email
+        user = db.query(User).filter(
+            (User.username == identifier) | (User.email == identifier)
+        ).first()
+        
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
 
-    return user
+        return user
+        
+    except HTTPException:
+        raise  # Re-raise HTTPExceptions as-is
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:
     """Ensures the current user is an admin."""

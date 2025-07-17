@@ -18,9 +18,12 @@ export const createPlant = async (name: string, species: string, locationId?: nu
 };
 
 // Upload image
-export const uploadPlantImage = async (plantId: number, file: File) => {
+export const uploadPlantImage = async (plantId: number, file: File, uploadedAt?: string) => {
     const formData = new FormData();
     formData.append("file", file);
+    if (uploadedAt) {
+        formData.append("uploaded_at", uploadedAt);
+    }
     const response = await apiClient.post(`${API_BASE}/${plantId}/upload_image`, formData);
     return response.data;
 };
@@ -73,9 +76,31 @@ export const generatePlantDescription = async (plantId: number): Promise<{ descr
 };
 
 // Care Helper
-export const generateCareAdvice = async (plantId: number): Promise<{ advice: string }> => {
-    const response = await apiClient.post(`/plants/${plantId}/care_helper`);
+export const generateCareAdvice = async (plantId: number): Promise<{
+    id: number;
+    advice_text: string;
+    generated_at: string;
+}> => {
+    const response = await apiClient.post(`${API_BASE}/${plantId}/care_advice`);
     return response.data;
+};
+
+// Get care advice history
+export const fetchCareAdvice = async (
+    plantId: number, 
+    params: { limit?: number; offset?: number } = {}
+): Promise<Array<{
+    id: number;
+    advice_text: string;
+    generated_at: string;
+}>> => {
+    const response = await apiClient.get(`${API_BASE}/${plantId}/care_advice`, { params });
+    return response.data;
+};
+
+// Delete care advice
+export const deleteCareAdvice = async (plantId: number, adviceId: number) => {
+    await apiClient.delete(`${API_BASE}/${plantId}/care_advice/${adviceId}`);
 };
 
 // Water plant
@@ -128,4 +153,62 @@ export const fetchIdentifications = async (
   });
 
   return response.data;
+};
+
+// Plant Notes CRUD
+export const createPlantNote = async (plantId: number, noteText: string): Promise<{
+    id: number;
+    note_text: string;
+    created_at: string;
+}> => {
+    const response = await apiClient.post(`${API_BASE}/${plantId}/notes`, { note_text: noteText });
+    return response.data;
+};
+
+export const fetchPlantNotes = async (
+    plantId: number,
+    params: { limit?: number; offset?: number } = {}
+): Promise<Array<{
+    id: number;
+    note_text: string;
+    created_at: string;
+}>> => {
+    const response = await apiClient.get(`${API_BASE}/${plantId}/notes`, { params });
+    return response.data;
+};
+
+export const updatePlantNote = async (
+    plantId: number, 
+    noteId: number, 
+    noteText: string
+): Promise<{
+    id: number;
+    note_text: string;
+    created_at: string;
+}> => {
+    const response = await apiClient.put(`${API_BASE}/${plantId}/notes/${noteId}`, { note_text: noteText });
+    return response.data;
+};
+
+export const deletePlantNote = async (plantId: number, noteId: number) => {
+    await apiClient.delete(`${API_BASE}/${plantId}/notes/${noteId}`);
+};
+
+// Activities for calendar/activity log
+export const fetchPlantActivities = async (
+    plantId: number,
+    params: {
+        limit?: number;
+        offset?: number;
+    } = {}
+): Promise<Array<{
+    id: string;
+    plant_id: number;
+    plant_name: string;
+    activity_type: 'watering' | 'care_advice' | 'image_upload' | 'note';
+    activity_data: any;
+    timestamp: string;
+}>> => {
+    const response = await apiClient.get(`${API_BASE}/${plantId}/activities`, { params });
+    return response.data;
 };

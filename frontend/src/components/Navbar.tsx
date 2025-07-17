@@ -115,11 +115,11 @@ export default function Navbar() {
                     <Link to="/plants" onClick={() => setMenuOpen(false)}>Plants</Link>
 
                     {!loading && (
-                        (authMode === "no" || authMode === "oidc" || (authMode === "local" && isLoggedIn)) ? (
+                        (authMode === "no" || (authMode === "oidc" && isLoggedIn) || (authMode === "local" && isLoggedIn)) ? (
                             <Link to="/manage" onClick={() => setMenuOpen(false)}>
                                 Manage
                             </Link>
-                        ) : authMode === "local" ? (
+                        ) : authMode !== "no" ? (
                             <Link to="/login" onClick={() => setMenuOpen(false)}>
                                 Login
                             </Link>

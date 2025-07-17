@@ -39,6 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
     
             try {
+                await refreshToken();
                 await fetchProfile();
             } catch (error) {
                 console.error("Error fetching profile:", error);
@@ -84,16 +85,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     setUser(response.data);
                     setIsLoggedIn(true);
                 }
-                // Refresh token only if the user is authenticated
-                await refreshToken();
             } else {
                 setUser(null);
                 setIsLoggedIn(false);
             }
         } catch (error: any) {
             if (error.response?.status === 401) {
+                console.warn("Access token expired or invalid. Trying refresh...");
+                const refreshed = await refreshToken();
+
+                if (refreshed) {
+                    try {
+                        // Retry fetching profile after refresh
+                        const retryResponse = await apiClient.get<User>("/users/profile");
+                        if (retryResponse.data) {
+                            setUser(retryResponse.data);
+                            setIsLoggedIn(true);
+                            return;
+                        }
+                    } catch (retryError) {
+                        console.error("Retry fetchProfile failed:", retryError);
+                    }
+                }
+
+                // If refresh or retry failed
                 setUser(null);
-                setIsLoggedIn(false);                  
+                setIsLoggedIn(false);
+
                 if (authMode === "oidc") {
                     window.location.href = "/api/auth/oidc-login";
                 }

@@ -37,7 +37,7 @@
     flex-wrap: wrap;
 }
 
-.delete-plant-btn, .archive-plant-btn, .generate-description-btn, .ai-care-helper-btn, .water-plant-btn, .identify-plant-btn, .file-input-plant-btn {
+.delete-plant-btn, .archive-plant-btn, .generate-description-btn, .ai-care-helper-btn, .water-plant-btn, .identify-plant-btn, .file-input-plant-btn, .notes-btn {
     flex-shrink: 0;
     white-space: nowrap;
     width: auto;
@@ -154,6 +154,235 @@ h3 {
     cursor: text;
 }
 
+/* Activity Feed Styles (renamed from Activity Log) */
+.activity-log-container {
+    margin-top: 2rem;
+}
+
+.activity-log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.activity-log-header h3 {
+    margin: 0;
+    color: var(--text-color);
+}
+
+.activity-log-list {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--background-color);
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+}
+
+.activity-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: background-color 0.2s ease;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-item:hover:not(.activity-skeleton) {
+    background-color: var(--secondary-background-color);
+}
+
+.activity-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.activity-icon.watering {
+    background-color: var(--octal-color);
+    color: white;
+}
+
+.activity-icon.care_advice {
+    background-color: var(--decimal-color);
+    color: white;
+}
+
+.activity-icon.image_upload {
+    background-color: var(--quinary-color);
+    color: white;
+}
+
+.activity-icon.note {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 4px;
+}
+
+.activity-title {
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0;
+    font-size: 14px;
+    flex: 1;
+}
+
+.activity-timestamp {
+    color: var(--text-color);
+    opacity: 0.6;
+    font-size: 12px;
+    margin: 0;
+    white-space: nowrap;
+    margin-left: 8px;
+}
+
+.activity-description {
+    color: var(--text-color);
+    opacity: 0.8;
+    font-size: 13px;
+    margin: 0;
+    line-height: 1.4;
+    text-align: justify;
+}
+
+.activity-log-empty {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-color);
+    opacity: 0.6;
+    font-style: italic;
+}
+
+/* Skeleton Loading Styles */
+.activity-skeleton {
+    pointer-events: none;
+}
+
+.activity-icon.skeleton {
+    background-color: var(--border-color);
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-line {
+    background-color: var(--border-color);
+    border-radius: 4px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+    margin-bottom: 6px;
+}
+
+.skeleton-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 6px;
+}
+
+.skeleton-title {
+    height: 14px;
+    width: 60%;
+}
+
+.skeleton-timestamp {
+    height: 10px;
+    width: 30%;
+}
+
+.skeleton-description {
+    height: 12px;
+    width: 90%;
+    margin-bottom: 0;
+}
+
+@keyframes skeleton-pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.4;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Notes Section Styles */
+.notes-section {
+    margin-top: 2rem;
+}
+
+.notes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.add-note-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.add-note-btn:hover {
+    background: var(--primary-color-dark, var(--primary-color));
+    opacity: 0.9;
+}
+
+.note-input, .archive-reason {
+    width: 100%;
+    min-height: 80px;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--background-color);
+    color: var(--text-color);
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical;
+    outline: none;
+}
+
+.note-input:focus, .archive-reason:focus {
+    border-color: var(--primary-color);
+    background: var(--secondary-background-color);
+}
+
+.note-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.save-note-btn:hover {
+    opacity: 0.9;
+}
+
 @media (max-width: 992px) {
     .plant-columns {
         flex-direction: column;
@@ -176,6 +405,12 @@ h3 {
 
     .delete-plant-btn {
         margin-left: auto;
+    }
+
+    .notes-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
     }
 }
 
@@ -208,8 +443,8 @@ h3 {
     color: var(--text-color);
 }
 
-/* DELETE MODAL (copied & adapted from watering log) */
-.delete-plant-modal-overlay, .archive-plant-modal-overlay {
+/* Modal */
+.delete-plant-modal-overlay, .archive-plant-modal-overlay, .notes-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -222,7 +457,7 @@ h3 {
     z-index: 1000;
 }
 
-.delete-plant-modal, .archive-plant-modal {
+.delete-plant-modal, .archive-plant-modal, .notes-modal {
     background: var(--secondary-background-color);
     padding: 20px;
     border-radius: 8px;
@@ -233,18 +468,27 @@ h3 {
     max-width: 400px;
 }
 
-.delete-plant-modal-buttons, .archive-plant-modal-buttons {
+.delete-plant-modal-buttons, .archive-plant-modal-buttons, .note-actions {
     display: flex;
     gap: 10px;
     margin-top: 15px;
     justify-content: center;
 }
 
-.delete-plant-confirm, .delete-plant-cancel, .archive-plant-confirm, .archive-plant-cancel {
+.delete-plant-confirm, .delete-plant-cancel, .archive-plant-confirm, .archive-plant-cancel, .save-note-btn, .notes-modal-close {
     padding: 10px 15px;
     border: none;
     cursor: pointer;
     border-radius: 6px;
+}
+
+.save-note-btn {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.save-note-btn:hover {
+    background-color: var(--secondary-color);
 }
 
 .delete-plant-confirm, .archive-plant-confirm  {
@@ -252,7 +496,7 @@ h3 {
     color: white;
 }
 
-.delete-plant-cancel, .archive-plant-cancel {
+.delete-plant-cancel, .archive-plant-cancel, .notes-modal-close {
     background-color: var(--quinary-color);
     color: white;
 }
@@ -261,8 +505,12 @@ h3 {
     background-color: var(--quaternary-color);
 }
 
-.delete-plant-cancel:hover, .archive-plant-cancel:hover {
+.delete-plant-cancel:hover, .archive-plant-cancel:hover, .notes-modal-close:hover {
     background-color: var(--senary-color);
+}
+
+.archive-modal-header, .delete-modal-header, .notes-modal-header {
+    margin-bottom: 10px;
 }
 
 /* Tags container - display as flex row */
@@ -412,4 +660,12 @@ h3 {
     background: rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(4px);
     z-index: 8000;
+}
+
+.Toastify__close-button button:hover {
+    background-color: none; 
+}
+
+.Toastify__close-button button svg {
+    color: white; 
 }

@@ -182,11 +182,9 @@
 .data-table input,
 .data-table select {
     border: none;
-    background: transparent;
     color: var(--text-color);
     font-size: inherit;
     width: 100%;
-    padding: 4px 0; /* Small padding for better appearance */
     margin: 0;
     outline: none;
     line-height: 1.4;
@@ -256,6 +254,7 @@
     padding: 15px;
     background: var(--background-color);
     border-radius: 0 0 8px 8px;
+    min-width: 600px;
 }
 
 .pagination button {
@@ -449,29 +448,67 @@
         border-bottom: 1px solid var(--border-color);
         background-color: var(--background-color);
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch; 
+        scrollbar-width: none; 
+        -ms-overflow-style: none;
+    }
+
+    /* Hide scrollbar on WebKit browsers (Chrome, Safari) */
+    .profile-sidebar::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Alternative solution: If you want to prevent scrolling entirely */
+    .profile-sidebar-no-scroll {
+        width: 100%;
+        padding: 10px 0;
+        box-shadow: none;
+        border-bottom: 1px solid var(--border-color);
+        background-color: var(--background-color);
+        overflow: hidden; 
+    }
+
+    .profile-sidebar-no-scroll ul {
+        display: flex;
+        width: 100%;
+        gap: 10px;
+        padding: 0 10px;
+        justify-content: space-around; 
+        flex-wrap: wrap; 
+    }
+
+    .profile-sidebar-no-scroll li {
+        flex: 1; 
+        min-width: 0; 
+        text-align: center;
+        padding: 8px 12px;
+        font-size: 14px;
+        margin: 0;
+        white-space: nowrap;
         overflow: hidden;
+        text-overflow: ellipsis; 
     }
     .profile-sidebar h3 {
         display: none;
     }
     .profile-sidebar ul {
         display: flex;
-        width: max-content; /* Allow content to determine width */
-        gap: 10px; /* Add gap between items */
+        width: max-content;
+        gap: 10px;
         padding: 0 10px;
     }
     .profile-sidebar li {
-        flex-shrink: 0; /* Prevent items from shrinking */
+        flex-shrink: 0; 
         text-align: center;
         padding: 8px 12px;
         font-size: 14px;
         margin: 0;
-        white-space: nowrap; /* Prevent text wrapping */
+        white-space: nowrap; 
     }
     
     /* Show management subsections on mobile but styled differently */
     .sidebar-subsection {
-        padding-left: 12px !important; /* Remove the large left padding */
+        padding-left: 12px !important; 
         font-size: 14px !important;
     }
     

@@ -71,7 +71,7 @@ export default function Plants() {
   } | null>(null);
 
   const [selectedDateTime, setSelectedDateTime] = useState<string>(
-    DateTime.now().toISO({ includeOffset: false }) ?? ""
+    DateTime.now().setZone(import.meta.env.VITE_TZ).toISO({ includeOffset: false }) ?? ""
   );
 
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -159,16 +159,21 @@ export default function Plants() {
       return;
     }
 
-    const currentDateTime = DateTime.now().toISO();
+    // Convert current local time to UTC before sending
+    const currentDateTimeUTC = DateTime.now().toUTC().toISO({ includeOffset: false });
 
     try {
-        await waterPlant(plantId, { watered_at: currentDateTime });
+        await waterPlant(plantId, { watered_at: currentDateTimeUTC });
+
+        const currentDateTimeLocale = DateTime.fromISO(currentDateTimeUTC, { zone: 'utc' })
+          .setZone(import.meta.env.VITE_TZ)
+          .toISO({ includeOffset: false });
 
         // Update only the specific plant's data without refetching everything
         setPlants(prevPlants => 
           prevPlants.map(plant => 
             plant.id === plantId 
-              ? { ...plant, last_watered: currentDateTime }
+              ? { ...plant, last_watered: currentDateTimeLocale }
               : plant
           )
         );
@@ -236,22 +241,27 @@ export default function Plants() {
       toast.error("You must be logged in to water plants.");
       return;
     }
-  
+
     if (filteredPlants.length === 0) {
       toast.warning("No plants to water.");
       return;
     }
-  
+
     try {
+      // Convert the user's selected local time to UTC for storage
+      const wateringDateTimeUTC = DateTime.fromISO(selectedDateTime, { zone: import.meta.env.VITE_TZ })
+        .toUTC()
+        .toISO({ includeOffset: false });
+
       for (const plant of filteredPlants) {
-        await waterPlant(plant.id, { watered_at: selectedDateTime });
+        await waterPlant(plant.id, { watered_at: wateringDateTimeUTC });
       }
       toast.success(`Watered ${filteredPlants.length} plants!`);
       fetchPlantsFromService();
     } catch (error) {
       toast.error((error as Error).message || "Failed to water plants.");
     }
-  };  
+  };
 
   const handleUploadImageForPlant = async (plantId: number, e: React.ChangeEvent<HTMLInputElement>) => {
     if (!isLoggedIn) {
@@ -562,7 +572,7 @@ export default function Plants() {
             const imageLoaded = loadedImages.has(plant.id);
 
             const timezone = import.meta.env.VITE_TZ
-            const locale = import.meta.env.VITE_Locale
+            const locale = import.meta.env.VITE_LOCALE
             const lastWateredText = plant.last_watered
               ? new Date(plant.last_watered).toLocaleString(locale, {
                   timeZone: timezone,
@@ -574,7 +584,6 @@ export default function Plants() {
                   minute: '2-digit',
                 })
               : "Not watered yet";
-
           return (
             <div key={plant.id} className={`plant-card ${plant.is_archived ? "archived" : ""}`}>
               <Link to={`/plant/${plant.id}`}>

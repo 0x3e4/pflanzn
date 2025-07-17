@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 from datetime import datetime
 
@@ -72,20 +72,8 @@ class PlantImageResponse(BaseModel):
     class Config:
         from_attributes = True
 
-class PlantResponse(BaseModel):
-    id: int
-    name: str
-    species: Optional[str]
-    description: Optional[str] = None
-    images: List[PlantImageResponse] = []
-    waterings: List["PlantWateringResponse"] = []
-    last_watered: Optional[datetime] = None
-    tags: Optional[List[TagResponse]] = []
-    is_archived: Optional[bool] = None
-    archive_reason: Optional[str] = None
-
-    class Config:
-        from_attributes = True
+class PlantImageCreate(BaseModel):
+    uploaded_at: Optional[datetime] = None
 
 class ArchiveRequest(BaseModel):
     archive: bool
@@ -125,5 +113,59 @@ class PlantIdentificationResponse(PlantIdentificationCreate):
 
     class Config:
         from_attributes = True
+
+class PlantCareAdviceCreate(BaseModel):
+    pass
+
+class PlantCareAdviceResponse(BaseModel):
+    id: int
+    advice_text: str
+    generated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+class PlantNoteCreate(BaseModel):
+    note_text: str
+
+class PlantNoteResponse(BaseModel):
+    id: int
+    note_text: str
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+class ActivityResponse(BaseModel):
+    id: str
+    plant_id: int
+    plant_name: str
+    activity_type: str
+    activity_data: dict
+    timestamp: str
+    
+    class Config:
+        from_attributes = True
+
+class PlantResponse(BaseModel):
+    id: int
+    name: str
+    species: Optional[str]
+    description: Optional[str] = None
+    images: List[PlantImageResponse] = []
+    waterings: List[PlantWateringResponse] = []
+    care_advice: List[PlantCareAdviceResponse] = []
+    notes: List[PlantNoteResponse] = []
+    last_watered: Optional[datetime] = None
+    tags: Optional[List[TagResponse]] = []
+    is_archived: Optional[bool] = None
+    archive_reason: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
 
 PlantResponse.model_rebuild()

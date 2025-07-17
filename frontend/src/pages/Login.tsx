@@ -24,9 +24,10 @@ const Login: React.FC = () => {
         }
     };
 
-    if (authMode === "local") {
+    if (authMode !== "no") {
         return (
             <div className="login-container">
+                {authMode === "local" && (
                 <form className="login-form" onSubmit={handleSubmit}>
                     <h2>Login</h2>
                     <input
@@ -42,6 +43,15 @@ const Login: React.FC = () => {
                     />
                     <button type="submit">Login</button>
                 </form>
+                )}
+                {authMode === "oidc" && (
+                    <button 
+                        onClick={() => window.location.href = "/api/auth/oidc-login"}
+                        className="oidc-btn"
+                    >
+                        Login with OIDC
+                    </button>
+                )}
             </div>
         );
     };
