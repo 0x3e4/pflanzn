@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, Form
 from sqlalchemy.orm import Session
+from app.core.config import settings
 from app.database import get_db
 from app.models import Plant, PlantImage, PlantWatering, PlantCareAdvice, PlantNote, Tag, PlantIdentification
 from app.schemas import (
@@ -28,10 +29,8 @@ from dotenv import load_dotenv
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
-PLANT_FOLDER = os.path.join(UPLOAD_FOLDER, "plants")
-IDENTIFICATION_FOLDER = os.path.join(UPLOAD_FOLDER, "identifications")
+PLANT_FOLDER = os.path.join(settings.UPLOAD_FOLDER, "plants")
+IDENTIFICATION_FOLDER = os.path.join(settings.UPLOAD_FOLDER, "identifications")
 
 os.makedirs(PLANT_FOLDER, exist_ok=True)
 os.makedirs(IDENTIFICATION_FOLDER, exist_ok=True)
@@ -149,7 +148,7 @@ def delete_plant(plant_id: int, db: Session = Depends(get_db)):
     # Remove associated images from storage
     for image in plant.images:
         # Remove image file from disk
-        absolute_image_path = os.path.join(BASE_DIR, "uploads", image.image_path)
+        absolute_image_path = os.path.join(settings.UPLOAD_FOLDER, image.image_path)
         if os.path.exists(absolute_image_path):
             os.remove(absolute_image_path)
 
@@ -451,7 +450,7 @@ def delete_plant_image(plant_id: int, image_id: int, db: Session = Depends(get_d
         raise HTTPException(status_code=404, detail="Image not found for this plant")
 
     # Remove image file from disk
-    absolute_image_path = os.path.join(BASE_DIR, "uploads", image.image_path)
+    absolute_image_path = os.path.join(settings.UPLOAD_FOLDER, image.image_path)
     if os.path.exists(absolute_image_path):
         os.remove(absolute_image_path)
 

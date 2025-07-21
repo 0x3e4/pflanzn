@@ -108,7 +108,12 @@ export default function UsersPanel() {
     };
 
     // Update User
-    const handleUpdateUser = async (userId: number) => {
+    const handleUpdateUser = async (userId: number, username: string) => {
+        if (username === import.meta.env.VITE_ADMIN_USER) {
+            toast.error("Cannot update the default admin.");
+            return;
+        }
+
         const changes = editedUsers[userId];
         if (!changes || Object.keys(changes).length === 0) {
             toast.info("No changes to save.");
@@ -221,7 +226,7 @@ export default function UsersPanel() {
                                 </td>
                                 {authMode !== "no" && (
                                     <td className="action-buttons">
-                                        <button className="update-btn" onClick={() => handleUpdateUser(u.id)}>
+                                        <button className="update-btn" onClick={() => handleUpdateUser(u.id, u.username)}>
                                             <FontAwesomeIcon icon={faSave} />
                                         </button>
                                         <button className="delete-btn" onClick={() => handleDeleteUser(u.id, u.username)}>

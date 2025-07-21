@@ -26,7 +26,7 @@ AUTH_MODE = settings.VITE_AUTH_MODE
 OIDC_PROVIDER_URL = settings.OIDC_PROVIDER_URL
 OIDC_CLIENT_ID = settings.OIDC_CLIENT_ID
 OIDC_CLIENT_SECRET = settings.OIDC_CLIENT_SECRET
-OIDC_REDIRECT_URI = settings.DOMAIN + "/api/auth/oidc/callback"
+OIDC_REDIRECT_URI = settings.VITE_DOMAIN + "/api/auth/oidc/callback"
 
 # Redis client
 REDIS_URL = settings.REDIS_URL

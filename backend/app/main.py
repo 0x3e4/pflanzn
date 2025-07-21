@@ -39,17 +39,17 @@ app.add_middleware(
 
 # Add SessionMiddleware BEFORE mounting routers
 if os.getenv("VITE_AUTH_MODE") == "oidc":
+    same_site_setting = "none" if "://" in settings.OIDC_PROVIDER_URL and not settings.VITE_DOMAIN.endswith(settings.OIDC_PROVIDER_URL.split("//")[1]) else "strict"
+
     app.add_middleware(
         SessionMiddleware,
         secret_key=settings.SECRET_KEY,
-        same_site="strict",
+        same_site=same_site_setting,
+        max_age=3600,
         https_only=True,
     )
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
-
-app.mount("/api/uploads", StaticFiles(directory=UPLOAD_FOLDER), name="uploads")
+app.mount("/api/uploads", StaticFiles(directory=settings.UPLOAD_FOLDER), name="uploads")
 
 # Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])

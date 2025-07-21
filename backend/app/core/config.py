@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     OIDC_PROVIDER_URL: str = os.getenv("OIDC_PROVIDER_URL")
     OIDC_CLIENT_ID: str = os.getenv("OIDC_CLIENT_ID")
     OIDC_CLIENT_SECRET: str = os.getenv("OIDC_CLIENT_SECRET")
-    DOMAIN: str = os.getenv("DOMAIN")
+    VITE_DOMAIN: str = os.getenv("VITE_DOMAIN")
     REDIS_URL: str = os.getenv("REDIS_URL", "localhost")
     PLANTNET_API_KEY: str = os.getenv("PLANTNET_API_KEY")
     PLANTNET_LANGUAGE: str = os.getenv("PLANTNET_LANGUAGE", "en")
@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     CLAUDE_MODEL_NAME: str = os.getenv("CLAUDE_MODEL_NAME", "claude-opus-4-20250514")
     OLLAMA_URL: str = os.getenv("OLLAMA_URL")
     OLLAMA_MODEL_NAME: str = os.getenv("OLLAMA_MODEL_NAME")
+    BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    UPLOAD_FOLDER: str = os.path.join(BASE_DIR, "uploads")
     
     class Config:
         env_file = ".env"

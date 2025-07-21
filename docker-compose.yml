@@ -6,7 +6,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./backend:/app
+      - ./backend:/backend
     depends_on:
       mariadb:
         condition: service_healthy
@@ -23,8 +23,8 @@ services:
       - .env
     restart: always
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - ./frontend:/frontend
+      - /frontend/node_modules
     depends_on:
       - mariadb
       - backend
