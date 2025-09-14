@@ -159,6 +159,55 @@
     );
 }
 
+.quadruple-day {
+    background: linear-gradient(
+        135deg,
+        var(--octal-color) 50%,
+        var(--quinary-color) 50%,
+        var(--decimal-color) 50%,
+        var(--primary-color) 50%
+    );
+    border-radius: 50%;
+    color: white;
+    font-weight: bold;
+    border-radius: 8px;
+}
+
+.react-calendar__tile.quadruple-day:hover {
+    background: linear-gradient(
+        135deg,
+        var(--nonal-color) 50%,
+        var(--senary-color) 50%,
+        var(--undecimal-color) 50%,
+        var(--secondary-color) 50%
+    );
+}
+
+.react-calendar__tile.quadruple-day:enabled:hover, .react-calendar__tile.quadruple-day:enabled:focus {
+    background: linear-gradient(
+        135deg,
+        var(--nonal-color) 50%,
+        var(--senary-color) 50%,
+        var(--undecimal-color) 50%,
+        var(--secondary-color) 50%
+    );
+}
+
+/* Notes days */
+.react-calendar__tile.note-day {
+  background-color: var(--primary-color);
+  color: var(--text-color);
+  font-weight: bold;
+  border-radius: 8px;
+}
+
+.react-calendar__tile.note-day:hover,
+.react-calendar__tile.note-day:enabled:hover,
+.react-calendar__tile.note-day:enabled:focus {
+  background-color: var(--secondary-color);
+  color: var(--text-color);
+}
+
 .watering-tooltip-content {
     text-align: left;
     padding: 4px 8px;

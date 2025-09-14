@@ -20,6 +20,11 @@ class User(Base):
     role = Column(String(50), default="user")
     auth_type = Column(String(10), default="local", nullable=False)
 
+    waterings_created = relationship("PlantWatering", back_populates="created_by")
+    images_uploaded = relationship("PlantImage", back_populates="uploaded_by")
+    care_advice_created = relationship("PlantCareAdvice", back_populates="created_by")
+    notes_created = relationship("PlantNote", back_populates="created_by")
+
 class Plant(Base):
     __tablename__ = "plants"
     id = Column(Integer, primary_key=True, index=True)
@@ -48,7 +53,10 @@ class PlantWatering(Base):
     plant_id = Column(Integer, ForeignKey("plants.id"), nullable=False)
     watered_at = Column(DateTime, nullable=False)
 
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+
     plant = relationship("Plant", back_populates="waterings")
+    created_by = relationship("User", back_populates="waterings_created")
 
     __table_args__ = (
         Index("idx_plant_waterings_plant_id", "plant_id"),
@@ -60,7 +68,11 @@ class PlantImage(Base):
     plant_id = Column(Integer, ForeignKey("plants.id"), nullable=False)
     image_path = Column(String(512), nullable=False)
     uploaded_at = Column(DateTime, default=func.now())
+
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+
     plant = relationship("Plant", back_populates="images")
+    uploaded_by = relationship("User", back_populates="images_uploaded")
 
 class PlantIdentification(Base):
     __tablename__ = "plant_identifications"
@@ -86,7 +98,10 @@ class PlantCareAdvice(Base):
     advice_text = Column(Text, nullable=False)
     generated_at = Column(DateTime, default=func.now())
     
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+
     plant = relationship("Plant", back_populates="care_advice")
+    created_by = relationship("User", back_populates="care_advice_created")
     
     __table_args__ = (
         Index("idx_plant_care_advice_plant_id", "plant_id"),
@@ -101,7 +116,10 @@ class PlantNote(Base):
     note_text = Column(Text, nullable=False)
     created_at = Column(DateTime, default=func.now())
     
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+
     plant = relationship("Plant", back_populates="notes")
+    created_by = relationship("User", back_populates="notes_created")
     
     __table_args__ = (
         Index("idx_plant_notes_plant_id", "plant_id"),

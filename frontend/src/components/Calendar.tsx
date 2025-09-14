@@ -3,10 +3,10 @@ import 'react-calendar/dist/Calendar.css';
 import "../styles/Calendar.css";
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { deleteWatering, deletePlantImage, deleteCareAdvice } from '../services/PlantService';
-import { PlantWatering, PlantImage, PlantCareAdvice } from '../types/Plant';
+import { deleteWatering, deletePlantImage, deleteCareAdvice, deletePlantNote } from '../services/PlantService';
+import { PlantWatering, PlantImage, PlantCareAdvice, PlantNote } from '../types/Plant';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash, faCircleXmark, faDroplet, faCamera } from "@fortawesome/free-solid-svg-icons";
+import { faTrash, faCircleXmark, faDroplet, faCamera, faStickyNote, faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
 import { toast } from 'react-toastify';
 import { useAuth } from "../context/AuthContext";
 import { setOverlayOpen } from "../services/overlayControl";
@@ -15,7 +15,9 @@ interface Props {
     waterings: PlantWatering[];
     images: PlantImage[];
     careadvice: PlantCareAdvice[];
+    notes: PlantNote[];
     plantId: number;
+    onChanged?: () => void;
 }
 
 interface TooltipPosition {
@@ -24,7 +26,7 @@ interface TooltipPosition {
     width: number;
 }
 
-function WateringTooltipOverlay({ content, position }: { content: React.ReactNode; position: TooltipPosition }) {
+function TooltipOverlay({ content, position, innerRef }: { content: React.ReactNode; position: TooltipPosition; innerRef?: React.Ref<HTMLDivElement>; }) {
     const style: React.CSSProperties = {
         position: 'absolute',
         top: position.top + position.width + 6,
@@ -43,23 +45,24 @@ function WateringTooltipOverlay({ content, position }: { content: React.ReactNod
     };    
 
     return createPortal(
-        <div style={style} className="watering-tooltip-overlay">
+        <div ref={innerRef} style={style} className="watering-tooltip-overlay">
             {content}
         </div>,
         document.body
     );
 }
 
-export default function WateringLogCalendar({ waterings, images, careadvice, plantId }: Props) {
+export default function LogCalendar({ waterings, images, careadvice, notes, plantId, onChanged }: Props) {
     const { isLoggedIn } = useAuth();
 
     const [localWaterings, setLocalWaterings] = useState<PlantWatering[]>(waterings);
     const [uploadedImages, setUploadedImages] = useState<PlantImage[]>(images);
     const [careAdvices, setCareAdvices] = useState<PlantCareAdvice[]>(careadvice);
+    const [plantNotes, setPlantNotes] = useState<PlantNote[]>(notes);
     const [hoveredDate, setHoveredDate] = useState<string | null>(null);
     const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition | null>(null);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-    const [deleteTarget, setDeleteTarget] = useState<{ type: "watering" | "image" | "advice"; id: number } | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<{ type: "watering" | "image" | "advice" | "note"; id: number } | null>(null);
 
     const tooltipRef = useRef<HTMLDivElement>(null);
 
@@ -67,7 +70,8 @@ export default function WateringLogCalendar({ waterings, images, careadvice, pla
         setLocalWaterings(waterings);
         setUploadedImages(images);
         setCareAdvices(careadvice);
-    }, [waterings, images]);
+        setPlantNotes(notes);
+    }, [waterings, images, careadvice, notes]);
 
     const locale = import.meta.env.VITE_LOCALE;
     const timezone = import.meta.env.VITE_TZ;
@@ -114,24 +118,35 @@ export default function WateringLogCalendar({ waterings, images, careadvice, pla
         return acc;
     }, {} as Record<string, PlantCareAdvice[]>);
 
+    const noteDates = plantNotes.reduce((acc, note) => {
+      const dateKey = formatDateKey(new Date(note.created_at));
+      if (!acc[dateKey]) acc[dateKey] = [];
+      acc[dateKey].push(note);
+      return acc;
+    }, {} as Record<string, PlantNote[]>);
+
     const tileClassName = ({ date }: { date: Date }) => {
         const dateKey = formatDateKey(date);
-        const hasWatering = !!wateredDates[dateKey];
-        const hasImage = !!imageDates[dateKey];
-        const hasAdvice = !!adviceDates[dateKey];
-
-        if (hasWatering && hasImage) return 'both-day';
-        if (hasWatering && hasImage && hasAdvice) return 'triple-day';
-        if (hasWatering) return 'watered-day';
-        if (hasImage) return 'image-day';
-        if (hasAdvice) return 'advice-day';
-        return '';
+        const classes: string[] = [];
+        if (wateredDates[dateKey]) classes.push('watered-day');
+        if (imageDates[dateKey])   classes.push('image-day');
+        if (adviceDates[dateKey])  classes.push('advice-day');
+        if (noteDates[dateKey])    classes.push('note-day');
+       
+        if (classes.includes('watered-day') && classes.includes('image-day') && classes.includes('advice-day') && classes.includes('note-day')) {
+            classes.push('quadruple-day');
+        } else if (classes.includes('watered-day') && classes.includes('image-day') && classes.includes('advice-day')) {
+            classes.push('triple-day');
+        } else if (classes.includes('watered-day') && classes.includes('image-day')) {
+            classes.push('both-day');
+        }
+        return classes.join(' ');
     };
 
     const handleClickDay = (date: Date, event: React.MouseEvent) => {
         const dateKey = formatDateKey(date);
     
-        if (wateredDates[dateKey] || imageDates[dateKey] || adviceDates[dateKey]) {
+        if (wateredDates[dateKey] || imageDates[dateKey] || adviceDates[dateKey] || noteDates[dateKey]) {
             setHoveredDate(dateKey);
     
             const rect = (event.target as HTMLElement).getBoundingClientRect();
@@ -146,7 +161,7 @@ export default function WateringLogCalendar({ waterings, images, careadvice, pla
         }
     };
 
-    const openDeleteModal = (type: "watering" | "image" | "advice", id: number) => {
+    const openDeleteModal = (type: "watering" | "image" | "advice" | "note", id: number) => {
         // Hide tooltip immediately before showing modal
         setHoveredDate(null);
         setTooltipPosition(null);
@@ -176,9 +191,14 @@ export default function WateringLogCalendar({ waterings, images, careadvice, pla
                 await deleteCareAdvice(plantId, deleteTarget.id);
                 setCareAdvices((prev) => prev.filter((adv) => adv.id !== deleteTarget.id));
                 toast.success("Care Advice deleted successfully!");
+            } else if (deleteTarget.type === "note") {
+                await deletePlantNote(plantId, deleteTarget.id);
+                setPlantNotes((prev) => prev.filter((n) => n.id !== deleteTarget.id));
+                toast.success("Note deleted successfully!");
             }
             setDeleteModalOpen(false);
             setHoveredDate(null);
+            onChanged?.();
         } catch (err) {
             toast.error((err as Error).message);
         }
@@ -211,10 +231,11 @@ export default function WateringLogCalendar({ waterings, images, careadvice, pla
     }, [deleteModalOpen]); 
 
     const renderTooltip = () => {
-        if (!hoveredDate || (!wateredDates[hoveredDate] && !imageDates[hoveredDate] && !adviceDates[hoveredDate]) || !tooltipPosition) return null;
+        if (!hoveredDate || (!wateredDates[hoveredDate] && !imageDates[hoveredDate] && !adviceDates[hoveredDate] && !noteDates[hoveredDate]) || !tooltipPosition) return null;
 
         return (
-            <WateringTooltipOverlay
+            <TooltipOverlay
+                innerRef={tooltipRef}
                 position={tooltipPosition}
                 content={
                     <div className="watering-tooltip-content">
@@ -282,7 +303,7 @@ export default function WateringLogCalendar({ waterings, images, careadvice, pla
                                 <ul>
                                     {adviceDates[hoveredDate].map(advice => (
                                         <li className="watering-tooltip-item" key={advice.id}>
-                                            <FontAwesomeIcon icon={faCamera} className="advice-icon" />
+                                            <FontAwesomeIcon icon={faWandMagicSparkles} className="advice-icon" />
                                             {new Date(advice.generated_at).toLocaleTimeString(locale, {
                                                 timeZone: timezone,
                                                 hour: '2-digit',
@@ -302,6 +323,33 @@ export default function WateringLogCalendar({ waterings, images, careadvice, pla
                                         </li>
                                     ))}
                                 </ul>
+                            </>
+                        )}
+
+                        {noteDates[hoveredDate] && (
+                            <>
+                            <strong>Notes added at:</strong>
+                            <ul>
+                                {noteDates[hoveredDate].map(note => (
+                                <li className="watering-tooltip-item" key={note.id}>
+                                    <FontAwesomeIcon icon={faStickyNote} className="note-icon" />
+                                    {new Date(note.created_at).toLocaleTimeString(locale, {
+                                    timeZone: timezone,
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                    })}
+                                    {isLoggedIn ? (
+                                    <button className="watering-delete-btn" onClick={() => openDeleteModal("note", note.id)}>
+                                        <FontAwesomeIcon icon={faTrash} />
+                                    </button>
+                                    ) : (
+                                    <button className="watering-delete-btn" onClick={() => toast.warning("You must be logged in to delete notes.")}>
+                                        <FontAwesomeIcon icon={faTrash} />
+                                    </button>
+                                    )}
+                                </li>
+                                ))}
+                            </ul>
                             </>
                         )}
                     </div>

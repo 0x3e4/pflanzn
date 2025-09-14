@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, Form
 from sqlalchemy.orm import Session
 from app.core.config import settings
+from app.core.security import get_current_user
 from app.database import get_db
-from app.models import Plant, PlantImage, PlantWatering, PlantCareAdvice, PlantNote, Tag, PlantIdentification
+from app.models import Plant, PlantImage, PlantWatering, PlantCareAdvice, PlantNote, Tag, PlantIdentification, User
 from app.schemas import (
     PlantCreate, PlantResponse, PlantUpdate, PlantImageResponse, 
     PlantWateringCreate, PlantWateringResponse, PlantCareAdviceResponse,
@@ -117,6 +118,9 @@ def get_plant(plant_id: int, db: Session = Depends(get_db)):
     for advice in plant.care_advice:
         advice.generated_at = advice.generated_at.replace(tzinfo=timezone.utc).astimezone(tz)
 
+    for note in plant.notes:
+        note.created_at = note.created_at.replace(tzinfo=timezone.utc).astimezone(tz)
+
     if latest_watering and latest_watering.watered_at:
         plant.last_watered = latest_watering.watered_at.replace(tzinfo=timezone.utc).astimezone(tz)
     else:
@@ -162,6 +166,7 @@ def upload_plant_image(
     file: UploadFile = File(...),
     uploaded_at: Optional[str] = Form(None), 
     db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user),
 ):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
@@ -212,7 +217,8 @@ def upload_plant_image(
     plant_image = PlantImage(
         plant_id=plant_id, 
         image_path=relative_path,
-        uploaded_at=timestamp
+        uploaded_at=timestamp,
+        user_id=(current_user.id if current_user else None),
     )
     db.add(plant_image)
     db.commit()
@@ -246,7 +252,7 @@ def identify_species(
 
     # Get latest image (sorted by uploaded_at)
     latest_image = sorted(plant.images, key=lambda img: img.uploaded_at, reverse=True)[0]
-    image_path = os.path.join(UPLOAD_FOLDER, latest_image.image_path)
+    image_path = os.path.join(settings.UPLOAD_FOLDER, latest_image.image_path)
 
     if not os.path.exists(image_path):
         raise HTTPException(status_code=404, detail="Image file not found")
@@ -366,7 +372,7 @@ async def identify_species_from_image(
                 id_uuid = str(uuid.uuid4())
                 filename = f"{id_uuid}.{ext}"
                 relative_path = os.path.join("identifications", filename)
-                identification_file_path = os.path.join(UPLOAD_FOLDER, relative_path)
+                identification_file_path = os.path.join(settings.UPLOAD_FOLDER, relative_path)
 
                 img.save(identification_file_path, format=img.format, optimize=True, quality=80)
                 logger.debug(f"Image saved to: {identification_file_path}")
@@ -460,7 +466,10 @@ def delete_plant_image(plant_id: int, image_id: int, db: Session = Depends(get_d
     return {"message": "Image deleted successfully"}
 
 @router.post("/{plant_id}/generate_description")
-async def generate_species_description_for_plant(plant_id: int, db: Session = Depends(get_db)):
+async def generate_species_description_for_plant(
+    plant_id: int, 
+    db: Session = Depends(get_db),
+):
     """
     Generate and save a species description using a llm provider for a given plant.
     """
@@ -496,7 +505,8 @@ async def generate_species_description_for_plant(plant_id: int, db: Session = De
 def water_plant(
     plant_id: int,
     watering_data: PlantWateringCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user),
 ):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
@@ -504,7 +514,8 @@ def water_plant(
 
     watering = PlantWatering(
         plant_id=plant_id,
-        watered_at=watering_data.watered_at or datetime.utcnow()
+        watered_at=watering_data.watered_at or datetime.utcnow(),
+        user_id=(current_user.id if current_user else None),
     )
     db.add(watering)
     db.commit()
@@ -573,7 +584,8 @@ def assign_tags_to_plant(plant_id: int, tag_names: List[str], db: Session = Depe
         images=[PlantImageResponse(id=img.id, image_path=img.image_path, uploaded_at=img.uploaded_at) for img in plant.images],
         waterings=[PlantWateringResponse(id=w.id, watered_at=w.watered_at) for w in plant.waterings],
         last_watered=max([w.watered_at for w in plant.waterings], default=None),
-        tags=[TagResponse(id=t.id, name=t.name) for t in plant.tags]
+        tags=[TagResponse(id=t.id, name=t.name) for t in plant.tags],
+        notes=[PlantNoteResponse(id=n.id, note_text=n.note_text, created_at=n.created_at) for n in plant.notes],
     )
 
 # Remove a tag from a plant
@@ -665,7 +677,10 @@ def get_plant_activities(
             "plant_id": plant_id,
             "plant_name": plant.name,
             "activity_type": "watering",
-            "activity_data": {"watering_id": watering.id},
+            "activity_data": {
+                "watering_id": watering.id,
+                "user_name": watering.created_by.username if watering.created_by else None,
+            },
             "timestamp": watering.watered_at.isoformat()
         })
     
@@ -686,7 +701,8 @@ def get_plant_activities(
             "activity_type": "image_upload",
             "activity_data": {
                 "image_id": image.id,
-                "image_path": image.image_path
+                "image_path": image.image_path,
+                "user_name": image.uploaded_by.username if image.uploaded_by else None,
             },
             "timestamp": image.uploaded_at.isoformat()
         })
@@ -709,7 +725,8 @@ def get_plant_activities(
                 "activity_type": "care_advice",
                 "activity_data": {
                     "advice_id": advice.id,
-                    "advice": advice.advice_text
+                    "advice": advice.advice_text,
+                    "user_name": advice.created_by.username if advice.created_by else None,
                 },
                 "timestamp": advice.generated_at.isoformat()
             })
@@ -734,7 +751,8 @@ def get_plant_activities(
                 "activity_type": "note",
                 "activity_data": {
                     "note_id": note.id,
-                    "note": note.note_text
+                    "note": note.note_text,
+                    "user_name": note.created_by.username if note.created_by else None,
                 },
                 "timestamp": note.created_at.isoformat()
             })
@@ -751,7 +769,8 @@ def get_plant_activities(
 @router.post("/{plant_id}/care_advice", response_model=PlantCareAdviceResponse)
 def get_care_helper(
     plant_id: int, 
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user),
 ):
     """
     Generate and store care advice for a plant using LLM.
@@ -770,7 +789,8 @@ def get_care_helper(
         care_advice = PlantCareAdvice(
             plant_id=plant_id,
             advice_text=advice_text,
-            generated_at=datetime.utcnow()
+            generated_at=datetime.utcnow(),
+            user_id=(current_user.id if current_user else None),
         )
         
         db.add(care_advice)
@@ -845,7 +865,8 @@ def delete_care_advice(
 def create_plant_note(
     plant_id: int,
     note_data: PlantNoteCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user),
 ):
     """
     Create a new note for a plant.
@@ -857,7 +878,8 @@ def create_plant_note(
     note = PlantNote(
         plant_id=plant_id,
         note_text=note_data.note_text,
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
+        user_id=(current_user.id if current_user else None),
     )
     
     db.add(note)

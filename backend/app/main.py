@@ -1,6 +1,6 @@
 import logging
 import os
-from fastapi import FastAPI, Depends, UploadFile, File
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
@@ -31,7 +31,7 @@ app = FastAPI(
 # CORS settings
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[settings.VITE_DOMAIN],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

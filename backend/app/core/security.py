@@ -1,13 +1,11 @@
-import os
 import redis
 from jose import jwt
 from passlib.hash import argon2
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from fastapi import Depends, HTTPException, Security, Request
+from fastapi import Depends, HTTPException, Request
 from app.database import get_db
 from app.models import User
-from app.schemas import UserCreate
 from typing import Optional
 from app.core.config import settings
 
@@ -52,12 +50,10 @@ def create_access_token(data: dict, expires_delta: timedelta) -> str:
 
     return new_token
 
-def create_refresh_token(data: dict) -> str:
-    """Creates a long-lived refresh token (e.g., 24 hours)."""
+def create_refresh_token(data: dict, expires_delta: timedelta) -> str:
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(days=1)
+    expire = datetime.utcnow() + expires_delta
     to_encode.update({"exp": expire})
-
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def decode_token(token: str) -> dict:

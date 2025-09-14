@@ -28,28 +28,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const isAuthDisabled = authMode === "no";
 
     useEffect(() => {
-        const checkAuth = async () => {
-            setLoading(true);
-    
-            if (authMode === "no") {
-                setLoading(false);
-                setUser(null);
-                setIsLoggedIn(false);
-                return;
-            }
-    
-            try {
-                await refreshToken();
-                await fetchProfile();
-            } catch (error) {
-                console.error("Error fetching profile:", error);
-                setUser(null);
-                setIsLoggedIn(false);
-            }
-            setLoading(false);
-        };
-    
-        checkAuth();
+    (async () => {
+        setLoading(true);
+        if (authMode !== "no") {
+        await refreshToken(true);
+        await fetchProfile();
+        } else {
+        setUser(null); setIsLoggedIn(false);
+        }
+        setLoading(false);
+    })();
     }, [authMode]);
     
     const login = async (username: string, password: string) => {
@@ -65,16 +53,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    const refreshToken = async () => {
-        if (isLoggedIn) {
-            try {
-                const response = await apiClient.post("/auth/refresh");
-                return response.data;
-            } catch (error) {
-                console.error("Refresh token failed:", error);
-                return null;
-            }
-        }
+    const refreshToken = async (force = false) => {
+    if (!force && !isLoggedIn) return null;
+    try {
+        const response = await apiClient.post("/auth/refresh");
+        return response.data;
+    } catch (e) {
+        console.error("Refresh token failed:", e);
+        return null;
+    }
     };
 
     const fetchProfile = async () => {

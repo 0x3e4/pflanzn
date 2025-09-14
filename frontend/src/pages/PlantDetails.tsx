@@ -429,6 +429,7 @@ export default function PlantDetails() {
         try {
             const note = await createPlantNote(Number(plantId), newNote.trim());
             setNotes([note, ...notes]);
+            setPlant((p) => (p ? { ...p, notes: [note, ...(p.notes || [])] } : p));
             setNewNote("");
             toast.success("Note created!");
             
@@ -457,32 +458,39 @@ export default function PlantDetails() {
     const getActivityTitle = (activity: any) => {
         switch (activity.activity_type) {
             case 'watering':
-                return 'Plant Watered';
+                return 'Watered';
             case 'care_advice':
-                return 'Care Advice Generated';
+                return 'Care Advice';
             case 'image_upload':
-                return 'Image Uploaded';
+                return 'Image';
             case 'note':
-                return 'Note Added';
+                return 'Note';
             default:
                 return 'Activity';
         }
     };
 
     const getActivityDescription = (activity: any) => {
+        const userName = activity.activity_data?.user_name || "";
+
         switch (activity.activity_type) {
-            case 'watering':
-                return 'Plant was watered';
-            case 'care_advice':
-                return activity.activity_data.advice || 'AI care advice was generated';
-            case 'image_upload':
-                return 'New photo was uploaded';
-            case 'note':
-                return activity.activity_data.note || 'A new note was added';
+            case "watering":
+                return `Plant was watered${userName ? ` by ${userName}` : ""}`;
+            case "care_advice":
+                return `${activity.activity_data?.advice || "Care advice was generated"}${
+                    userName ? ` by ${userName}` : ""
+            }`;
+            case "image_upload":
+                return `New photo was uploaded${userName ? ` by ${userName}` : ""}`;
+            case "note":
+                return `${activity.activity_data?.note || "A new note was added"}${
+                    userName ? ` by ${userName}` : ""
+            }`;
             default:
-                return '';
+                return "";
         }
     };
+
 
     const handleOpenNotesModal = () => {
         if (!isLoggedIn) {
@@ -644,7 +652,17 @@ export default function PlantDetails() {
                     </div>
 
                     <TimelineImages images={plant.images} plantId={plant.id} />
-                    <Calendar waterings={plant.waterings} images={plant.images} careadvice={plant.care_advice} plantId={plant.id} />
+                    <Calendar
+                        waterings={plant.waterings}
+                        images={plant.images}
+                        careadvice={plant.care_advice}
+                        notes={plant.notes}
+                        plantId={plant.id}
+                        onChanged={() => {
+                            loadPlant();
+                            loadActivities();
+                        }}
+                    />
                 </div>
 
                 {/* Right Column - Description */}
@@ -935,6 +953,7 @@ export default function PlantDetails() {
                         <div className="note-input-container">
                             <EditableDiv
                                 value={newNote}
+                                onChange={setNewNote}
                                 onSave={setNewNote}
                                 placeholder="Add a note about your plant..."
                                 className="note-input"
