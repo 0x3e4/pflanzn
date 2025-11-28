@@ -69,6 +69,8 @@ export default function PlantDetails() {
     const [notesModalOpen, setNotesModalOpen] = useState(false);
     const [notes, setNotes] = useState<any[]>([]);
     const [newNote, setNewNote] = useState("");
+    const [careAdviceModalOpen, setCareAdviceModalOpen] = useState(false);
+    const [careAdviceMessage, setCareAdviceMessage] = useState("");
 
     // Fetch plant and activites data on load
     useEffect(() => {
@@ -259,18 +261,26 @@ export default function PlantDetails() {
         }
     };
 
-    // Generate AI Care Helper
-    const handleGenerateCareAdvice = async () => {
+    // Open care advice modal
+    const handleOpenCareAdviceModal = () => {
         if (!isLoggedIn) {
             toast.error("You must be logged in to receive care tips.");
             return;
         }
+        setCareAdviceModalOpen(true);
+    };
 
+    // Generate AI Care Helper
+    const handleGenerateCareAdvice = async () => {
         setLoadingPlant(true);
         setToastVisible(true);
+        setCareAdviceModalOpen(false);
 
         try {
-            const careAdviceEntry = await generateCareAdvice(Number(plantId));
+            const careAdviceEntry = await generateCareAdvice(
+                Number(plantId),
+                careAdviceMessage.trim() || undefined
+            );
 
             if (plant) {
                 setPlant({
@@ -288,6 +298,9 @@ export default function PlantDetails() {
             });
 
             toast.success("Care advice saved to your plant's history!");
+
+            // Clear the message for next time
+            setCareAdviceMessage("");
 
             // Always refresh activity feed
             loadActivities();
@@ -805,7 +818,7 @@ export default function PlantDetails() {
                                     <>
                                         {isLoggedIn ? (
                                             <>
-                                                <button className="ai-care-helper-btn" onClick={handleGenerateCareAdvice}>
+                                                <button className="ai-care-helper-btn" onClick={handleOpenCareAdviceModal}>
                                                     <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Care Helper
                                                 </button>
 
@@ -815,7 +828,7 @@ export default function PlantDetails() {
                                             </>
                                         ) : (
                                                 <>
-                                                    <button className="ai-care-helper-btn" onClick={() => toast.warning("You must be logged in to receive tips from AI.")}>
+                                                    <button className="ai-care-helper-btn" onClick={handleOpenCareAdviceModal}>
                                                         <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Care Helper
                                                     </button>
 
@@ -959,7 +972,7 @@ export default function PlantDetails() {
                                 className="note-input"
                             />
                             <div className="note-actions">
-                                <button 
+                                <button
                                     className="save-note-btn"
                                     onClick={handleCreateNote}
                                     disabled={!newNote.trim()}
@@ -967,6 +980,50 @@ export default function PlantDetails() {
                                     <FontAwesomeIcon icon={faPlus} /> Add Note
                                 </button>
                                 <button className="notes-modal-close" onClick={() => setNotesModalOpen(false)}>
+                                    <FontAwesomeIcon icon={faCircleXmark} /> Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Care Advice Modal */}
+            {careAdviceModalOpen && (
+                <div className="notes-modal-overlay">
+                    <div className="notes-modal">
+                        <div className="notes-modal-header">
+                            <span>AI Care Helper</span>
+                        </div>
+
+                        <div className="note-input-container">
+                            <p style={{ marginBottom: '1rem', color: '#666', fontSize: '0.9rem' }}>
+                                Describe what you're observing with your plant (optional):
+                            </p>
+                            <textarea
+                                value={careAdviceMessage}
+                                onChange={(e) => setCareAdviceMessage(e.target.value)}
+                                placeholder="e.g., my plant is losing a lot of leaves, the leaves are turning yellow..."
+                                className="note-input"
+                                rows={4}
+                                style={{
+                                    width: '100%',
+                                    padding: '0.75rem',
+                                    borderRadius: '8px',
+                                    border: '1px solid #ddd',
+                                    fontFamily: 'inherit',
+                                    fontSize: '0.95rem',
+                                    resize: 'vertical'
+                                }}
+                            />
+                            <div className="note-actions">
+                                <button
+                                    className="save-note-btn"
+                                    onClick={handleGenerateCareAdvice}
+                                >
+                                    <FontAwesomeIcon icon={faWandMagicSparkles} /> Get AI Advice
+                                </button>
+                                <button className="notes-modal-close" onClick={() => setCareAdviceModalOpen(false)}>
                                     <FontAwesomeIcon icon={faCircleXmark} /> Cancel
                                 </button>
                             </div>

@@ -3,6 +3,7 @@ import re
 import openai
 from app.core.config import settings
 from app.utils.llm_text_cleaner import clean_generated_text
+from app.services.prompt_config import PromptConfig
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -14,25 +15,22 @@ class OpenAIClient:
         """
         Generate a description for a given plant species using OpenAI's GPT models.
         """
-        prompt = (
-            f"Write a detailed botanical description for the plant species '{species_name}', "
-            f"also known as '{common_name}'. Cover these aspects: habitat, appearance, care tips, and any interesting facts. "
-            f"Write the description in '{settings.LLM_LANGUAGE}' naturally, like a professional botanist would write for a plant catalog. "
-            f"Do NOT include a title or markdown formatting like '**' and keep it within 2000 characters."
-        )
+        prompt = PromptConfig.get_species_description_prompt(common_name, species_name)
 
         try:
             logger.info(f"Requesting OpenAI to generate description for: {species_name}")
 
             response = openai.ChatCompletion.create(
                 model=settings.OPENAI_MODEL_NAME,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=1000,
-                temperature=0.7
+                messages=[
+                    {"role": "system", "content": PromptConfig.get_system_message()},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=PromptConfig.MAX_TOKENS_DESCRIPTION,
+                temperature=PromptConfig.TEMPERATURE_CREATIVE
             )
 
             generated_text = response['choices'][0]['message']['content']
-
             cleaned_description = clean_generated_text(generated_text)
 
             logger.info(f"Received response from OpenAI")
@@ -40,4 +38,75 @@ class OpenAIClient:
 
         except Exception as e:
             logger.exception(f"Error while calling OpenAI: {e}")
+            raise
+
+    def care_helper(self, db, plant_id: int, user_message: str = None) -> str:
+        """
+        Generate care advice for a plant using OpenAI's GPT models with vision capabilities.
+        Optionally includes user's observation for more targeted advice.
+        """
+        import os
+        import base64
+        from app.models import Plant
+
+        # Recompute BASE_DIR and UPLOAD_FOLDER
+        BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+
+        plant = db.query(Plant).filter(Plant.id == plant_id).first()
+        if not plant:
+            raise ValueError("Plant not found")
+
+        species = plant.species or "Unknown species"
+
+        # Watering history
+        last_waterings = sorted(plant.waterings, key=lambda w: w.watered_at, reverse=True)[:10]
+        watering_dates = [w.watered_at.strftime('%Y-%m-%d') for w in last_waterings]
+
+        # Use latest image
+        latest_images = sorted(plant.images, key=lambda img: img.uploaded_at, reverse=True)[:5]
+        if not latest_images:
+            raise ValueError("No images found for this plant")
+
+        relative_path = latest_images[0].image_path
+        image_path = os.path.join(UPLOAD_FOLDER, relative_path)
+
+        if not os.path.exists(image_path):
+            raise FileNotFoundError(f"Image file not found: {image_path}")
+
+        with open(image_path, "rb") as f:
+            base64_image = base64.b64encode(f.read()).decode("utf-8")
+
+        prompt = PromptConfig.get_care_helper_prompt(species, watering_dates, user_message)
+
+        try:
+            logger.info(f"Requesting OpenAI vision-based care guidance for plant ID {plant_id}")
+
+            response = openai.ChatCompletion.create(
+                model="gpt-4o",  # Use vision-capable model
+                messages=[
+                    {"role": "system", "content": PromptConfig.get_system_message()},
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{base64_image}"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                max_tokens=PromptConfig.MAX_TOKENS_CARE_ADVICE,
+                temperature=PromptConfig.TEMPERATURE_PRECISE
+            )
+
+            generated_text = response['choices'][0]['message']['content']
+            cleaned = clean_generated_text(generated_text)
+            return cleaned
+
+        except Exception as e:
+            logger.exception(f"Error while generating care helper response: {e}")
             raise

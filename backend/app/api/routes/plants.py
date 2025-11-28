@@ -768,12 +768,14 @@ def get_plant_activities(
 
 @router.post("/{plant_id}/care_advice", response_model=PlantCareAdviceResponse)
 def get_care_helper(
-    plant_id: int, 
+    plant_id: int,
+    user_message: Optional[str] = Form(None),
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user),
 ):
     """
     Generate and store care advice for a plant using LLM.
+    Optional user_message allows adding context like "my plant is losing leaves".
     """
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
@@ -782,7 +784,9 @@ def get_care_helper(
     try:
         llm = LLMClient()
         logger.info(f"Generating care advice for plant {plant_id}")
-        advice_text = llm.care_helper(db, plant_id)
+        if user_message:
+            logger.info(f"User message: {user_message}")
+        advice_text = llm.care_helper(db, plant_id, user_message)
         logger.info(f"Generated advice text: {advice_text[:100]}...")
         
         # Store the care advice in the database

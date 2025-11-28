@@ -76,12 +76,19 @@ export const generatePlantDescription = async (plantId: number): Promise<{ descr
 };
 
 // Care Helper
-export const generateCareAdvice = async (plantId: number): Promise<{
+export const generateCareAdvice = async (
+    plantId: number,
+    userMessage?: string
+): Promise<{
     id: number;
     advice_text: string;
     generated_at: string;
 }> => {
-    const response = await apiClient.post(`${API_BASE}/${plantId}/care_advice`);
+    const formData = new FormData();
+    if (userMessage) {
+        formData.append('user_message', userMessage);
+    }
+    const response = await apiClient.post(`${API_BASE}/${plantId}/care_advice`, formData);
     return response.data;
 };
 
