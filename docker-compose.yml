@@ -16,7 +16,14 @@ services:
       - dmz00
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_AUTH_MODE: ${VITE_AUTH_MODE}
+        VITE_DOMAIN: ${VITE_DOMAIN}
+        VITE_TZ: ${VITE_TZ}
+        VITE_LOCALE: ${VITE_LOCALE}
+        VITE_LLM_PROVIDER: ${VITE_LLM_PROVIDER}
     expose:
       - "4173"
     env_file:
