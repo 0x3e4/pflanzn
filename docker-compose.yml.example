@@ -1,8 +1,8 @@
 services:
   backend:
     build: ./backend
-    expose:
-      - "8000"
+    ports:
+      - "8000:8000"
     env_file:
       - .env
     volumes:
@@ -11,9 +11,6 @@ services:
       mariadb:
         condition: service_healthy
     restart: always
-    networks:
-      - default
-      - dmz00
 
   frontend:
     build:
@@ -24,8 +21,8 @@ services:
         VITE_TZ: ${VITE_TZ}
         VITE_LOCALE: ${VITE_LOCALE}
         VITE_LLM_PROVIDER: ${VITE_LLM_PROVIDER}
-    expose:
-      - "4173"
+    ports:
+      - "4173:4173"
     env_file:
       - .env
     restart: always
@@ -35,22 +32,17 @@ services:
     depends_on:
       - mariadb
       - backend
-    networks:
-      - default
-      - dmz00
 
   mariadb:
     image: mariadb:latest
     restart: always
     environment:
-      MARIADB_ROOT_PASSWORD: ***REDACTED***
-      MARIADB_DATABASE: plants_db
-      MARIADB_USER: root
-      MARIADB_PASSWORD: ***REDACTED***
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
     volumes:
       - mariadb_data:/var/lib/mysql
-    expose:
-      - "3306"
     healthcheck:
       test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "root", "-p***REDACTED***"]
       interval: 10s
@@ -61,13 +53,6 @@ services:
   redis:
     image: redis:latest
     restart: always
-    expose:
-      - "6379"
-
-networks:
-  dmz00:
-    name: dmz00
-    external: true
 
 volumes:
   mariadb_data:
