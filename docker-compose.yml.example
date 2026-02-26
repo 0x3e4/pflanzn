@@ -26,9 +26,6 @@ services:
     env_file:
       - .env
     restart: always
-    volumes:
-      - ./frontend:/frontend
-      - /frontend/node_modules
     depends_on:
       - mariadb
       - backend
