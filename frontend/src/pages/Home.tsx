@@ -9,6 +9,21 @@ import LoadingOverlay from "../components/LoadingOverlay";
 import { toast } from "react-toastify";
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
+import { Link } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+    faCamera,
+    faDroplet,
+    faSeedling,
+    faWandMagicSparkles
+} from "@fortawesome/free-solid-svg-icons";
+
+type HomeOverview = {
+    total: number;
+    active: number;
+    species: number;
+    totalWaterings: number;
+};
 
 export default function Home() {
     const [plants, setPlants] = useState<Plant[]>([]);
@@ -18,6 +33,12 @@ export default function Home() {
     const [allImagesLoaded, setAllImagesLoaded] = useState(false);
     const [loadedImagesCount, setLoadedImagesCount] = useState(0);
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+    const [overview, setOverview] = useState<HomeOverview>({
+        total: 0,
+        active: 0,
+        species: 0,
+        totalWaterings: 0,
+    });
 
     useEffect(() => {
         const handleResize = () => setWindowWidth(window.innerWidth);
@@ -54,14 +75,24 @@ export default function Home() {
     const loadPlants = async () => {
         try {
             const data = await fetchPlants();
-            const nonArchivedPlants = data.filter(plant => !plant.is_archived);
+            const nonArchivedPlants = data.filter((plant) => !plant.is_archived);
 
-            const speciesCountMap = data.reduce((acc, plant) => {
+            const speciesCountMap = nonArchivedPlants.reduce((acc, plant) => {
                 const species = plant.species ?? "Unknown";
                 acc[species] = (acc[species] || 0) + 1;
                 return acc;
             }, {} as Record<string, number>);
             setSpeciesCounts(speciesCountMap);
+
+            setOverview({
+                total: data.length,
+                active: nonArchivedPlants.length,
+                species: Object.keys(speciesCountMap).length,
+                totalWaterings: data.reduce(
+                    (sum, plant) => sum + (Array.isArray(plant.waterings) ? plant.waterings.length : 0),
+                    0
+                ),
+            });
 
             const speciesList = Object.keys(speciesCountMap);
             setWordPositions(generateWordPositions(speciesList));
@@ -83,7 +114,7 @@ export default function Home() {
         return shuffleArray(speciesList).slice(0, 10).map((species) => ({ species }));
     };
 
-    const maxCount = Math.max(...Object.values(speciesCounts) || [0]);
+    const maxCount = Math.max(1, ...Object.values(speciesCounts));
 
     const getSpeciesColor = (species: string) => {
         const intensity = (speciesCounts[species] || 0) / maxCount;
@@ -118,13 +149,65 @@ export default function Home() {
     return (
         <div className="container home-container">
             {loadingPlants && <LoadingOverlay />}
-            <div className="home-content">
+            <section className="home-hero">
+                <p className="home-kicker">Plant Care Cockpit</p>
                 <h1>Pflanzn</h1>
-                <p>A simple and efficient plant management system.</p>
-            </div>
+                <p className="home-subtitle">
+                    Keep your plants healthy with watering logs, image timelines, species identification and AI-powered care guidance.
+                </p>
+                <div className="home-cta-row">
+                    <Link to="/plants" className="home-cta primary">
+                        Open My Plants
+                    </Link>
+                    <Link to="/about" className="home-cta secondary">
+                        Learn more about Pflanzn
+                    </Link>
+                </div>
+                <div className="home-feature-pills">
+                    <div className="feature-pill">
+                        <FontAwesomeIcon icon={faDroplet} />
+                        Watering history
+                    </div>
+                    <div className="feature-pill">
+                        <FontAwesomeIcon icon={faCamera} />
+                        Photo timelines
+                    </div>
+                    <div className="feature-pill">
+                        <FontAwesomeIcon icon={faWandMagicSparkles} />
+                        AI care helper
+                    </div>
+                </div>
+            </section>
+
+            <section className="home-stats-grid">
+                <article className="home-stat-card">
+                    <FontAwesomeIcon icon={faSeedling} className="home-stat-icon" />
+                    <span className="home-stat-value">{overview.total}</span>
+                    <span className="home-stat-label">Total Plants</span>
+                </article>
+                <article className="home-stat-card">
+                    <FontAwesomeIcon icon={faSeedling} className="home-stat-icon" />
+                    <span className="home-stat-value">{overview.active}</span>
+                    <span className="home-stat-label">Active Plants</span>
+                </article>
+                <article className="home-stat-card">
+                    <FontAwesomeIcon icon={faDroplet} className="home-stat-icon" />
+                    <span className="home-stat-value">{overview.totalWaterings}</span>
+                    <span className="home-stat-label">Total Waterings Logged</span>
+                </article>
+                <article className="home-stat-card">
+                    <FontAwesomeIcon icon={faWandMagicSparkles} className="home-stat-icon" />
+                    <span className="home-stat-value">{overview.species}</span>
+                    <span className="home-stat-label">Species Tracked</span>
+                </article>
+            </section>
 
             {plants.length > 0 && (
-                <>
+                <section className="home-carousel-section">
+                    <div className="home-section-heading">
+                        <h2>Recently Captured</h2>
+                    </div>
+
                     {/* Show skeleton while images are loading */}
                     {!allImagesLoaded && (
                         <div className="carousel-skeleton carousel-container">
@@ -177,34 +260,56 @@ export default function Home() {
 
                                     return (
                                         <div key={plant.id} className="plant-slide">
-                                            <img
-                                                src={imageUrl}
-                                                alt={plant.name}
-                                                className="home-plant-image"
-                                                loading="lazy"
-                                            />
+                                            <Link
+                                                to={`/plant/${plant.id}`}
+                                                className="home-carousel-link"
+                                                title={`Open ${plant.name || "plant"}`}
+                                            >
+                                                <img
+                                                    src={imageUrl}
+                                                    alt={plant.name}
+                                                    className="home-plant-image"
+                                                    loading="lazy"
+                                                />
+                                            </Link>
                                         </div>
                                     );
                                 })}
                             </Slider>
                         </div>
                     )}
-                </>
+                </section>
             )}
 
             <section className="species-wordcloud">
+                <div className="home-section-heading">
+                    <h2>Species Snapshot</h2>
+                    <span>Most frequent species in your collection</span>
+                </div>
                 <div className="wordcloud">
-                    {wordPositions.map(({ species }) => (
-                        <span
-                            key={species}
-                            className="wordcloud-item"
-                            style={{ color: getSpeciesColor(species), fontSize: getFontSize(species) }}
-                        >
-                            {species}
-                        </span>
-                    ))}
+                    {wordPositions.length > 0 ? (
+                        wordPositions.map(({ species }) => (
+                            <Link
+                                key={species}
+                                to={`/plants?species=${encodeURIComponent(species)}`}
+                                className="wordcloud-item species-link"
+                                style={{ color: getSpeciesColor(species), fontSize: getFontSize(species) }}
+                            >
+                                {species}
+                            </Link>
+                        ))
+                    ) : (
+                        <p className="home-wordcloud-empty">No species data yet.</p>
+                    )}
                 </div>
             </section>
+            {plants.length === 0 && !loadingPlants && (
+                <section className="home-empty-state">
+                    <h2>No plant photos yet</h2>
+                    <p>Add your first plant image to unlock carousel highlights.</p>
+                    <Link to="/plants" className="home-cta primary">Go to Plants</Link>
+                </section>
+            )}
         </div>
     );
 }

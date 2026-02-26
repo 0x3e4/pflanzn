@@ -454,7 +454,10 @@ h3 {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 12000;
+    padding: 1rem;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
 }
 
 .delete-plant-modal, .archive-plant-modal, .notes-modal {
@@ -466,6 +469,10 @@ h3 {
     text-align: center;
     width: 90%;
     max-width: 400px;
+    position: relative;
+    z-index: 12001;
+    max-height: min(85vh, 680px);
+    overflow-y: auto;
 }
 
 .delete-plant-modal-buttons, .archive-plant-modal-buttons, .note-actions {
@@ -642,10 +649,12 @@ h3 {
 /* Toast body styling */
 .care-advice-toast {
     white-space: pre-wrap;
-    font-size: 0.95rem;
+    font-size: 1rem;
+    line-height: 1.55;
     background-color: var(--background-color, #fff);
     color: var(--text-color, #000);
-    max-width: 90vw;
+    width: min(860px, calc(100vw - 2rem));
+    max-width: min(860px, calc(100vw - 2rem));
     margin: 0 auto;
     border-radius: 12px;
     padding: 1.5rem;
@@ -668,4 +677,19 @@ h3 {
 
 .Toastify__close-button button svg {
     color: white; 
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .delete-plant-modal-buttons, .archive-plant-modal-buttons, .note-actions {
+        flex-direction: column;
+    }
+
+    .delete-plant-confirm, .delete-plant-cancel, .archive-plant-confirm, .archive-plant-cancel, .save-note-btn, .notes-modal-close {
+        width: 100%;
+        touch-action: manipulation;
+    }
 }

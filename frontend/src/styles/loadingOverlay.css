@@ -9,18 +9,49 @@
     align-items: center;
     justify-content: center;
     backdrop-filter: blur(5px);
-    z-index: 9999;
+    z-index: 13000;
 }
 
 .loading-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
+    padding: 20px 24px;
     border-radius: 12px;
+    max-width: min(640px, calc(100vw - 2rem));
+    text-align: left;
+    background: rgba(22, 22, 22, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .loading-gif {
     width: 80px;
     height: auto;
+}
+
+.loading-text {
+    margin-top: 10px;
+    color: var(--text-color);
+}
+
+.loading-text h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+}
+
+.loading-text p {
+    margin: 0;
+    line-height: 1.5;
+    opacity: 0.9;
+}
+
+.loading-text ul {
+    margin: 0.8rem 0 0;
+    padding-left: 1.1rem;
+}
+
+.loading-text li {
+    font-size: 0.9rem;
+    opacity: 0.85;
+    line-height: 1.4;
 }

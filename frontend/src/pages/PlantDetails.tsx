@@ -45,6 +45,12 @@ import IdentifyResults from "../components/IdentifyResults";
 import { useAuth } from "../context/AuthContext";
 import { setOverlayOpen } from "../services/overlayControl";
 
+type ActionLoadingState = {
+    title: string;
+    message: string;
+    details?: string[];
+} | null;
+
 export default function PlantDetails() {
     const { isLoggedIn } = useAuth();
     const { plantId } = useParams();
@@ -71,6 +77,7 @@ export default function PlantDetails() {
     const [newNote, setNewNote] = useState("");
     const [careAdviceModalOpen, setCareAdviceModalOpen] = useState(false);
     const [careAdviceMessage, setCareAdviceMessage] = useState("");
+    const [actionLoading, setActionLoading] = useState<ActionLoadingState>(null);
 
     // Fetch plant and activites data on load
     useEffect(() => {
@@ -249,15 +256,23 @@ export default function PlantDetails() {
             return;
         }
 
-        setLoadingPlant(true);
+        setActionLoading({
+            title: "Generating AI Description",
+            message: "Analyzing your plant details to produce a better description.",
+            details: [
+                "Checking existing plant data and context",
+                "Generating text with the configured AI provider",
+                "Saving the new description to this plant",
+            ],
+        });
 
         try {
             const { description } = await generatePlantDescription(Number(plantId));
-            handleUpdate({ description });
+            await handleUpdate({ description });
         } catch (error) {
             toast.error((error as Error).message || "Failed to generate description.");
         } finally {
-            setLoadingPlant(false);
+            setActionLoading(null);
         }
     };
 
@@ -272,9 +287,17 @@ export default function PlantDetails() {
 
     // Generate AI Care Helper
     const handleGenerateCareAdvice = async () => {
-        setLoadingPlant(true);
         setToastVisible(true);
         setCareAdviceModalOpen(false);
+        setActionLoading({
+            title: "Generating AI Care Advice",
+            message: "Reviewing recent plant state and preparing actionable care guidance.",
+            details: [
+                "Evaluating your optional symptom message",
+                "Generating advice based on plant context",
+                "Saving advice to activity history",
+            ],
+        });
 
         try {
             const careAdviceEntry = await generateCareAdvice(
@@ -294,6 +317,10 @@ export default function PlantDetails() {
                 autoClose: false,
                 closeOnClick: true,
                 className: "care-advice-toast",
+                style: {
+                    width: "min(860px, calc(100vw - 2rem))",
+                    maxWidth: "min(860px, calc(100vw - 2rem))",
+                },
                 onClose: () => setToastVisible(false),
             });
 
@@ -309,7 +336,7 @@ export default function PlantDetails() {
             toast.error((error as Error).message || "Failed to generate care advice.");
             setToastVisible(false);
         } finally {
-            setLoadingPlant(false);
+            setActionLoading(null);
         }
     };
 
@@ -514,13 +541,31 @@ export default function PlantDetails() {
         loadNotes();
     };
 
+    const hasBlockingOverlay = Boolean(
+        identifyResults ||
+        deleteModalOpen ||
+        archiveModalOpen ||
+        notesModalOpen ||
+        careAdviceModalOpen ||
+        actionLoading
+    );
+
     useEffect(() => {
-        if (identifyResults || deleteModalOpen || archiveModalOpen || notesModalOpen) {
-        setOverlayOpen(true);
-        } else {
-        setOverlayOpen(false);
-        }
-    }, [identifyResults, deleteModalOpen, archiveModalOpen, notesModalOpen]);  
+        setOverlayOpen(hasBlockingOverlay);
+    }, [hasBlockingOverlay]);
+
+    useEffect(() => {
+        return () => {
+            setOverlayOpen(false);
+        };
+    }, []);
+
+    useEffect(() => {
+        document.body.classList.toggle("modal-open", hasBlockingOverlay);
+        return () => {
+            document.body.classList.remove("modal-open");
+        };
+    }, [hasBlockingOverlay]);
 
     const ActivityFeedSection = () => (
         <div className="activity-log-container">
@@ -583,12 +628,26 @@ export default function PlantDetails() {
         </div>
     );
 
-    if (loadingPlant) return <LoadingOverlay />
+    if (loadingPlant) {
+        return (
+            <LoadingOverlay
+                title="Loading Plant"
+                message="Fetching plant details, images, and activity history."
+            />
+        );
+    }
 
     if (!plant) return;
 
     return (
         <div className="container plant-details-container">
+            {actionLoading && (
+                <LoadingOverlay
+                    title={actionLoading.title}
+                    message={actionLoading.message}
+                    details={actionLoading.details}
+                />
+            )}
             {toastVisible && <div className="toast-blur-overlay" />}
             <div className="plant-columns">
                 {/* Left Column - Plant Info + Images + Watering Log */}

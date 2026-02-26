@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
     fetchPlants,
     createPlant,
@@ -77,11 +77,21 @@ export default function Plants() {
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   const { isLoggedIn } = useAuth();
+  const [searchParams] = useSearchParams();
+  const speciesFilter = searchParams.get("species");
 
   useEffect(() => {
     fetchPlantsFromService();
     fetchTagsFromService();
   }, []);
+
+  useEffect(() => {
+    if (speciesFilter) {
+      setFilterMode("species");
+      setSelectedFilterValue(speciesFilter);
+      setSelectedTagId(null);
+    }
+  }, [speciesFilter]);
 
   useEffect(() => {
     if (plants.length === 0) {
