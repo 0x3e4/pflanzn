@@ -8,6 +8,8 @@ services:
     volumes:
       - ./backend:/backend
     depends_on:
+      redis:
+        condition: service_started
       mariadb:
         condition: service_healthy
     restart: always
