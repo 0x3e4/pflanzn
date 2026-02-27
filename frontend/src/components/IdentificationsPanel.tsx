@@ -12,7 +12,6 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import "../styles/identificationsPanel.css";
 import { setOverlayOpen } from "../services/overlayControl";
-import LoadingOverlay from "../components/LoadingOverlay";
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 
@@ -158,7 +157,6 @@ export default function IdentificationsPanel() {
 
     return (
         <div className="statistics-panel">
-            {loading && <LoadingOverlay />}
             <h2>Recent Identifications</h2>
             <p>These are recent identification results powered by Pl@ntNet.</p>
 
@@ -195,7 +193,26 @@ export default function IdentificationsPanel() {
 
             {/* Identification List */}
             <div className="identification-list">
-                {currentPageData.length > 0 ? (
+                {loading ? (
+                    [...Array(4)].map((_, index) => (
+                        <div className="identification-entry" key={index}>
+                            <div className="identification-meta">
+                                <Skeleton width={220} height={28} />
+                                <Skeleton width={160} />
+                                <Skeleton width={140} />
+                                <Skeleton width={260} />
+                            </div>
+                            <div className="identification-image-container">
+                                <Skeleton
+                                    height="100%"
+                                    width="100%"
+                                    baseColor="#444"
+                                    highlightColor="#666"
+                                />
+                            </div>
+                        </div>
+                    ))
+                ) : currentPageData.length > 0 ? (
                     currentPageData.map((item) => {
                         const imageLoaded = loadedImages.has(item.id);
                         
@@ -258,7 +275,7 @@ export default function IdentificationsPanel() {
                 )}
 
                 {/* Pagination */}
-                {totalPages > 1 && (
+                {!loading && totalPages > 1 && (
                     <div className="pagination">
                         <button
                             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}

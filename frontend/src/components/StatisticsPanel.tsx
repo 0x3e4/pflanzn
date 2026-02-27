@@ -11,8 +11,9 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Plant } from "../types/Plant";
 import "../styles/statisticsPanel.css";
-import LoadingOverlay from "../components/LoadingOverlay";
 import { toast } from 'react-toastify';
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 interface SpeciesStats {
     name: string;
@@ -315,7 +316,6 @@ export default function StatisticsPanel() {
 
     return (
         <div className="statistics-panel">
-            {loading && <LoadingOverlay />}
             <h2>Statistics</h2>
             <p>Here you can monitor plant statistics.</p>
             
@@ -335,40 +335,46 @@ export default function StatisticsPanel() {
             <div className="stats-row">
                 <div className="stats-card">
                     <FontAwesomeIcon icon={faSeedling} className="stats-icon" />
-                    <h3>{stats ? stats.totalPlants : "Loading..."}</h3>
+                    <h3>{loading ? <Skeleton width={80} /> : stats?.totalPlants ?? 0}</h3>
                     <p>Active Plants</p>
                 </div>
                 <div className="stats-card">
                     <FontAwesomeIcon icon={faArchive} className="stats-icon" />
-                    <h3>{stats ? stats.archivedPlants : "Loading..."}</h3>
+                    <h3>{loading ? <Skeleton width={80} /> : stats?.archivedPlants ?? 0}</h3>
                     <p>Archived Plants</p>
                 </div>
                 <div className="stats-card">
                     <FontAwesomeIcon icon={faList} className="stats-icon" />
                     <h3>Top 5 Species</h3>
                     <ul>
-                        {stats?.topSpecies?.length ? (
+                        {loading ? (
+                            [...Array(3)].map((_, index) => (
+                                <li key={index}>
+                                    <Skeleton />
+                                </li>
+                            ))
+                        ) : stats?.topSpecies?.length ? (
                             stats.topSpecies.map((species, index) => (
                                 <li key={index}>{species.name} ({species.count})</li>
                             ))
                         ) : (
-                            <li>Loading...</li>
+                            <li>No data</li>
                         )}
                     </ul>
                 </div>
                 <div className="stats-card">
                     <FontAwesomeIcon icon={faDroplet} className="stats-icon" />
-                    <h3>{stats ? stats.totalWaterings : "Loading..."}</h3>
+                    <h3>{loading ? <Skeleton width={80} /> : stats?.totalWaterings ?? 0}</h3>
                     <p>Total Waterings Logged</p>
                 </div>
                 <div className="stats-card">
                     <FontAwesomeIcon icon={faImage} className="stats-icon" />
-                    <h3>{stats ? stats.totalImages : "Loading..."}</h3>
+                    <h3>{loading ? <Skeleton width={80} /> : stats?.totalImages ?? 0}</h3>
                     <p>Total Images Uploaded</p>
                 </div>
                 <div className="stats-card">
                     <FontAwesomeIcon icon={faClock} className="stats-icon" />
-                    <h3>{stats?.lastWateredPlant?.name || "N/A"}</h3>
+                    <h3>{loading ? <Skeleton width={120} /> : stats?.lastWateredPlant?.name || "N/A"}</h3>
                     <p>Last Watered Plant</p>
                 </div>
             </div>
@@ -381,7 +387,9 @@ export default function StatisticsPanel() {
                 </h3>
                 
                 <div className="chart-container">
-                    {dailyWaterings.length > 0 ? (
+                    {loading ? (
+                        <Skeleton height="100%" />
+                    ) : dailyWaterings.length > 0 ? (
                         <WateringChart data={dailyWaterings} />
                     ) : (
                         <div className="chart-loading">

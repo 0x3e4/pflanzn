@@ -5,7 +5,8 @@ import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faSave, faPlus, faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 import { User } from "../types/User";
-import LoadingOverlay from "../components/LoadingOverlay";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 const roles = ["user", "admin"];
 
@@ -59,10 +60,38 @@ export default function UsersPanel() {
     const currentUsers = sortedUsers.slice(indexOfFirstUser, indexOfLastUser);
     
     useEffect(() => {
-        if (authMode !== "no" && (authMode === "local" || authMode === "oidc") && (user?.role === "admin")) {
-            fetchUsers().then(setUsers).catch(() => toast.error("Failed to load users."));
-        }
-        setLoading(false);
+        let isActive = true;
+
+        const loadUsers = async () => {
+            setLoading(true);
+            const canManageUsers = authMode !== "no" && (authMode === "local" || authMode === "oidc") && user?.role === "admin";
+
+            if (!canManageUsers) {
+                if (isActive) {
+                    setUsers([]);
+                    setLoading(false);
+                }
+                return;
+            }
+
+            try {
+                const fetchedUsers = await fetchUsers();
+                if (isActive) {
+                    setUsers(fetchedUsers);
+                }
+            } catch {
+                toast.error("Failed to load users.");
+            } finally {
+                if (isActive) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        loadUsers();
+        return () => {
+            isActive = false;
+        };
     }, [user, authMode]);
 
     const handlePageChange = (direction: "prev" | "next") => {
@@ -169,8 +198,6 @@ export default function UsersPanel() {
 
     return (
         <div className="users-panel">
-            {loading && <LoadingOverlay />}
-
             <h2>User Management</h2>
             {authMode === "local" && (
                 <button className="add-btn" onClick={() => setModalOpen(true)}>
@@ -191,55 +218,70 @@ export default function UsersPanel() {
                         </tr>
                     </thead>
                     <tbody>
-                        {currentUsers.map((u) => (
-                            <tr key={u.id}>
-                                <td>{u.id}</td>
-                                <td>
-                                    <input
-                                        type="text"
-                                        value={getCurrentValue(u.id, 'username', u.username)} 
-                                        onChange={(e) => updateUserField(u.id, 'username', e.target.value)}
-                                        className="editable-input"
-                                        disabled={authMode === "oidc"}
-                                    />
-                                </td>
-                                <td>
-                                    <input
-                                        type="email"
-                                        value={getCurrentValue(u.id, 'email', u.email)} 
-                                        onChange={(e) => updateUserField(u.id, 'email', e.target.value)}
-                                        className="editable-input"
-                                        disabled={authMode === "oidc"}
-                                    />
-                                </td>
-                                <td>
-                                    <select
-                                        value={getCurrentValue(u.id, 'role', u.role)} 
-                                        onChange={(e) => updateUserField(u.id, 'role', e.target.value)}
-                                        disabled={authMode === "no"}
-                                        className="editable-select"
-                                    >
-                                        {roles.map((role) => (
-                                            <option key={role} value={role}>{role}</option>
-                                        ))}
-                                    </select>
-                                </td>
-                                {authMode !== "no" && (
-                                    <td className="action-buttons">
-                                        <button className="update-btn" onClick={() => handleUpdateUser(u.id, u.username)}>
-                                            <FontAwesomeIcon icon={faSave} />
-                                        </button>
-                                        <button className="delete-btn" onClick={() => handleDeleteUser(u.id, u.username)}>
-                                            <FontAwesomeIcon icon={faTrash} />
-                                        </button>
+                        {loading
+                            ? [...Array(6)].map((_, index) => (
+                                <tr key={`user-skeleton-${index}`}>
+                                    <td><Skeleton width={24} /></td>
+                                    <td><Skeleton /></td>
+                                    <td><Skeleton /></td>
+                                    <td><Skeleton width={70} /></td>
+                                    {authMode !== "no" && (
+                                        <td className="action-buttons">
+                                            <Skeleton circle width={30} height={30} />
+                                            <Skeleton circle width={30} height={30} />
+                                        </td>
+                                    )}
+                                </tr>
+                            ))
+                            : currentUsers.map((u) => (
+                                <tr key={u.id}>
+                                    <td>{u.id}</td>
+                                    <td>
+                                        <input
+                                            type="text"
+                                            value={getCurrentValue(u.id, 'username', u.username)} 
+                                            onChange={(e) => updateUserField(u.id, 'username', e.target.value)}
+                                            className="editable-input"
+                                            disabled={authMode === "oidc"}
+                                        />
                                     </td>
-                                )}
-                            </tr>
-                        ))}
+                                    <td>
+                                        <input
+                                            type="email"
+                                            value={getCurrentValue(u.id, 'email', u.email)} 
+                                            onChange={(e) => updateUserField(u.id, 'email', e.target.value)}
+                                            className="editable-input"
+                                            disabled={authMode === "oidc"}
+                                        />
+                                    </td>
+                                    <td>
+                                        <select
+                                            value={getCurrentValue(u.id, 'role', u.role)} 
+                                            onChange={(e) => updateUserField(u.id, 'role', e.target.value)}
+                                            disabled={authMode === "no"}
+                                            className="editable-select"
+                                        >
+                                            {roles.map((role) => (
+                                                <option key={role} value={role}>{role}</option>
+                                            ))}
+                                        </select>
+                                    </td>
+                                    {authMode !== "no" && (
+                                        <td className="action-buttons">
+                                            <button className="update-btn" onClick={() => handleUpdateUser(u.id, u.username)}>
+                                                <FontAwesomeIcon icon={faSave} />
+                                            </button>
+                                            <button className="delete-btn" onClick={() => handleDeleteUser(u.id, u.username)}>
+                                                <FontAwesomeIcon icon={faTrash} />
+                                            </button>
+                                        </td>
+                                    )}
+                                </tr>
+                            ))}
                     </tbody>
                 </table>
                 
-                {totalPages > 1 && (
+                {!loading && totalPages > 1 && (
                     <div className="pagination">
                         <button 
                             onClick={() => handlePageChange("prev")}

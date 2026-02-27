@@ -31,7 +31,6 @@ import {
     faExpand,
     faCompress
 } from "@fortawesome/free-solid-svg-icons";
-import LoadingOverlay from "../components/LoadingOverlay";
 import { useAuth } from "../context/AuthContext";
 import { setOverlayOpen } from "../services/overlayControl";
 import Skeleton from 'react-loading-skeleton';
@@ -441,7 +440,6 @@ export default function Plants() {
 
   return (
     <div className={`container plants-container${isStretched ? " plants-container--stretched" : ""}`}>
-      {loading && <LoadingOverlay />}
       <div className="plants-header">
         <h1>Plants</h1>
         <button
@@ -464,32 +462,40 @@ export default function Plants() {
 
       <div className="plant-filter-sort-bar">
         <div className="plant-tag-filter">
-          <span className={`hashtag ${selectedTagId === null ? "active" : ""}`} onClick={() => setSelectedTagId(null)}>
-            #all
-          </span>
-          {allTags.map(tag => (
-            <span
-              key={tag.id}
-              className={`hashtag ${selectedTagId === tag.id ? "active" : ""}`}
-              onClick={() => setSelectedTagId(tag.id)}
-            >
-              #{tag.name}
-            </span>
-          ))}
-          {plants.some(p => !p.is_archived && (!p.tags || p.tags.length === 0)) && (
-            <span
-              className={`hashtag ${selectedTagId === -2 ? "active" : ""}`}
-              onClick={() => setSelectedTagId(-2)}
-            >
-              #untagged
-            </span>
+          {loading ? (
+            [...Array(6)].map((_, index) => (
+              <Skeleton key={index} width={80} height={28} borderRadius={999} />
+            ))
+          ) : (
+            <>
+              <span className={`hashtag ${selectedTagId === null ? "active" : ""}`} onClick={() => setSelectedTagId(null)}>
+                #all
+              </span>
+              {allTags.map(tag => (
+                <span
+                  key={tag.id}
+                  className={`hashtag ${selectedTagId === tag.id ? "active" : ""}`}
+                  onClick={() => setSelectedTagId(tag.id)}
+                >
+                  #{tag.name}
+                </span>
+              ))}
+              {plants.some(p => !p.is_archived && (!p.tags || p.tags.length === 0)) && (
+                <span
+                  className={`hashtag ${selectedTagId === -2 ? "active" : ""}`}
+                  onClick={() => setSelectedTagId(-2)}
+                >
+                  #untagged
+                </span>
+              )}
+              <span
+                className={`hashtag hashtag-archive ${selectedTagId === -1 ? "active" : ""}`}
+                onClick={() => setSelectedTagId(-1)}
+              >
+                #archive
+              </span>
+            </>
           )}
-          <span
-            className={`hashtag hashtag-archive ${selectedTagId === -1 ? "active" : ""}`}
-            onClick={() => setSelectedTagId(-1)}
-          >
-            #archive
-          </span>
         </div>
 
         <div className="water-plant-input-container">
@@ -574,7 +580,19 @@ export default function Plants() {
       </div>
 
       <div className="plants-list">
-        {filteredPlants.map((plant) => {
+        {loading ? [...Array(8)].map((_, index) => (
+          <div key={`plant-card-skeleton-${index}`} className="plant-card">
+            <div className="plant-image-container all-plants">
+              <Skeleton height="100%" width="100%" className="plant-image-skeleton" />
+            </div>
+            <div className="plant-card-text">
+              <h3><Skeleton width="70%" /></h3>
+              <small><Skeleton width={40} /></small>
+              <p><Skeleton width="80%" /></p>
+              <p><Skeleton width="90%" /></p>
+            </div>
+          </div>
+        )) : filteredPlants.map((plant) => {
             const sortedImages = [...(plant.images || [])].sort(
               (a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime()
             );

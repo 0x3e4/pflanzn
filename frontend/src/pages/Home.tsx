@@ -5,7 +5,6 @@ import { fetchPlants } from "../services/PlantService";
 import "../styles/home.css";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import LoadingOverlay from "../components/LoadingOverlay";
 import { toast } from "react-toastify";
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
@@ -148,68 +147,95 @@ export default function Home() {
 
     return (
         <div className="container home-container">
-            {loadingPlants && <LoadingOverlay />}
             <section className="home-hero">
-                <p className="home-kicker">Plant Care Cockpit</p>
-                <h1>Pflanzn</h1>
+                <p className="home-kicker">
+                    {loadingPlants ? <Skeleton width={140} /> : "Plant Care Cockpit"}
+                </p>
+                <h1>{loadingPlants ? <Skeleton width={220} /> : "Pflanzn"}</h1>
                 <p className="home-subtitle">
-                    Keep your plants healthy with watering logs, image timelines, species identification and AI-powered care guidance.
+                    {loadingPlants ? (
+                        <>
+                            <Skeleton />
+                            <Skeleton width="88%" />
+                        </>
+                    ) : (
+                        "Keep your plants healthy with watering logs, image timelines, species identification and AI-powered care guidance."
+                    )}
                 </p>
                 <div className="home-cta-row">
-                    <Link to="/plants" className="home-cta primary">
-                        Open My Plants
-                    </Link>
-                    <Link to="/about" className="home-cta secondary">
-                        Learn more about Pflanzn
-                    </Link>
+                    {loadingPlants ? (
+                        <>
+                            <Skeleton height={40} width={150} borderRadius={10} />
+                            <Skeleton height={40} width={220} borderRadius={10} />
+                        </>
+                    ) : (
+                        <>
+                            <Link to="/plants" className="home-cta primary">
+                                Open My Plants
+                            </Link>
+                            <Link to="/about" className="home-cta secondary">
+                                Learn more about Pflanzn
+                            </Link>
+                        </>
+                    )}
                 </div>
                 <div className="home-feature-pills">
-                    <div className="feature-pill">
-                        <FontAwesomeIcon icon={faDroplet} />
-                        Watering history
-                    </div>
-                    <div className="feature-pill">
-                        <FontAwesomeIcon icon={faCamera} />
-                        Photo timelines
-                    </div>
-                    <div className="feature-pill">
-                        <FontAwesomeIcon icon={faWandMagicSparkles} />
-                        AI care helper
-                    </div>
+                    {loadingPlants ? (
+                        <>
+                            <Skeleton height={30} width={140} borderRadius={999} />
+                            <Skeleton height={30} width={140} borderRadius={999} />
+                            <Skeleton height={30} width={140} borderRadius={999} />
+                        </>
+                    ) : (
+                        <>
+                            <div className="feature-pill">
+                                <FontAwesomeIcon icon={faDroplet} />
+                                Watering history
+                            </div>
+                            <div className="feature-pill">
+                                <FontAwesomeIcon icon={faCamera} />
+                                Photo timelines
+                            </div>
+                            <div className="feature-pill">
+                                <FontAwesomeIcon icon={faWandMagicSparkles} />
+                                AI care helper
+                            </div>
+                        </>
+                    )}
                 </div>
             </section>
 
             <section className="home-stats-grid">
                 <article className="home-stat-card">
                     <FontAwesomeIcon icon={faSeedling} className="home-stat-icon" />
-                    <span className="home-stat-value">{overview.total}</span>
+                    <span className="home-stat-value">{loadingPlants ? <Skeleton width={56} /> : overview.total}</span>
                     <span className="home-stat-label">Total Plants</span>
                 </article>
                 <article className="home-stat-card">
                     <FontAwesomeIcon icon={faSeedling} className="home-stat-icon" />
-                    <span className="home-stat-value">{overview.active}</span>
+                    <span className="home-stat-value">{loadingPlants ? <Skeleton width={56} /> : overview.active}</span>
                     <span className="home-stat-label">Active Plants</span>
                 </article>
                 <article className="home-stat-card">
                     <FontAwesomeIcon icon={faDroplet} className="home-stat-icon" />
-                    <span className="home-stat-value">{overview.totalWaterings}</span>
+                    <span className="home-stat-value">{loadingPlants ? <Skeleton width={72} /> : overview.totalWaterings}</span>
                     <span className="home-stat-label">Total Waterings Logged</span>
                 </article>
                 <article className="home-stat-card">
                     <FontAwesomeIcon icon={faWandMagicSparkles} className="home-stat-icon" />
-                    <span className="home-stat-value">{overview.species}</span>
+                    <span className="home-stat-value">{loadingPlants ? <Skeleton width={56} /> : overview.species}</span>
                     <span className="home-stat-label">Species Tracked</span>
                 </article>
             </section>
 
-            {plants.length > 0 && (
+            {(loadingPlants || plants.length > 0) && (
                 <section className="home-carousel-section">
                     <div className="home-section-heading">
                         <h2>Recently Captured</h2>
                     </div>
 
                     {/* Show skeleton while images are loading */}
-                    {!allImagesLoaded && (
+                    {(loadingPlants || !allImagesLoaded) && (
                         <div className="carousel-skeleton carousel-container">
                             <div style={{ display: "flex", gap: "20px", justifyContent: "center" }}>
                                 {[...Array(getSkeletonCount())].map((_, i) => (
@@ -228,28 +254,30 @@ export default function Home() {
                     )}
 
                     {/* Hidden images for preloading */}
-                    <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
-                        {plants.map((plant) => {
-                            const latestImage = plant.images?.[plant.images.length - 1];
-                            const imageUrl = latestImage
-                                ? `/api/uploads/${latestImage.image_path}`
-                                : "/placeholder-plant.webp";
+                    {!loadingPlants && (
+                        <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+                            {plants.map((plant) => {
+                                const latestImage = plant.images?.[plant.images.length - 1];
+                                const imageUrl = latestImage
+                                    ? `/api/uploads/${latestImage.image_path}`
+                                    : "/placeholder-plant.webp";
 
-                            return (
-                                <img
-                                    key={`preload-${plant.id}`}
-                                    src={imageUrl}
-                                    alt=""
-                                    onLoad={handleImageLoad}
-                                    onError={handleImageLoad}
-                                    style={{ width: '1px', height: '1px' }}
-                                />
-                            );
-                        })}
-                    </div>
+                                return (
+                                    <img
+                                        key={`preload-${plant.id}`}
+                                        src={imageUrl}
+                                        alt=""
+                                        onLoad={handleImageLoad}
+                                        onError={handleImageLoad}
+                                        style={{ width: '1px', height: '1px' }}
+                                    />
+                                );
+                            })}
+                        </div>
+                    )}
 
                     {/* Actual carousel - shown when images are loaded */}
-                    {allImagesLoaded && (
+                    {!loadingPlants && allImagesLoaded && (
                         <div className="carousel-container">
                             <Slider {...sliderSettings}>
                                 {plants.map((plant) => {
@@ -287,7 +315,11 @@ export default function Home() {
                     <span>Most frequent species in your collection</span>
                 </div>
                 <div className="wordcloud">
-                    {wordPositions.length > 0 ? (
+                    {loadingPlants ? (
+                        [...Array(6)].map((_, index) => (
+                            <Skeleton key={index} height={32} width={100 + index * 10} borderRadius={6} />
+                        ))
+                    ) : wordPositions.length > 0 ? (
                         wordPositions.map(({ species }) => (
                             <Link
                                 key={species}

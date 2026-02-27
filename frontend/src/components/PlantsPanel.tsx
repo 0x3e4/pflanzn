@@ -6,8 +6,9 @@ import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faSave, faEye, faChevronLeft, faChevronRight, faCircleXmark } from "@fortawesome/free-solid-svg-icons";
 import { Plant } from "../types/Plant";
-import LoadingOverlay from "../components/LoadingOverlay";
 import { setOverlayOpen } from "../services/overlayControl";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 export default function PlantsPanel() {
     const navigate = useNavigate();
@@ -58,12 +59,38 @@ export default function PlantsPanel() {
     const currentPlants = sortedPlants.slice(indexOfFirstPlant, indexOfLastPlant);
     
     useEffect(() => {
-        if (authMode === "no" || user?.role === "admin") {
-            fetchPlants()
-                .then((plants) => setPlants(plants.map((p) => ({ ...p, species: p.species ?? "" }))))
-                .catch(() => toast.error("Failed to load plants."));
-        }
-        setLoading(false);
+        let isActive = true;
+
+        const loadPlants = async () => {
+            setLoading(true);
+            const canManagePlants = authMode === "no" || user?.role === "admin";
+
+            if (!canManagePlants) {
+                if (isActive) {
+                    setPlants([]);
+                    setLoading(false);
+                }
+                return;
+            }
+
+            try {
+                const fetchedPlants = await fetchPlants();
+                if (isActive) {
+                    setPlants(fetchedPlants.map((p) => ({ ...p, species: p.species ?? "" })));
+                }
+            } catch {
+                toast.error("Failed to load plants.");
+            } finally {
+                if (isActive) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        loadPlants();
+        return () => {
+            isActive = false;
+        };
     }, [user, authMode]);
 
     const handleNavigateToPlant = (plantId: number) => {
@@ -153,8 +180,6 @@ export default function PlantsPanel() {
 
     return (
         <div className="plants-panel">
-            {loading && <LoadingOverlay />}
-
             <h2>Plant Management</h2>
             <p>Here you can manage all the plants.</p>
 
@@ -169,42 +194,55 @@ export default function PlantsPanel() {
                         </tr>
                     </thead>
                     <tbody>
-                        {currentPlants.map((p) => (
-                            <tr key={p.id}>
-                                <td>{p.id}</td>
-                                <td>
-                                    <input 
-                                        type="text" 
-                                        value={getCurrentValue(p.id, 'name', p.name)} 
-                                        onChange={(e) => updatePlantField(p.id, 'name', e.target.value)} 
-                                        className="editable-input"
-                                    />
-                                </td>
-                                <td>
-                                    <input 
-                                        type="text" 
-                                        value={getCurrentValue(p.id, 'species', p.species)} 
-                                        onChange={(e) => updatePlantField(p.id, 'species', e.target.value)} 
-                                        className="editable-input"
-                                    />
-                                </td>
-                                <td className="action-buttons">
-                                    <button className="view-btn" onClick={() => handleNavigateToPlant(p.id)}>
-                                        <FontAwesomeIcon icon={faEye} />
-                                    </button>
-                                    <button className="update-btn" onClick={() => handleUpdatePlant(p.id)}>
-                                        <FontAwesomeIcon icon={faSave} />
-                                    </button>
-                                    <button className="delete-btn" onClick={() => setDeleteModalOpen(p.id)}>
-                                        <FontAwesomeIcon icon={faTrash} />
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
+                        {loading
+                            ? [...Array(6)].map((_, index) => (
+                                <tr key={`plant-skeleton-${index}`}>
+                                    <td><Skeleton width={24} /></td>
+                                    <td><Skeleton /></td>
+                                    <td><Skeleton /></td>
+                                    <td className="action-buttons">
+                                        <Skeleton circle width={30} height={30} />
+                                        <Skeleton circle width={30} height={30} />
+                                        <Skeleton circle width={30} height={30} />
+                                    </td>
+                                </tr>
+                            ))
+                            : currentPlants.map((p) => (
+                                <tr key={p.id}>
+                                    <td>{p.id}</td>
+                                    <td>
+                                        <input 
+                                            type="text" 
+                                            value={getCurrentValue(p.id, 'name', p.name)} 
+                                            onChange={(e) => updatePlantField(p.id, 'name', e.target.value)} 
+                                            className="editable-input"
+                                        />
+                                    </td>
+                                    <td>
+                                        <input 
+                                            type="text" 
+                                            value={getCurrentValue(p.id, 'species', p.species)} 
+                                            onChange={(e) => updatePlantField(p.id, 'species', e.target.value)} 
+                                            className="editable-input"
+                                        />
+                                    </td>
+                                    <td className="action-buttons">
+                                        <button className="view-btn" onClick={() => handleNavigateToPlant(p.id)}>
+                                            <FontAwesomeIcon icon={faEye} />
+                                        </button>
+                                        <button className="update-btn" onClick={() => handleUpdatePlant(p.id)}>
+                                            <FontAwesomeIcon icon={faSave} />
+                                        </button>
+                                        <button className="delete-btn" onClick={() => setDeleteModalOpen(p.id)}>
+                                            <FontAwesomeIcon icon={faTrash} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
                     </tbody>
                 </table>
 
-                {totalPages > 1 && (
+                {!loading && totalPages > 1 && (
                     <div className="pagination">
                         <button 
                             onClick={() => handlePageChange("prev")}

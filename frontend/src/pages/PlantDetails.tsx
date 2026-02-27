@@ -44,6 +44,8 @@ import LoadingOverlay from "../components/LoadingOverlay";
 import IdentifyResults from "../components/IdentifyResults";
 import { useAuth } from "../context/AuthContext";
 import { setOverlayOpen } from "../services/overlayControl";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 type ActionLoadingState = {
     title: string;
@@ -630,10 +632,35 @@ export default function PlantDetails() {
 
     if (loadingPlant) {
         return (
-            <LoadingOverlay
-                title="Loading Plant"
-                message="Fetching plant details, images, and activity history."
-            />
+            <div className="container plant-details-container">
+                <div className="plant-columns">
+                    <div className="plant-left-column">
+                        <div className="plant-information">
+                            <h2><Skeleton width="80%" /></h2>
+                            <small><Skeleton width={48} /></small>
+                            <span className="plant-information-names"><Skeleton width="90%" /></span>
+                            <span className="plant-information-names"><Skeleton width="95%" /></span>
+                        </div>
+                        <div style={{ marginTop: "1rem" }}>
+                            <Skeleton height={320} />
+                        </div>
+                        <div style={{ marginTop: "1rem" }}>
+                            <Skeleton height={280} />
+                        </div>
+                    </div>
+                    <div className="plant-right-column">
+                        <div style={{ marginBottom: "1rem" }}>
+                            <Skeleton height={42} />
+                        </div>
+                        <div style={{ marginBottom: "1.5rem" }}>
+                            <Skeleton height={180} />
+                        </div>
+                        <div>
+                            <Skeleton height={260} />
+                        </div>
+                    </div>
+                </div>
+            </div>
         );
     }
 

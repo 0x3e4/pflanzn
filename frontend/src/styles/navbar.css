@@ -173,3 +173,9 @@
 .identify-btn:hover {
   transform: scale(1.1);
 }
+
+.identify-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}

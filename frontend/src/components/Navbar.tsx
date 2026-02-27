@@ -3,11 +3,10 @@ import { Link } from "react-router-dom";
 import "../styles/navbar.css";
 import { useAuth } from "../context/AuthContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCamera } from "@fortawesome/free-solid-svg-icons";
+import { faCamera, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { identifyPlantFromImage } from "../services/PlantService";
 import IdentifyResults from "./IdentifyResults";
 import { toast } from "react-toastify";
-import LoadingOverlay from "../components/LoadingOverlay";
 
 export default function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -79,10 +78,6 @@ export default function Navbar() {
         }
     };
 
-    if (loadingIdentification) {
-        return <LoadingOverlay />;
-    }
-
     return (
         <nav className={`navbar ${isScrolled ? "shrink" : ""}`} ref={navRef}>
             <div className="nav-container">
@@ -92,8 +87,8 @@ export default function Navbar() {
                 </Link>
 
                 {/* Identify Button - Left of Hamburger */}
-                <button className="identify-btn" onClick={handleIdentifyClick}>
-                    <FontAwesomeIcon icon={faCamera} />
+                <button className="identify-btn" onClick={handleIdentifyClick} disabled={loadingIdentification}>
+                    <FontAwesomeIcon icon={loadingIdentification ? faSpinner : faCamera} spin={loadingIdentification} />
                 </button>
                 <input
                     type="file"

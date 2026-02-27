@@ -8,10 +8,11 @@ import UsersPanel from "../components/UsersPanel";
 import PlantsPanel from "../components/PlantsPanel";
 import IdentificationsPanel from "../components/IdentificationsPanel";
 import "../styles/manage.css";
-import LoadingOverlay from "../components/LoadingOverlay";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPenToSquare, faUnlock } from "@fortawesome/free-solid-svg-icons";
 import { User } from "../types/User";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 type ManageSection = "profile" | "statistics" | "identification" | "users" | "plants" ;
 
@@ -119,16 +120,39 @@ const Manage: React.FC = () => {
         }
     };
 
+    if (loading) {
+        return (
+            <div className="container profile-container">
+                <aside className="profile-sidebar">
+                    <ul>
+                        {[...Array(5)].map((_, index) => (
+                            <li key={index}>
+                                <Skeleton height={18} />
+                            </li>
+                        ))}
+                    </ul>
+                </aside>
+                <div className="profile-main-content">
+                    <div className="profile-info">
+                        <Skeleton height={34} width={180} style={{ marginBottom: "1rem" }} />
+                        {[...Array(6)].map((_, index) => (
+                            <Skeleton key={index} height={44} style={{ marginBottom: "0.8rem" }} />
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="container profile-container">
-            {loading && <LoadingOverlay />}
             <aside className="profile-sidebar">
                 <ul>
                     {authMode !== "no" && (
                         <>
                             <h3>Details</h3>
                             <li 
-                                className={`sidebar-subsection activeSection === "profile" ? "active" : ""`}
+                                className={`sidebar-subsection ${activeSection === "profile" ? "active" : ""}`}
                                 onClick={() => setActiveSection("profile")}
                             >
                                 Profile
