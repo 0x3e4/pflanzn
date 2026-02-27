@@ -19,10 +19,14 @@ export function usePullToRefresh(
     const TRIGGER_DISTANCE = 70;
     const MAX_PULL = 100;
 
+    function getPageScrollTop() {
+      return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    }
+
     function handleTouchStart(e: TouchEvent) {
       const el = ref.current;
       if (!el) return;
-      if (el.scrollTop !== 0 || getOverlayOpen()) return;
+      if (getPageScrollTop() !== 0 || getOverlayOpen()) return;
 
       const target = e.target as HTMLElement;
 
@@ -34,6 +38,7 @@ export function usePullToRefresh(
                                 target.closest(".profile-sidebar") ||
                                 target.closest(".activity-log-list") ||
                                 target.closest(".activity-log-container") ||
+                                target.closest(".species-wordcloud") ||
                                 target.closest(".notes-section") ||
                                 target.closest(".tag-dropdown") ||
                                 target.closest(".description") ||

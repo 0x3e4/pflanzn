@@ -38,8 +38,6 @@ export default function IdentificationsPanel() {
 
     const sortRef = useRef<HTMLDivElement>(null);
 
-    const datePickerRef = useRef<HTMLDivElement>(null);
-
     useEffect(() => {
         loadData();
     }, []);
@@ -63,11 +61,6 @@ export default function IdentificationsPanel() {
         const handleClickOutside = (e: MouseEvent) => {
             if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
                 setSortBy(null);
-            }
-            // Reset date picker when clicking outside
-            if (datePickerRef.current && !datePickerRef.current.contains(e.target as Node)) {
-                setSelectedDate("");
-                setCurrentPage(1);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
@@ -171,7 +164,7 @@ export default function IdentificationsPanel() {
 
             {/* Controls */}
             <div style={{ marginBottom: "1rem", display: "flex", gap: "1rem", alignItems: "flex-start", flexWrap: "wrap" }}>
-                <div ref={datePickerRef} className="identification-plant-input-container">
+                <div className="identification-plant-input-container">
                     <div className="identification-plant-datetime">
                         <input
                             id="datePicker"

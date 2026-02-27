@@ -153,6 +153,28 @@
     .identification-meta {
         flex: 1 1 100%;
     }
+
+    .identification-list .pagination {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        margin-top: 12px;
+        padding: 8px 10px;
+        gap: 10px;
+        border-radius: 8px;
+    }
+
+    .identification-list .pagination button {
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
+        padding: 0;
+    }
+
+    .identification-list .pagination span {
+        min-width: 64px;
+        font-size: 0.95rem;
+    }
 }
 
 .identification-plant-datetime {

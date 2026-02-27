@@ -6,12 +6,17 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAuth = true }) => {
-    const { isLoggedIn } = useAuth();
+    const { isLoggedIn, loading } = useAuth();
     const authMode = import.meta.env.VITE_AUTH_MODE || "no";
 
     // If auth is disabled, always show content
     if (authMode !== "oidc") {
         return <>{children}</>;
+    }
+
+    // Avoid auth-state flicker while the session/profile bootstrap is still running.
+    if (loading) {
+        return null;
     }
 
     // If auth is required but user is not logged in, show login prompt

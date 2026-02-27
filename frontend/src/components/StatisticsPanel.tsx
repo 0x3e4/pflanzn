@@ -38,16 +38,46 @@ const WateringChart = ({ data }: { data: DailyWateringData[] }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const chartRef = useRef<any>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const resizeTimeoutRef = useRef<number | null>(null);
+    const observerResizeTimeoutRef = useRef<number | null>(null);
+
+    const clearPendingResizeTimeouts = () => {
+        if (resizeTimeoutRef.current !== null) {
+            window.clearTimeout(resizeTimeoutRef.current);
+            resizeTimeoutRef.current = null;
+        }
+        if (observerResizeTimeoutRef.current !== null) {
+            window.clearTimeout(observerResizeTimeoutRef.current);
+            observerResizeTimeoutRef.current = null;
+        }
+    };
+
+    const destroyChart = () => {
+        clearPendingResizeTimeouts();
+        if (chartRef.current) {
+            chartRef.current.destroy();
+            chartRef.current = null;
+        }
+    };
+
+    const safeResizeChart = () => {
+        const chart = chartRef.current;
+        if (!chart || !canvasRef.current || !chart.ctx?.canvas) {
+            return;
+        }
+        chart.resize();
+    };
 
     // Resize handler
     const handleResize = () => {
-        if (chartRef.current) {
-            setTimeout(() => {
-                if (chartRef.current) {
-                    chartRef.current.resize();
-                }
-            }, 100);
+        if (!chartRef.current) return;
+        if (resizeTimeoutRef.current !== null) {
+            window.clearTimeout(resizeTimeoutRef.current);
         }
+        resizeTimeoutRef.current = window.setTimeout(() => {
+            safeResizeChart();
+            resizeTimeoutRef.current = null;
+        }, 100);
     };
 
     useEffect(() => {
@@ -80,9 +110,7 @@ const WateringChart = ({ data }: { data: DailyWateringData[] }) => {
 
                 if (canvasRef.current) {
                     // Destroy existing chart if it exists
-                    if (chartRef.current) {
-                        chartRef.current.destroy();
-                    }
+                    destroyChart();
 
                     // Format dates for labels
                     const labels = data.map(item => {
@@ -182,7 +210,9 @@ const WateringChart = ({ data }: { data: DailyWateringData[] }) => {
                                 },
                                 onResize: (chart: any) => {
                                     // Force redraw on resize
-                                    chart.update('none');
+                                    if (chart?.ctx?.canvas) {
+                                        chart.update('none');
+                                    }
                                 }
                             }
                         });
@@ -203,9 +233,7 @@ const WateringChart = ({ data }: { data: DailyWateringData[] }) => {
 
         // Cleanup function
         return () => {
-            if (chartRef.current) {
-                chartRef.current.destroy();
-            }
+            destroyChart();
             window.removeEventListener('resize', handleResize);
         };
     }, [data]);
@@ -218,10 +246,12 @@ const WateringChart = ({ data }: { data: DailyWateringData[] }) => {
             // Check if we have entries and chart exists
             if (entries.length > 0 && chartRef.current) {
                 // Debounce the resize to avoid excessive calls
-                setTimeout(() => {
-                    if (chartRef.current) {
-                        chartRef.current.resize();
-                    }
+                if (observerResizeTimeoutRef.current !== null) {
+                    window.clearTimeout(observerResizeTimeoutRef.current);
+                }
+                observerResizeTimeoutRef.current = window.setTimeout(() => {
+                    safeResizeChart();
+                    observerResizeTimeoutRef.current = null;
                 }, 150);
             }
         });
@@ -230,6 +260,7 @@ const WateringChart = ({ data }: { data: DailyWateringData[] }) => {
 
         return () => {
             resizeObserver.disconnect();
+            clearPendingResizeTimeouts();
         };
     }, []);
 
