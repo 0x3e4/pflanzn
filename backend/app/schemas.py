@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, List
+from typing import Optional, List, Literal
 from datetime import datetime
 
 class UserCreate(BaseModel):
@@ -167,5 +167,46 @@ class PlantResponse(BaseModel):
 class UserLogin(BaseModel):
     username: str
     password: str
+
+class LocationImageResponse(BaseModel):
+    id: int
+    image_path: str
+    uploaded_at: datetime
+    exif_latitude: Optional[float] = None
+    exif_longitude: Optional[float] = None
+
+    class Config:
+        from_attributes = True
+
+class LocationBase(BaseModel):
+    name: str
+    item_name: Optional[str] = None
+    description: Optional[str] = None
+    spot_type: Literal["field", "public_spot", "forest", "meadow", "other"] = "other"
+    visibility: Literal["private", "shared", "public"] = "private"
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+
+class LocationCreate(LocationBase):
+    pass
+
+class LocationUpdate(BaseModel):
+    name: Optional[str] = None
+    item_name: Optional[str] = None
+    description: Optional[str] = None
+    spot_type: Optional[Literal["field", "public_spot", "forest", "meadow", "other"]] = None
+    visibility: Optional[Literal["private", "shared", "public"]] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+
+class LocationResponse(LocationBase):
+    id: int
+    coordinate_source: Optional[Literal["manual", "photo_exif"]] = None
+    created_at: datetime
+    updated_at: datetime
+    images: List[LocationImageResponse] = []
+
+    class Config:
+        from_attributes = True
 
 PlantResponse.model_rebuild()

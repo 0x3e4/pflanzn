@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from "react-route
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Plants from "./pages/Plants";
+import Locations from "./pages/Locations";
 import PlantDetails from "./pages/PlantDetails";
 import Login from "./pages/Login";
 import Manage from "./pages/Manage";
@@ -26,6 +27,10 @@ const isTruthyEnv = (value: string | undefined, defaultValue = true) => {
 function AppLayout() {
     const authMode = import.meta.env.VITE_AUTH_MODE || "no";
     const showProtectedView = isTruthyEnv(import.meta.env.VITE_SHOW_PROTECTED_VIEW, true);
+    const showLocations = isTruthyEnv(
+        import.meta.env.VITE_ENABLE_LOCATIONS || import.meta.env.VITE_ENABLE_HERBALIST_LOCATIONS,
+        false
+    );
     const { loading, isLoggedIn } = useAuth();
     const location = useLocation();
     const ref = useRef<HTMLDivElement>(null);
@@ -78,6 +83,7 @@ function AppLayout() {
                         <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
                         <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
                         <Route path="/plants" element={<ProtectedRoute><Plants /></ProtectedRoute>} />
+                        {showLocations && <Route path="/locations" element={<ProtectedRoute><Locations /></ProtectedRoute>} />}
                         <Route path="/plant/:plantId" element={<ProtectedRoute><PlantDetails /></ProtectedRoute>} />
                         {authMode !== "no" && <Route path="/login" element={<Login />} />}
                         <Route path="/manage" element={<ProtectedRoute enforceAuth><Manage /></ProtectedRoute>} />

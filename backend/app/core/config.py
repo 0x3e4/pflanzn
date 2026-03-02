@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     CLAUDE_MODEL_NAME: str = os.getenv("CLAUDE_MODEL_NAME", "claude-opus-4-20250514")
     OLLAMA_URL: str = os.getenv("OLLAMA_URL")
     OLLAMA_MODEL_NAME: str = os.getenv("OLLAMA_MODEL_NAME")
+    VITE_ENABLE_LOCATIONS: bool = (
+        os.getenv("VITE_ENABLE_LOCATIONS")
+        or os.getenv("VITE_ENABLE_HERBALIST_LOCATIONS", "false")
+    ).strip().lower() in ("1", "true", "yes", "on")
     BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     UPLOAD_FOLDER: str = os.path.join(BASE_DIR, "uploads")
     

@@ -16,6 +16,9 @@ export default function Navbar() {
     const navRef = useRef<HTMLElement | null>(null);
     const { isLoggedIn, loading } = useAuth();
     const authMode = import.meta.env.VITE_AUTH_MODE;
+    const showLocations = !["false", "0", "no", "off"].includes(
+        (import.meta.env.VITE_ENABLE_LOCATIONS || import.meta.env.VITE_ENABLE_HERBALIST_LOCATIONS || "false").toLowerCase()
+    );
     const [loadingIdentification, setLoading] = useState<boolean>(false);
 
     useEffect(() => {
@@ -108,6 +111,9 @@ export default function Navbar() {
 
                 <div className={`nav-links ${menuOpen ? "active" : ""}`}>
                     <Link to="/plants" onClick={() => setMenuOpen(false)}>Plants</Link>
+                    {showLocations && (
+                        <Link to="/locations" onClick={() => setMenuOpen(false)}>Locations</Link>
+                    )}
 
                     {!loading && (
                         (authMode === "no" || (authMode === "oidc" && isLoggedIn) || (authMode === "local" && isLoggedIn)) ? (

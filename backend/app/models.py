@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Text, Table, Index, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Text, Table, Index, Boolean, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -124,4 +124,44 @@ class PlantNote(Base):
     __table_args__ = (
         Index("idx_plant_notes_plant_id", "plant_id"),
         Index("idx_plant_notes_created_at", "created_at"),
+    )
+
+
+class Location(Base):
+    __tablename__ = "locations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    item_name = Column(String(255), nullable=True)
+    description = Column(Text, nullable=True)
+    spot_type = Column(String(50), nullable=False, default="other")
+    visibility = Column(String(20), nullable=False, default="private")
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
+    coordinate_source = Column(String(20), nullable=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
+
+    images = relationship("LocationImage", back_populates="location", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        Index("idx_locations_spot_type", "spot_type"),
+        Index("idx_locations_visibility", "visibility"),
+    )
+
+
+class LocationImage(Base):
+    __tablename__ = "location_images"
+
+    id = Column(Integer, primary_key=True, index=True)
+    location_id = Column(Integer, ForeignKey("locations.id"), nullable=False)
+    image_path = Column(String(512), nullable=False)
+    uploaded_at = Column(DateTime, default=func.now(), nullable=False)
+    exif_latitude = Column(Float, nullable=True)
+    exif_longitude = Column(Float, nullable=True)
+
+    location = relationship("Location", back_populates="images")
+
+    __table_args__ = (
+        Index("idx_location_images_location_id", "location_id"),
     )
