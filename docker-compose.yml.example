@@ -19,6 +19,7 @@ services:
       context: ./frontend
       args:
         VITE_AUTH_MODE: ${VITE_AUTH_MODE}
+        VITE_SHOW_PROTECTED_VIEW: ${VITE_SHOW_PROTECTED_VIEW}
         VITE_DOMAIN: ${VITE_DOMAIN}
         VITE_TZ: ${VITE_TZ}
         VITE_LOCALE: ${VITE_LOCALE}

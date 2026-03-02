@@ -1,34 +1,36 @@
 import { useAuth } from "../context/AuthContext";
+import AuthSplash from "./AuthSplash";
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
     requireAuth?: boolean;
+    enforceAuth?: boolean;
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAuth = true }) => {
+const isTruthyEnv = (value: string | undefined, defaultValue = true) => {
+    if (!value) {
+        return defaultValue;
+    }
+    return !["false", "0", "no", "off"].includes(value.trim().toLowerCase());
+};
+
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+    children,
+    requireAuth = true,
+    enforceAuth = false
+}) => {
     const { isLoggedIn, loading } = useAuth();
     const authMode = import.meta.env.VITE_AUTH_MODE || "no";
+    const showProtectedView = isTruthyEnv(import.meta.env.VITE_SHOW_PROTECTED_VIEW, true);
+    const isAuthEnabled = authMode === "oidc" || authMode === "local";
+    const shouldProtectView = isAuthEnabled && (showProtectedView || enforceAuth);
 
-    // If auth is disabled, always show content
-    if (authMode !== "oidc") {
+    if (!shouldProtectView) {
         return <>{children}</>;
     }
 
-    // Avoid auth-state flicker while the session/profile bootstrap is still running.
-    if (loading) {
-        return null;
-    }
-
-    // If auth is required but user is not logged in, show login prompt
-    if (requireAuth && !isLoggedIn) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="text-center">
-                    <h2 className="text-2xl font-bold mb-4">Authentication Required</h2>
-                    <p className="mb-4">Please log in to access this page.</p>
-                </div>
-            </div>
-        );
+    if (loading || (requireAuth && !isLoggedIn)) {
+        return <AuthSplash />;
     }
 
     return <>{children}</>;
