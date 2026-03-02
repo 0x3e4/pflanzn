@@ -298,12 +298,36 @@ async def refresh_token(request: Request, db: Session = Depends(get_db)):
         payload = decode_token(app_rtok)
     except HTTPException:
         raise
-    email = payload.get("sub")
-    if not email:
+    subject = payload.get("sub")
+    if not subject:
         raise HTTPException(status_code=401, detail="Invalid refresh token payload")
 
+    if AUTH_MODE == "local":
+        stored_refresh = redis_client.get(f"refresh:{subject}")
+        if not stored_refresh or stored_refresh != app_rtok:
+            raise HTTPException(status_code=401, detail="Refresh failed")
+
+        user = db.query(User).filter(User.username == subject).first()
+        if not user or user.auth_type != "local":
+            raise HTTPException(status_code=401, detail="Refresh failed")
+
+        now = int(time.time())
+        access_expires_at = now + (30 * 60)
+        refresh_expires_at = now + (24 * 60 * 60)
+
+        app_access = create_access_token({"sub": user.username}, expires_delta=timedelta(minutes=30))
+        app_refresh = create_refresh_token({"sub": user.username}, expires_delta=timedelta(days=1))
+        redis_client.setex(f"refresh:{user.username}", 86400, app_refresh)
+
+        response = JSONResponse(content={"message": "Access token refreshed"})
+        _set_auth_cookies(response, app_access, access_expires_at, app_refresh, refresh_expires_at)
+        return response
+
+    if AUTH_MODE != "oidc":
+        raise HTTPException(status_code=400, detail="Refresh not supported for current auth mode")
+
     # 2) Lock by user/email to avoid races
-    lock_key = f"rt-lock:{email}"
+    lock_key = f"rt-lock:{subject}"
     if not redis_client.set(lock_key, "1", nx=True, ex=5):
         raise HTTPException(status_code=409, detail="Refresh already in progress")
 
@@ -311,7 +335,7 @@ async def refresh_token(request: Request, db: Session = Depends(get_db)):
         # 3) Get IdP metadata & RT
         meta = await _get_oidc_metadata()
         token_url = meta["token_endpoint"]
-        idp_refresh = redis_client.get(f"idp:refresh:{email}")
+        idp_refresh = redis_client.get(f"idp:refresh:{subject}")
         if not idp_refresh:
             # app RT valid but we lost IdP RT -> force re-login
             raise HTTPException(status_code=401, detail="Refresh failed")
@@ -325,7 +349,7 @@ async def refresh_token(request: Request, db: Session = Depends(get_db)):
         new_tok = r.json()
 
         # 5) Persist/rotate IdP tokens
-        _store_idp_tokens(email, new_tok)
+        _store_idp_tokens(subject, new_tok)
 
         # 6) Mirror new IdP expiries for YOUR app tokens
         now = int(time.time())
@@ -339,8 +363,8 @@ async def refresh_token(request: Request, db: Session = Depends(get_db)):
         access_delta = timedelta(seconds=idp_at_expires_at - now)
         refresh_delta = timedelta(seconds=(idp_rt_expires_at - now)) if idp_rt_expires_at else timedelta(days=30)
 
-        app_access = create_access_token({"sub": email}, expires_delta=access_delta)
-        app_refresh = create_refresh_token({"sub": email}, expires_delta=refresh_delta)
+        app_access = create_access_token({"sub": subject}, expires_delta=access_delta)
+        app_refresh = create_refresh_token({"sub": subject}, expires_delta=refresh_delta)
 
         # 7) Set cookies to YOUR app tokens with IdP-aligned expiries
         response = JSONResponse(content={"message": "Access token refreshed"})
