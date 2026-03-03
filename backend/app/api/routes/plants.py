@@ -96,6 +96,45 @@ def get_identifications(
 
     return results
 
+@router.delete("/identifications/{identification_id}")
+def delete_identification(
+    identification_id: int,
+    db: Session = Depends(get_db),
+):
+    target = db.query(PlantIdentification).filter(PlantIdentification.id == identification_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="Identification not found")
+
+    session_rows = db.query(PlantIdentification).filter(PlantIdentification.session_id == target.session_id).all()
+    if not session_rows:
+        raise HTTPException(status_code=404, detail="Identification session not found")
+
+    image_paths = {entry.image_path for entry in session_rows if entry.image_path}
+    deleted_count = len(session_rows)
+
+    for entry in session_rows:
+        db.delete(entry)
+
+    db.commit()
+
+    for image_path in image_paths:
+        normalized_path = image_path.replace("\\", "/")
+        if not normalized_path.startswith("identifications/"):
+            continue
+
+        has_references = db.query(PlantIdentification.id).filter(PlantIdentification.image_path == image_path).first()
+        if has_references:
+            continue
+
+        absolute_image_path = os.path.join(settings.UPLOAD_FOLDER, image_path)
+        if os.path.exists(absolute_image_path):
+            try:
+                os.remove(absolute_image_path)
+            except OSError as exc:
+                logger.warning(f"Failed to remove identification image '{absolute_image_path}': {exc}")
+
+    return {"message": "Identification deleted successfully", "deleted_count": deleted_count}
+
 @router.get("/{plant_id}", response_model=PlantResponse)
 def get_plant(plant_id: int, db: Session = Depends(get_db)):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()

@@ -18,6 +18,7 @@ import { useAuth } from "../context/AuthContext";
 import { setOverlayOpen } from "../services/overlayControl";
 import EditableDiv from "../components/EditableDiv";
 import IdentifyResults from "../components/IdentifyResults";
+import LoadingOverlay from "../components/LoadingOverlay";
 import LocationTimelineImages from "../components/LocationTimelineImages";
 import StaticLeafletMap from "../components/StaticLeafletMap";
 import LocationCalendar, { LocationLocalNote, LocationSeasonEvent } from "../components/LocationCalendar";
@@ -34,6 +35,11 @@ import { Location, LocationUpdateInput, SpotType } from "../types/Location";
 import "../styles/locationDetails.css";
 
 type LocationIdentifyResult = { species: string; commonName: string; score: string; images: string[] };
+type ActionLoadingState = {
+  title: string;
+  message: string;
+  details?: string[];
+} | null;
 
 const spotTypeLabels: Record<SpotType, string> = {
   field: "Field",
@@ -100,6 +106,7 @@ export default function LocationDetails() {
   const [notesModalOpen, setNotesModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [generatingDescription, setGeneratingDescription] = useState(false);
+  const [actionLoading, setActionLoading] = useState<ActionLoadingState>(null);
 
   const sortedImages = useMemo(() => {
     if (!location?.images.length) {
@@ -289,15 +296,16 @@ export default function LocationDetails() {
     setSeasonEventDateTime(toLocalDateTimeInputValue(new Date()));
   }, [location?.id]);
 
+  const hasBlockingOverlay = Boolean(identifyResults || notesModalOpen || deleteModalOpen || actionLoading);
+
   useEffect(() => {
-    const hasOverlay = Boolean(identifyResults || notesModalOpen || deleteModalOpen);
-    setOverlayOpen(hasOverlay);
-    document.body.classList.toggle("modal-open", hasOverlay);
+    setOverlayOpen(hasBlockingOverlay);
+    document.body.classList.toggle("modal-open", hasBlockingOverlay);
     return () => {
       setOverlayOpen(false);
       document.body.classList.remove("modal-open");
     };
-  }, [identifyResults, notesModalOpen, deleteModalOpen]);
+  }, [hasBlockingOverlay]);
 
   const persistCustomTags = (updater: (prev: string[]) => string[]) => {
     if (!location) {
@@ -540,6 +548,15 @@ export default function LocationDetails() {
     }
 
     setGeneratingDescription(true);
+    setActionLoading({
+      title: "Generating AI Description",
+      message: "Building a seasonal location summary focused on planting and harvest timing.",
+      details: [
+        "Collecting location context (area type, crop/herb, coordinates)",
+        "Generating seasonal recommendations with the configured AI provider",
+        "Saving the generated description to this location",
+      ],
+    });
     try {
       const { description } = await generateLocationDescription(location.id);
       setLocation((prev) => (prev ? { ...prev, description } : prev));
@@ -547,6 +564,7 @@ export default function LocationDetails() {
     } catch (error) {
       toast.error((error as Error).message || "Failed to generate location description.");
     } finally {
+      setActionLoading(null);
       setGeneratingDescription(false);
     }
   };
@@ -752,6 +770,14 @@ export default function LocationDetails() {
 
   return (
     <div className="container location-details-page">
+      {actionLoading && (
+        <LoadingOverlay
+          title={actionLoading.title}
+          message={actionLoading.message}
+          details={actionLoading.details}
+        />
+      )}
+
       <div className="location-columns">
         <div className="location-left-column">
           <div className="location-information plant-information">

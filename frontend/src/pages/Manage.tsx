@@ -7,14 +7,17 @@ import StatisticsPanel from "../components/StatisticsPanel";
 import UsersPanel from "../components/UsersPanel";
 import PlantsPanel from "../components/PlantsPanel";
 import IdentificationsPanel from "../components/IdentificationsPanel";
+import LocationsPanel from "../components/LocationsPanel";
 import "../styles/manage.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPenToSquare, faUnlock } from "@fortawesome/free-solid-svg-icons";
 import { User } from "../types/User";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import { APP_VERSION } from "../config/appInfo";
+import { getUiPreferences, updateUiPreferences } from "../config/uiPreferences";
 
-type ManageSection = "profile" | "statistics" | "identification" | "users" | "plants" ;
+type ManageSection = "profile" | "statistics" | "identification" | "users" | "plants" | "locations" | "customize";
 
 const Manage: React.FC = () => {
     const { user, logout, fetchProfile, isLoggedIn } = useAuth();
@@ -31,6 +34,7 @@ const Manage: React.FC = () => {
         newPassword: "",
         confirmPassword: "",
     });
+    const [defaultWidescreen, setDefaultWidescreen] = useState(() => getUiPreferences().defaultWidescreen);
     
 
     useEffect(() => {
@@ -120,6 +124,12 @@ const Manage: React.FC = () => {
         }
     };
 
+    const handleDefaultWidescreenChange = (enabled: boolean) => {
+        setDefaultWidescreen(enabled);
+        updateUiPreferences({ defaultWidescreen: enabled });
+        toast.success(`Default widescreen ${enabled ? "enabled" : "disabled"}.`);
+    };
+
     if (loading) {
         return (
             <div className="container profile-container">
@@ -187,6 +197,13 @@ const Manage: React.FC = () => {
                                 Plants
                             </li>
 
+                            <li
+                                className={`sidebar-subsection ${activeSection === "locations" ? "active" : ""}`}
+                                onClick={() => setActiveSection("locations")}
+                            >
+                                Locations
+                            </li>
+
                             <li 
                                 className={`sidebar-subsection ${activeSection === "identification" ? "active" : ""}`}
                                 onClick={() => setActiveSection("identification")}
@@ -195,6 +212,15 @@ const Manage: React.FC = () => {
                             </li>
                         </>
                     )}
+
+                    <h3>Settings</h3>
+                    <li
+                        className={`sidebar-subsection ${activeSection === "customize" ? "active" : ""}`}
+                        onClick={() => setActiveSection("customize")}
+                    >
+                        Customize
+                    </li>
+                    <li className="sidebar-info-item">Version {APP_VERSION}</li>
 
                     {authMode !== "no" && (
                         <li className="logout-link" onClick={handleLogout}>Logout</li>
@@ -281,6 +307,30 @@ const Manage: React.FC = () => {
 
                 {activeSection === "plants" && (authMode === "no" || user?.role === "admin") && (
                     <PlantsPanel />
+                )}
+
+                {activeSection === "locations" && (authMode === "no" || user?.role === "admin") && (
+                    <LocationsPanel />
+                )}
+
+                {activeSection === "customize" && (
+                    <div className="profile-info manage-customize-panel">
+                        <h2>Customize</h2>
+                        <p>Override layout defaults used across the app.</p>
+
+                        <label className="manage-setting-row">
+                            <input
+                                type="checkbox"
+                                checked={defaultWidescreen}
+                                onChange={(e) => handleDefaultWidescreenChange(e.target.checked)}
+                            />
+                            <span>Enable widescreen by default for Plants and Locations</span>
+                        </label>
+
+                        <small className="manage-setting-hint">
+                            You can still collapse the page width with the expand/collapse icon directly in Plants and Locations.
+                        </small>
+                    </div>
                 )}
             </div>
         </div>

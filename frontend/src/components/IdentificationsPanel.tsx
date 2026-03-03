@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { fetchIdentifications } from "../services/PlantService";
+import { deleteIdentification, fetchIdentifications } from "../services/PlantService";
 import { PlantIdentification } from "../types/Identification";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -8,12 +8,14 @@ import {
     faSortAlphaDown,
     faChevronLeft,
     faChevronRight,
-    faExpand
+    faExpand,
+    faTrash
 } from "@fortawesome/free-solid-svg-icons";
 import "../styles/identificationsPanel.css";
 import { setOverlayOpen } from "../services/overlayControl";
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
+import { toast } from "react-toastify";
 
 type SortBy = "confidence" | "name";
 
@@ -22,6 +24,7 @@ export default function IdentificationsPanel() {
     const [sortBy, setSortBy] = useState<SortBy | null>(null);
     const [selectedDate, setSelectedDate] = useState<string>("");
     const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
+    const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
 
     const itemsPerPage = 10;
     const [currentPage, setCurrentPage] = useState(1);
@@ -93,7 +96,7 @@ export default function IdentificationsPanel() {
     const endIndex = startIndex + itemsPerPage;
     const currentPageData = sorted.slice(startIndex, endIndex);
 
-    const totalPages = Math.ceil(sorted.length / itemsPerPage);
+    const totalPages = Math.max(1, Math.ceil(sorted.length / itemsPerPage));
 
     const formatSelectedDate = (dateString: string) => {
         if (!dateString) return "";
@@ -153,6 +156,48 @@ export default function IdentificationsPanel() {
             if (prev.has(imageId)) return prev;
             return new Set(prev).add(imageId);
         });
+    };
+
+    useEffect(() => {
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, totalPages]);
+
+    const handleDeleteIdentification = async (item: PlantIdentification) => {
+        if (deletingSessionId) {
+            return;
+        }
+
+        const shouldDelete = window.confirm("Delete this identification entry?");
+        if (!shouldDelete) {
+            return;
+        }
+
+        setDeletingSessionId(item.session_id);
+        try {
+            await deleteIdentification(item.id);
+
+            setIdentifications((prev) => {
+                const removedIds = prev
+                    .filter((entry) => entry.session_id === item.session_id)
+                    .map((entry) => entry.id);
+
+                setLoadedImages((prevLoaded) => {
+                    const nextLoaded = new Set(prevLoaded);
+                    removedIds.forEach((id) => nextLoaded.delete(id));
+                    return nextLoaded;
+                });
+
+                return prev.filter((entry) => entry.session_id !== item.session_id);
+            });
+
+            toast.success("Identification deleted.");
+        } catch (error) {
+            toast.error((error as Error).message || "Failed to delete identification.");
+        } finally {
+            setDeletingSessionId(null);
+        }
     };
 
     return (
@@ -267,6 +312,14 @@ export default function IdentificationsPanel() {
                                         )}
                                     </div>
                                 )}
+                                <button
+                                    className="identification-delete-btn identification-delete-btn--row-corner"
+                                    onClick={() => handleDeleteIdentification(item)}
+                                    title="Delete identification"
+                                    disabled={deletingSessionId === item.session_id}
+                                >
+                                    <FontAwesomeIcon icon={faTrash} />
+                                </button>
                             </div>
                         );
                     })
@@ -275,7 +328,7 @@ export default function IdentificationsPanel() {
                 )}
 
                 {/* Pagination */}
-                {!loading && totalPages > 1 && (
+                {!loading && sorted.length > 0 && totalPages > 1 && (
                     <div className="pagination">
                         <button
                             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}

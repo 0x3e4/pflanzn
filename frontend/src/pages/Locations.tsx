@@ -14,6 +14,7 @@ import IdentifyResults from "../components/IdentifyResults";
 import StaticLeafletMap from "../components/StaticLeafletMap";
 import { Location, SpotType } from "../types/Location";
 import "../styles/locations.css";
+import { getUiPreferences } from "../config/uiPreferences";
 
 const spotTypeLabels: Record<SpotType, string> = {
   field: "Field",
@@ -34,7 +35,7 @@ export default function Locations() {
   const [modalOpen, setModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<LocationSortOption>("updatedDesc");
-  const [isStretched, setIsStretched] = useState(false);
+  const [isStretched, setIsStretched] = useState(() => getUiPreferences().defaultWidescreen);
   const [selectedSpotType, setSelectedSpotType] = useState<SpotType | "all">("all");
   const [newLocationImage, setNewLocationImage] = useState<File | null>(null);
   const [modalIdentifyResults, setModalIdentifyResults] = useState<LocationIdentifyResult[] | null>(null);
@@ -293,18 +294,16 @@ export default function Locations() {
     <div className={`container plants-container locations-container${isStretched ? " locations-container--stretched" : ""}`}>
       <div className="locations-header">
         <h1>Locations</h1>
-        <div className="locations-header-actions">
-          <button
-            className="toggle-stretch-btn"
-            title={isStretched ? "Collapse container" : "Expand container"}
-            onClick={() => setIsStretched(!isStretched)}
-          >
-            <FontAwesomeIcon icon={isStretched ? faCompress : faExpand} />
-          </button>
-          <button className="add-location-btn" onClick={() => setModalOpen(true)}>
-            <FontAwesomeIcon icon={faPlus} />
-          </button>
-        </div>
+        <button
+          className="toggle-stretch-btn"
+          title={isStretched ? "Collapse container" : "Expand container"}
+          onClick={() => setIsStretched(!isStretched)}
+        >
+          <FontAwesomeIcon icon={isStretched ? faCompress : faExpand} />
+        </button>
+        <button className="add-location-btn" onClick={() => setModalOpen(true)}>
+          <FontAwesomeIcon icon={faPlus} />
+        </button>
       </div>
 
       {modalOpen && (

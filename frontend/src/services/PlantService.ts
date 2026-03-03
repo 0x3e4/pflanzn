@@ -162,6 +162,15 @@ export const fetchIdentifications = async (
   return response.data;
 };
 
+export const deleteIdentification = async (
+    identificationId: number,
+): Promise<{ message: string; deleted_count: number }> => {
+    const response = await apiClient.delete<{ message: string; deleted_count: number }>(
+        `${API_BASE}/identifications/${identificationId}`,
+    );
+    return response.data;
+};
+
 // Plant Notes CRUD
 export const createPlantNote = async (plantId: number, noteText: string): Promise<{
     id: number;

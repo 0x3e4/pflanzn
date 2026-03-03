@@ -15,7 +15,7 @@
 .profile-sidebar h3 {
     margin-top: 0;
     font-size: 18px;
-    margin-bottom: 8px;
+    margin-bottom: 8px !important;
 }
 .profile-sidebar ul {
     list-style: none;
@@ -64,6 +64,10 @@
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+.sidebar-subitem {
+    padding-left: 40px !important;
+}
+
 .sidebar-subsection:hover {
     background-color: var(--senary-color);
     color: var(--primary-color);
@@ -72,6 +76,18 @@
 .sidebar-subsection.active {
     background-color: var(--primary-color);
     color: white;
+}
+
+.sidebar-info-item {
+    cursor: default !important;
+    background: transparent !important;
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+.sidebar-info-item:hover {
+    background: transparent !important;
+    color: var(--text-color) !important;
 }
 
 .logout-link {
@@ -92,16 +108,42 @@
     text-align: left;
 }
 /* Info Box */
-.profile-info, .admin-panel, .statistics-panel, .plants-panel, .users-panel {
+.profile-info, .admin-panel, .statistics-panel, .plants-panel, .users-panel, .locations-panel {
     padding: 20px;
     border-radius: 8px;
     color: var(--text-color);
     width: 100%;
     box-sizing: border-box;
 }
-.profile-info h2, .admin-panel h2, .statistics-panel h2, .plants-panel h2, .users-panel h2 {
+.profile-info h2, .admin-panel h2, .statistics-panel h2, .plants-panel h2, .users-panel h2, .locations-panel h2 {
     margin-top: 0;
     font-size: 1.5rem;
+}
+
+.manage-customize-panel {
+    max-width: 760px;
+}
+
+.manage-setting-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 18px;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+.manage-setting-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-color);
+    cursor: pointer;
+}
+
+.manage-setting-hint {
+    display: block;
+    margin-top: 10px;
+    color: var(--quinary-color);
 }
 
 .add-btn {
@@ -516,7 +558,7 @@
         width: 100%;
         box-sizing: border-box;
     }
-    .profile-info, .admin-panel, .statistics-panel, .users-panel, .plants-panel {
+    .profile-info, .admin-panel, .statistics-panel, .users-panel, .plants-panel, .locations-panel {
         width: 100%;
         padding: 15px 0;
         box-sizing: border-box;

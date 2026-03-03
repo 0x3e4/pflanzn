@@ -3,7 +3,7 @@ footer {
   width: 100%;
   background-color: var(--secondary-color);
   color: #ffffff;
-  padding: 2rem 4rem;
+  padding: 1.25rem 2.5rem;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -22,16 +22,16 @@ footer {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding-bottom: 2rem;
+  padding-bottom: 0.75rem;
 }
 
 .footer-logo img {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
 }
 
 .footer-logo h1 {
-  font-size: 1.5rem;
+  font-size: 1.15rem;
   margin: 0;
   font-weight: 800;
   display: flex;
@@ -42,26 +42,26 @@ footer {
 .footer-columns {
   display: flex;
   flex-wrap: wrap;
-  gap: 10rem;
+  gap: 4rem;
 }
 
 .footer-column {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .footer-column h3 {
-  font-size: 1rem;
+  font-size: 0.92rem;
   font-weight: 600;
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.5rem;
   color: #ffffff;
 }
 
 .footer-column a {
   text-decoration: none;
   color: var(--septimal-color);
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   transition: color 0.3s;
 }
 
@@ -74,18 +74,18 @@ footer {
   footer {
       flex-direction: column;
       align-items: flex-start;
-      padding: 2rem;
+      padding: 1.25rem;
   }
 
   .footer-columns {
-      gap: 5rem;
+      gap: 2rem;
       width: 100%;
   }
 }  
 
 .si-icon {
 color: #ffffff;
-width: 14px;
-height: 14px;
-margin-right: 1rem;
+width: 13px;
+height: 13px;
+margin-right: 0.65rem;
 }

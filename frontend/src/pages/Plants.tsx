@@ -35,6 +35,7 @@ import { useAuth } from "../context/AuthContext";
 import { setOverlayOpen } from "../services/overlayControl";
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
+import { getUiPreferences } from "../config/uiPreferences";
 
 export default function Plants() {
   const [plants, setPlants] = useState<Plant[]>([]);
@@ -48,7 +49,7 @@ export default function Plants() {
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
   const [unarchiveReason, setUnarchiveReason] = useState("");
   const [selectedPlantToUnarchive, setSelectedPlantToUnarchive] = useState<number | null>(null);
-  const [isStretched, setIsStretched] = useState(false);
+  const [isStretched, setIsStretched] = useState(() => getUiPreferences().defaultWidescreen);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
 
   type FilterMode = "species" | "name";
