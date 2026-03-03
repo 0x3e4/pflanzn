@@ -9,7 +9,8 @@ import {
     faChevronLeft,
     faChevronRight,
     faExpand,
-    faTrash
+    faTrash,
+    faCircleXmark
 } from "@fortawesome/free-solid-svg-icons";
 import "../styles/identificationsPanel.css";
 import { setOverlayOpen } from "../services/overlayControl";
@@ -25,6 +26,7 @@ export default function IdentificationsPanel() {
     const [selectedDate, setSelectedDate] = useState<string>("");
     const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
     const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
+    const [deleteModalItem, setDeleteModalItem] = useState<PlantIdentification | null>(null);
 
     const itemsPerPage = 10;
     const [currentPage, setCurrentPage] = useState(1);
@@ -55,8 +57,15 @@ export default function IdentificationsPanel() {
     };
 
     useEffect(() => {
-        setOverlayOpen(fullSizeImagePath !== null);
-    }, [fullSizeImagePath]);
+        const hasBlockingOverlay = fullSizeImagePath !== null || deleteModalItem !== null;
+        setOverlayOpen(hasBlockingOverlay);
+    }, [fullSizeImagePath, deleteModalItem]);
+
+    useEffect(() => {
+        return () => {
+            setOverlayOpen(false);
+        };
+    }, []);
 
     // Click outside sort buttons resets sortBy
     useEffect(() => {
@@ -110,20 +119,24 @@ export default function IdentificationsPanel() {
         });
     };
 
-    // Reset loaded images when identifications change
+    // Keep loaded-image cache for existing rows and only drop removed IDs.
     useEffect(() => {
-        const newIds = new Set(identifications.map(item => item.id));
-        const currentIds = new Set(Array.from(loadedImages));
-        
-        // Check if we have completely different identifications
-        const hasSignificantChanges = identifications.length === 0 || 
-                                    newIds.size !== currentIds.size ||
-                                    [...newIds].some(id => !currentIds.has(id));
-        
-        if (hasSignificantChanges) {
-            setLoadedImages(new Set()); // Only reset when truly necessary
-        }
-    }, [identifications.length]);
+        setLoadedImages((prevLoaded) => {
+            const validIds = new Set(identifications.map((item) => item.id));
+            let changed = false;
+            const nextLoaded = new Set<number>();
+
+            prevLoaded.forEach((id) => {
+                if (validIds.has(id)) {
+                    nextLoaded.add(id);
+                } else {
+                    changed = true;
+                }
+            });
+
+            return changed ? nextLoaded : prevLoaded;
+        });
+    }, [identifications]);
 
     useEffect(() => {
         // Mobile-specific aggressive preloading for current page
@@ -164,23 +177,32 @@ export default function IdentificationsPanel() {
         }
     }, [currentPage, totalPages]);
 
-    const handleDeleteIdentification = async (item: PlantIdentification) => {
+    const openDeleteModal = (item: PlantIdentification) => {
         if (deletingSessionId) {
             return;
         }
+        setDeleteModalItem(item);
+    };
 
-        const shouldDelete = window.confirm("Delete this identification entry?");
-        if (!shouldDelete) {
+    const closeDeleteModal = () => {
+        if (deletingSessionId) {
+            return;
+        }
+        setDeleteModalItem(null);
+    };
+
+    const handleConfirmDeleteIdentification = async () => {
+        if (!deleteModalItem || deletingSessionId) {
             return;
         }
 
-        setDeletingSessionId(item.session_id);
+        setDeletingSessionId(deleteModalItem.session_id);
         try {
-            await deleteIdentification(item.id);
+            await deleteIdentification(deleteModalItem.id);
 
             setIdentifications((prev) => {
                 const removedIds = prev
-                    .filter((entry) => entry.session_id === item.session_id)
+                    .filter((entry) => entry.session_id === deleteModalItem.session_id)
                     .map((entry) => entry.id);
 
                 setLoadedImages((prevLoaded) => {
@@ -189,10 +211,11 @@ export default function IdentificationsPanel() {
                     return nextLoaded;
                 });
 
-                return prev.filter((entry) => entry.session_id !== item.session_id);
+                return prev.filter((entry) => entry.session_id !== deleteModalItem.session_id);
             });
 
             toast.success("Identification deleted.");
+            setDeleteModalItem(null);
         } catch (error) {
             toast.error((error as Error).message || "Failed to delete identification.");
         } finally {
@@ -314,7 +337,7 @@ export default function IdentificationsPanel() {
                                 )}
                                 <button
                                     className="identification-delete-btn identification-delete-btn--row-corner"
-                                    onClick={() => handleDeleteIdentification(item)}
+                                    onClick={() => openDeleteModal(item)}
                                     title="Delete identification"
                                     disabled={deletingSessionId === item.session_id}
                                 >
@@ -354,6 +377,32 @@ export default function IdentificationsPanel() {
                             src={`/api/uploads/${fullSizeImagePath}`}
                             alt="Full Size Plant"
                         />
+                    </div>
+                )}
+
+                {deleteModalItem && (
+                    <div className="identification-delete-modal-overlay" onClick={closeDeleteModal}>
+                        <div className="identification-delete-modal" onClick={(e) => e.stopPropagation()}>
+                            <div className="delete-modal-header">
+                                <span>Are you sure you want to delete this identification?</span>
+                            </div>
+                            <div className="identification-delete-modal-buttons">
+                                <button
+                                    className="identification-delete-confirm"
+                                    onClick={handleConfirmDeleteIdentification}
+                                    disabled={deletingSessionId === deleteModalItem.session_id}
+                                >
+                                    <FontAwesomeIcon icon={faTrash} /> Delete
+                                </button>
+                                <button
+                                    className="identification-delete-cancel"
+                                    onClick={closeDeleteModal}
+                                    disabled={deletingSessionId === deleteModalItem.session_id}
+                                >
+                                    <FontAwesomeIcon icon={faCircleXmark} /> Cancel
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>

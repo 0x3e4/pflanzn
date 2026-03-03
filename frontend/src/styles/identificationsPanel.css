@@ -50,6 +50,11 @@
     border-radius: 6px;
     width: 34px;
     height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
@@ -68,6 +73,75 @@
     left: 12px;
     bottom: 12px;
     z-index: 12;
+}
+
+.identification-delete-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.72);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1300;
+}
+
+.identification-delete-modal {
+    background: var(--secondary-background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    width: min(440px, calc(100% - 24px));
+    padding: 18px;
+    color: var(--text-color);
+}
+
+.identification-delete-modal .delete-modal-header {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.identification-delete-modal-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.identification-delete-confirm,
+.identification-delete-cancel {
+    border: none;
+    border-radius: 6px;
+    height: 38px;
+    padding: 0 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    color: #fff;
+}
+
+.identification-delete-confirm {
+    background: var(--tertiary-color);
+}
+
+.identification-delete-confirm:hover:not(:disabled) {
+    background: var(--quaternary-color);
+}
+
+.identification-delete-cancel {
+    background: var(--quinary-color);
+}
+
+.identification-delete-cancel:hover:not(:disabled) {
+    background: var(--senary-color);
+}
+
+.identification-delete-confirm:disabled,
+.identification-delete-cancel:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
 /* Image container */
