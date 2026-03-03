@@ -37,8 +37,8 @@ export interface LocationCreateInput {
 
 export interface LocationUpdateInput {
   name?: string;
-  item_name?: string;
-  description?: string;
+  item_name?: string | null;
+  description?: string | null;
   spot_type?: SpotType;
   visibility?: Visibility;
   latitude?: number | null;

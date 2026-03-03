@@ -2,6 +2,7 @@ import logging
 import re
 import ollama
 import os
+from typing import Optional
 from app.core.config import settings
 from app.utils.llm_text_cleaner import clean_generated_text
 from app.services.prompt_config import PromptConfig
@@ -41,6 +42,49 @@ class OllamaClient:
 
         except Exception as e:
             logger.exception(f"Error while calling Ollama: {e}")
+            raise
+
+    def generate_location_description(
+        self,
+        location_name: str,
+        item_name: str,
+        spot_type: str,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        existing_description: Optional[str] = None,
+    ) -> str:
+        prompt = PromptConfig.get_location_description_prompt(
+            location_name=location_name,
+            item_name=item_name,
+            spot_type=spot_type,
+            latitude=latitude,
+            longitude=longitude,
+            existing_description=existing_description,
+        )
+
+        try:
+            logger.info(f"Requesting Ollama to generate location description for: {location_name}")
+
+            response = ollama.chat(
+                model=settings.OLLAMA_MODEL_NAME,
+                messages=[
+                    {"role": "system", "content": PromptConfig.get_system_message()},
+                    {"role": "user", "content": prompt},
+                ],
+                options={
+                    "temperature": PromptConfig.TEMPERATURE_CREATIVE,
+                    "num_predict": PromptConfig.MAX_TOKENS_LOCATION_DESCRIPTION,
+                },
+            )
+
+            generated_text = response["message"]["content"]
+            cleaned_description = clean_generated_text(generated_text)
+
+            logger.info("Received location description response from Ollama")
+            return cleaned_description
+
+        except Exception as e:
+            logger.exception(f"Error while calling Ollama for location description: {e}")
             raise
 
     def care_helper(self, db, plant_id: int, user_message: str = None) -> str:

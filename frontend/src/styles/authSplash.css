@@ -5,6 +5,10 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
+  background:
+      radial-gradient(600px circle at 10% -10%, rgba(76, 175, 80, 0.2), transparent 45%),
+      radial-gradient(500px circle at 90% 10%, rgba(121, 76, 175, 0.16), transparent 48%),
+      var(--secondary-background-color);
 }
 
 .auth-splash-content {

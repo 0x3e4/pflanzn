@@ -2,6 +2,7 @@ import logging
 import re
 import httpx
 import json
+from typing import Optional
 from app.core.config import settings
 from app.utils.llm_text_cleaner import clean_generated_text
 from app.services.prompt_config import PromptConfig
@@ -51,6 +52,54 @@ class MistralAIClient:
 
         except Exception as e:
             logger.exception(f"Error while calling Mistral AI: {e}")
+            raise
+
+    def generate_location_description(
+        self,
+        location_name: str,
+        item_name: str,
+        spot_type: str,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        existing_description: Optional[str] = None,
+    ) -> str:
+        prompt = PromptConfig.get_location_description_prompt(
+            location_name=location_name,
+            item_name=item_name,
+            spot_type=spot_type,
+            latitude=latitude,
+            longitude=longitude,
+            existing_description=existing_description,
+        )
+
+        payload = {
+            "model": settings.MISTRALAI_MODEL_NAME,
+            "messages": [
+                {"role": "system", "content": PromptConfig.get_system_message()},
+                {"role": "user", "content": prompt},
+            ],
+            "max_tokens": PromptConfig.MAX_TOKENS_LOCATION_DESCRIPTION,
+            "temperature": PromptConfig.TEMPERATURE_CREATIVE,
+        }
+
+        try:
+            logger.info(f"Requesting Mistral AI to generate location description for: {location_name}")
+
+            response = httpx.post(MISTRAL_API_URL, headers=HEADERS, data=json.dumps(payload))
+
+            if response.status_code != 200:
+                logger.error(f"Failed to call Mistral AI: {response.status_code} - {response.text}")
+                raise Exception(f"Mistral API request failed with status {response.status_code}")
+
+            data = response.json()
+            generated_text = data["choices"][0]["message"]["content"]
+            cleaned_description = clean_generated_text(generated_text)
+
+            logger.info("Received location description response from Mistral AI")
+            return cleaned_description
+
+        except Exception as e:
+            logger.exception(f"Error while calling Mistral AI for location description: {e}")
             raise
 
     def care_helper(self, db, plant_id: int, user_message: str = None) -> str:

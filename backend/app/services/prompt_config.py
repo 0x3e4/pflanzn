@@ -3,6 +3,7 @@ Shared prompt configuration for all LLM providers.
 This prevents duplication and ensures consistent AI behavior across different clients.
 """
 from app.core.config import settings
+from typing import Optional
 
 
 class PromptConfig:
@@ -15,6 +16,7 @@ class PromptConfig:
     # Max token settings
     MAX_TOKENS_DESCRIPTION = 800  # Reduced from 1000 for more concise descriptions
     MAX_TOKENS_CARE_ADVICE = 600  # For focused, actionable care advice
+    MAX_TOKENS_LOCATION_DESCRIPTION = 900  # Location-focused seasonal crop guidance
 
     @staticmethod
     def get_species_description_prompt(common_name: str, species_name: str) -> str:
@@ -65,6 +67,36 @@ class PromptConfig:
         )
 
         return base_prompt
+
+    @staticmethod
+    def get_location_description_prompt(
+        location_name: str,
+        item_name: str,
+        spot_type: str,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        existing_description: Optional[str] = None,
+    ) -> str:
+        """
+        Generate prompt for a location-focused seasonal crop/herb description.
+        """
+        coordinates = "unknown"
+        if latitude is not None and longitude is not None:
+            coordinates = f"{latitude:.6f}, {longitude:.6f}"
+
+        existing_text = existing_description.strip() if existing_description else "none"
+        item_text = item_name.strip() if item_name else "mixed crop/herb area"
+
+        return (
+            f"Write a practical location description for '{location_name}'. "
+            f"Focus on '{item_text}' in a '{spot_type}' area at coordinates: {coordinates}. "
+            f"Current saved description: {existing_text}. "
+            f"Write in '{settings.LLM_LANGUAGE}' and keep it concise, clear, and actionable. "
+            f"Include: ideal sowing/planting window, growth phase notes, harvest season/timing, "
+            f"harvest readiness indicators, and short post-harvest/storage tips. "
+            f"If climate cannot be inferred from coordinates, state assumptions briefly. "
+            f"Avoid markdown, headings, lists, or bold text. Maximum 1800 characters."
+        )
 
     @staticmethod
     def get_system_message() -> str:

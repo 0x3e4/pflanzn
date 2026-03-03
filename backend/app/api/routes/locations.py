@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.database import get_db
 from app.models import Location, LocationImage
+from app.services.llm_client import LLMClient
 from app.services.plantnet import identify_species_via_plantnet
 from app.schemas import (
     LocationCreate,
@@ -196,6 +197,67 @@ def list_location_images(
     if not location:
         raise HTTPException(status_code=404, detail="Location not found")
     return location.images
+
+
+@router.delete("/{location_id}/images/{image_id}")
+def delete_location_image(
+    location_id: int,
+    image_id: int,
+    _: None = Depends(ensure_feature_enabled),
+    db: Session = Depends(get_db),
+):
+    location = db.query(Location).filter(Location.id == location_id).first()
+    if not location:
+        raise HTTPException(status_code=404, detail="Location not found")
+
+    image = (
+        db.query(LocationImage)
+        .filter(LocationImage.id == image_id, LocationImage.location_id == location_id)
+        .first()
+    )
+    if not image:
+        raise HTTPException(status_code=404, detail="Image not found for this location")
+
+    absolute_image_path = os.path.join(settings.UPLOAD_FOLDER, image.image_path)
+    if os.path.exists(absolute_image_path):
+        os.remove(absolute_image_path)
+
+    db.delete(image)
+    db.commit()
+
+    return {"message": "Image deleted successfully"}
+
+
+@router.post("/{location_id}/generate_description")
+def generate_location_description(
+    location_id: int,
+    _: None = Depends(ensure_feature_enabled),
+    db: Session = Depends(get_db),
+):
+    location = db.query(Location).filter(Location.id == location_id).first()
+    if not location:
+        raise HTTPException(status_code=404, detail="Location not found")
+
+    try:
+        llm = LLMClient()
+        description = llm.generate_location_description(
+            location_name=location.name,
+            item_name=location.item_name or "",
+            spot_type=location.spot_type,
+            latitude=location.latitude,
+            longitude=location.longitude,
+            existing_description=location.description,
+        )
+        location.description = description
+        db.commit()
+        db.refresh(location)
+        return {
+            "message": "Location description generated and saved successfully.",
+            "description": description,
+        }
+    except Exception as exc:
+        logger.error(f"Failed to generate location description: {exc}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate location description: {exc}")
 
 
 @router.post("/identify")

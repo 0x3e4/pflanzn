@@ -7,6 +7,7 @@ from app.services.prompt_config import PromptConfig
 from sqlalchemy.orm import Session
 from app.models import Plant
 import base64
+from typing import Optional
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -41,6 +42,45 @@ class ClaudeClient:
 
         except Exception as e:
             logger.exception(f"Error while calling Claude Messages API: {e}")
+            raise
+
+    def generate_location_description(
+        self,
+        location_name: str,
+        item_name: str,
+        spot_type: str,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        existing_description: Optional[str] = None,
+    ) -> str:
+        prompt = PromptConfig.get_location_description_prompt(
+            location_name=location_name,
+            item_name=item_name,
+            spot_type=spot_type,
+            latitude=latitude,
+            longitude=longitude,
+            existing_description=existing_description,
+        )
+
+        try:
+            logger.info(f"Requesting Claude to generate location description for: {location_name}")
+
+            response = anthropic_client.messages.create(
+                model=settings.CLAUDE_MODEL_NAME,
+                max_tokens=PromptConfig.MAX_TOKENS_LOCATION_DESCRIPTION,
+                temperature=PromptConfig.TEMPERATURE_CREATIVE,
+                system=PromptConfig.get_system_message(),
+                messages=[{"role": "user", "content": prompt}],
+            )
+
+            generated_text = response.content[0].text
+            cleaned_description = clean_generated_text(generated_text)
+
+            logger.info("Received location description response from Claude")
+            return cleaned_description
+
+        except Exception as e:
+            logger.exception(f"Error while calling Claude for location description: {e}")
             raise
 
     def care_helper(self, db: Session, plant_id: int, user_message: str = None) -> str:

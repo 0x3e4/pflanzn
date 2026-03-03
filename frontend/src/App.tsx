@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import About from "./pages/About";
 import Plants from "./pages/Plants";
 import Locations from "./pages/Locations";
+import LocationDetails from "./pages/LocationDetails";
 import PlantDetails from "./pages/PlantDetails";
 import Login from "./pages/Login";
 import Manage from "./pages/Manage";
@@ -84,6 +85,7 @@ function AppLayout() {
                         <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
                         <Route path="/plants" element={<ProtectedRoute><Plants /></ProtectedRoute>} />
                         {showLocations && <Route path="/locations" element={<ProtectedRoute><Locations /></ProtectedRoute>} />}
+                        {showLocations && <Route path="/location/:locationId" element={<ProtectedRoute><LocationDetails /></ProtectedRoute>} />}
                         <Route path="/plant/:plantId" element={<ProtectedRoute><PlantDetails /></ProtectedRoute>} />
                         {authMode !== "no" && <Route path="/login" element={<Login />} />}
                         <Route path="/manage" element={<ProtectedRoute enforceAuth><Manage /></ProtectedRoute>} />

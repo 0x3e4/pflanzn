@@ -13,6 +13,11 @@ export const fetchLocations = async (): Promise<Location[]> => {
   return response.data;
 };
 
+export const fetchSingleLocation = async (locationId: number): Promise<Location> => {
+  const response = await apiClient.get<Location>(`${API_BASE}/${locationId}`);
+  return response.data;
+};
+
 export const createLocation = async (payload: LocationCreateInput): Promise<Location> => {
   const response = await apiClient.post<Location>(`${API_BASE}/`, payload);
   return response.data;
@@ -44,6 +49,11 @@ export const fetchLocationImages = async (locationId: number): Promise<LocationI
   return response.data;
 };
 
+export const deleteLocationImage = async (locationId: number, imageId: number): Promise<{ message: string }> => {
+  const response = await apiClient.delete<{ message: string }>(`${API_BASE}/${locationId}/images/${imageId}`);
+  return response.data;
+};
+
 export const identifyLocationFromImage = async (file: File): Promise<{
   identified_species: Array<{
     scientific_name: string;
@@ -58,5 +68,10 @@ export const identifyLocationFromImage = async (file: File): Promise<{
   const response = await apiClient.post(`${API_BASE}/identify`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  return response.data;
+};
+
+export const generateLocationDescription = async (locationId: number): Promise<{ description: string }> => {
+  const response = await apiClient.post<{ description: string }>(`${API_BASE}/${locationId}/generate_description`);
   return response.data;
 };

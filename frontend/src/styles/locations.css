@@ -78,12 +78,6 @@
   color: var(--text-color);
 }
 
-.modal-subtitle {
-  color: #ccc;
-  margin-top: 0;
-  margin-bottom: 10px;
-}
-
 .add-location-modal-content input,
 .add-location-modal-content select,
 .add-location-modal-content textarea {
@@ -119,6 +113,11 @@
 
 .location-identify-button {
   margin-top: 0;
+  background-color: var(--quinary-color) !important;
+}
+
+.location-identify-button:hover {
+  background-color: var(--senary-color) !important;
 }
 
 .location-identify-results-list {
@@ -262,6 +261,15 @@
   box-shadow: 0px 12px 20px rgba(0, 0, 0, 0.7);
 }
 
+.location-card-main-link {
+  color: inherit;
+  display: block;
+}
+
+.location-card-main-link:hover {
+  color: inherit;
+}
+
 .location-image-container {
   width: 100%;
   height: 450px;
@@ -299,8 +307,12 @@
   margin: 3px 0;
 }
 
+.location-card-id {
+  margin: 2px 0 4px;
+}
+
 .location-card p strong {
-  color: var(--text-color);
+  color: inherit;
   font-weight: 700;
 }
 
@@ -310,14 +322,14 @@
 
 .location-map-wrap {
   margin-top: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .location-map-frame {
   width: 100%;
   height: 200px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  display: block;
 }
 
 .location-buttons {
@@ -356,6 +368,20 @@
   background-color: var(--senary-color);
 }
 
+.identify-location-btn {
+  background-color: var(--primary-color);
+  border-radius: 0;
+}
+
+.identify-location-btn:hover {
+  background-color: var(--secondary-color);
+}
+
+.identify-location-btn:disabled {
+  opacity: 0.75;
+  cursor: wait;
+}
+
 .locations-container--stretched {
   max-width: unset !important;
 }
@@ -370,6 +396,11 @@
   transition: background-color .5s ease-in-out, transform .5s;
   border-radius: 25%;
   margin-left: 6px;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .toggle-stretch-btn:hover {

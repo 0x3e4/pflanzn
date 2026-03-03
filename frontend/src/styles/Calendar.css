@@ -208,6 +208,24 @@
   color: var(--text-color);
 }
 
+.react-calendar__tile.season-day {
+  background-color: #b8892d;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 8px;
+}
+
+.react-calendar__tile.season-day:hover,
+.react-calendar__tile.season-day:enabled:hover,
+.react-calendar__tile.season-day:enabled:focus {
+  background-color: #8f6a1f;
+  color: #fff;
+}
+
+.react-calendar__tile.location-triple-day::after {
+  box-shadow: 0 0 0 2px rgba(184, 137, 45, 0.8);
+}
+
 .watering-tooltip-content {
     text-align: left;
     padding: 4px 8px;

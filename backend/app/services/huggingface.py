@@ -1,5 +1,6 @@
 import logging
 import re
+from typing import Optional
 from huggingface_hub import InferenceClient
 from app.core.config import settings
 from app.utils.llm_text_cleaner import clean_generated_text
@@ -39,6 +40,44 @@ class HuggingFaceClient:
 
         except Exception as e:
             logger.exception(f"Error while calling Hugging Face: {e}")
+            raise
+
+    def generate_location_description(
+        self,
+        location_name: str,
+        item_name: str,
+        spot_type: str,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        existing_description: Optional[str] = None,
+    ) -> str:
+        system_msg = PromptConfig.get_system_message()
+        prompt = PromptConfig.get_location_description_prompt(
+            location_name=location_name,
+            item_name=item_name,
+            spot_type=spot_type,
+            latitude=latitude,
+            longitude=longitude,
+            existing_description=existing_description,
+        )
+        full_prompt = f"{system_msg}\n\n{prompt}"
+
+        try:
+            logger.info(f"Requesting Hugging Face to generate location description for: {location_name}")
+
+            response = client.text_generation(
+                full_prompt,
+                max_new_tokens=PromptConfig.MAX_TOKENS_LOCATION_DESCRIPTION,
+                temperature=PromptConfig.TEMPERATURE_CREATIVE,
+            )
+
+            cleaned_description = clean_generated_text(response)
+
+            logger.info("Received location description response from Hugging Face")
+            return cleaned_description
+
+        except Exception as e:
+            logger.exception(f"Error while calling Hugging Face for location description: {e}")
             raise
 
     def care_helper(self, db, plant_id: int, user_message: str = None) -> str:
