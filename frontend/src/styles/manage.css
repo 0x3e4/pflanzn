@@ -4,6 +4,7 @@
     width: 100%;
     background-color: var(--secondary-background-color);
     text-align: left;
+    min-height: 82vh;
 }
 /* Sidebar (desktop view) */
 .profile-sidebar {

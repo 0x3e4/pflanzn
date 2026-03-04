@@ -3,6 +3,7 @@ import logging
 import redis
 import httpx
 import time
+from urllib.parse import urlparse
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
@@ -37,9 +38,17 @@ REDIS_URL = settings.REDIS_URL
 redis_client = redis.StrictRedis.from_url(REDIS_URL, decode_responses=True)
 
 # Cookie settings
+def _is_truthy(value: Optional[str], default: bool = False) -> bool:
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+parsed_domain = urlparse(settings.VITE_DOMAIN or "")
+derived_secure = parsed_domain.scheme.lower() == "https"
+cookie_secure_override = os.getenv("COOKIE_SECURE")
+COOKIE_SECURE = _is_truthy(cookie_secure_override, default=derived_secure)
 COOKIE_DOMAIN = None
-COOKIE_SAMESITE = "none"
-COOKIE_SECURE = True
+COOKIE_SAMESITE = (os.getenv("COOKIE_SAMESITE") or ("none" if COOKIE_SECURE else "lax")).lower()
 COOKIE_PATH = "/"
 
 # Initialize OAuth for OIDC
@@ -148,6 +157,9 @@ def login(user_data: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     # Generate tokens
+    now = int(time.time())
+    access_expires_at = now + (30 * 60)
+    refresh_expires_at = now + (24 * 60 * 60)
     access_token = create_access_token({"sub": user.username}, expires_delta=timedelta(minutes=30))
     refresh_token = create_refresh_token({"sub": user.username}, expires_delta=timedelta(days=1))
 
@@ -156,14 +168,7 @@ def login(user_data: LoginRequest, db: Session = Depends(get_db)):
 
     # Secure response with HTTP-only cookies
     response = JSONResponse(content={"message": "Login successful"})
-    response.set_cookie(
-        key="access_token", value=access_token, httponly=True, secure=COOKIE_SECURE,
-        samesite=COOKIE_SAMESITE, path=COOKIE_PATH
-    )
-    response.set_cookie(
-        key="refresh_token", value=refresh_token, httponly=True, secure=COOKIE_SECURE,
-        samesite=COOKIE_SAMESITE, path=COOKIE_PATH
-    )
+    _set_auth_cookies(response, access_token, access_expires_at, refresh_token, refresh_expires_at)
 
     return response
 

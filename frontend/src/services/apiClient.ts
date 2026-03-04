@@ -10,8 +10,16 @@ type RetriableRequestConfig = InternalAxiosRequestConfig & {
     _retry?: boolean;
 };
 
+const isTruthyEnv = (value: string | undefined, defaultValue = true) => {
+    if (!value) {
+        return defaultValue;
+    }
+    return !["false", "0", "no", "off"].includes(value.trim().toLowerCase());
+};
+
 const AUTH_MODE = (import.meta.env.VITE_AUTH_MODE || "no").toLowerCase();
 const isAuthEnabled = AUTH_MODE === "oidc" || AUTH_MODE === "local";
+const showProtectedView = isTruthyEnv(import.meta.env.VITE_SHOW_PROTECTED_VIEW, true);
 const nonRetryAuthPaths = ["/auth/login", "/auth/refresh", "/auth/logout", "/auth/oidc-login", "/auth/oidc/callback"];
 let refreshPromise: Promise<void> | null = null;
 let redirectInProgress = false;
@@ -23,8 +31,18 @@ const shouldHandleUnauthorized = (url: string | undefined) => {
     return !nonRetryAuthPaths.some((path) => url.includes(path));
 };
 
+const shouldRedirectToLogin = () => {
+    if (!isAuthEnabled) {
+        return false;
+    }
+
+    const pathname = window.location.pathname;
+    const isManageRoute = pathname.startsWith("/manage");
+    return showProtectedView || isManageRoute;
+};
+
 const redirectToLogin = async () => {
-    if (redirectInProgress || !isAuthEnabled) {
+    if (redirectInProgress || !shouldRedirectToLogin()) {
         return;
     }
     redirectInProgress = true;
@@ -35,8 +53,6 @@ const redirectToLogin = async () => {
     } finally {
         if (!window.location.pathname.startsWith("/login")) {
             window.location.href = "/login?reason=session_expired";
-        } else {
-            window.location.reload();
         }
     }
 };

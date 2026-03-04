@@ -2,7 +2,7 @@
 .plants-container {
   text-align: center;
   background-color: var(--secondary-background-color);
-  min-height: 77vh;
+  min-height: 82vh;
   transition: max-width 0.3s ease-in-out;
 }
 
