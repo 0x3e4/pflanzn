@@ -1,0 +1,23 @@
+.offline-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10001;
+    background-color: var(--tertiary-color);
+    color: white;
+    text-align: center;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}

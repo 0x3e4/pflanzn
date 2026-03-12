@@ -72,14 +72,7 @@ footer {
 /* Mobile-friendly */
 @media (max-width: 768px) {
   footer {
-      flex-direction: column;
-      align-items: flex-start;
-      padding: 1.25rem;
-  }
-
-  .footer-columns {
-      gap: 2rem;
-      width: 100%;
+      display: none;
   }
 }  
 

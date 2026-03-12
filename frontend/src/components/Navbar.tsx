@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import "../styles/navbar.css";
 import { useAuth } from "../context/AuthContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCamera, faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { faCamera, faSpinner, faSun, faMoon } from "@fortawesome/free-solid-svg-icons";
+import { useTheme } from "../hooks/useTheme";
 import { identifyPlantFromImage } from "../services/PlantService";
 import IdentifyResults from "./IdentifyResults";
 import { toast } from "react-toastify";
@@ -20,6 +21,7 @@ export default function Navbar() {
         (import.meta.env.VITE_ENABLE_LOCATIONS || import.meta.env.VITE_ENABLE_HERBALIST_LOCATIONS || "false").toLowerCase()
     );
     const [loadingIdentification, setLoading] = useState<boolean>(false);
+    const { theme, toggleTheme } = useTheme();
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -82,15 +84,19 @@ export default function Navbar() {
     };
 
     return (
-        <nav className={`navbar ${isScrolled ? "shrink" : ""}`} ref={navRef}>
+        <nav className={`navbar ${isScrolled ? "shrink" : ""}`} ref={navRef} aria-label="Main navigation">
             <div className="nav-container">
                 <Link to="/" className="nav-logo" onClick={() => setMenuOpen(false)}>
                     <img src="/logo_transparent.png" alt="Logo" />
                     Pflanzn
                 </Link>
 
+                <button className="theme-toggle-btn" onClick={toggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}>
+                    <FontAwesomeIcon icon={theme === "dark" ? faSun : faMoon} />
+                </button>
+
                 {/* Identify Button - Left of Hamburger */}
-                <button className="identify-btn" onClick={handleIdentifyClick} disabled={loadingIdentification}>
+                <button className="identify-btn" onClick={handleIdentifyClick} disabled={loadingIdentification} aria-label="Identify a plant from photo">
                     <FontAwesomeIcon icon={loadingIdentification ? faSpinner : faCamera} spin={loadingIdentification} />
                 </button>
                 <input
@@ -105,6 +111,8 @@ export default function Navbar() {
                 <button
                     className={`nav-toggle ${menuOpen ? "active" : ""}`}
                     onClick={() => setMenuOpen(!menuOpen)}
+                    aria-label={menuOpen ? "Close menu" : "Open menu"}
+                    aria-expanded={menuOpen}
                 >
                     <span className="hamburger"></span>
                 </button>

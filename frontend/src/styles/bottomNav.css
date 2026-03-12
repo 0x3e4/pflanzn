@@ -1,0 +1,121 @@
+/* Bottom Navigation - Mobile Only */
+.bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background-color: var(--background-color);
+    border-top: 1px solid var(--senary-color);
+    padding: 6px 0;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+    align-items: flex-end;
+    justify-content: space-around;
+}
+
+@media (max-width: 768px) {
+    .bottom-nav {
+        display: flex;
+    }
+}
+
+.bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    flex: 1;
+    padding: 4px 0;
+    color: var(--quinary-color);
+    text-decoration: none;
+    font-size: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.bottom-nav-item svg {
+    font-size: 20px;
+}
+
+.bottom-nav-item span {
+    font-weight: 500;
+}
+
+.bottom-nav-item.active {
+    color: var(--primary-color);
+}
+
+.bottom-nav-item:hover {
+    color: var(--primary-color);
+    background: none;
+}
+
+/* Prominent center identify button */
+.bottom-nav-identify {
+    position: relative;
+    padding: 0;
+}
+
+.bottom-nav-identify-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    margin-top: -20px;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.bottom-nav-identify:hover .bottom-nav-identify-circle,
+.bottom-nav-identify:active .bottom-nav-identify-circle {
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.5);
+}
+
+.bottom-nav-identify:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.bottom-nav-identify:disabled .bottom-nav-identify-circle {
+    transform: none;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+}
+
+/* Spacer when locations is hidden */
+.bottom-nav-spacer {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Adjust main content to not be hidden behind bottom nav on mobile */
+@media (max-width: 768px) {
+    main {
+        padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    /* Hide hamburger menu on mobile since we have bottom nav */
+    .nav-toggle {
+        display: none !important;
+    }
+
+    /* Hide dropdown nav-links on mobile */
+    .nav-links {
+        display: none !important;
+    }
+
+    /* Hide the identify button from navbar on mobile (it's in bottom nav) */
+    .identify-btn {
+        display: none !important;
+    }
+}

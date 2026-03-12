@@ -24,6 +24,7 @@ export default function ScrollToTopButton() {
             className={`scroll-to-top-btn ${visible ? 'visible' : 'hidden'}`}
             onClick={scrollToTop}
             title="Scroll back to top"
+            aria-label="Scroll back to top"
         >
             <FontAwesomeIcon icon={faArrowUp} />
         </button>

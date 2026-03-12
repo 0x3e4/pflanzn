@@ -8,7 +8,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: white;
+  color: var(--text-color);
   transition: all 0.3s ease-in-out;
   z-index: 1000;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
@@ -30,12 +30,12 @@
   font-size: 1.5rem;
   font-weight: bold;
   text-decoration: none;
-  color: white;
+  color: var(--text-color);
   transition: all 0.3s ease-in-out;
 }
 
 .nav-logo:hover {
-  color: white;
+  color: var(--text-color);
 }
 
 .nav-logo img {
@@ -52,7 +52,7 @@
 
 .nav-links a {
   text-decoration: none;
-  color: white;
+  color: var(--text-color);
   font-size: 1rem;
   transition: color 0.3s ease;
   padding: 10px 15px;
@@ -78,7 +78,7 @@
   display: block;
   width: 30px;
   height: 3px;
-  background: white;
+  background: var(--text-color);
   position: relative;
   transition: all 0.3s ease-in-out;
 }
@@ -89,7 +89,7 @@
   display: block;
   width: 30px;
   height: 3px;
-  background: white;
+  background: var(--text-color);
   position: absolute;
   transition: transform 0.3s ease;
 }
@@ -163,7 +163,7 @@
 .identify-btn {
   background-color: unset;
   border: none;
-  color: white;
+  color: var(--text-color);
   border-radius: 25%;
   cursor: pointer;
   font-size: 18px;
@@ -178,4 +178,21 @@
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 6px;
+  transition: transform 0.3s, color 0.3s;
+}
+
+.theme-toggle-btn:hover {
+  transform: scale(1.15);
+  color: var(--primary-color);
+  background: none;
 }

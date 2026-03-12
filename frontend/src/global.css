@@ -19,6 +19,25 @@
   --border-color: #ccc;
 }
 
+/* Light theme overrides */
+:root[data-theme="light"] {
+  --primary-color: #388e3c;
+  --secondary-color: #1b5e20;
+  --tertiary-color: #c62828;
+  --quaternary-color: #b71c1c;
+  --quinary-color: #666666;
+  --senary-color: #cccccc;
+  --septimal-color: #444444;
+  --octal-color: #3949ab;
+  --nonal-color: #1a237e;
+  --decimal-color: #6a1b9a;
+  --undecimal-color: #4a148c;
+  --background-color: #fafafa;
+  --secondary-background-color: #ffffff;
+  --text-color: #212121;
+  --border-color: #e0e0e0;
+}
+
 ::selection {
   background-color: var(--secondary-color);
   color: var(--text-color);
@@ -269,4 +288,25 @@ input[type="date"] {
     appearance: textfield;
     -webkit-appearance: textfield;
     -moz-appearance: textfield;
+}
+
+/* Skip to content link (a11y) */
+.skip-to-content {
+    position: absolute;
+    top: -100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary-color);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 0 0 6px 6px;
+    z-index: 10000;
+    font-weight: 600;
+    text-decoration: none;
+    transition: top 0.2s;
+}
+
+.skip-to-content:focus {
+    top: 0;
+    color: white;
 }

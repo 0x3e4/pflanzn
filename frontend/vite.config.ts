@@ -22,13 +22,60 @@ export default defineConfig(() => {
           display: 'standalone',
           icons: [
             { src: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
-            { src: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' }
+            { src: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+            { src: '/icons/icon-maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
           ]
         },
         workbox: {
           globPatterns: ['**/*.{js,css,png,svg,ico}'],
           navigateFallbackDenylist: [
             /^\/$/
+          ],
+          runtimeCaching: [
+            {
+              urlPattern: /\/api\/plants(\/\d+)?(\?.*)?$/,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'api-plants',
+                expiration: { maxEntries: 200, maxAgeSeconds: 7 * 24 * 60 * 60 },
+                networkTimeoutSeconds: 3,
+              },
+            },
+            {
+              urlPattern: /\/api\/locations(\/\d+)?(\?.*)?$/,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'api-locations',
+                expiration: { maxEntries: 50, maxAgeSeconds: 7 * 24 * 60 * 60 },
+                networkTimeoutSeconds: 3,
+              },
+            },
+            {
+              urlPattern: /\/api\/uploads\/.+\.(webp|jpg|jpeg|png)$/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'plant-images',
+                expiration: { maxEntries: 500, maxAgeSeconds: 30 * 24 * 60 * 60 },
+              },
+            },
+            {
+              urlPattern: /\/api\/users\/profile$/,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'api-user',
+                expiration: { maxEntries: 1, maxAgeSeconds: 24 * 60 * 60 },
+                networkTimeoutSeconds: 2,
+              },
+            },
+            {
+              urlPattern: /\/api\/statistics(\/.*)?$/,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'api-statistics',
+                expiration: { maxEntries: 10, maxAgeSeconds: 24 * 60 * 60 },
+                networkTimeoutSeconds: 3,
+              },
+            },
           ],
         }
       })

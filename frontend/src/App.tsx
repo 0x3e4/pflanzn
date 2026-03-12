@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
 import About from "./pages/About";
@@ -11,6 +11,7 @@ import Manage from "./pages/Manage";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ScrollToTopButton from './components/ScrollToTopButton';
+import BottomNav from './components/BottomNav';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -18,6 +19,8 @@ import { ShareProvider, useShare } from "./context/ShareContext";
 import { usePullToRefresh } from "./hooks/usePullToRefresh";
 import { ProtectedRoute } from "./components/Protection";
 import AuthSplash from "./components/AuthSplash";
+import ErrorBoundary from "./components/ErrorBoundary";
+import OfflineBanner from "./components/OfflineBanner";
 
 const isTruthyEnv = (value: string | undefined, defaultValue = true) => {
     if (!value) {
@@ -57,15 +60,6 @@ function AppLayout() {
         window.location.reload();
     });
 
-    useEffect(() => {
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                .then(reg => console.log('SW registered:', reg))
-                .catch(err => console.error('SW registration failed:', err));
-            });
-        }
-    }, []);
 
     if (shouldShowProtectedSplash) {
         return <AuthSplash />;
@@ -73,6 +67,8 @@ function AppLayout() {
     
     return (
         <>
+            <OfflineBanner />
+            <a href="#main-content" className="skip-to-content">Skip to content</a>
             <Navbar />
             <div ref={ref} style={{ position: "relative" }}>
                 <div id="pull-indicator" className="pull-indicator" style={{ transform: "translateY(-100%)" }}>
@@ -82,7 +78,8 @@ function AppLayout() {
                         <div className="spinner" />
                     )}
                 </div>
-                <main>
+                <main id="main-content">
+                    <ErrorBoundary>
                     <Routes>
                         <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
                         <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
@@ -93,6 +90,7 @@ function AppLayout() {
                         {authMode !== "no" && <Route path="/login" element={<Login />} />}
                         <Route path="/manage" element={<ProtectedRoute enforceAuth><Manage /></ProtectedRoute>} />
                     </Routes>
+                    </ErrorBoundary>
                     <ToastContainer
                         position="bottom-right"
                         autoClose={3000}
@@ -108,6 +106,7 @@ function AppLayout() {
                 <Footer />
             </div>
             <ScrollToTopButton />
+            <BottomNav />
         </>
     );
 }
