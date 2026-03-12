@@ -28,6 +28,10 @@ const shouldHandleUnauthorized = (url: string | undefined) => {
     if (!url || !isAuthEnabled) {
         return false;
     }
+    // Don't try to refresh/redirect when using share token
+    if (sessionStorage.getItem("share_token")) {
+        return false;
+    }
     return !nonRetryAuthPaths.some((path) => url.includes(path));
 };
 
@@ -56,6 +60,15 @@ const redirectToLogin = async () => {
         }
     }
 };
+
+// Attach share token header when in share mode
+apiClient.interceptors.request.use((config) => {
+    const shareToken = sessionStorage.getItem("share_token");
+    if (shareToken) {
+        config.headers["X-Share-Token"] = shareToken;
+    }
+    return config;
+});
 
 apiClient.interceptors.response.use(
     (response) => response,

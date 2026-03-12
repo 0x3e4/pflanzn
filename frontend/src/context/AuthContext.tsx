@@ -107,7 +107,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setUser(null);
                 setIsLoggedIn(false);
 
-                if (authMode === "oidc" && showProtectedView) {
+                // Don't redirect to OIDC if a share token is present
+                const hasShareToken = new URLSearchParams(window.location.search).has("share")
+                    || !!sessionStorage.getItem("share_token");
+
+                if (authMode === "oidc" && showProtectedView && !hasShareToken) {
                     window.location.href = "/api/auth/oidc-login";
                 }
             } else {

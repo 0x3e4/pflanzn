@@ -14,6 +14,7 @@ import ScrollToTopButton from './components/ScrollToTopButton';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ShareProvider, useShare } from "./context/ShareContext";
 import { usePullToRefresh } from "./hooks/usePullToRefresh";
 import { ProtectedRoute } from "./components/Protection";
 import AuthSplash from "./components/AuthSplash";
@@ -33,6 +34,7 @@ function AppLayout() {
         false
     );
     const { loading, isLoggedIn } = useAuth();
+    const { isShareAccess, shareLoading } = useShare();
     const location = useLocation();
     const ref = useRef<HTMLDivElement>(null);
     const isAuthEnabled = authMode === "oidc" || authMode === "local";
@@ -41,7 +43,8 @@ function AppLayout() {
     const shouldShowProtectedSplash =
         isAuthEnabled &&
         protectCurrentRoute &&
-        (loading || !isLoggedIn);
+        !isShareAccess &&
+        (loading || shareLoading || !isLoggedIn);
 
     const { refreshing, setRefreshing } = usePullToRefresh(ref, () => {
         setTimeout(() => {
@@ -120,7 +123,9 @@ function AppShell() {
 export default function App() {
     return (
         <AuthProvider>
-            <AppShell />
+            <ShareProvider>
+                <AppShell />
+            </ShareProvider>
         </AuthProvider>
     );
 }

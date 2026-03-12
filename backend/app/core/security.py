@@ -92,13 +92,32 @@ def validate_session(identifier: str, token: str, request: Request):
 # Current User Helpers
 # ==============================================================================
 
+def _is_valid_share_token(share_token: str, db: Session) -> bool:
+    """Check if a share token is valid and not expired."""
+    from app.models import ShareLink
+    from datetime import datetime
+    link = db.query(ShareLink).filter(
+        (ShareLink.token == share_token) | (ShareLink.alias == share_token)
+    ).first()
+    if not link:
+        return False
+    if link.expires_at and link.expires_at < datetime.utcnow():
+        return False
+    return True
+
+
 def get_current_user(request: Request, db: Session = Depends(get_db)) -> Optional[User]:
     """Retrieves the currently authenticated user from Secure Cookie."""
-    
+
     # Check if auth is disabled
     if AUTH_MODE == "no":
         return None
-    
+
+    # Check for share token (read-only bypass)
+    share_token = request.query_params.get("share_token") or request.headers.get("X-Share-Token")
+    if share_token and _is_valid_share_token(share_token, db):
+        return None
+
     token = request.cookies.get("access_token")
     if not token:
         raise HTTPException(status_code=401, detail="Missing access token")

@@ -75,6 +75,14 @@ def _ensure_locations_schema():
         if "idx_location_images_location_id" not in location_image_indexes:
             _execute_ddl("CREATE INDEX idx_location_images_location_id ON location_images (location_id)")
 
+def _ensure_share_links_schema():
+    """Idempotent migration for the share_links table."""
+    inspector = inspect(engine)
+    tables = set(inspector.get_table_names())
+    if "share_links" not in tables:
+        return  # create_all already handled it
+
+
 def get_db():
     db = None
     for attempt in range(3):
@@ -97,4 +105,5 @@ def init_db():
     from app import models
     models.Base.metadata.create_all(bind=engine)
     _ensure_locations_schema()
+    _ensure_share_links_schema()
     logger.debug("Database tables ensured.")

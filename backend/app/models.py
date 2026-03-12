@@ -150,6 +150,19 @@ class Location(Base):
     )
 
 
+class ShareLink(Base):
+    __tablename__ = "share_links"
+
+    id = Column(Integer, primary_key=True, index=True)
+    token = Column(String(64), unique=True, nullable=False, index=True)
+    alias = Column(String(255), unique=True, nullable=False, index=True)
+    expires_at = Column(DateTime, nullable=True)  # NULL = never expires
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_by_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
+    created_by = relationship("User")
+
+
 class LocationImage(Base):
     __tablename__ = "location_images"
 

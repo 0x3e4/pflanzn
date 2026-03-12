@@ -8,6 +8,7 @@ import UsersPanel from "../components/UsersPanel";
 import PlantsPanel from "../components/PlantsPanel";
 import IdentificationsPanel from "../components/IdentificationsPanel";
 import LocationsPanel from "../components/LocationsPanel";
+import SharePanel from "../components/SharePanel";
 import "../styles/manage.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPenToSquare, faUnlock } from "@fortawesome/free-solid-svg-icons";
@@ -17,12 +18,16 @@ import "react-loading-skeleton/dist/skeleton.css";
 import { APP_VERSION } from "../config/appInfo";
 import { getUiPreferences, updateUiPreferences } from "../config/uiPreferences";
 
-type ManageSection = "profile" | "statistics" | "identification" | "users" | "plants" | "locations" | "customize";
+type ManageSection = "profile" | "statistics" | "identification" | "users" | "plants" | "locations" | "customize" | "share";
 
 const Manage: React.FC = () => {
     const { user, logout, fetchProfile, isLoggedIn } = useAuth();
     const navigate = useNavigate();
     const authMode = import.meta.env.VITE_AUTH_MODE || "no";
+    const showProtectedView = !["false", "0", "no", "off"].includes(
+        (import.meta.env.VITE_SHOW_PROTECTED_VIEW || "true").trim().toLowerCase()
+    );
+    const showShare = (authMode === "oidc" || authMode === "local") && showProtectedView;
     const [loading, setLoading] = useState(true);
     const [activeSection, setActiveSection] = useState<ManageSection>("statistics");
     const [editedUser, setEditedUser] = useState<Partial<User>>({
@@ -220,6 +225,14 @@ const Manage: React.FC = () => {
                     >
                         Customize
                     </li>
+                    {showShare && user?.role === "admin" && (
+                        <li
+                            className={`sidebar-subsection ${activeSection === "share" ? "active" : ""}`}
+                            onClick={() => setActiveSection("share")}
+                        >
+                            Share
+                        </li>
+                    )}
                     <li className="sidebar-info-item">Version {APP_VERSION}</li>
 
                     {authMode !== "no" && (
@@ -311,6 +324,10 @@ const Manage: React.FC = () => {
 
                 {activeSection === "locations" && (authMode === "no" || user?.role === "admin") && (
                     <LocationsPanel />
+                )}
+
+                {activeSection === "share" && showShare && user?.role === "admin" && (
+                    <SharePanel />
                 )}
 
                 {activeSection === "customize" && (

@@ -5,74 +5,128 @@
     align-items: center;
     justify-content: center;
     min-height: 82vh;
+    padding: 20px;
+}
+
+/* Login Card */
+.login-card {
+    background-color: var(--secondary-background-color);
+    border-radius: 16px;
+    box-shadow: 0px 12px 40px rgba(0, 0, 0, 0.4);
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+}
+
+/* Login Header */
+.login-header {
+    margin-bottom: 28px;
+}
+
+.login-logo {
+    font-size: 40px;
+    color: var(--primary-color);
+    margin-bottom: 12px;
+}
+
+.login-header h2 {
+    margin: 0 0 6px;
+    color: var(--text-color);
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.login-subtitle {
+    margin: 0;
+    color: var(--quinary-color);
+    font-size: 14px;
 }
 
 /* Login Form */
 .login-form {
-    background-color: var(--secondary-background-color);
-    padding: 30px;
-    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.6);
     text-align: center;
-    width: auto;
-}
-
-.login-form h2 {
-    margin-bottom: 20px;
-    color: var(--text-color);
-    font-size: 24px;
+    width: 100%;
 }
 
 /* Input Fields */
 .login-form input {
     width: 100%;
-    padding: 12px;
-    margin: 8px 0;
-    border: 1px solid var(--quinary-color);
-    border-radius: 6px;
-    font-size: 16px;
-    background-color: var(--secondary-background-color);
+    padding: 14px 16px;
+    margin: 6px 0;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 15px;
+    background-color: var(--background-color);
     color: var(--text-color);
     outline: none;
-    transition: border-color 0.3s ease;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
     box-sizing: border-box;
 }
 
 .login-form input:focus {
     border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb, 76, 175, 80), 0.15);
 }
 
 /* Login Button */
 .login-form button {
     width: 100%;
-    padding: 12px;
+    padding: 14px;
     background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 10px;
     font-size: 16px;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin-top: 10px;
+    transition: background-color 0.3s ease, transform 0.15s ease;
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .login-form button:hover {
     background-color: var(--secondary-color);
+    transform: translateY(-1px);
 }
 
+.login-form button:active {
+    transform: translateY(0);
+}
 
+/* OIDC Button */
 .oidc-btn {
-    flex-shrink: 0;
-    white-space: nowrap;
-    width: auto;
-    padding: 10px 12px;
-    font-size: 14px;
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 600;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
-    background-color: var(--quinary-color);
+    transition: background-color 0.3s ease, transform 0.15s ease;
+    background-color: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
-  
+
 .oidc-btn:hover {
-    background-color: var(--senary-color);
+    background-color: var(--secondary-color);
+    transform: translateY(-1px);
+}
+
+.oidc-btn:active {
+    transform: translateY(0);
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .login-card {
+        padding: 32px 24px;
+    }
 }

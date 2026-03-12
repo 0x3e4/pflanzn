@@ -13,6 +13,7 @@ import {
 import IdentifyResults from "../components/IdentifyResults";
 import StaticLeafletMap from "../components/StaticLeafletMap";
 import { Location, SpotType } from "../types/Location";
+import { useAuth } from "../context/AuthContext";
 import "../styles/locations.css";
 import { getUiPreferences } from "../config/uiPreferences";
 
@@ -28,6 +29,7 @@ type LocationSortOption = "updatedDesc" | "updatedAsc" | "createdDesc" | "create
 type LocationIdentifyResult = { species: string; commonName: string; score: string; images: string[] };
 
 export default function Locations() {
+  const { isLoggedIn } = useAuth();
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -163,6 +165,10 @@ export default function Locations() {
   };
 
   const handleCreateLocation = async () => {
+    if (!isLoggedIn) {
+      toast.error("You must be logged in to add locations.");
+      return;
+    }
     if (!newLocation.name.trim()) {
       toast.error("Location name is required.");
       return;
@@ -301,9 +307,15 @@ export default function Locations() {
         >
           <FontAwesomeIcon icon={isStretched ? faCompress : faExpand} />
         </button>
-        <button className="add-location-btn" onClick={() => setModalOpen(true)}>
-          <FontAwesomeIcon icon={faPlus} />
-        </button>
+        {isLoggedIn ? (
+          <button className="add-location-btn" onClick={() => setModalOpen(true)}>
+            <FontAwesomeIcon icon={faPlus} />
+          </button>
+        ) : (
+          <button className="add-location-btn" onClick={() => toast.warning("You must be logged in to add locations.")}>
+            <FontAwesomeIcon icon={faPlus} />
+          </button>
+        )}
       </div>
 
       {modalOpen && (
@@ -458,29 +470,42 @@ export default function Locations() {
                   </div>
                 </Link>
                 <div className="location-buttons">
-                  <label className="upload-location-btn">
-                    <FontAwesomeIcon icon={faUpload} />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const selected = e.target.files?.[0];
-                        if (selected) {
-                          handleUploadImage(location.id, selected);
-                        }
-                        e.currentTarget.value = "";
-                      }}
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    className="identify-location-btn"
-                    onClick={() => handleIdentifyExistingLocation(location)}
-                    disabled={identifyingLocationId === location.id}
-                    title="Identify crop/herb from latest image"
-                  >
-                    <FontAwesomeIcon icon={faFingerprint} />
-                  </button>
+                  {isLoggedIn ? (
+                    <>
+                      <label className="upload-location-btn">
+                        <FontAwesomeIcon icon={faUpload} />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const selected = e.target.files?.[0];
+                            if (selected) {
+                              handleUploadImage(location.id, selected);
+                            }
+                            e.currentTarget.value = "";
+                          }}
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        className="identify-location-btn"
+                        onClick={() => handleIdentifyExistingLocation(location)}
+                        disabled={identifyingLocationId === location.id}
+                        title="Identify crop/herb from latest image"
+                      >
+                        <FontAwesomeIcon icon={faFingerprint} />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button className="upload-location-btn" onClick={() => toast.warning("You must be logged in to upload images.")}>
+                        <FontAwesomeIcon icon={faUpload} />
+                      </button>
+                      <button className="identify-location-btn" onClick={() => toast.warning("You must be logged in to identify locations.")}>
+                        <FontAwesomeIcon icon={faFingerprint} />
+                      </button>
+                    </>
+                  )}
                 </div>
               </article>
             );

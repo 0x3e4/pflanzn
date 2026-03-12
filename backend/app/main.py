@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
-from app.api.routes import auth, plants, tags, users, statistics, locations
+from app.api.routes import auth, plants, tags, users, statistics, locations, share
 from app.database import init_db
 from app.core.security import create_admin_user
 from dotenv import load_dotenv
@@ -59,6 +59,7 @@ app.include_router(statistics.router, prefix="/api/statistics", tags=["Statistic
 app.include_router(tags.router, prefix="/api/tags", tags=["Tags"])
 if settings.VITE_ENABLE_LOCATIONS:
     app.include_router(locations.router, prefix="/api/locations", tags=["Locations"])
+app.include_router(share.router, prefix="/api/share", tags=["Share"])
 
 @app.get("/")
 def root():

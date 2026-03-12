@@ -209,4 +209,18 @@ class LocationResponse(LocationBase):
     class Config:
         from_attributes = True
 
+class ShareLinkCreate(BaseModel):
+    alias: str = Field(..., min_length=1, max_length=255)
+    expires_in_hours: Optional[int] = None  # None = never expires
+
+class ShareLinkResponse(BaseModel):
+    id: int
+    token: str
+    alias: str
+    expires_at: Optional[datetime] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
 PlantResponse.model_rebuild()
