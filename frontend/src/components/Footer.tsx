@@ -1,6 +1,6 @@
 import "../styles/footer.css";
 import { Link } from "react-router-dom";
-import { SiGithub, SiMastodon, SiDocker } from "@icons-pack/react-simple-icons";
+import { SiGithub } from "@icons-pack/react-simple-icons";
 
 export default function Footer() {
     return (
