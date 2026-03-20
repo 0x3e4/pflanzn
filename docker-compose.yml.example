@@ -1,6 +1,6 @@
 services:
   backend:
-    build: ./backend
+    image: ghcr.io/0x3e4/pflanzn-backend:latest
     ports:
       - "8000:8000"
     env_file:
@@ -15,16 +15,15 @@ services:
     restart: always
 
   frontend:
-    build:
-      context: ./frontend
-      args:
-        VITE_AUTH_MODE: ${VITE_AUTH_MODE}
-        VITE_SHOW_PROTECTED_VIEW: ${VITE_SHOW_PROTECTED_VIEW}
-        VITE_ENABLE_LOCATIONS: ${VITE_ENABLE_LOCATIONS}
-        VITE_DOMAIN: ${VITE_DOMAIN}
-        VITE_TZ: ${VITE_TZ}
-        VITE_LOCALE: ${VITE_LOCALE}
-        VITE_LLM_PROVIDER: ${VITE_LLM_PROVIDER}
+    image: ghcr.io/0x3e4/pflanzn-frontend:latest
+    environment:
+      VITE_AUTH_MODE: ${VITE_AUTH_MODE}
+      VITE_SHOW_PROTECTED_VIEW: ${VITE_SHOW_PROTECTED_VIEW}
+      VITE_ENABLE_LOCATIONS: ${VITE_ENABLE_LOCATIONS}
+      VITE_DOMAIN: ${VITE_DOMAIN}
+      VITE_TZ: ${VITE_TZ}
+      VITE_LOCALE: ${VITE_LOCALE}
+      VITE_LLM_PROVIDER: ${VITE_LLM_PROVIDER}
     ports:
       - "4173:4173"
     env_file:

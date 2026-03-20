@@ -39,7 +39,7 @@ export const addUser = async (user: { username: string; email: string; password:
 // Update user
 export const updateUser = async (userId: number, data: Partial<User>) => {
     try {
-        const response = await apiClient.put(`${API_BASE}/${userId}`, data );
+        const response = await apiClient.put(`${API_BASE}/${userId}`, data);
         return response.data;
     } catch (error) {
         console.error("Failed to update user:", error);
@@ -52,8 +52,8 @@ export const updateUserPassword = async (userId: number, data: Partial<UserPassw
     try {
         const response = await apiClient.put(`${API_BASE}/${userId}/changepassword`, {
             old_password: data.oldPassword,
-            new_password: data.newPassword, 
-        } );
+            new_password: data.newPassword,
+        });
         return response.data;
     } catch (error) {
         console.error("Failed to update user password:", error);

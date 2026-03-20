@@ -12,13 +12,19 @@ import { toast } from "react-toastify";
 export default function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
-    const [identifyResults, setIdentifyResults] = useState<{ species: string; commonName: string; score: string; images: string[] }[] | null>(null);
+    const [identifyResults, setIdentifyResults] = useState<
+        { species: string; commonName: string; score: string; images: string[] }[] | null
+    >(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const navRef = useRef<HTMLElement | null>(null);
     const { isLoggedIn, loading } = useAuth();
     const authMode = import.meta.env.VITE_AUTH_MODE;
     const showLocations = !["false", "0", "no", "off"].includes(
-        (import.meta.env.VITE_ENABLE_LOCATIONS || import.meta.env.VITE_ENABLE_HERBALIST_LOCATIONS || "false").toLowerCase()
+        (
+            import.meta.env.VITE_ENABLE_LOCATIONS ||
+            import.meta.env.VITE_ENABLE_HERBALIST_LOCATIONS ||
+            "false"
+        ).toLowerCase(),
     );
     const [loadingIdentification, setLoading] = useState<boolean>(false);
     const { theme, toggleTheme } = useTheme();
@@ -58,7 +64,6 @@ export default function Navbar() {
     };
 
     const processPlantIdentification = async (file: File) => {
-
         setLoading(true);
 
         try {
@@ -70,12 +75,14 @@ export default function Navbar() {
                 return;
             }
 
-            setIdentifyResults(result.identified_species.map((r: any) => ({
-                species: r.scientific_name || "Unknown",
-                commonName: r.common_name || "No common name",
-                score: r.score.toString(),
-                images: r.images
-            })));
+            setIdentifyResults(
+                result.identified_species.map((r: any) => ({
+                    species: r.scientific_name || "Unknown",
+                    commonName: r.common_name || "No common name",
+                    score: r.score.toString(),
+                    images: r.images,
+                })),
+            );
         } catch (error) {
             toast.error("Error identifying plant. Please try again.");
         } finally {
@@ -91,12 +98,21 @@ export default function Navbar() {
                     Pflanzn
                 </Link>
 
-                <button className="theme-toggle-btn" onClick={toggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}>
+                <button
+                    className="theme-toggle-btn"
+                    onClick={toggleTheme}
+                    aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+                >
                     <FontAwesomeIcon icon={theme === "dark" ? faSun : faMoon} />
                 </button>
 
                 {/* Identify Button - Left of Hamburger */}
-                <button className="identify-btn" onClick={handleIdentifyClick} disabled={loadingIdentification} aria-label="Identify a plant from photo">
+                <button
+                    className="identify-btn"
+                    onClick={handleIdentifyClick}
+                    disabled={loadingIdentification}
+                    aria-label="Identify a plant from photo"
+                >
                     <FontAwesomeIcon icon={loadingIdentification ? faSpinner : faCamera} spin={loadingIdentification} />
                 </button>
                 <input
@@ -118,13 +134,19 @@ export default function Navbar() {
                 </button>
 
                 <div className={`nav-links ${menuOpen ? "active" : ""}`}>
-                    <Link to="/plants" onClick={() => setMenuOpen(false)}>Plants</Link>
+                    <Link to="/plants" onClick={() => setMenuOpen(false)}>
+                        Plants
+                    </Link>
                     {showLocations && (
-                        <Link to="/locations" onClick={() => setMenuOpen(false)}>Locations</Link>
+                        <Link to="/locations" onClick={() => setMenuOpen(false)}>
+                            Locations
+                        </Link>
                     )}
 
-                    {!loading && (
-                        (authMode === "no" || (authMode === "oidc" && isLoggedIn) || (authMode === "local" && isLoggedIn)) ? (
+                    {!loading &&
+                        (authMode === "no" ||
+                        (authMode === "oidc" && isLoggedIn) ||
+                        (authMode === "local" && isLoggedIn) ? (
                             <Link to="/manage" onClick={() => setMenuOpen(false)}>
                                 Manage
                             </Link>
@@ -132,8 +154,7 @@ export default function Navbar() {
                             <Link to="/login" onClick={() => setMenuOpen(false)}>
                                 Login
                             </Link>
-                        ) : null
-                    )}
+                        ) : null)}
                 </div>
             </div>
 

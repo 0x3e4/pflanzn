@@ -20,3 +20,6 @@ ollama
 authlib
 itsdangerous
 anthropic
+pytest
+pytest-asyncio
+ruff

@@ -1,19 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { deletePlantImage } from "../services/PlantService";
 import { PlantImage } from "../types/Plant";
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faCircleXmark, faChevronLeft, faChevronRight, faExpand } from "@fortawesome/free-solid-svg-icons";
 import "../styles/timelineImages.css";
 import { useAuth } from "../context/AuthContext";
 import { setOverlayOpen } from "../services/overlayControl";
-import Skeleton from 'react-loading-skeleton';
-import 'react-loading-skeleton/dist/skeleton.css';
+import { useModalA11y } from "../hooks/useModalA11y";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 interface TimelineImagesProps {
     images: PlantImage[];
     plantId: number;
-}  
+}
 
 export default function TimelineImages({ images, plantId }: TimelineImagesProps) {
     const { isLoggedIn } = useAuth();
@@ -27,21 +28,21 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
 
     useEffect(() => {
         // Only reset loaded images if the actual image IDs have changed
-        const newImageIds = new Set(images.map(img => img.id));
-        const currentImageIds = new Set(localImages.map(img => img.id));
-        
+        const newImageIds = new Set(images.map((img) => img.id));
+        const currentImageIds = new Set(localImages.map((img) => img.id));
+
         // Check if the sets are different
-        const hasImageChanges = newImageIds.size !== currentImageIds.size || 
-                            [...newImageIds].some(id => !currentImageIds.has(id));
-        
+        const hasImageChanges =
+            newImageIds.size !== currentImageIds.size || [...newImageIds].some((id) => !currentImageIds.has(id));
+
         setLocalImages(images);
-        
+
         if (hasImageChanges) {
             // Only reset if images actually changed, not just reloaded
-            setLoadedImages(prev => {
+            setLoadedImages((prev) => {
                 const newSet = new Set<number>();
                 // Keep loaded state for images that still exist
-                prev.forEach(imageId => {
+                prev.forEach((imageId) => {
                     if (newImageIds.has(imageId)) {
                         newSet.add(imageId);
                     }
@@ -52,12 +53,10 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
     }, [images]);
 
     const sortedImages = [...localImages].sort(
-        (a, b) => new Date(a.uploaded_at).getTime() - new Date(b.uploaded_at).getTime()
+        (a, b) => new Date(a.uploaded_at).getTime() - new Date(b.uploaded_at).getTime(),
     );
 
-    const [activeIndex, setActiveIndex] = useState<number>(
-        sortedImages.length > 0 ? sortedImages.length - 1 : 0
-    );
+    const [activeIndex, setActiveIndex] = useState<number>(sortedImages.length > 0 ? sortedImages.length - 1 : 0);
 
     const activeImage = sortedImages[activeIndex];
 
@@ -73,28 +72,31 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
     const [fullSizeModalOpen, setFullSizeModalOpen] = useState(false);
 
     const openDeleteModal = () => setDeleteModalOpen(true);
-    const closeDeleteModal = () => setDeleteModalOpen(false);
+    const closeDeleteModal = useCallback(() => setDeleteModalOpen(false), []);
 
     const openFullSizeModal = () => setFullSizeModalOpen(true);
-    const closeFullSizeModal = () => setFullSizeModalOpen(false);
+    const closeFullSizeModal = useCallback(() => setFullSizeModalOpen(false), []);
+
+    const { modalRef: deleteModalRef } = useModalA11y({ isOpen: deleteModalOpen, onClose: closeDeleteModal });
+    const { modalRef: fullSizeModalRef } = useModalA11y({ isOpen: fullSizeModalOpen, onClose: closeFullSizeModal });
 
     const handleImageLoad = (imageId: number) => {
-        setLoadedImages(prev => {
+        setLoadedImages((prev) => {
             if (prev.has(imageId)) return prev;
             return new Set(prev).add(imageId);
         });
-        
+
         if (activeImage && imageId === activeImage.id) {
             setCurrentImageLoaded(true);
         }
     };
 
     const handleImageError = (imageId: number) => {
-        setLoadedImages(prev => {
+        setLoadedImages((prev) => {
             if (prev.has(imageId)) return prev;
             return new Set(prev).add(imageId);
         });
-        
+
         if (activeImage && imageId === activeImage.id) {
             setCurrentImageLoaded(true);
         }
@@ -104,8 +106,8 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
         if (!activeImage) return;
         try {
             await deletePlantImage(plantId, activeImage.id);
-            setLocalImages(prev => prev.filter(img => img.id !== activeImage.id));
-            setLoadedImages(prev => {
+            setLocalImages((prev) => prev.filter((img) => img.id !== activeImage.id));
+            setLoadedImages((prev) => {
                 const newSet = new Set(prev);
                 newSet.delete(activeImage.id);
                 return newSet;
@@ -128,12 +130,12 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
 
     const formattedDate = new Date(activeImage.uploaded_at).toLocaleString(import.meta.env.VITE_Locale, {
         timeZone: import.meta.env.VITE_TZ,
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
     });
 
     const minSwipeDistance = 50;
@@ -142,93 +144,93 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
         setTouchEndX(null); // Reset previous
         setTouchStartX(e.targetTouches[0].clientX);
     };
-    
+
     const handleTouchMove = (e: React.TouchEvent) => {
         const currentX = e.targetTouches[0].clientX;
-    
+
         setTouchEndX(currentX);
-    
+
         const deltaX = currentX - (touchStartX ?? 0);
-    
+
         // If mostly horizontal, prevent scrolling the page
         if (Math.abs(deltaX) > 10) {
             e.preventDefault();
         }
     };
-    
+
     const handleTouchEnd = () => {
         if (!touchStartX || !touchEndX) return;
-    
+
         const distance = touchStartX - touchEndX;
-    
+
         if (distance > minSwipeDistance) {
             goToNext();
         } else if (distance < -minSwipeDistance) {
             goToPrevious();
         }
-    };  
-    
+    };
+
     useEffect(() => {
-    // Mobile-specific aggressive preloading
-    const isMobile = /Android|webOS|iPhone|iPad|Opera Mini/i.test(navigator.userAgent);
-    
-    if (isMobile && sortedImages.length > 0) {
-        // On mobile, prioritize loading the current image and nearby images first
-        const priorityImages = [
-        sortedImages[activeIndex], // Current image
-        sortedImages[activeIndex - 1], // Previous
-        sortedImages[activeIndex + 1], // Next
-        ].filter(Boolean); // Remove undefined entries
+        // Mobile-specific aggressive preloading
+        const isMobile = /Android|webOS|iPhone|iPad|Opera Mini/i.test(navigator.userAgent);
 
-        priorityImages.forEach(image => {
-        if (!loadedImages.has(image.id)) {
-            const img = new Image();
-            img.onload = () => handleImageLoad(image.id);
-            img.onerror = () => handleImageError(image.id);
-            img.src = `/api/uploads/${image.image_path}`;
+        if (isMobile && sortedImages.length > 0) {
+            // On mobile, prioritize loading the current image and nearby images first
+            const priorityImages = [
+                sortedImages[activeIndex], // Current image
+                sortedImages[activeIndex - 1], // Previous
+                sortedImages[activeIndex + 1], // Next
+            ].filter(Boolean); // Remove undefined entries
+
+            priorityImages.forEach((image) => {
+                if (!loadedImages.has(image.id)) {
+                    const img = new Image();
+                    img.onload = () => handleImageLoad(image.id);
+                    img.onerror = () => handleImageError(image.id);
+                    img.src = `/api/uploads/${image.image_path}?size=thumb`;
+                }
+            });
+
+            // Then load the rest with a small delay to prioritize visible content
+            setTimeout(() => {
+                sortedImages.forEach((image) => {
+                    if (!loadedImages.has(image.id) && !priorityImages.includes(image)) {
+                        const img = new Image();
+                        img.onload = () => handleImageLoad(image.id);
+                        img.onerror = () => handleImageError(image.id);
+                        img.src = `/api/uploads/${image.image_path}?size=thumb`;
+                    }
+                });
+            }, 100);
         }
-        });
-
-        // Then load the rest with a small delay to prioritize visible content
-        setTimeout(() => {
-        sortedImages.forEach(image => {
-            if (!loadedImages.has(image.id) && !priorityImages.includes(image)) {
-            const img = new Image();
-            img.onload = () => handleImageLoad(image.id);
-            img.onerror = () => handleImageError(image.id);
-            img.src = `/api/uploads/${image.image_path}`;
-            }
-        });
-        }, 100);
-    }
     }, [sortedImages, activeIndex, loadedImages]);
 
     useEffect(() => {
-    // Immediately check if current image is loaded when component mounts
-    if (activeImage && loadedImages.has(activeImage.id)) {
-        setCurrentImageLoaded(true);
-    } else if (activeImage) {
-        setCurrentImageLoaded(false);
-        
-        // Force load the current image if not already loaded
-        const img = new Image();
-        img.onload = () => {
-        handleImageLoad(activeImage.id);
-        setCurrentImageLoaded(true);
-        };
-        img.onerror = () => {
-        handleImageError(activeImage.id);
-        setCurrentImageLoaded(true);
-        };
-        img.src = `/api/uploads/${activeImage.image_path}`;
-    }
+        // Immediately check if current image is loaded when component mounts
+        if (activeImage && loadedImages.has(activeImage.id)) {
+            setCurrentImageLoaded(true);
+        } else if (activeImage) {
+            setCurrentImageLoaded(false);
+
+            // Force load the current image if not already loaded
+            const img = new Image();
+            img.onload = () => {
+                handleImageLoad(activeImage.id);
+                setCurrentImageLoaded(true);
+            };
+            img.onerror = () => {
+                handleImageError(activeImage.id);
+                setCurrentImageLoaded(true);
+            };
+            img.src = `/api/uploads/${activeImage.image_path}?size=medium`;
+        }
     }, [activeImage]);
 
     useEffect(() => {
         if (fullSizeModalOpen || deleteModalOpen) {
-          setOverlayOpen(true);
+            setOverlayOpen(true);
         } else {
-          setOverlayOpen(false);
+            setOverlayOpen(false);
         }
     }, [fullSizeModalOpen, deleteModalOpen]);
 
@@ -236,7 +238,7 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
         <div className="plant-carousel-container">
             {deleteModalOpen && (
                 <div className="plant-delete-modal-overlay">
-                    <div className="plant-delete-modal">
+                    <div className="plant-delete-modal" ref={deleteModalRef} role="dialog" aria-modal="true" aria-label="Confirm image deletion">
                         <span>Are you sure you want to delete this image?</span>
                         <div className="plant-delete-modal-buttons">
                             <button className="plant-delete-btn" onClick={handleConfirmDelete}>
@@ -251,10 +253,10 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
             )}
 
             {fullSizeModalOpen && (
-                <div className="plant-fullsize-modal-overlay" onClick={closeFullSizeModal}>
+                <div className="plant-fullsize-modal-overlay" ref={fullSizeModalRef} role="dialog" aria-modal="true" aria-label="Full size image" onClick={closeFullSizeModal}>
                     <img
                         className="plant-fullsize-image"
-                        src={`/api/uploads/${activeImage.image_path}`}
+                        src={`/api/uploads/${activeImage.image_path}?size=original`}
                         alt="Full Size Plant"
                     />
                 </div>
@@ -287,51 +289,60 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
                     )}
 
                     {/* Hidden preloader for all images */}
-                    <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
-                    {sortedImages
-                        .filter(image => !loadedImages.has(image.id)) // Only preload unloaded images
-                        .slice(0, 5) // Limit concurrent preloads to prevent overwhelming mobile
-                        .map((image) => (
-                        <img
-                            key={`preload-${image.id}`}
-                            src={`/api/uploads/${image.image_path}`}
-                            alt=""
-                            onLoad={() => handleImageLoad(image.id)}
-                            onError={() => handleImageError(image.id)}
-                            style={{ width: '1px', height: '1px' }}
-                        />
-                        ))}
+                    <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
+                        {sortedImages
+                            .filter((image) => !loadedImages.has(image.id)) // Only preload unloaded images
+                            .slice(0, 5) // Limit concurrent preloads to prevent overwhelming mobile
+                            .map((image) => (
+                                <img
+                                    key={`preload-${image.id}`}
+                                    src={`/api/uploads/${image.image_path}?size=thumb`}
+                                    alt=""
+                                    loading="lazy"
+                                    onLoad={() => handleImageLoad(image.id)}
+                                    onError={() => handleImageError(image.id)}
+                                    style={{ width: "1px", height: "1px" }}
+                                />
+                            ))}
                     </div>
 
                     {/* Main image */}
                     <img
                         className="plant-carousel-image"
-                        src={`/api/uploads/${activeImage.image_path}`}
+                        src={`/api/uploads/${activeImage.image_path}?size=medium`}
+                        srcSet={`/api/uploads/${activeImage.image_path}?size=thumb 300w, /api/uploads/${activeImage.image_path}?size=medium 800w`}
+                        sizes="(max-width: 768px) 100vw, 800px"
                         alt="Plant Image"
                         tabIndex={-1}
-                        style={{ display: currentImageLoaded ? 'block' : 'none' }}
+                        style={{ display: currentImageLoaded ? "block" : "none" }}
                     />
 
-                    <div className="plant-fullsize-overlay" style={{ display: currentImageLoaded ? 'block' : 'none' }}>
+                    <div className="plant-fullsize-overlay" style={{ display: currentImageLoaded ? "block" : "none" }}>
                         <button className="plant-view-fullsize-btn" onClick={openFullSizeModal}>
                             <FontAwesomeIcon icon={faExpand} />
                         </button>
                     </div>
 
                     {/* Delete button overlay - bottom right */}
-                    <div className="plant-delete-overlay" style={{ display: currentImageLoaded ? 'block' : 'none' }}>
+                    <div className="plant-delete-overlay" style={{ display: currentImageLoaded ? "block" : "none" }}>
                         {isLoggedIn ? (
                             <button className="plant-image-delete-btn" onClick={openDeleteModal}>
                                 <FontAwesomeIcon icon={faTrash} />
                             </button>
                         ) : (
-                            <button className="plant-image-delete-btn" onClick={() => toast.warning("You must be logged in to delete images.")}>
+                            <button
+                                className="plant-image-delete-btn"
+                                onClick={() => toast.warning("You must be logged in to delete images.")}
+                            >
                                 <FontAwesomeIcon icon={faTrash} />
                             </button>
                         )}
                     </div>
 
-                    <div className="plant-uploaded-date-overlay" style={{ display: currentImageLoaded ? 'block' : 'none' }}>
+                    <div
+                        className="plant-uploaded-date-overlay"
+                        style={{ display: currentImageLoaded ? "block" : "none" }}
+                    >
                         {formattedDate}
                     </div>
                 </div>

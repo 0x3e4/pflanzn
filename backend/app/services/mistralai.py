@@ -1,11 +1,12 @@
-import logging
-import re
-import httpx
 import json
+import logging
 from typing import Optional
+
+import httpx
+
 from app.core.config import settings
-from app.utils.llm_text_cleaner import clean_generated_text
 from app.services.prompt_config import PromptConfig
+from app.utils.llm_text_cleaner import clean_generated_text
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -47,7 +48,7 @@ class MistralAIClient:
             generated_text = data['choices'][0]['message']['content']
             cleaned_description = clean_generated_text(generated_text)
 
-            logger.info(f"Received response from Mistral AI")
+            logger.info("Received response from Mistral AI")
             return cleaned_description
 
         except Exception as e:
@@ -108,6 +109,7 @@ class MistralAIClient:
         Note: Mistral AI may not support vision, so this provides text-based advice.
         """
         import os
+
         from app.models import Plant
 
         BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))

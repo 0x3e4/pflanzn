@@ -1,198 +1,202 @@
 .navbar {
-  width: 100%;
-  position: fixed;
-  top: 0;
-  left: 0;
-  background-color: var(--background-color);
-  padding: 15px 0px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: var(--text-color);
-  transition: all 0.3s ease-in-out;
-  z-index: 1000;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: var(--background-color);
+    padding: 15px 0px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text-color);
+    transition: all 0.3s ease-in-out;
+    z-index: 1000;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .nav-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
 }
 
 .nav-logo {
-  display: flex;
-  align-items: center;
-  font-size: 1.5rem;
-  font-weight: bold;
-  text-decoration: none;
-  color: var(--text-color);
-  transition: all 0.3s ease-in-out;
+    display: flex;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: all 0.3s ease-in-out;
 }
 
 .nav-logo:hover {
-  color: var(--text-color);
+    color: var(--text-color);
 }
 
 .nav-logo img {
-  width: 40px;
-  height: 40px;
-  margin-right: 10px;
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
 }
 
 .nav-links {
-  display: flex;
-  gap: 20px;
-  transition: all 0.3s ease-in-out;
+    display: flex;
+    gap: 20px;
+    transition: all 0.3s ease-in-out;
 }
 
 .nav-links a {
-  text-decoration: none;
-  color: var(--text-color);
-  font-size: 1rem;
-  transition: color 0.3s ease;
-  padding: 10px 15px;
+    text-decoration: none;
+    color: var(--text-color);
+    font-size: 1rem;
+    transition: color 0.3s ease;
+    padding: 10px 15px;
 }
 
 .nav-links a:hover {
-  color: #4caf50;
+    color: #4caf50;
 }
 
 .nav-toggle {
-  display: none;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 10px;
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 10px;
 }
 
 .nav-toggle:hover {
-  background: transparent;
+    background: transparent;
 }
 
 .hamburger {
-  display: block;
-  width: 30px;
-  height: 3px;
-  background: var(--text-color);
-  position: relative;
-  transition: all 0.3s ease-in-out;
+    display: block;
+    width: 30px;
+    height: 3px;
+    background: var(--text-color);
+    position: relative;
+    transition: all 0.3s ease-in-out;
 }
 
 .hamburger::before,
 .hamburger::after {
-  content: "";
-  display: block;
-  width: 30px;
-  height: 3px;
-  background: var(--text-color);
-  position: absolute;
-  transition: transform 0.3s ease;
+    content: "";
+    display: block;
+    width: 30px;
+    height: 3px;
+    background: var(--text-color);
+    position: absolute;
+    transition: transform 0.3s ease;
 }
 
 .hamburger::before {
-  top: -8px;
+    top: -8px;
 }
 
 .hamburger::after {
-  top: 8px;
+    top: 8px;
 }
 
 @media (max-width: 768px) {
-  .nav-links {
-    display: none;
-    flex-direction: column;
-    position: absolute;
-    top: 70px;
-    right: 10px;
-    background: var(--background-color);
-    padding: 15px;
-    border-radius: 5px;
-    align-items: flex-start;
-    width: 200px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--text-color);
-  }
+    .nav-links {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 70px;
+        right: 10px;
+        background: var(--background-color);
+        padding: 15px;
+        border-radius: 5px;
+        align-items: flex-start;
+        width: 200px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--text-color);
+    }
 
-  .nav-links a {
-    width: 100%;
-    text-align: left;
-    padding: 12px;
-  }
+    .nav-links a {
+        width: 100%;
+        text-align: left;
+        padding: 12px;
+    }
 
-  .nav-toggle {
-    display: block;
-  }
+    .nav-toggle {
+        display: block;
+    }
 
-  .nav-toggle.active + .nav-links {
-    display: flex;
-  }
+    .nav-toggle.active + .nav-links {
+        display: flex;
+    }
 
-  .nav-toggle.active .hamburger {
-    background: transparent;
-  }
+    .nav-toggle.active .hamburger {
+        background: transparent;
+    }
 
-  .nav-toggle.active .hamburger::before {
-    transform: translateY(8px) rotate(45deg);
-  }
+    .nav-toggle.active .hamburger::before {
+        transform: translateY(8px) rotate(45deg);
+    }
 
-  .nav-toggle.active .hamburger::after {
-    transform: translateY(-8px) rotate(-45deg);
-  }
+    .nav-toggle.active .hamburger::after {
+        transform: translateY(-8px) rotate(-45deg);
+    }
 
-  .shrink .nav-links {
-    top: 60px;
-    padding: 10px;
-  }
+    .shrink .nav-links {
+        top: 60px;
+        padding: 10px;
+    }
 }
 
 /* Navbar Shrinking Effect on Scroll */
 .shrink {
-  padding: 10px 0px;
+    padding: 10px 0px;
 }
 
 .shrink .nav-logo {
-  font-size: 1.2rem;
+    font-size: 1.2rem;
 }
 
 /* Identify Button */
 .identify-btn {
-  background-color: unset;
-  border: none;
-  color: var(--text-color);
-  border-radius: 25%;
-  cursor: pointer;
-  font-size: 18px;
-  transition: background-color 0.5s ease-in-out, transform 0.5s;
+    background-color: unset;
+    border: none;
+    color: var(--text-color);
+    border-radius: 25%;
+    cursor: pointer;
+    font-size: 18px;
+    transition:
+        background-color 0.5s ease-in-out,
+        transform 0.5s;
 }
 
 .identify-btn:hover {
-  transform: scale(1.1);
+    transform: scale(1.1);
 }
 
 .identify-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
 }
 
 /* Theme Toggle Button */
 .theme-toggle-btn {
-  background: none;
-  border: none;
-  color: var(--text-color);
-  cursor: pointer;
-  font-size: 18px;
-  padding: 6px;
-  transition: transform 0.3s, color 0.3s;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 6px;
+    transition:
+        transform 0.3s,
+        color 0.3s;
 }
 
 .theme-toggle-btn:hover {
-  transform: scale(1.15);
-  color: var(--primary-color);
-  background: none;
+    transform: scale(1.15);
+    color: var(--primary-color);
+    background: none;
 }

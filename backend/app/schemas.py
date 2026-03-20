@@ -1,6 +1,8 @@
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, List, Literal
 from datetime import datetime
+from typing import List, Literal, Optional
+
+from pydantic import BaseModel, EmailStr, Field
+
 
 class UserCreate(BaseModel):
     username: str
@@ -121,7 +123,7 @@ class PlantCareAdviceResponse(BaseModel):
     id: int
     advice_text: str
     generated_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -132,7 +134,7 @@ class PlantNoteResponse(BaseModel):
     id: int
     note_text: str
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -143,7 +145,7 @@ class ActivityResponse(BaseModel):
     activity_type: str
     activity_data: dict
     timestamp: str
-    
+
     class Config:
         from_attributes = True
 

@@ -12,14 +12,14 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.database import get_db
 from app.models import Location, LocationImage
-from app.services.llm_client import LLMClient
-from app.services.plantnet import identify_species_via_plantnet
 from app.schemas import (
     LocationCreate,
     LocationImageResponse,
     LocationResponse,
     LocationUpdate,
 )
+from app.services.llm_client import LLMClient
+from app.services.plantnet import identify_species_via_plantnet
 from app.utils.exif import extract_gps_coordinates
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")

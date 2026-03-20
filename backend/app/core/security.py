@@ -1,13 +1,15 @@
+from datetime import datetime, timedelta
+from typing import Optional
+
 import redis
+from fastapi import Depends, HTTPException, Request
 from jose import jwt
 from passlib.hash import argon2
-from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from fastapi import Depends, HTTPException, Request
+
+from app.core.config import settings
 from app.database import get_db
 from app.models import User
-from typing import Optional
-from app.core.config import settings
 
 # Environment variables / settings
 SECRET_KEY = settings.SECRET_KEY
@@ -43,8 +45,8 @@ def create_access_token(data: dict, expires_delta: timedelta) -> str:
 
     if is_session_management_enabled():
         # Invalidate previous session
-        redis_client.delete(f"session:{identifier}")  
-        
+        redis_client.delete(f"session:{identifier}")
+
         # Store new session
         redis_client.setex(f"session:{identifier}", int(expires_delta.total_seconds()), new_token)
 
@@ -94,8 +96,9 @@ def validate_session(identifier: str, token: str, request: Request):
 
 def _is_valid_share_token(share_token: str, db: Session) -> bool:
     """Check if a share token is valid and not expired."""
-    from app.models import ShareLink
     from datetime import datetime
+
+    from app.models import ShareLink
     link = db.query(ShareLink).filter(
         (ShareLink.token == share_token) | (ShareLink.alias == share_token)
     ).first()
@@ -125,7 +128,7 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> Optiona
     try:
         payload = decode_token(token)
         identifier = payload.get("sub")
-        
+
         if not identifier:
             raise HTTPException(status_code=401, detail="Invalid token payload")
 
@@ -136,15 +139,15 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> Optiona
         user = db.query(User).filter(
             (User.username == identifier) | (User.email == identifier)
         ).first()
-        
+
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
 
         return user
-        
+
     except HTTPException:
         raise  # Re-raise HTTPExceptions as-is
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
 
 def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:

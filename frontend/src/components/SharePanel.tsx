@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useModalA11y } from "../hooks/useModalA11y";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faPlus, faCopy } from "@fortawesome/free-solid-svg-icons";
@@ -20,6 +21,8 @@ export default function SharePanel() {
     const [links, setLinks] = useState<ShareLink[]>([]);
     const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
+    const closeModal = useCallback(() => setModalOpen(false), []);
+    const { modalRef } = useModalA11y({ isOpen: modalOpen, onClose: closeModal });
     const [newAlias, setNewAlias] = useState("");
     const [newExpiry, setNewExpiry] = useState<number | null>(null);
     const domain = import.meta.env.VITE_DOMAIN || window.location.origin;
@@ -115,49 +118,74 @@ export default function SharePanel() {
                         </tr>
                     </thead>
                     <tbody>
-                        {loading
-                            ? [...Array(3)].map((_, index) => (
+                        {loading ? (
+                            [...Array(3)].map((_, index) => (
                                 <tr key={`share-skeleton-${index}`}>
-                                    <td><Skeleton /></td>
-                                    <td><Skeleton /></td>
-                                    <td><Skeleton width={100} /></td>
+                                    <td>
+                                        <Skeleton />
+                                    </td>
+                                    <td>
+                                        <Skeleton />
+                                    </td>
+                                    <td>
+                                        <Skeleton width={100} />
+                                    </td>
                                     <td className="action-buttons">
                                         <Skeleton circle width={30} height={30} />
                                         <Skeleton circle width={30} height={30} />
                                     </td>
                                 </tr>
                             ))
-                            : links.length === 0 ? (
-                                <tr>
-                                    <td colSpan={4} style={{ textAlign: "center", opacity: 0.6 }}>
-                                        No share links yet. Create one to get started.
-                                    </td>
-                                </tr>
-                            ) : links.map((link) => (
+                        ) : links.length === 0 ? (
+                            <tr>
+                                <td colSpan={4} style={{ textAlign: "center", opacity: 0.6 }}>
+                                    No share links yet. Create one to get started.
+                                </td>
+                            </tr>
+                        ) : (
+                            links.map((link) => (
                                 <tr key={link.id} style={{ opacity: isExpired(link.expires_at) ? 0.5 : 1 }}>
                                     <td>{link.alias}</td>
-                                    <td style={{ maxWidth: "300px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    <td
+                                        style={{
+                                            maxWidth: "300px",
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
+                                        }}
+                                    >
                                         {getShareUrl(link)}
                                     </td>
                                     <td>{formatExpiry(link.expires_at)}</td>
                                     <td className="action-buttons">
-                                        <button className="update-btn" onClick={() => copyToClipboard(link)} title="Copy link">
+                                        <button
+                                            className="update-btn"
+                                            onClick={() => copyToClipboard(link)}
+                                            title="Copy link"
+                                        >
                                             <FontAwesomeIcon icon={faCopy} />
                                         </button>
-                                        <button className="delete-btn" onClick={() => handleDelete(link)} title="Delete">
+                                        <button
+                                            className="delete-btn"
+                                            onClick={() => handleDelete(link)}
+                                            title="Delete"
+                                        >
                                             <FontAwesomeIcon icon={faTrash} />
                                         </button>
                                     </td>
                                 </tr>
-                            ))}
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>
 
             {modalOpen && (
-                <div className="modal-overlay" onClick={() => setModalOpen(false)}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <span className="close" onClick={() => setModalOpen(false)}>&times;</span>
+                <div className="modal-overlay" onClick={closeModal}>
+                    <div className="modal-content" ref={modalRef} role="dialog" aria-modal="true" aria-label="Create share link" onClick={(e) => e.stopPropagation()}>
+                        <span className="close" onClick={() => setModalOpen(false)}>
+                            &times;
+                        </span>
                         <h2>Create Share Link</h2>
                         <div className="input-row">
                             <input
@@ -170,10 +198,15 @@ export default function SharePanel() {
                         <div className="input-row">
                             <select
                                 value={newExpiry === null ? "null" : String(newExpiry)}
-                                onChange={(e) => setNewExpiry(e.target.value === "null" ? null : Number(e.target.value))}
+                                onChange={(e) =>
+                                    setNewExpiry(e.target.value === "null" ? null : Number(e.target.value))
+                                }
                             >
                                 {EXPIRY_OPTIONS.map((opt) => (
-                                    <option key={String(opt.value)} value={opt.value === null ? "null" : String(opt.value)}>
+                                    <option
+                                        key={String(opt.value)}
+                                        value={opt.value === null ? "null" : String(opt.value)}
+                                    >
                                         {opt.label}
                                     </option>
                                 ))}

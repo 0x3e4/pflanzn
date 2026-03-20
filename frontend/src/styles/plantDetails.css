@@ -31,13 +31,21 @@
     gap: 1rem;
 }
 
-.plant-global-button-left, .plant-global-button-right {
+.plant-global-button-left,
+.plant-global-button-right {
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
 }
 
-.delete-plant-btn, .archive-plant-btn, .generate-description-btn, .ai-care-helper-btn, .water-plant-btn, .identify-plant-btn, .file-input-plant-btn, .notes-btn {
+.delete-plant-btn,
+.archive-plant-btn,
+.generate-description-btn,
+.ai-care-helper-btn,
+.water-plant-btn,
+.identify-plant-btn,
+.file-input-plant-btn,
+.notes-btn {
     flex-shrink: 0;
     white-space: nowrap;
     width: auto;
@@ -52,7 +60,7 @@
 .file-input-plant-btn {
     background-color: var(--quinary-color);
 }
-  
+
 .file-input-plant-btn:hover {
     background-color: var(--senary-color);
 }
@@ -77,11 +85,13 @@
     border: 1px solid var(--tertiary-color);
 }
 
-.generate-description-btn, .ai-care-helper-btn {
+.generate-description-btn,
+.ai-care-helper-btn {
     background-color: var(--decimal-color);
 }
 
-.generate-description-btn:hover, .ai-care-helper-btn:hover {
+.generate-description-btn:hover,
+.ai-care-helper-btn:hover {
     background-color: var(--undecimal-color);
 }
 
@@ -121,7 +131,8 @@
     position: relative;
 }
 
-h2, h3 {
+h2,
+h3 {
     margin: 0px;
     margin-bottom: 1rem;
 }
@@ -131,7 +142,7 @@ h3 {
 }
 
 .description span {
-    hyphens: auto; 
+    hyphens: auto;
     text-align: justify;
 }
 
@@ -148,7 +159,7 @@ h3 {
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
-  
+
 .description.editing {
     background-color: var(--secondary-background-color);
     cursor: text;
@@ -354,7 +365,8 @@ h3 {
     opacity: 0.9;
 }
 
-.note-input, .archive-reason {
+.note-input,
+.archive-reason {
     width: 100%;
     min-height: 80px;
     padding: 12px;
@@ -368,7 +380,8 @@ h3 {
     outline: none;
 }
 
-.note-input:focus, .archive-reason:focus {
+.note-input:focus,
+.archive-reason:focus {
     border-color: var(--primary-color);
     background: var(--secondary-background-color);
 }
@@ -389,7 +402,8 @@ h3 {
         align-items: stretch;
     }
 
-    .plant-left-column, .plant-right-column {
+    .plant-left-column,
+    .plant-right-column {
         max-width: 100%;
         min-width: 0;
     }
@@ -444,13 +458,15 @@ h3 {
 }
 
 /* Modal */
-.delete-plant-modal-overlay, .archive-plant-modal-overlay, .notes-modal-overlay {
+.delete-plant-modal-overlay,
+.archive-plant-modal-overlay,
+.notes-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.6);
+    background-color: rgba(0, 0, 0, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -460,11 +476,13 @@ h3 {
     -webkit-overflow-scrolling: touch;
 }
 
-.delete-plant-modal, .archive-plant-modal, .notes-modal {
+.delete-plant-modal,
+.archive-plant-modal,
+.notes-modal {
     background: var(--secondary-background-color);
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     color: var(--text-color);
     text-align: center;
     width: 90%;
@@ -475,14 +493,21 @@ h3 {
     overflow-y: auto;
 }
 
-.delete-plant-modal-buttons, .archive-plant-modal-buttons, .note-actions {
+.delete-plant-modal-buttons,
+.archive-plant-modal-buttons,
+.note-actions {
     display: flex;
     gap: 10px;
     margin-top: 15px;
     justify-content: center;
 }
 
-.delete-plant-confirm, .delete-plant-cancel, .archive-plant-confirm, .archive-plant-cancel, .save-note-btn, .notes-modal-close {
+.delete-plant-confirm,
+.delete-plant-cancel,
+.archive-plant-confirm,
+.archive-plant-cancel,
+.save-note-btn,
+.notes-modal-close {
     padding: 10px 15px;
     border: none;
     cursor: pointer;
@@ -498,25 +523,33 @@ h3 {
     background-color: var(--secondary-color);
 }
 
-.delete-plant-confirm, .archive-plant-confirm  {
+.delete-plant-confirm,
+.archive-plant-confirm {
     background-color: var(--tertiary-color);
     color: white;
 }
 
-.delete-plant-cancel, .archive-plant-cancel, .notes-modal-close {
+.delete-plant-cancel,
+.archive-plant-cancel,
+.notes-modal-close {
     background-color: var(--quinary-color);
     color: white;
 }
 
-.delete-plant-confirm:hover, .archive-plant-confirm:hover {
+.delete-plant-confirm:hover,
+.archive-plant-confirm:hover {
     background-color: var(--quaternary-color);
 }
 
-.delete-plant-cancel:hover, .archive-plant-cancel:hover, .notes-modal-close:hover {
+.delete-plant-cancel:hover,
+.archive-plant-cancel:hover,
+.notes-modal-close:hover {
     background-color: var(--senary-color);
 }
 
-.archive-modal-header, .delete-modal-header, .notes-modal-header {
+.archive-modal-header,
+.delete-modal-header,
+.notes-modal-header {
     margin-bottom: 10px;
 }
 
@@ -631,14 +664,14 @@ h3 {
 
 @media (max-width: 400px) {
     .water-plant-input-container {
-      flex-direction: column;
-      align-items: stretch;
+        flex-direction: column;
+        align-items: stretch;
     }
-  
+
     .water-plant-btn,
     .water-plant-datetime {
-      width: 100%;
-      justify-content: center;
+        width: 100%;
+        justify-content: center;
     }
 }
 
@@ -672,11 +705,11 @@ h3 {
 }
 
 .Toastify__close-button button:hover {
-    background-color: none; 
+    background-color: none;
 }
 
 .Toastify__close-button button svg {
-    color: white; 
+    color: white;
 }
 
 body.modal-open {
@@ -684,11 +717,18 @@ body.modal-open {
 }
 
 @media (max-width: 768px) {
-    .delete-plant-modal-buttons, .archive-plant-modal-buttons, .note-actions {
+    .delete-plant-modal-buttons,
+    .archive-plant-modal-buttons,
+    .note-actions {
         flex-direction: column;
     }
 
-    .delete-plant-confirm, .delete-plant-cancel, .archive-plant-confirm, .archive-plant-cancel, .save-note-btn, .notes-modal-close {
+    .delete-plant-confirm,
+    .delete-plant-cancel,
+    .archive-plant-confirm,
+    .archive-plant-cancel,
+    .save-note-btn,
+    .notes-modal-close {
         width: 100%;
         touch-action: manipulation;
     }

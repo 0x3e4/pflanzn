@@ -31,16 +31,18 @@ export default class ErrorBoundary extends Component<Props, State> {
             if (this.props.fallback) return this.props.fallback;
 
             return (
-                <div style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    minHeight: "60vh",
-                    padding: "2rem",
-                    textAlign: "center",
-                    color: "var(--text-color)",
-                }}>
+                <div
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        minHeight: "60vh",
+                        padding: "2rem",
+                        textAlign: "center",
+                        color: "var(--text-color)",
+                    }}
+                >
                     <h2 style={{ marginBottom: "0.5rem" }}>Something went wrong</h2>
                     <p style={{ color: "var(--quinary-color)", marginBottom: "1.5rem" }}>
                         An unexpected error occurred. Please try reloading the page.

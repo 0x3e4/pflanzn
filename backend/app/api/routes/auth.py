@@ -1,22 +1,22 @@
-import os
 import logging
-import redis
-import httpx
+import os
 import time
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, Optional
 from urllib.parse import urlparse
+
+import httpx
+import redis
+from authlib.integrations.starlette_client import OAuth
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
-from datetime import timedelta, datetime, timezone
+
+from app.core.config import settings
+from app.core.security import create_access_token, create_refresh_token, decode_token, verify_password
 from app.database import get_db
-from app.core.security import (
-    verify_password, create_access_token, create_refresh_token, decode_token
-)
 from app.models import User
 from app.schemas import LoginRequest
-from authlib.integrations.starlette_client import OAuth
-from app.core.config import settings
-from typing import Optional, Dict, Any
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -144,7 +144,7 @@ def login(user_data: LoginRequest, db: Session = Depends(get_db)):
     logger.debug(f"Login attempt for user: '{user_data.username}'")
 
     user = db.query(User).filter(User.username == user_data.username).first()
-    
+
     if not user or not verify_password(user_data.password, user.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
@@ -282,7 +282,7 @@ async def oidc_callback(request: Request, db: Session = Depends(get_db)):
         import traceback
         logger.error(f"Full traceback: {traceback.format_exc()}")
         return RedirectResponse(url="/login?error=auth_failed", status_code=302)
-        
+
 @router.post("/logout")
 def logout():
     """Clears the authentication cookie."""

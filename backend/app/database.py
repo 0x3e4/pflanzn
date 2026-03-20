@@ -1,9 +1,11 @@
 import logging
+from time import sleep
+
+from mariadb import InterfaceError, OperationalError
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker
-from mariadb import InterfaceError, OperationalError
+
 from app.core.config import settings
-from time import sleep
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")

@@ -1,14 +1,15 @@
 import logging
 import os
+
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
-from app.api.routes import auth, plants, tags, users, statistics, locations, share
-from app.database import init_db
-from app.core.security import create_admin_user
-from dotenv import load_dotenv
+
+from app.api.routes import auth, locations, plants, share, statistics, tags, uploads, users
 from app.core.config import settings
+from app.core.security import create_admin_user
+from app.database import init_db
 
 # Load environment variables
 load_dotenv()
@@ -23,8 +24,8 @@ logger.debug("Database initialized.")
 
 # Initialize FastAPI
 app = FastAPI(
-    title="Plant Management API", 
-    version="1.0.0", 
+    title="Plant Management API",
+    version="1.0.0",
     docs_url="/api/docs"
 )
 
@@ -49,9 +50,8 @@ if os.getenv("VITE_AUTH_MODE") == "oidc":
         https_only=True,
     )
 
-app.mount("/api/uploads", StaticFiles(directory=settings.UPLOAD_FOLDER), name="uploads")
-
 # Include routers
+app.include_router(uploads.router, prefix="/api/uploads", tags=["Uploads"])
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(plants.router, prefix="/api/plants", tags=["Plants"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])

@@ -1,17 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import { fetchStatistics, fetchDailyWaterings } from "../services/StatisticService";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-    faSeedling,
-    faList,
-    faDroplet,
-    faClock,
-    faArchive,
-    faImage
-} from "@fortawesome/free-solid-svg-icons";
+import { faSeedling, faList, faDroplet, faClock, faArchive, faImage } from "@fortawesome/free-solid-svg-icons";
 import { Plant } from "../types/Plant";
 import "../styles/statisticsPanel.css";
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
@@ -85,71 +78,56 @@ const WateringChart = ({ data }: { data: DailyWateringData[] }) => {
         const loadChartJS = async () => {
             try {
                 // Dynamic import of Chart.js
-                const {
-                    Chart,
-                    CategoryScale,
-                    LinearScale,
-                    PointElement,
-                    LineElement,
-                    Title,
-                    Tooltip,
-                    Legend,
-                    Filler
-                } = await import('chart.js/auto');
+                const { Chart, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } =
+                    await import("chart.js/auto");
 
                 // Register components
-                Chart.register(
-                    CategoryScale,
-                    LinearScale,
-                    PointElement,
-                    LineElement,
-                    Title,
-                    Tooltip,
-                    Legend,
-                    Filler
-                );
+                Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
                 if (canvasRef.current) {
                     // Destroy existing chart if it exists
                     destroyChart();
 
                     // Format dates for labels
-                    const labels = data.map(item => {
+                    const labels = data.map((item) => {
                         const date = new Date(item.date);
-                        return date.toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric' 
+                        return date.toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
                         });
                     });
 
-                    const ctx = canvasRef.current.getContext('2d');
+                    const ctx = canvasRef.current.getContext("2d");
                     if (ctx) {
                         const computedStyle = getComputedStyle(document.documentElement);
-                        const primaryColor = computedStyle.getPropertyValue('--primary-color').trim() || '#4CAF50';
-                        const backgroundColor = computedStyle.getPropertyValue('--background-color').trim() || '#2c2c2c';
-                        const textColor = computedStyle.getPropertyValue('--text-color').trim() || '#ffffff';
-                        const borderColor = computedStyle.getPropertyValue('--border-color').trim() || '#ccc';
+                        const primaryColor = computedStyle.getPropertyValue("--primary-color").trim() || "#4CAF50";
+                        const backgroundColor =
+                            computedStyle.getPropertyValue("--background-color").trim() || "#2c2c2c";
+                        const textColor = computedStyle.getPropertyValue("--text-color").trim() || "#ffffff";
+                        const borderColor = computedStyle.getPropertyValue("--border-color").trim() || "#ccc";
 
                         chartRef.current = new Chart(ctx, {
-                            type: 'line',
+                            type: "line",
                             data: {
                                 labels: labels,
-                                datasets: [{
-                                    label: 'Daily Waterings',
-                                    data: data.map(item => item.waterings),
-                                    borderColor: primaryColor,
-                                    backgroundColor: `${primaryColor}20`,
-                                    borderWidth: 2,
-                                    fill: true,
-                                    tension: 0.2,
-                                    pointBackgroundColor: primaryColor,
-                                    pointBorderColor: backgroundColor,
-                                    pointBorderWidth: 2,
-                                    pointRadius: 4,
-                                    pointHoverRadius: 6,
-                                    pointHoverBackgroundColor: primaryColor,
-                                    pointHoverBorderColor: textColor
-                                }]
+                                datasets: [
+                                    {
+                                        label: "Daily Waterings",
+                                        data: data.map((item) => item.waterings),
+                                        borderColor: primaryColor,
+                                        backgroundColor: `${primaryColor}20`,
+                                        borderWidth: 2,
+                                        fill: true,
+                                        tension: 0.2,
+                                        pointBackgroundColor: primaryColor,
+                                        pointBorderColor: backgroundColor,
+                                        pointBorderWidth: 2,
+                                        pointRadius: 4,
+                                        pointHoverRadius: 6,
+                                        pointHoverBackgroundColor: primaryColor,
+                                        pointHoverBorderColor: textColor,
+                                    },
+                                ],
                             },
                             options: {
                                 responsive: true,
@@ -157,13 +135,13 @@ const WateringChart = ({ data }: { data: DailyWateringData[] }) => {
                                 resizeDelay: 100,
                                 plugins: {
                                     title: {
-                                        display: false
+                                        display: false,
                                     },
                                     legend: {
-                                        display: false
+                                        display: false,
                                     },
                                     tooltip: {
-                                        mode: 'index',
+                                        mode: "index",
                                         intersect: false,
                                         backgroundColor: backgroundColor,
                                         titleColor: textColor,
@@ -172,59 +150,59 @@ const WateringChart = ({ data }: { data: DailyWateringData[] }) => {
                                         borderWidth: 1,
                                         cornerRadius: 8,
                                         callbacks: {
-                                            label: function(context: any) {
+                                            label: function (context: any) {
                                                 return `${context.parsed.y} waterings`;
-                                            }
-                                        }
-                                    }
+                                            },
+                                        },
+                                    },
                                 },
                                 scales: {
                                     x: {
                                         display: true,
                                         grid: {
                                             display: true,
-                                            color: `${textColor}20`
+                                            color: `${textColor}20`,
                                         },
                                         ticks: {
                                             color: textColor,
                                             maxRotation: 45,
-                                            minRotation: 0
-                                        }
+                                            minRotation: 0,
+                                        },
                                     },
                                     y: {
                                         display: true,
                                         beginAtZero: true,
                                         grid: {
                                             display: true,
-                                            color: `${textColor}20`
+                                            color: `${textColor}20`,
                                         },
                                         ticks: {
                                             color: textColor,
-                                            stepSize: 1
-                                        }
-                                    }
+                                            stepSize: 1,
+                                        },
+                                    },
                                 },
                                 interaction: {
-                                    mode: 'nearest',
-                                    axis: 'x',
-                                    intersect: false
+                                    mode: "nearest",
+                                    axis: "x",
+                                    intersect: false,
                                 },
                                 onResize: (chart: any) => {
                                     // Force redraw on resize
                                     if (chart?.ctx?.canvas) {
-                                        chart.update('none');
+                                        chart.update("none");
                                     }
-                                }
-                            }
+                                },
+                            },
                         });
 
                         // Add window resize event listener
-                        window.addEventListener('resize', handleResize);
+                        window.addEventListener("resize", handleResize);
                     }
                 }
             } catch (err: any) {
-                console.error('Failed to load Chart.js:', err);
-                toast.error('Failed to load chart: ' + err.message);
+                console.error("Failed to load Chart.js:", err);
+                toast.error("Failed to load chart: " + err.message);
             }
         };
 
@@ -235,7 +213,7 @@ const WateringChart = ({ data }: { data: DailyWateringData[] }) => {
         // Cleanup function
         return () => {
             destroyChart();
-            window.removeEventListener('resize', handleResize);
+            window.removeEventListener("resize", handleResize);
         };
     }, [data]);
 
@@ -266,18 +244,24 @@ const WateringChart = ({ data }: { data: DailyWateringData[] }) => {
     }, []);
 
     return (
-        <div ref={containerRef} style={{ 
-            position: 'relative', 
-            height: '100%', 
-            width: '100%', 
-        }}>
-            <canvas ref={canvasRef} style={{ 
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%'
-            }} />
+        <div
+            ref={containerRef}
+            style={{
+                position: "relative",
+                height: "100%",
+                width: "100%",
+            }}
+        >
+            <canvas
+                ref={canvasRef}
+                style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                }}
+            />
         </div>
     );
 };
@@ -294,20 +278,18 @@ export default function StatisticsPanel() {
 
     const loadData = async () => {
         try {
-            
             const statsData = await fetchStatistics();
             setStats(statsData);
-            
+
             try {
                 const dailyWateringsResponse = await fetchDailyWaterings(7);
-               
+
                 if (dailyWateringsResponse && dailyWateringsResponse.dailyWaterings) {
                     setDailyWaterings(dailyWateringsResponse.dailyWaterings);
                 }
             } catch (wateringError) {
                 setError("Failed to load chart data");
             }
-            
         } catch (error) {
             setError("Failed to load statistics");
         }
@@ -318,29 +300,31 @@ export default function StatisticsPanel() {
         <div className="statistics-panel">
             <h2>Statistics</h2>
             <p>Here you can monitor plant statistics.</p>
-            
+
             {error && (
-                <div style={{
-                    background: '#ffebee',
-                    color: '#c62828',
-                    padding: '10px',
-                    borderRadius: '4px',
-                    margin: '10px 0'
-                }}>
+                <div
+                    style={{
+                        background: "#ffebee",
+                        color: "#c62828",
+                        padding: "10px",
+                        borderRadius: "4px",
+                        margin: "10px 0",
+                    }}
+                >
                     Error: {error}
                 </div>
             )}
-            
+
             {/* Top Row - Statistics Cards */}
             <div className="stats-row">
                 <div className="stats-card">
                     <FontAwesomeIcon icon={faSeedling} className="stats-icon" />
-                    <h3>{loading ? <Skeleton width={80} /> : stats?.totalPlants ?? 0}</h3>
+                    <h3>{loading ? <Skeleton width={80} /> : (stats?.totalPlants ?? 0)}</h3>
                     <p>Active Plants</p>
                 </div>
                 <div className="stats-card">
                     <FontAwesomeIcon icon={faArchive} className="stats-icon" />
-                    <h3>{loading ? <Skeleton width={80} /> : stats?.archivedPlants ?? 0}</h3>
+                    <h3>{loading ? <Skeleton width={80} /> : (stats?.archivedPlants ?? 0)}</h3>
                     <p>Archived Plants</p>
                 </div>
                 <div className="stats-card">
@@ -355,7 +339,9 @@ export default function StatisticsPanel() {
                             ))
                         ) : stats?.topSpecies?.length ? (
                             stats.topSpecies.map((species, index) => (
-                                <li key={index}>{species.name} ({species.count})</li>
+                                <li key={index}>
+                                    {species.name} ({species.count})
+                                </li>
                             ))
                         ) : (
                             <li>No data</li>
@@ -364,12 +350,12 @@ export default function StatisticsPanel() {
                 </div>
                 <div className="stats-card">
                     <FontAwesomeIcon icon={faDroplet} className="stats-icon" />
-                    <h3>{loading ? <Skeleton width={80} /> : stats?.totalWaterings ?? 0}</h3>
+                    <h3>{loading ? <Skeleton width={80} /> : (stats?.totalWaterings ?? 0)}</h3>
                     <p>Total Waterings Logged</p>
                 </div>
                 <div className="stats-card">
                     <FontAwesomeIcon icon={faImage} className="stats-icon" />
-                    <h3>{loading ? <Skeleton width={80} /> : stats?.totalImages ?? 0}</h3>
+                    <h3>{loading ? <Skeleton width={80} /> : (stats?.totalImages ?? 0)}</h3>
                     <p>Total Images Uploaded</p>
                 </div>
                 <div className="stats-card">
@@ -382,10 +368,10 @@ export default function StatisticsPanel() {
             {/* Daily Waterings Chart */}
             <div className="chart-section">
                 <h3>
-                    <FontAwesomeIcon icon={faDroplet} style={{ marginRight: '0.5rem' }} />
+                    <FontAwesomeIcon icon={faDroplet} style={{ marginRight: "0.5rem" }} />
                     Daily Waterings
                 </h3>
-                
+
                 <div className="chart-container">
                     {loading ? (
                         <Skeleton height="100%" />

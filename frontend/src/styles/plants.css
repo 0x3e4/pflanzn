@@ -1,501 +1,508 @@
 /* Container for the entire plant section */
 .plants-container {
-  text-align: center;
-  background-color: var(--secondary-background-color);
-  min-height: 82vh;
-  transition: max-width 0.3s ease-in-out;
+    text-align: center;
+    background-color: var(--secondary-background-color);
+    min-height: 82vh;
+    transition: max-width 0.3s ease-in-out;
 }
 
 /* Header Section: Plants title on the left & "+" button */
 .plants-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 20px;
-  min-width: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 20px;
+    min-width: 300px;
 }
 
 .plants-header h1 {
-  color: var(--text-color);
-  margin: 0;
+    color: var(--text-color);
+    margin: 0;
 }
 
 /* Add Plant (+) Button */
 .add-plant-btn {
-  font-size: 28px;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  border: none;
-  background: var(--primary-color);
-  color: white;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+    font-size: 28px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: none;
+    background: var(--primary-color);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition:
+        background-color 0.3s ease,
+        transform 0.2s ease;
 }
 
 .add-plant-btn:hover {
-  background-color: var(--secondary-color);
-  transform: scale(1.1);
+    background-color: var(--secondary-color);
+    transform: scale(1.1);
 }
 
 /* Add Plant Modal */
 .add-plant-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
 }
 
 .add-plant-modal-content {
-  background: var(--secondary-background-color);
-  padding: 20px;
-  border-radius: 8px;
-  text-align: center;
-  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.3);
-  position: relative;
-  max-height: 80vh;
-  overflow-y: auto;
+    background: var(--secondary-background-color);
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+    max-height: 80vh;
+    overflow-y: auto;
 }
 
 /* Close button inside modal */
 .add-plant-modal-content .close {
-  position: absolute;
-  right: 15px;
-  top: 15px;
-  cursor: pointer;
-  font-size: 24px;
-  color: var(--text-color);
-  transition: color 0.3s ease;
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    cursor: pointer;
+    font-size: 24px;
+    color: var(--text-color);
+    transition: color 0.3s ease;
 }
 
 .add-plant-modal-content .close:hover {
-  color: #aaa;
+    color: #aaa;
 }
 
 /* Modal Input Fields */
 .add-plant-modal-content input {
-  width: 100%;
-  padding: 10px;
-  margin: 10px 0;
-  border: 1px solid #555;
-  border-radius: 6px;
-  font-size: 16px;
-  background: #222;
-  color: var(--text-color);
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #555;
+    border-radius: 6px;
+    font-size: 16px;
+    background: #222;
+    color: var(--text-color);
 }
 
 /* Modal Button */
 .add-plant-modal-content button {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
-  width: 100%;
-  transition: background-color 0.3s ease;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+    transition: background-color 0.3s ease;
 }
 
 .add-plant-modal-content button:hover {
-  background-color: var(--secondary-color);
+    background-color: var(--secondary-color);
 }
 
 /* Plant list section */
 .plants-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 1.5rem;
-  width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.5rem;
+    width: 100%;
 }
 
 /* Plant card styling */
 .plant-card {
-  background: var(--secondary-background-color);
-  border-radius: 12px;
-  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
-  text-align: left !important;
-  transition: box-shadow 0.3s ease;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  position: relative;
+    background: var(--secondary-background-color);
+    border-radius: 12px;
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+    text-align: left !important;
+    transition: box-shadow 0.3s ease;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
 }
 
 @media (max-width: 768px) {
-  .plant-card {
-    flex-basis: calc(50% - 15px);
-    min-width: 140px;
-  }
+    .plant-card {
+        flex-basis: calc(50% - 15px);
+        min-width: 140px;
+    }
 }
 
 .plant-card-text {
-  padding: 10px;
-  margin-bottom: 40px;
-  box-sizing: border-box;
+    padding: 10px;
+    margin-bottom: 40px;
+    box-sizing: border-box;
 }
 
 .plant-card:hover {
-  box-shadow: 0px 12px 20px rgba(0, 0, 0, 0.7);
+    box-shadow: 0px 12px 20px rgba(0, 0, 0, 0.7);
 }
 
 /* Plant image styling */
 .plant-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
 }
 
 .plant-image-container {
-  width: 100%;
-  height: 450px;
-  overflow: hidden;
-  border-radius: 8px;
+    width: 100%;
+    height: 450px;
+    overflow: hidden;
+    border-radius: 8px;
 }
 
 /* Zoom the image slightly when hovering */
 .plant-image-container:hover .plant-image {
-  transform: scale(1.1);
+    transform: scale(1.1);
 }
 
 /* Title and species text should be below the image */
 .plant-card h3 {
-  font-size: 20px;
-  margin: 5px 0;
-  color: var(--text-color);
+    font-size: 20px;
+    margin: 5px 0;
+    color: var(--text-color);
 }
 
 .plant-card p {
-  font-size: 14px;
-  color: #ccc;
-  margin: 3px 0;
+    font-size: 14px;
+    color: #ccc;
+    margin: 3px 0;
 }
 
 .plant-buttons {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  position: absolute;
-  bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
 }
 
 .plant-buttons button {
-  flex: 1;
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.3s ease;
+    flex: 1;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
 }
 
 .plant-buttons .identify-plant-btn {
-  background-color: var(--primary-color);
+    background-color: var(--primary-color);
 }
 
 .plant-buttons .identify-plant-btn:hover {
-  background-color: var(--secondary-color);
+    background-color: var(--secondary-color);
 }
 
 .plant-buttons .water-plant-btn {
-  background-color: var(--octal-color);
-  border-radius: 0;
+    background-color: var(--octal-color);
+    border-radius: 0;
 }
 
 .plant-buttons .water-plant-btn:hover {
-  background-color: var(--nonal-color);
+    background-color: var(--nonal-color);
 }
 
 .plant-buttons .file-input-plant-btn {
-  background-color: var(--quinary-color);
-  border-radius: 0;
+    background-color: var(--quinary-color);
+    border-radius: 0;
 }
 
 .plant-buttons .file-input-plant-btn:hover {
-  background-color: var(--senary-color);
+    background-color: var(--senary-color);
 }
 
 .plant-buttons .archive-plant-btn {
-  background-color: var(--text-color);
-  color: var(--quaternary-color);
-  border: 1px solid var(--quaternary-color);
-  border-radius: 0;
-  z-index: 100;
+    background-color: var(--text-color);
+    color: var(--quaternary-color);
+    border: 1px solid var(--quaternary-color);
+    border-radius: 0;
+    z-index: 100;
 }
 
 .plant-buttons .archive-plant-btn:hover {
-  background-color: var(--septimal-color);
-  color: var(--quaternary-color);
-  border: 1px solid var(--tertiary-color);
+    background-color: var(--septimal-color);
+    color: var(--quaternary-color);
+    border: 1px solid var(--tertiary-color);
 }
 
 /* Hide the file input text */
 .file-input {
-  display: none;
+    display: none;
 }
 
 .modal-plant-buttons {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 10px;
 }
 
 .modal-plant-buttons button {
-  flex: 1;
-  color: white;
-  padding: 10px 12px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.3s ease;
+    flex: 1;
+    color: white;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
 }
 
 .modal-buttons {
-  gap: 1rem;
+    gap: 1rem;
 }
 
 .modal-cancel-button {
-  background-color: var(--tertiary-color) !important;
+    background-color: var(--tertiary-color) !important;
 }
 
 .modal-cancel-button:hover {
-  background-color: var(--quaternary-color) !important;
+    background-color: var(--quaternary-color) !important;
 }
 
 .modal-identify-button {
-  background-color: var(--quinary-color) !important;
+    background-color: var(--quinary-color) !important;
 }
 
 .modal-identify-button:hover {
-  background-color: var(--senary-color) !important;
+    background-color: var(--senary-color) !important;
 }
 
 .identify-results-list {
-  list-style-type: none;
-  padding: 0;
+    list-style-type: none;
+    padding: 0;
 }
 
 .plant-filter-sort-bar {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  gap: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    gap: 0.75rem;
 }
 
 .plant-tag-filter {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  flex: 1 1 auto;
-  width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    flex: 1 1 auto;
+    width: 100%;
 }
 
 .hashtag {
-  background-color: var(--background-color);
-  padding: 4px 10px;
-  border-radius: 999px;
-  cursor: pointer;
-  color: var(--text-color);
-  font-weight: bold;
-  transition: background-color 0.2s ease;
+    background-color: var(--background-color);
+    padding: 4px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+    color: var(--text-color);
+    font-weight: bold;
+    transition: background-color 0.2s ease;
 }
 
 .hashtag:hover {
-  background-color: var(--quinary-color);
+    background-color: var(--quinary-color);
 }
 
 .hashtag.active {
-  background-color: var(--secondary-color);
+    background-color: var(--secondary-color);
 }
 
 .hashtag-archive:hover {
-  background-color: var(--text-color);
-  color: var(--quaternary-color);
+    background-color: var(--text-color);
+    color: var(--quaternary-color);
 }
 
 .hashtag-archive.active {
-  background-color: var(--text-color);
-  color: var(--tertiary-color);
+    background-color: var(--text-color);
+    color: var(--tertiary-color);
 }
 
-.plant-sort-container, .plant-filter-dropdown {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  flex: 0 0 auto;
+.plant-sort-container,
+.plant-filter-dropdown {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    flex: 0 0 auto;
 }
 
 .plant-sort-container select {
-  min-width: 140px;
-  padding: 6px 10px;
-  border-radius: 6px;
-  background-color: var(--secondary-background-color);
-  color: var(--text-color);
-  border: 1px solid var(--border-color);
+    min-width: 140px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background-color: var(--secondary-background-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
 }
 
 .plant-filter-dropdown select {
-  min-width: 140px;
-  padding: 10px;
-  color: var(--text-color);
+    min-width: 140px;
+    padding: 10px;
+    color: var(--text-color);
 }
 
 .plant-filter-dropdown {
-  border: none !important;
+    border: none !important;
 }
 
 .plant-card.archived {
-  opacity: 0.8;
-  position: relative;
+    opacity: 0.8;
+    position: relative;
 }
 
 .plant-archived-label {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background-color: var(--tertiary-color);
-  color: white;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 12px;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: var(--tertiary-color);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
 }
 
 .filter-toggle-icon {
-  margin-left: 0.5rem;
-  cursor: pointer;
-  font-size: 1.2rem;
-  transition: transform 0.2s ease;
+    margin-left: 0.5rem;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: transform 0.2s ease;
 }
 
 .filter-toggle-icon:hover {
-  transform: scale(1.1);
+    transform: scale(1.1);
 }
 
 .filter-specie-name-container {
-  display: flex;
-  align-items: center;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0px 0px 0px 4px;
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0px 0px 0px 4px;
 }
 
 .plant-filter-dropdown:focus {
-  box-shadow: 0 0 5px var(--primary-color);
+    box-shadow: 0 0 5px var(--primary-color);
 }
 
 .plant-filter-dropdown select {
-  border: none;
-  background-color: var(--secondary-background-color);
+    border: none;
+    background-color: var(--secondary-background-color);
 }
 
 .plant-filter-dropdown select:focus {
-  box-shadow: unset;
+    box-shadow: unset;
 }
 
 .plant-filter-toggle {
-  margin-right: 0.5rem;
+    margin-right: 0.5rem;
 }
 
 #sort-select {
-  padding: 10px;
+    padding: 10px;
 }
 
 @media (max-width: 768px) {
-  .plant-filter-sort-bar {
-    flex-direction: column;
-    align-items: stretch;
-    row-gap: 0.75rem;
-  }
+    .plant-filter-sort-bar {
+        flex-direction: column;
+        align-items: stretch;
+        row-gap: 0.75rem;
+    }
 
-  .filter-specie-name-container,
-  .plant-sort-container,
-  .plant-search-container {
-    flex: 0 0 100%;
-    width: 100% !important;
-    align-self: stretch;
-  }
+    .filter-specie-name-container,
+    .plant-sort-container,
+    .plant-search-container {
+        flex: 0 0 100%;
+        width: 100% !important;
+        align-self: stretch;
+    }
 
-  .filter-specie-name-container .plant-filter-dropdown {
-    flex: 1 1 auto !important;
-    width: 100% !important;
-    min-width: 0 !important;
-  }
+    .filter-specie-name-container .plant-filter-dropdown {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
 
-  .filter-specie-name-container .plant-filter-dropdown select {
-    width: 100% !important;
-    min-width: 0 !important;
-    border-radius: 100%;
-  }
+    .filter-specie-name-container .plant-filter-dropdown select {
+        width: 100% !important;
+        min-width: 0 !important;
+        border-radius: 100%;
+    }
 
-  .filter-specie-name-container .plant-filter-toggle {
-    flex: 0 0 auto;
-  }
+    .filter-specie-name-container .plant-filter-toggle {
+        flex: 0 0 auto;
+    }
 }
 
 .plants-container--stretched {
-  max-width: unset !important;
+    max-width: unset !important;
 }
 
 .toggle-stretch-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.25rem;
-  color: var(--text-color);
-  opacity: 0;
-  transition: background-color .5s ease-in-out,transform .5s;
-  border-radius: 25%;
-  margin-left: 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.25rem;
+    color: var(--text-color);
+    opacity: 0;
+    transition:
+        background-color 0.5s ease-in-out,
+        transform 0.5s;
+    border-radius: 25%;
+    margin-left: 6px;
 }
 
 .toggle-stretch-btn:hover {
-  transform: scale(1.1);
+    transform: scale(1.1);
 }
 
 .plants-container:hover .plants-header .toggle-stretch-btn {
-  opacity: 1;
-  transition: color .5s ease-in-out,transform .5s;
+    opacity: 1;
+    transition:
+        color 0.5s ease-in-out,
+        transform 0.5s;
 }
 
 @media (max-width: 1200px) {
-  .toggle-stretch-btn {
-    opacity: 0 !important;
-  }
+    .toggle-stretch-btn {
+        opacity: 0 !important;
+    }
 }
 
 .plant-search-container {
-  flex: 1;
-  min-width: 250px;
+    flex: 1;
+    min-width: 250px;
 }
 
 .plant-search-input {
-  width: 100%;
-  padding: 9px;
-  border: 1px solid var(--quinary-color);
-  border-radius: 6px;
-  font-size: 16px;
-  background-color: var(--secondary-background-color);
-  color: var(--text-color);
-  outline: none;
-  transition: border-color 0.3s ease;
-  box-sizing: border-box;
+    width: 100%;
+    padding: 9px;
+    border: 1px solid var(--quinary-color);
+    border-radius: 6px;
+    font-size: 16px;
+    background-color: var(--secondary-background-color);
+    color: var(--text-color);
+    outline: none;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
 }
 
 .plant-search-input:focus {
-  border-color: var(--primary-color);
+    border-color: var(--primary-color);
 }
 
 .plant-image-skeleton {

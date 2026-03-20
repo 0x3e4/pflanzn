@@ -18,7 +18,7 @@ const isTruthyEnv = (value: string | undefined, defaultValue = true) => {
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     children,
     requireAuth = true,
-    enforceAuth = false
+    enforceAuth = false,
 }) => {
     const { isLoggedIn, loading } = useAuth();
     const { isShareAccess } = useShare();

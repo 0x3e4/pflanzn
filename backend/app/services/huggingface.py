@@ -1,10 +1,11 @@
 import logging
-import re
 from typing import Optional
+
 from huggingface_hub import InferenceClient
+
 from app.core.config import settings
-from app.utils.llm_text_cleaner import clean_generated_text
 from app.services.prompt_config import PromptConfig
+from app.utils.llm_text_cleaner import clean_generated_text
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -35,7 +36,7 @@ class HuggingFaceClient:
 
             cleaned_description = clean_generated_text(response)
 
-            logger.info(f"Received response from Hugging Face")
+            logger.info("Received response from Hugging Face")
             return cleaned_description
 
         except Exception as e:
@@ -86,6 +87,7 @@ class HuggingFaceClient:
         Note: Vision support depends on the specific model being used.
         """
         import os
+
         from app.models import Plant
 
         BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))

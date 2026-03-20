@@ -6,16 +6,11 @@ import "../styles/home.css";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { toast } from "react-toastify";
-import Skeleton from 'react-loading-skeleton';
-import 'react-loading-skeleton/dist/skeleton.css';
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-    faCamera,
-    faDroplet,
-    faSeedling,
-    faWandMagicSparkles
-} from "@fortawesome/free-solid-svg-icons";
+import { faCamera, faDroplet, faSeedling, faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
 
 type HomeOverview = {
     total: number;
@@ -41,8 +36,8 @@ export default function Home() {
 
     useEffect(() => {
         const handleResize = () => setWindowWidth(window.innerWidth);
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
     }, []);
 
     // Determine number of skeleton slides based on screen size
@@ -76,11 +71,14 @@ export default function Home() {
             const data = await fetchPlants();
             const nonArchivedPlants = data.filter((plant) => !plant.is_archived);
 
-            const speciesCountMap = nonArchivedPlants.reduce((acc, plant) => {
-                const species = plant.species ?? "Unknown";
-                acc[species] = (acc[species] || 0) + 1;
-                return acc;
-            }, {} as Record<string, number>);
+            const speciesCountMap = nonArchivedPlants.reduce(
+                (acc, plant) => {
+                    const species = plant.species ?? "Unknown";
+                    acc[species] = (acc[species] || 0) + 1;
+                    return acc;
+                },
+                {} as Record<string, number>,
+            );
             setSpeciesCounts(speciesCountMap);
 
             setOverview({
@@ -89,7 +87,7 @@ export default function Home() {
                 species: Object.keys(speciesCountMap).length,
                 totalWaterings: data.reduce(
                     (sum, plant) => sum + (Array.isArray(plant.waterings) ? plant.waterings.length : 0),
-                    0
+                    0,
                 ),
             });
 
@@ -110,7 +108,9 @@ export default function Home() {
     const shuffleArray = <T,>(array: T[]): T[] => [...array].sort(() => Math.random() - 0.5);
 
     const generateWordPositions = (speciesList: string[]) => {
-        return shuffleArray(speciesList).slice(0, 10).map((species) => ({ species }));
+        return shuffleArray(speciesList)
+            .slice(0, 10)
+            .map((species) => ({ species }));
     };
 
     const maxCount = Math.max(1, ...Object.values(speciesCounts));
@@ -148,9 +148,7 @@ export default function Home() {
     return (
         <div className="container home-container">
             <section className="home-hero">
-                <p className="home-kicker">
-                    {loadingPlants ? <Skeleton width={140} /> : "Plant Care Cockpit"}
-                </p>
+                <p className="home-kicker">{loadingPlants ? <Skeleton width={140} /> : "Plant Care Cockpit"}</p>
                 <h1>{loadingPlants ? <Skeleton width={220} /> : "Pflanzn"}</h1>
                 <p className="home-subtitle">
                     {loadingPlants ? (
@@ -218,12 +216,16 @@ export default function Home() {
                 </article>
                 <article className="home-stat-card">
                     <FontAwesomeIcon icon={faDroplet} className="home-stat-icon" />
-                    <span className="home-stat-value">{loadingPlants ? <Skeleton width={72} /> : overview.totalWaterings}</span>
+                    <span className="home-stat-value">
+                        {loadingPlants ? <Skeleton width={72} /> : overview.totalWaterings}
+                    </span>
                     <span className="home-stat-label">Total Waterings Logged</span>
                 </article>
                 <article className="home-stat-card">
                     <FontAwesomeIcon icon={faWandMagicSparkles} className="home-stat-icon" />
-                    <span className="home-stat-value">{loadingPlants ? <Skeleton width={56} /> : overview.species}</span>
+                    <span className="home-stat-value">
+                        {loadingPlants ? <Skeleton width={56} /> : overview.species}
+                    </span>
                     <span className="home-stat-label">Species Tracked</span>
                 </article>
             </section>
@@ -255,11 +257,11 @@ export default function Home() {
 
                     {/* Hidden images for preloading */}
                     {!loadingPlants && (
-                        <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+                        <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
                             {plants.map((plant) => {
                                 const latestImage = plant.images?.[plant.images.length - 1];
                                 const imageUrl = latestImage
-                                    ? `/api/uploads/${latestImage.image_path}`
+                                    ? `/api/uploads/${latestImage.image_path}?size=thumb`
                                     : "/placeholder-plant.webp";
 
                                 return (
@@ -269,7 +271,7 @@ export default function Home() {
                                         alt=""
                                         onLoad={handleImageLoad}
                                         onError={handleImageLoad}
-                                        style={{ width: '1px', height: '1px' }}
+                                        style={{ width: "1px", height: "1px" }}
                                     />
                                 );
                             })}
@@ -283,7 +285,7 @@ export default function Home() {
                                 {plants.map((plant) => {
                                     const latestImage = plant.images?.[plant.images.length - 1];
                                     const imageUrl = latestImage
-                                        ? `/api/uploads/${latestImage.image_path}`
+                                        ? `/api/uploads/${latestImage.image_path}?size=medium`
                                         : "/placeholder-plant.webp";
 
                                     return (
@@ -339,7 +341,9 @@ export default function Home() {
                 <section className="home-empty-state">
                     <h2>No plant photos yet</h2>
                     <p>Add your first plant image to unlock carousel highlights.</p>
-                    <Link to="/plants" className="home-cta primary">Go to Plants</Link>
+                    <Link to="/plants" className="home-cta primary">
+                        Go to Plants
+                    </Link>
                 </section>
             )}
         </div>

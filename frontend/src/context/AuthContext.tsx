@@ -36,18 +36,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const showProtectedView = isTruthyEnv(import.meta.env.VITE_SHOW_PROTECTED_VIEW, true);
 
     useEffect(() => {
-    (async () => {
-        setLoading(true);
-        if (authMode !== "no") {
-        await refreshToken(true);
-        await fetchProfile();
-        } else {
-        setUser(null); setIsLoggedIn(false);
-        }
-        setLoading(false);
-    })();
+        (async () => {
+            setLoading(true);
+            if (authMode !== "no") {
+                await refreshToken(true);
+                await fetchProfile();
+            } else {
+                setUser(null);
+                setIsLoggedIn(false);
+            }
+            setLoading(false);
+        })();
     }, [authMode]);
-    
+
     const login = async (username: string, password: string) => {
         if (authMode === "local") {
             try {
@@ -62,14 +63,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const refreshToken = async (force = false) => {
-    if (!force && !isLoggedIn) return null;
-    try {
-        const response = await apiClient.post("/auth/refresh");
-        return response.data;
-    } catch (e) {
-        console.error("Refresh token failed:", e);
-        return null;
-    }
+        if (!force && !isLoggedIn) return null;
+        try {
+            const response = await apiClient.post("/auth/refresh");
+            return response.data;
+        } catch (e) {
+            console.error("Refresh token failed:", e);
+            return null;
+        }
     };
 
     const fetchProfile = async () => {
@@ -108,8 +109,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setIsLoggedIn(false);
 
                 // Don't redirect to OIDC if a share token is present
-                const hasShareToken = new URLSearchParams(window.location.search).has("share")
-                    || !!sessionStorage.getItem("share_token");
+                const hasShareToken =
+                    new URLSearchParams(window.location.search).has("share") || !!sessionStorage.getItem("share_token");
 
                 if (authMode === "oidc" && showProtectedView && !hasShareToken) {
                     window.location.href = "/api/auth/oidc-login";
@@ -121,7 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setLoading(false);
         }
     };
-    
+
     const logout = async () => {
         try {
             await apiClient.post("/auth/logout");
@@ -132,26 +133,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoggedIn(false);
     };
 
-    const authValue = useMemo(() => ({
-        user,
-        login,
-        logout,
-        fetchProfile,
-        isLoggedIn: isAuthDisabled || isLoggedIn,
-        loading
-    }), [user, isLoggedIn, loading, isAuthDisabled]);
-
-    return (
-        <AuthContext.Provider value={authValue}>
-            {children}
-        </AuthContext.Provider>
+    const authValue = useMemo(
+        () => ({
+            user,
+            login,
+            logout,
+            fetchProfile,
+            isLoggedIn: isAuthDisabled || isLoggedIn,
+            loading,
+        }),
+        [user, isLoggedIn, loading, isAuthDisabled],
     );
+
+    return <AuthContext.Provider value={authValue}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) {
-        return { user: null, isLoggedIn: false, loading: true, login: async () => {}, logout: async () => {}, fetchProfile: async () => {} };
+        return {
+            user: null,
+            isLoggedIn: false,
+            loading: true,
+            login: async () => {},
+            logout: async () => {},
+            fetchProfile: async () => {},
+        };
     }
     return context;
 };

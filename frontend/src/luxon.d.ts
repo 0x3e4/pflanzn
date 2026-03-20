@@ -1,1 +1,1 @@
-declare module 'luxon';
+declare module "luxon";

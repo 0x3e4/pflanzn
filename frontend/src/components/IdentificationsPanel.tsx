@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useModalA11y } from "../hooks/useModalA11y";
 import { deleteIdentification, fetchIdentifications } from "../services/PlantService";
 import { PlantIdentification } from "../types/Identification";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -10,12 +11,12 @@ import {
     faChevronRight,
     faExpand,
     faTrash,
-    faCircleXmark
+    faCircleXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import "../styles/identificationsPanel.css";
 import { setOverlayOpen } from "../services/overlayControl";
-import Skeleton from 'react-loading-skeleton';
-import 'react-loading-skeleton/dist/skeleton.css';
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 import { toast } from "react-toastify";
 
 type SortBy = "confidence" | "name";
@@ -33,7 +34,9 @@ export default function IdentificationsPanel() {
 
     const [fullSizeImagePath, setFullSizeImagePath] = useState<string | null>(null);
     const openFullSizeModal = (path: string) => setFullSizeImagePath(path);
-    const closeFullSizeModal = () => setFullSizeImagePath(null);
+    const closeFullSizeModal = useCallback(() => setFullSizeImagePath(null), []);
+
+    const { modalRef: fullSizeModalRef } = useModalA11y({ isOpen: !!fullSizeImagePath, onClose: closeFullSizeModal });
 
     const [loading, setLoading] = useState(true);
 
@@ -83,7 +86,7 @@ export default function IdentificationsPanel() {
     // Filter by date
     let filtered = [...identifications];
     if (selectedDate) {
-        filtered = filtered.filter(item => {
+        filtered = filtered.filter((item) => {
             const itemDate = new Date(item.identified_at).toISOString().split("T")[0];
             return itemDate === selectedDate;
         });
@@ -112,10 +115,10 @@ export default function IdentificationsPanel() {
         const date = new Date(dateString + "T00:00:00");
         return date.toLocaleDateString(locale, {
             timeZone: timezone,
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
         });
     };
 
@@ -141,31 +144,31 @@ export default function IdentificationsPanel() {
     useEffect(() => {
         // Mobile-specific aggressive preloading for current page
         const isMobile = /Android|webOS|iPhone|iPad|Opera Mini/i.test(navigator.userAgent);
-        
+
         if (isMobile && currentPageData.length > 0) {
             // Preload images for current page items immediately
             const imagesToPreload = currentPageData
-                .filter(item => item.image_path && !loadedImages.has(item.id))
+                .filter((item) => item.image_path && !loadedImages.has(item.id))
                 .slice(0, 6); // Limit to first 6 images on mobile
-            
-            imagesToPreload.forEach(item => {
+
+            imagesToPreload.forEach((item) => {
                 const img = new Image();
                 img.onload = () => handleImageLoad(item.id);
                 img.onerror = () => handleImageError(item.id);
-                img.src = `/api/uploads/${item.image_path}`;
+                img.src = `/api/uploads/${item.image_path}?size=thumb`;
             });
         }
     }, [currentPageData, loadedImages]);
 
     const handleImageLoad = (imageId: number) => {
-        setLoadedImages(prev => {
+        setLoadedImages((prev) => {
             if (prev.has(imageId)) return prev;
             return new Set(prev).add(imageId);
         });
     };
 
     const handleImageError = (imageId: number) => {
-        setLoadedImages(prev => {
+        setLoadedImages((prev) => {
             if (prev.has(imageId)) return prev;
             return new Set(prev).add(imageId);
         });
@@ -184,12 +187,14 @@ export default function IdentificationsPanel() {
         setDeleteModalItem(item);
     };
 
-    const closeDeleteModal = () => {
+    const closeDeleteModal = useCallback(() => {
         if (deletingSessionId) {
             return;
         }
         setDeleteModalItem(null);
-    };
+    }, [deletingSessionId]);
+
+    const { modalRef: deleteModalRef } = useModalA11y({ isOpen: !!deleteModalItem, onClose: closeDeleteModal });
 
     const handleConfirmDeleteIdentification = async () => {
         if (!deleteModalItem || deletingSessionId) {
@@ -229,7 +234,15 @@ export default function IdentificationsPanel() {
             <p>These are recent identification results powered by Pl@ntNet.</p>
 
             {/* Controls */}
-            <div style={{ marginBottom: "1rem", display: "flex", gap: "1rem", alignItems: "flex-start", flexWrap: "wrap" }}>
+            <div
+                style={{
+                    marginBottom: "1rem",
+                    display: "flex",
+                    gap: "1rem",
+                    alignItems: "flex-start",
+                    flexWrap: "wrap",
+                }}
+            >
                 <div className="identification-plant-input-container">
                     <div className="identification-plant-datetime">
                         <input
@@ -271,19 +284,14 @@ export default function IdentificationsPanel() {
                                 <Skeleton width={260} />
                             </div>
                             <div className="identification-image-container">
-                                <Skeleton
-                                    height="100%"
-                                    width="100%"
-                                    baseColor="#444"
-                                    highlightColor="#666"
-                                />
+                                <Skeleton height="100%" width="100%" baseColor="#444" highlightColor="#666" />
                             </div>
                         </div>
                     ))
                 ) : currentPageData.length > 0 ? (
                     currentPageData.map((item) => {
                         const imageLoaded = loadedImages.has(item.id);
-                        
+
                         return (
                             <div className="identification-entry" key={item.id}>
                                 <div className="identification-meta">
@@ -291,17 +299,24 @@ export default function IdentificationsPanel() {
                                         <FontAwesomeIcon icon={faFingerprint} />
                                         <h3 className="no-margin-bottom">{item.scientific_name}</h3>
                                     </div>
-                                    <p><strong>Common name:</strong> {item.common_name}</p>
-                                    <p><strong>Confidence:</strong> {item.confidence_score}%</p>
-                                    <p><strong>Date:</strong> {new Date(item.identified_at).toLocaleString(locale, {
-                                        timeZone: timezone,
-                                        weekday: 'long',
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                    })}</p>
+                                    <p>
+                                        <strong>Common name:</strong> {item.common_name}
+                                    </p>
+                                    <p>
+                                        <strong>Confidence:</strong> {item.confidence_score}%
+                                    </p>
+                                    <p>
+                                        <strong>Date:</strong>{" "}
+                                        {new Date(item.identified_at).toLocaleString(locale, {
+                                            timeZone: timezone,
+                                            weekday: "long",
+                                            year: "numeric",
+                                            month: "long",
+                                            day: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                        })}
+                                    </p>
                                 </div>
                                 {item.image_path && (
                                     <div className="identification-image-container">
@@ -316,19 +331,23 @@ export default function IdentificationsPanel() {
                                                 className="identification-plant-image-skeleton"
                                             />
                                         )}
-                                        
+
                                         <img
-                                            src={`/api/uploads/${item.image_path}`}
+                                            src={`/api/uploads/${item.image_path}?size=thumb`}
                                             alt={item.scientific_name}
                                             className="identification-image"
-                                            style={{ display: imageLoaded ? 'block' : 'none' }}
+                                            loading="lazy"
+                                            style={{ display: imageLoaded ? "block" : "none" }}
                                             onLoad={() => handleImageLoad(item.id)}
                                             onError={() => handleImageError(item.id)}
                                         />
-                                        
+
                                         {imageLoaded && (
                                             <div className="identification-image-overlay">
-                                                <button className="plant-view-fullsize-btn" onClick={() => openFullSizeModal(item.image_path!)}>
+                                                <button
+                                                    className="plant-view-fullsize-btn"
+                                                    onClick={() => openFullSizeModal(item.image_path!)}
+                                                >
                                                     <FontAwesomeIcon icon={faExpand} />
                                                 </button>
                                             </div>
@@ -359,7 +378,9 @@ export default function IdentificationsPanel() {
                         >
                             <FontAwesomeIcon icon={faChevronLeft} />
                         </button>
-                        <span>{currentPage} of {totalPages}</span>
+                        <span>
+                            {currentPage} of {totalPages}
+                        </span>
                         <button
                             onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                             disabled={currentPage === totalPages}
@@ -371,10 +392,10 @@ export default function IdentificationsPanel() {
 
                 {/* Full Size Image Modal */}
                 {fullSizeImagePath && (
-                    <div className="plant-fullsize-modal-overlay" onClick={closeFullSizeModal}>
+                    <div className="plant-fullsize-modal-overlay" ref={fullSizeModalRef} role="dialog" aria-modal="true" aria-label="Full size image" onClick={closeFullSizeModal}>
                         <img
                             className="plant-fullsize-image"
-                            src={`/api/uploads/${fullSizeImagePath}`}
+                            src={`/api/uploads/${fullSizeImagePath}?size=original`}
                             alt="Full Size Plant"
                         />
                     </div>
@@ -382,7 +403,7 @@ export default function IdentificationsPanel() {
 
                 {deleteModalItem && (
                     <div className="identification-delete-modal-overlay" onClick={closeDeleteModal}>
-                        <div className="identification-delete-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="identification-delete-modal" ref={deleteModalRef} role="dialog" aria-modal="true" aria-label="Confirm deletion" onClick={(e) => e.stopPropagation()}>
                             <div className="delete-modal-header">
                                 <span>Are you sure you want to delete this identification?</span>
                             </div>

@@ -2,8 +2,9 @@
 Shared prompt configuration for all LLM providers.
 This prevents duplication and ensures consistent AI behavior across different clients.
 """
-from app.core.config import settings
 from typing import Optional
+
+from app.core.config import settings
 
 
 class PromptConfig:

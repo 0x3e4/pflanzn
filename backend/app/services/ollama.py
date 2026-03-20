@@ -1,11 +1,12 @@
 import logging
-import re
-import ollama
 import os
 from typing import Optional
+
+import ollama
+
 from app.core.config import settings
-from app.utils.llm_text_cleaner import clean_generated_text
 from app.services.prompt_config import PromptConfig
+from app.utils.llm_text_cleaner import clean_generated_text
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ class OllamaClient:
             generated_text = response['message']['content']
             cleaned_description = clean_generated_text(generated_text)
 
-            logger.info(f"Received response from Ollama")
+            logger.info("Received response from Ollama")
             return cleaned_description
 
         except Exception as e:
@@ -93,6 +94,7 @@ class OllamaClient:
         Note: Vision support depends on the specific Ollama model being used.
         """
         import os
+
         from app.models import Plant
 
         BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))

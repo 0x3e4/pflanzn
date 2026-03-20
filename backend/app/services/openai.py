@@ -1,10 +1,11 @@
 import logging
-import re
-import openai
 from typing import Optional
+
+import openai
+
 from app.core.config import settings
-from app.utils.llm_text_cleaner import clean_generated_text
 from app.services.prompt_config import PromptConfig
+from app.utils.llm_text_cleaner import clean_generated_text
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ class OpenAIClient:
             generated_text = response['choices'][0]['message']['content']
             cleaned_description = clean_generated_text(generated_text)
 
-            logger.info(f"Received response from OpenAI")
+            logger.info("Received response from OpenAI")
             return cleaned_description
 
         except Exception as e:
@@ -86,8 +87,9 @@ class OpenAIClient:
         Generate care advice for a plant using OpenAI's GPT models with vision capabilities.
         Optionally includes user's observation for more targeted advice.
         """
-        import os
         import base64
+        import os
+
         from app.models import Plant
 
         # Recompute BASE_DIR and UPLOAD_FOLDER

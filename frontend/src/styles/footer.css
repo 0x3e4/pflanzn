@@ -1,84 +1,84 @@
 /* Footer */
 footer {
-  width: 100%;
-  background-color: var(--secondary-color);
-  color: #ffffff;
-  padding: 1.25rem 2.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  box-sizing: border-box;
+    width: 100%;
+    background-color: var(--secondary-color);
+    color: #ffffff;
+    padding: 1.25rem 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    box-sizing: border-box;
 }
 
 .footer-logo {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
 }
 
 .footer-logo-container {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
 }
 
 .footer-logo img {
-  width: 40px;
-  height: 40px;
+    width: 40px;
+    height: 40px;
 }
 
 .footer-logo h1 {
-  font-size: 1.15rem;
-  margin: 0;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+    font-size: 1.15rem;
+    margin: 0;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .footer-columns {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4rem;
 }
 
 .footer-column {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
 }
 
 .footer-column h3 {
-  font-size: 0.92rem;
-  font-weight: 600;
-  margin: 0 0 0.5rem;
-  color: #ffffff;
+    font-size: 0.92rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+    color: #ffffff;
 }
 
 .footer-column a {
-  text-decoration: none;
-  color: var(--septimal-color);
-  font-size: 0.8rem;
-  transition: color 0.3s;
+    text-decoration: none;
+    color: var(--septimal-color);
+    font-size: 0.8rem;
+    transition: color 0.3s;
 }
 
 .footer-column a:hover {
-  color: #ffffff;
+    color: #ffffff;
 }
 
 /* Mobile-friendly */
 @media (max-width: 768px) {
-  footer {
-      display: none;
-  }
-}  
+    footer {
+        display: none;
+    }
+}
 
 .si-icon {
-color: #ffffff;
-width: 13px;
-height: 13px;
-margin-right: 0.65rem;
+    color: #ffffff;
+    width: 13px;
+    height: 13px;
+    margin-right: 0.65rem;
 }

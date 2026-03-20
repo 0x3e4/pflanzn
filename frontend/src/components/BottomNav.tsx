@@ -1,7 +1,15 @@
 import { useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHouse, faLeaf, faCamera, faMapMarkerAlt, faGear, faRightToBracket, faSpinner } from "@fortawesome/free-solid-svg-icons";
+import {
+    faHouse,
+    faLeaf,
+    faCamera,
+    faMapMarkerAlt,
+    faGear,
+    faRightToBracket,
+    faSpinner,
+} from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../context/AuthContext";
 import { useShare } from "../context/ShareContext";
 import { identifyPlantFromImage } from "../services/PlantService";
@@ -16,12 +24,18 @@ export default function BottomNav() {
     const { isShareAccess } = useShare();
     const authMode = import.meta.env.VITE_AUTH_MODE || "no";
     const showLocations = !["false", "0", "no", "off"].includes(
-        (import.meta.env.VITE_ENABLE_LOCATIONS || import.meta.env.VITE_ENABLE_HERBALIST_LOCATIONS || "false").toLowerCase()
+        (
+            import.meta.env.VITE_ENABLE_LOCATIONS ||
+            import.meta.env.VITE_ENABLE_HERBALIST_LOCATIONS ||
+            "false"
+        ).toLowerCase(),
     );
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [loadingIdentification, setLoadingIdentification] = useState(false);
-    const [identifyResults, setIdentifyResults] = useState<{ species: string; commonName: string; score: string; images: string[] }[] | null>(null);
+    const [identifyResults, setIdentifyResults] = useState<
+        { species: string; commonName: string; score: string; images: string[] }[] | null
+    >(null);
 
     if (isShareAccess) return null;
 
@@ -45,12 +59,14 @@ export default function BottomNav() {
                 toast.warning("No species identified.");
                 return;
             }
-            setIdentifyResults(result.identified_species.map((r: any) => ({
-                species: r.scientific_name || "Unknown",
-                commonName: r.common_name || "No common name",
-                score: r.score.toString(),
-                images: r.images,
-            })));
+            setIdentifyResults(
+                result.identified_species.map((r: any) => ({
+                    species: r.scientific_name || "Unknown",
+                    commonName: r.common_name || "No common name",
+                    score: r.score.toString(),
+                    images: r.images,
+                })),
+            );
         } catch {
             toast.error("Error identifying plant. Please try again.");
         } finally {
@@ -70,7 +86,11 @@ export default function BottomNav() {
                     <span>Home</span>
                 </Link>
 
-                <Link to="/plants" className={`bottom-nav-item ${isActive("/plant") ? "active" : ""}`} aria-label="Plants">
+                <Link
+                    to="/plants"
+                    className={`bottom-nav-item ${isActive("/plant") ? "active" : ""}`}
+                    aria-label="Plants"
+                >
                     <FontAwesomeIcon icon={faLeaf} />
                     <span>Plants</span>
                 </Link>
@@ -82,12 +102,19 @@ export default function BottomNav() {
                     aria-label="Identify a plant from photo"
                 >
                     <div className="bottom-nav-identify-circle">
-                        <FontAwesomeIcon icon={loadingIdentification ? faSpinner : faCamera} spin={loadingIdentification} />
+                        <FontAwesomeIcon
+                            icon={loadingIdentification ? faSpinner : faCamera}
+                            spin={loadingIdentification}
+                        />
                     </div>
                 </button>
 
                 {showLocations ? (
-                    <Link to="/locations" className={`bottom-nav-item ${isActive("/location") ? "active" : ""}`} aria-label="Locations">
+                    <Link
+                        to="/locations"
+                        className={`bottom-nav-item ${isActive("/location") ? "active" : ""}`}
+                        aria-label="Locations"
+                    >
                         <FontAwesomeIcon icon={faMapMarkerAlt} />
                         <span>Locations</span>
                     </Link>
@@ -96,13 +123,21 @@ export default function BottomNav() {
                 )}
 
                 {showManage && (
-                    <Link to="/manage" className={`bottom-nav-item ${isActive("/manage") ? "active" : ""}`} aria-label="Settings">
+                    <Link
+                        to="/manage"
+                        className={`bottom-nav-item ${isActive("/manage") ? "active" : ""}`}
+                        aria-label="Settings"
+                    >
                         <FontAwesomeIcon icon={faGear} />
                         <span>Settings</span>
                     </Link>
                 )}
                 {showLogin && (
-                    <Link to="/login" className={`bottom-nav-item ${isActive("/login") ? "active" : ""}`} aria-label="Login">
+                    <Link
+                        to="/login"
+                        className={`bottom-nav-item ${isActive("/login") ? "active" : ""}`}
+                        aria-label="Login"
+                    >
                         <FontAwesomeIcon icon={faRightToBracket} />
                         <span>Login</span>
                     </Link>

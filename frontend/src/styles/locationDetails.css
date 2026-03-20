@@ -1,319 +1,319 @@
 .location-details-page {
-  text-align: left;
-  background-color: var(--secondary-background-color);
-  min-height: 77vh;
-  position: relative;
+    text-align: left;
+    background-color: var(--secondary-background-color);
+    min-height: 77vh;
+    position: relative;
 }
 
 .location-columns {
-  display: flex;
-  gap: 20px;
-  width: 100%;
-  max-width: 1200px;
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    max-width: 1200px;
 }
 
 .location-left-column {
-  flex: 1;
-  max-width: 300px;
-  position: relative;
+    flex: 1;
+    max-width: 300px;
+    position: relative;
 }
 
 .location-right-column {
-  flex: 1;
-  min-width: 0;
-  text-align: left !important;
-  position: relative;
+    flex: 1;
+    min-width: 0;
+    text-align: left !important;
+    position: relative;
 }
 
 .location-information {
-  text-align: left !important;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+    text-align: left !important;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .location-information h2 {
-  margin: 0;
-  margin-bottom: 1rem;
+    margin: 0;
+    margin-bottom: 1rem;
 }
 
 .location-information h2 span {
-  font-size: 24px !important;
+    font-size: 24px !important;
 }
 
 .location-information-names {
-  margin: 3px 0;
+    margin: 3px 0;
 }
 
 .location-description-container,
 .location-map-panel,
 .location-activity-log-container {
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
 }
 
 .location-description-container {
-  margin-top: 1.5rem;
+    margin-top: 1.5rem;
 }
 
 .location-map-panel {
-  margin-top: 1.5rem;
+    margin-top: 1.5rem;
 }
 
 .location-activity-log-container {
-  margin-top: 2rem;
+    margin-top: 2rem;
 }
 
 .location-description-container h3,
 .location-activity-log-container h3 {
-  margin: 0 0 24px;
+    margin: 0 0 24px;
 }
 
 .location-map-canvas-wrap {
-  border-radius: 8px;
-  overflow: hidden;
-  height: 360px;
-  width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 360px;
+    width: 100%;
 }
 
 .location-map-canvas {
-  width: 100%;
-  height: 100%;
+    width: 100%;
+    height: 100%;
 }
 
 .location-tags-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 10px;
-  align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+    align-items: center;
 }
 
 .location-tags-container--top {
-  margin-bottom: 14px;
+    margin-bottom: 14px;
 }
 
 .location-tag {
-  display: flex;
-  align-items: center;
-  background-color: var(--background-color);
-  padding: 5px 12px;
-  border-radius: 15px;
-  font-size: 14px;
-  font-weight: bold;
-  cursor: default;
-  transition: background 0.3s ease-in-out;
+    display: flex;
+    align-items: center;
+    background-color: var(--background-color);
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: default;
+    transition: background 0.3s ease-in-out;
 }
 
 .location-tag:hover {
-  background-color: var(--quinary-color);
+    background-color: var(--quinary-color);
 }
 
 .location-tag-delete-icon {
-  margin-left: 6px;
-  cursor: pointer;
-  color: var(--quinary-color);
+    margin-left: 6px;
+    cursor: pointer;
+    color: var(--quinary-color);
 }
 
 .location-tag-delete-icon:hover {
-  color: var(--senary-color);
+    color: var(--senary-color);
 }
 
 .location-tag-delete-icon.disabled {
-  color: var(--quinary-color);
-  cursor: default;
+    color: var(--quinary-color);
+    cursor: default;
 }
 
 .location-tag-input-wrapper {
-  position: relative;
+    position: relative;
 }
 
 .location-tag-input {
-  border: 1px solid var(--border-color);
-  padding: 4px 10px;
-  border-radius: 15px;
-  font-size: 14px;
-  outline: none;
-  min-width: 150px;
-  background-color: var(--secondary-background-color);
-  color: var(--text-color);
+    border: 1px solid var(--border-color);
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 14px;
+    outline: none;
+    min-width: 150px;
+    background-color: var(--secondary-background-color);
+    color: var(--text-color);
 }
 
 .location-tag-input:focus {
-  background-color: var(--background-color);
-  border-color: var(--primary-color);
+    background-color: var(--background-color);
+    border-color: var(--primary-color);
 }
 
 .location-tag-dropdown {
-  position: absolute;
-  top: 36px;
-  left: 0;
-  width: 100%;
-  background: var(--secondary-background-color);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  max-height: 150px;
-  overflow-y: auto;
-  z-index: 1000;
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 100%;
+    background: var(--secondary-background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 1000;
 }
 
 .location-tag-dropdown-item {
-  padding: 8px;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: var(--text-color);
-  transition: background 0.3s ease;
+    padding: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-color);
+    transition: background 0.3s ease;
 }
 
 .location-tag-dropdown-item span {
-  flex-grow: 1;
+    flex-grow: 1;
 }
 
 .location-tag-dropdown-item:hover {
-  background: var(--background-color);
+    background: var(--background-color);
 }
 
 .location-tag-dropdown-item.disabled {
-  color: var(--quinary-color);
-  cursor: default;
+    color: var(--quinary-color);
+    cursor: default;
 }
 
 .location-description-editable {
-  min-height: 160px;
+    min-height: 160px;
 }
 
 .location-inline-editable[data-placeholder]:empty::before {
-  content: attr(data-placeholder);
-  color: #999;
+    content: attr(data-placeholder);
+    color: #999;
 }
 
 .location-calendar-section {
-  margin-top: 15px;
+    margin-top: 15px;
 }
 
 .location-calendar-section .react-calendar {
-  width: 100% !important;
+    width: 100% !important;
 }
 
 .react-calendar__tile.location-dual-day::after {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
 }
 
 .location-activity-log-list {
-  max-height: 400px;
-  overflow-y: auto;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background: var(--background-color);
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--background-color);
 }
 
 .location-activity-item {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border-color);
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
 }
 
 .location-activity-item:last-child {
-  border-bottom: none;
+    border-bottom: none;
 }
 
 .location-activity-item:hover {
-  background-color: var(--secondary-background-color);
+    background-color: var(--secondary-background-color);
 }
 
 .location-activity-icon {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  margin-top: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
 }
 
 .location-activity-icon.image {
-  background-color: var(--quinary-color);
-  color: white;
+    background-color: var(--quinary-color);
+    color: white;
 }
 
 .location-activity-icon.note {
-  background-color: var(--primary-color);
-  color: white;
+    background-color: var(--primary-color);
+    color: white;
 }
 
 .location-activity-icon.season {
-  background-color: #b8892d;
-  color: white;
+    background-color: #b8892d;
+    color: white;
 }
 
 .location-activity-content {
-  flex: 1;
+    flex: 1;
 }
 
 .location-activity-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 4px;
 }
 
 .location-activity-title {
-  font-weight: 600;
-  color: var(--text-color);
-  margin: 0;
-  font-size: 14px;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0;
+    font-size: 14px;
 }
 
 .location-activity-timestamp {
-  color: var(--text-color);
-  opacity: 0.6;
-  font-size: 12px;
-  margin: 0;
-  white-space: nowrap;
-  margin-left: 8px;
+    color: var(--text-color);
+    opacity: 0.6;
+    font-size: 12px;
+    margin: 0;
+    white-space: nowrap;
+    margin-left: 8px;
 }
 
 .location-activity-description {
-  color: var(--text-color);
-  opacity: 0.85;
-  font-size: 13px;
-  margin: 0;
-  line-height: 1.4;
+    color: var(--text-color);
+    opacity: 0.85;
+    font-size: 13px;
+    margin: 0;
+    line-height: 1.4;
 }
 
 .location-below-column {
-  margin-top: 20px;
+    margin-top: 20px;
 }
 
 .location-global-button-section {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
 }
 
 .location-global-button-left {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .location-global-button-right {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .file-input {
-  display: none;
+    display: none;
 }
 
 .file-input-location-btn,
@@ -321,180 +321,180 @@
 .generate-location-description-btn,
 .season-event-btn,
 .notes-btn {
-  flex-shrink: 0;
-  white-space: nowrap;
-  width: auto;
-  padding: 10px 12px;
-  font-size: 14px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+    flex-shrink: 0;
+    white-space: nowrap;
+    width: auto;
+    padding: 10px 12px;
+    font-size: 14px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
 .file-input-location-btn {
-  background-color: var(--quinary-color);
+    background-color: var(--quinary-color);
 }
 
 .file-input-location-btn:hover {
-  background-color: var(--senary-color);
+    background-color: var(--senary-color);
 }
 
 .identify-location-btn-bottom,
 .save-note-btn {
-  background-color: var(--primary-color);
+    background-color: var(--primary-color);
 }
 
 .identify-location-btn-bottom:hover,
 .save-note-btn:hover {
-  background-color: var(--secondary-color);
+    background-color: var(--secondary-color);
 }
 
 .identify-location-btn-bottom:disabled {
-  opacity: 0.8;
-  cursor: wait;
+    opacity: 0.8;
+    cursor: wait;
 }
 
 .generate-location-description-btn {
-  background-color: var(--decimal-color);
+    background-color: var(--decimal-color);
 }
 
 .generate-location-description-btn:hover {
-  background-color: var(--undecimal-color);
+    background-color: var(--undecimal-color);
 }
 
 .generate-location-description-btn:disabled {
-  opacity: 0.8;
-  cursor: wait;
+    opacity: 0.8;
+    cursor: wait;
 }
 
 .season-event-input-container {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
 }
 
 .season-event-btn {
-  background-color: #b8892d;
-  color: #fff;
+    background-color: #b8892d;
+    color: #fff;
 }
 
 .season-event-btn:hover {
-  background-color: #8f6a1f;
+    background-color: #8f6a1f;
 }
 
 .season-event-datetime {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background-color: var(--secondary-background-color);
-  padding: 6px 8px;
-  border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background-color: var(--secondary-background-color);
+    padding: 6px 8px;
+    border-radius: 8px;
 }
 
 .season-event-datetime input {
-  background: transparent;
-  border: none;
-  color: var(--text-color);
-  font-size: 14px;
-  outline: none;
+    background: transparent;
+    border: none;
+    color: var(--text-color);
+    font-size: 14px;
+    outline: none;
 }
 
 .notes-btn {
-  background-color: var(--primary-color);
-  color: var(--text-color);
+    background-color: var(--primary-color);
+    color: var(--text-color);
 }
 
 .notes-btn:hover {
-  background-color: var(--secondary-color);
+    background-color: var(--secondary-color);
 }
 
 .archive-location-btn,
 .delete-location-btn-bottom {
-  flex-shrink: 0;
-  white-space: nowrap;
-  width: auto;
-  padding: 10px 12px;
-  font-size: 14px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+    flex-shrink: 0;
+    white-space: nowrap;
+    width: auto;
+    padding: 10px 12px;
+    font-size: 14px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
 .archive-location-btn {
-  background-color: var(--text-color);
-  color: var(--quaternary-color);
-  border: 1px solid var(--quaternary-color);
+    background-color: var(--text-color);
+    color: var(--quaternary-color);
+    border: 1px solid var(--quaternary-color);
 }
 
 .archive-location-btn:hover {
-  background-color: var(--septimal-color);
-  color: var(--quaternary-color);
-  border: 1px solid var(--tertiary-color);
+    background-color: var(--septimal-color);
+    color: var(--quaternary-color);
+    border: 1px solid var(--tertiary-color);
 }
 
 .delete-location-btn-bottom,
 .delete-plant-confirm,
 .plant-delete-btn,
 .watering-delete-confirm {
-  background-color: var(--tertiary-color);
-  color: white;
+    background-color: var(--tertiary-color);
+    color: white;
 }
 
 .delete-location-btn-bottom:hover,
 .delete-plant-confirm:hover,
 .plant-delete-btn:hover,
 .watering-delete-confirm:hover {
-  background-color: var(--quaternary-color);
+    background-color: var(--quaternary-color);
 }
 
 .delete-plant-cancel,
 .plant-cancel-btn,
 .notes-modal-close,
 .watering-delete-cancel {
-  background-color: var(--quinary-color);
-  color: white;
+    background-color: var(--quinary-color);
+    color: white;
 }
 
 .delete-plant-cancel:hover,
 .plant-cancel-btn:hover,
 .notes-modal-close:hover,
 .watering-delete-cancel:hover {
-  background-color: var(--senary-color);
+    background-color: var(--senary-color);
 }
 
 .note-input {
-  width: 100%;
-  min-height: 80px;
-  padding: 12px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background: var(--background-color);
-  color: var(--text-color);
-  font-family: inherit;
-  font-size: 14px;
-  resize: vertical;
-  outline: none;
-  text-align: left;
-  box-sizing: border-box;
+    width: 100%;
+    min-height: 80px;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--background-color);
+    color: var(--text-color);
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical;
+    outline: none;
+    text-align: left;
+    box-sizing: border-box;
 }
 
 .note-input.editing {
-  background: var(--secondary-background-color);
-  border-color: var(--primary-color);
+    background: var(--secondary-background-color);
+    border-color: var(--primary-color);
 }
 
 .note-actions,
 .delete-plant-modal-buttons,
 .plant-delete-modal-buttons,
 .watering-delete-modal-buttons {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
-  justify-content: center;
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    justify-content: center;
 }
 
 .save-note-btn,
@@ -505,106 +505,106 @@
 .plant-cancel-btn,
 .watering-delete-confirm,
 .watering-delete-cancel {
-  padding: 10px 15px;
-  border: none;
-  cursor: pointer;
-  border-radius: 6px;
+    padding: 10px 15px;
+    border: none;
+    cursor: pointer;
+    border-radius: 6px;
 }
 
 .notes-modal-header,
 .delete-modal-header {
-  margin-bottom: 10px;
+    margin-bottom: 10px;
 }
 
 .notes-modal-overlay,
 .delete-plant-modal-overlay,
 .plant-delete-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 12000;
-  padding: 1rem;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 12000;
+    padding: 1rem;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
 }
 
 .notes-modal,
 .delete-plant-modal,
 .plant-delete-modal {
-  background: var(--secondary-background-color);
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  color: var(--text-color);
-  text-align: center;
-  width: 90%;
-  max-width: 420px;
-  position: relative;
-  z-index: 12001;
-  max-height: min(85vh, 680px);
-  overflow-y: auto;
+    background: var(--secondary-background-color);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    color: var(--text-color);
+    text-align: center;
+    width: 90%;
+    max-width: 420px;
+    position: relative;
+    z-index: 12001;
+    max-height: min(85vh, 680px);
+    overflow-y: auto;
 }
 
 .location-details-empty {
-  background: var(--background-color);
-  border-radius: 10px;
-  padding: 12px;
-  color: #ddd;
+    background: var(--background-color);
+    border-radius: 10px;
+    padding: 12px;
+    color: #ddd;
 }
 
 @media (max-width: 992px) {
-  .location-columns {
-    flex-direction: column;
-  }
+    .location-columns {
+        flex-direction: column;
+    }
 
-  .location-left-column {
-    max-width: 100%;
-  }
+    .location-left-column {
+        max-width: 100%;
+    }
 
-  .location-map-canvas-wrap {
-    height: 320px;
-  }
+    .location-map-canvas-wrap {
+        height: 320px;
+    }
 
-  .location-global-button-section {
-    justify-content: flex-start;
-  }
+    .location-global-button-section {
+        justify-content: flex-start;
+    }
 }
 
 @media (max-width: 768px) {
-  .delete-plant-modal-buttons,
-  .plant-delete-modal-buttons,
-  .watering-delete-modal-buttons,
-  .note-actions {
-    flex-direction: column;
-  }
+    .delete-plant-modal-buttons,
+    .plant-delete-modal-buttons,
+    .watering-delete-modal-buttons,
+    .note-actions {
+        flex-direction: column;
+    }
 
-  .delete-plant-confirm,
-  .delete-plant-cancel,
-  .plant-delete-btn,
-  .plant-cancel-btn,
-  .watering-delete-confirm,
-  .watering-delete-cancel,
-  .save-note-btn,
-  .notes-modal-close {
-    width: 100%;
-  }
+    .delete-plant-confirm,
+    .delete-plant-cancel,
+    .plant-delete-btn,
+    .plant-cancel-btn,
+    .watering-delete-confirm,
+    .watering-delete-cancel,
+    .save-note-btn,
+    .notes-modal-close {
+        width: 100%;
+    }
 }
 
 @media (max-width: 400px) {
-  .season-event-input-container {
-    flex-direction: column;
-    align-items: stretch;
-  }
+    .season-event-input-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
 
-  .season-event-btn,
-  .season-event-datetime {
-    width: 100%;
-    justify-content: center;
-  }
+    .season-event-btn,
+    .season-event-datetime {
+        width: 100%;
+        justify-content: center;
+    }
 }

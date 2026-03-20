@@ -12,9 +12,9 @@ import {
     removeTagFromPlant,
     archivePlant,
     generateCareAdvice,
-    fetchPlantActivities, 
-    createPlantNote, 
-    fetchPlantNotes
+    fetchPlantActivities,
+    createPlantNote,
+    fetchPlantNotes,
 } from "../services/PlantService";
 import { fetchTags, deleteTag } from "../services/TagService";
 import { Plant } from "../types/Plant";
@@ -23,23 +23,23 @@ import TimelineImages from "../components/TimelineImages";
 import Description from "../components/Description";
 import Calendar from "../components/Calendar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { 
-    faTrash, 
-    faWandMagicSparkles, 
+import {
+    faTrash,
+    faWandMagicSparkles,
     faDroplet,
-    faFingerprint, 
-    faCircleXmark, 
-    faUpload, 
-    faBoxArchive, 
+    faFingerprint,
+    faCircleXmark,
+    faUpload,
+    faBoxArchive,
     faTrashCanArrowUp,
-    faCamera, 
+    faCamera,
     faStickyNote,
-    faPlus
+    faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import EditableDiv from "../components/EditableDiv";
 import "../styles/plantDetails.css";
-import { DateTime } from 'luxon';
-import { toast } from 'react-toastify';
+import { DateTime } from "luxon";
+import { toast } from "react-toastify";
 import LoadingOverlay from "../components/LoadingOverlay";
 import IdentifyResults from "../components/IdentifyResults";
 import { useAuth } from "../context/AuthContext";
@@ -64,12 +64,16 @@ export default function PlantDetails() {
     const [newTag, setNewTag] = useState("");
     const [showTagDropdown, setShowTagDropdown] = useState(false);
     const [selectedDateTime, setSelectedDateTime] = useState<string>(
-        DateTime.now().setZone(import.meta.env.VITE_TZ).toISO({ includeOffset: false }) ?? ""
+        DateTime.now()
+            .setZone(import.meta.env.VITE_TZ)
+            .toISO({ includeOffset: false }) ?? "",
     );
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-    const [identifyResults, setIdentifyResults] = useState<{ species: string; commonName: string; score: string; images: string[] }[] | null>(null);
+    const [identifyResults, setIdentifyResults] = useState<
+        { species: string; commonName: string; score: string; images: string[] }[] | null
+    >(null);
     const [archiveModalOpen, setArchiveModalOpen] = useState(false);
-    const [archiveReason, setArchiveReason] = useState("");    
+    const [archiveReason, setArchiveReason] = useState("");
     const [isArchiving, setIsArchiving] = useState(true);
     const [toastVisible, setToastVisible] = useState(false);
     const [activities, setActivities] = useState<any[]>([]);
@@ -121,7 +125,6 @@ export default function PlantDetails() {
 
             // Always refresh activity feed
             loadActivities();
-            
         } catch (err) {
             toast.error((err as Error).message || "Failed to upload the image.");
         }
@@ -129,12 +132,12 @@ export default function PlantDetails() {
 
     const handleArchivePlant = async () => {
         if (!plant) return;
-    
+
         if (!isLoggedIn) {
             toast.error("You must be logged in to archive or restore plants.");
             return;
-        }     
-    
+        }
+
         try {
             await archivePlant(plant.id, isArchiving, archiveReason);
             toast.success(isArchiving ? "Plant archived!" : "Plant restored!");
@@ -162,12 +165,14 @@ export default function PlantDetails() {
                 return;
             }
 
-            setIdentifyResults(result.identified_species.map((r: any) => ({
-                species: r.scientific_name || "Unknown",
-                commonName: r.common_name || "No common name",
-                score: r.score.toString(),
-                images: r.images,
-            })));
+            setIdentifyResults(
+                result.identified_species.map((r: any) => ({
+                    species: r.scientific_name || "Unknown",
+                    commonName: r.common_name || "No common name",
+                    score: r.score.toString(),
+                    images: r.images,
+                })),
+            );
         } catch (error) {
             toast.error((error as Error).message || "Failed to identify plant.");
         } finally {
@@ -177,27 +182,27 @@ export default function PlantDetails() {
 
     // Handle updating plant (name/species/description/etc.)
     const handleUpdate = async (updatedFields: Partial<Plant>) => {
-      if (!plant || !plantId) return;
+        if (!plant || !plantId) return;
 
-      if (!isLoggedIn) {
-        toast.error("You must be logged in to update plants.");
-        return;
+        if (!isLoggedIn) {
+            toast.error("You must be logged in to update plants.");
+            return;
         }
-  
-      const hasChanges = Object.keys(updatedFields).some((key) => {
-          const fieldKey = key as keyof Plant;
-          return plant[fieldKey] !== updatedFields[fieldKey];
-      });
-  
-      if (!hasChanges) return;
-  
-      try {
-          const updated = await updatePlant(Number(plantId), updatedFields);
-          setPlant(updated);
-          toast.success("Plant updated successfully!");
-      } catch (err) {
-          toast.error((err as Error).message);
-      }
+
+        const hasChanges = Object.keys(updatedFields).some((key) => {
+            const fieldKey = key as keyof Plant;
+            return plant[fieldKey] !== updatedFields[fieldKey];
+        });
+
+        if (!hasChanges) return;
+
+        try {
+            const updated = await updatePlant(Number(plantId), updatedFields);
+            setPlant(updated);
+            toast.success("Plant updated successfully!");
+        } catch (err) {
+            toast.error((err as Error).message);
+        }
     };
 
     // Handle delete plant via confirmation modal
@@ -231,21 +236,20 @@ export default function PlantDetails() {
                 .toISO({ includeOffset: false });
 
             const newWatering = await waterPlant(Number(plantId), { watered_at: wateringDateTimeUTC });
-            
+
             // Update plant state directly instead of reloading everything
             if (plant) {
                 setPlant({
                     ...plant,
                     last_watered: new Date(wateringDateTimeUTC),
-                    waterings: [...(plant.waterings || []), newWatering]
+                    waterings: [...(plant.waterings || []), newWatering],
                 });
             }
-            
+
             toast.success("Watering logged successfully!");
 
             // Always refresh activity feed
             loadActivities();
-            
         } catch (error) {
             toast.error((error as Error).message || "Failed to log watering.");
         }
@@ -302,15 +306,12 @@ export default function PlantDetails() {
         });
 
         try {
-            const careAdviceEntry = await generateCareAdvice(
-                Number(plantId),
-                careAdviceMessage.trim() || undefined
-            );
+            const careAdviceEntry = await generateCareAdvice(Number(plantId), careAdviceMessage.trim() || undefined);
 
             if (plant) {
                 setPlant({
                     ...plant,
-                    care_advice: [careAdviceEntry, ...(plant.care_advice || [])]
+                    care_advice: [careAdviceEntry, ...(plant.care_advice || [])],
                 });
             }
 
@@ -333,7 +334,6 @@ export default function PlantDetails() {
 
             // Always refresh activity feed
             loadActivities();
-
         } catch (error) {
             toast.error((error as Error).message || "Failed to generate care advice.");
             setToastVisible(false);
@@ -407,7 +407,7 @@ export default function PlantDetails() {
         if (input.length > 0) {
             // Filter available tags based on input
             const filtered = availableTags
-                .filter(tag => tag.name.toLowerCase().includes(input.toLowerCase()))
+                .filter((tag) => tag.name.toLowerCase().includes(input.toLowerCase()))
                 .slice(0, 5);
             setFilteredTags(filtered);
         } else {
@@ -424,11 +424,11 @@ export default function PlantDetails() {
             toast.error("You must be logged in to delete tags.");
             return;
         }
-        
+
         try {
             await deleteTag(tagId);
-            setAvailableTags(prevTags => prevTags.filter(tag => tag.id !== tagId));
-            setFilteredTags(prevTags => prevTags.filter(tag => tag.id !== tagId));
+            setAvailableTags((prevTags) => prevTags.filter((tag) => tag.id !== tagId));
+            setFilteredTags((prevTags) => prevTags.filter((tag) => tag.id !== tagId));
             toast.success("Tag deleted successfully!");
         } catch (error) {
             toast.error("Failed to delete tag.");
@@ -437,7 +437,7 @@ export default function PlantDetails() {
 
     const loadActivities = async () => {
         if (!plantId) return;
-        
+
         setLoadingActivities(true);
         try {
             const data = await fetchPlantActivities(Number(plantId), { limit: 20 });
@@ -451,7 +451,7 @@ export default function PlantDetails() {
 
     const loadNotes = async () => {
         if (!plantId) return;
-        
+
         try {
             const data = await fetchPlantNotes(Number(plantId), { limit: 10 });
             setNotes(data);
@@ -462,7 +462,7 @@ export default function PlantDetails() {
 
     const handleCreateNote = async () => {
         if (!plantId || !newNote.trim()) return;
-        
+
         if (!isLoggedIn) {
             toast.error("You must be logged in to create notes.");
             return;
@@ -474,7 +474,7 @@ export default function PlantDetails() {
             setPlant((p) => (p ? { ...p, notes: [note, ...(p.notes || [])] } : p));
             setNewNote("");
             toast.success("Note created!");
-            
+
             // Always refresh activity feed
             loadActivities();
         } catch (error) {
@@ -484,13 +484,13 @@ export default function PlantDetails() {
 
     const getActivityIcon = (activityType: string) => {
         switch (activityType) {
-            case 'watering':
+            case "watering":
                 return faDroplet;
-            case 'care_advice':
+            case "care_advice":
                 return faWandMagicSparkles;
-            case 'image_upload':
+            case "image_upload":
                 return faCamera;
-            case 'note':
+            case "note":
                 return faStickyNote;
             default:
                 return faStickyNote;
@@ -499,16 +499,16 @@ export default function PlantDetails() {
 
     const getActivityTitle = (activity: any) => {
         switch (activity.activity_type) {
-            case 'watering':
-                return 'Watered';
-            case 'care_advice':
-                return 'Care Advice';
-            case 'image_upload':
-                return 'Image';
-            case 'note':
-                return 'Note';
+            case "watering":
+                return "Watered";
+            case "care_advice":
+                return "Care Advice";
+            case "image_upload":
+                return "Image";
+            case "note":
+                return "Note";
             default:
-                return 'Activity';
+                return "Activity";
         }
     };
 
@@ -521,18 +521,15 @@ export default function PlantDetails() {
             case "care_advice":
                 return `${activity.activity_data?.advice || "Care advice was generated"}${
                     userName ? ` by ${userName}` : ""
-            }`;
+                }`;
             case "image_upload":
                 return `New photo was uploaded${userName ? ` by ${userName}` : ""}`;
             case "note":
-                return `${activity.activity_data?.note || "A new note was added"}${
-                    userName ? ` by ${userName}` : ""
-            }`;
+                return `${activity.activity_data?.note || "A new note was added"}${userName ? ` by ${userName}` : ""}`;
             default:
                 return "";
         }
     };
-
 
     const handleOpenNotesModal = () => {
         if (!isLoggedIn) {
@@ -549,7 +546,7 @@ export default function PlantDetails() {
         archiveModalOpen ||
         notesModalOpen ||
         careAdviceModalOpen ||
-        actionLoading
+        actionLoading,
     );
 
     useEffect(() => {
@@ -573,15 +570,11 @@ export default function PlantDetails() {
         <div className="activity-log-container">
             <div className="activity-log-header">
                 <h3>Activity Feed</h3>
-                <button 
-                    className="notes-btn"
-                    onClick={handleOpenNotesModal}
-                    title="Manage Notes"
-                >
+                <button className="notes-btn" onClick={handleOpenNotesModal} title="Manage Notes">
                     <FontAwesomeIcon icon={faStickyNote} />
                 </button>
             </div>
-            
+
             <div className="activity-log-list">
                 {loadingActivities ? (
                     // Skeleton loading
@@ -613,11 +606,11 @@ export default function PlantDetails() {
                                     <p className="activity-timestamp">
                                         {new Date(activity.timestamp).toLocaleString(import.meta.env.VITE_LOCALE, {
                                             timeZone: import.meta.env.VITE_TZ,
-                                            weekday: 'short',
-                                            month: 'short',
-                                            day: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit'
+                                            weekday: "short",
+                                            month: "short",
+                                            day: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
                                         })}
                                     </p>
                                 </div>
@@ -636,10 +629,18 @@ export default function PlantDetails() {
                 <div className="plant-columns">
                     <div className="plant-left-column">
                         <div className="plant-information">
-                            <h2><Skeleton width="80%" /></h2>
-                            <small><Skeleton width={48} /></small>
-                            <span className="plant-information-names"><Skeleton width="90%" /></span>
-                            <span className="plant-information-names"><Skeleton width="95%" /></span>
+                            <h2>
+                                <Skeleton width="80%" />
+                            </h2>
+                            <small>
+                                <Skeleton width={48} />
+                            </small>
+                            <span className="plant-information-names">
+                                <Skeleton width="90%" />
+                            </span>
+                            <span className="plant-information-names">
+                                <Skeleton width="95%" />
+                            </span>
                         </div>
                         <div style={{ marginTop: "1rem" }}>
                             <Skeleton height={320} />
@@ -683,7 +684,7 @@ export default function PlantDetails() {
                         <h2>
                             {isLoggedIn ? (
                                 <>
-                                    <span 
+                                    <span
                                         className="editable-input"
                                         contentEditable
                                         suppressContentEditableWarning
@@ -738,14 +739,14 @@ export default function PlantDetails() {
                             <strong>Last Watered:</strong>{" "}
                             {plant.last_watered
                                 ? new Date(plant.last_watered).toLocaleString(import.meta.env.VITE_LOCALE, {
-                                    timeZone: import.meta.env.VITE_TZ,
-                                    weekday: 'long',
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                })
+                                      timeZone: import.meta.env.VITE_TZ,
+                                      weekday: "long",
+                                      year: "numeric",
+                                      month: "long",
+                                      day: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                  })
                                 : "Not watered yet"}
                         </span>
                     </div>
@@ -768,7 +769,7 @@ export default function PlantDetails() {
                 <div className="plant-right-column">
                     {/* Tags Section */}
                     <div className="tags-container">
-                        {plant.tags.map(tag => (
+                        {plant.tags.map((tag) => (
                             <span key={tag.id} className="tag">
                                 #{tag.name}
                                 {isLoggedIn && (
@@ -794,13 +795,15 @@ export default function PlantDetails() {
                                 />
                                 {showTagDropdown && filteredTags.length > 0 && (
                                     <div className="tag-dropdown">
-                                        {filteredTags.map(tag => {
+                                        {filteredTags.map((tag) => {
                                             // Check if the tag is used in any plant
-                                            const isTagUsed = plant?.tags.some(usedTag => usedTag.id === tag.id);
+                                            const isTagUsed = plant?.tags.some((usedTag) => usedTag.id === tag.id);
 
                                             return (
                                                 <div key={tag.id} className="tag-dropdown-item">
-                                                    <span onMouseDown={() => handleTagClick(tag.name)}>#{tag.name}</span>
+                                                    <span onMouseDown={() => handleTagClick(tag.name)}>
+                                                        #{tag.name}
+                                                    </span>
 
                                                     {isLoggedIn && (
                                                         <FontAwesomeIcon
@@ -808,15 +811,21 @@ export default function PlantDetails() {
                                                             className={`tag-delete-icon ${isTagUsed ? "disabled" : ""}`}
                                                             onMouseDown={(e) => {
                                                                 e.stopPropagation();
-                                                            
+
                                                                 if (isTagUsed) {
-                                                                    toast.warning(`"${tag.name}" is assigned to a plant and cannot be deleted.`);
+                                                                    toast.warning(
+                                                                        `"${tag.name}" is assigned to a plant and cannot be deleted.`,
+                                                                    );
                                                                     setNewTag("");
                                                                 } else {
                                                                     handleDeleteTag(tag.id);
                                                                 }
                                                             }}
-                                                            title={isTagUsed ? "This tag is used and cannot be deleted" : "Delete tag"}
+                                                            title={
+                                                                isTagUsed
+                                                                    ? "This tag is used and cannot be deleted"
+                                                                    : "Delete tag"
+                                                            }
                                                         />
                                                     )}
                                                 </div>
@@ -857,7 +866,10 @@ export default function PlantDetails() {
                                             </button>
                                         </>
                                     ) : (
-                                        <button className="water-plant-btn" onClick={() => toast.warning("You must be logged in to water plants.")}>
+                                        <button
+                                            className="water-plant-btn"
+                                            onClick={() => toast.warning("You must be logged in to water plants.")}
+                                        >
                                             <FontAwesomeIcon icon={faDroplet} /> Water Plant
                                         </button>
                                     )}
@@ -878,12 +890,18 @@ export default function PlantDetails() {
                                             className="file-input"
                                             onChange={(e) => handleUploadImageForPlant(e)}
                                         />
-                                        <button className="file-input-plant-btn" onClick={() => document.getElementById(`file-upload-${plant.id}`)?.click()}>
+                                        <button
+                                            className="file-input-plant-btn"
+                                            onClick={() => document.getElementById(`file-upload-${plant.id}`)?.click()}
+                                        >
                                             <FontAwesomeIcon icon={faUpload} /> Upload Image
                                         </button>
                                     </>
                                 ) : (
-                                    <button className="file-input-plant-btn" onClick={() => toast.warning("You must be logged in to upload images.")}>
+                                    <button
+                                        className="file-input-plant-btn"
+                                        onClick={() => toast.warning("You must be logged in to upload images.")}
+                                    >
                                         <FontAwesomeIcon icon={faUpload} /> Upload Image
                                     </button>
                                 )}
@@ -895,7 +913,10 @@ export default function PlantDetails() {
                                         </button>
                                     </>
                                 ) : (
-                                    <button className="identify-plant-btn" onClick={() => toast.warning("You must be logged in to identify images.")}>
+                                    <button
+                                        className="identify-plant-btn"
+                                        onClick={() => toast.warning("You must be logged in to identify images.")}
+                                    >
                                         <FontAwesomeIcon icon={faFingerprint} /> Identify Plant
                                     </button>
                                 )}
@@ -904,24 +925,40 @@ export default function PlantDetails() {
                                     <>
                                         {isLoggedIn ? (
                                             <>
-                                                <button className="ai-care-helper-btn" onClick={handleOpenCareAdviceModal}>
+                                                <button
+                                                    className="ai-care-helper-btn"
+                                                    onClick={handleOpenCareAdviceModal}
+                                                >
                                                     <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Care Helper
                                                 </button>
 
-                                                <button className="generate-description-btn" onClick={handleGenerateDescription}>
+                                                <button
+                                                    className="generate-description-btn"
+                                                    onClick={handleGenerateDescription}
+                                                >
                                                     <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Description
                                                 </button>
                                             </>
                                         ) : (
-                                                <>
-                                                    <button className="ai-care-helper-btn" onClick={handleOpenCareAdviceModal}>
-                                                        <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Care Helper
-                                                    </button>
+                                            <>
+                                                <button
+                                                    className="ai-care-helper-btn"
+                                                    onClick={handleOpenCareAdviceModal}
+                                                >
+                                                    <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Care Helper
+                                                </button>
 
-                                                    <button className="generate-description-btn" onClick={() => toast.warning("You must be logged in to generate a description with AI.")}>
-                                                        <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Description
-                                                    </button>
-                                                </>
+                                                <button
+                                                    className="generate-description-btn"
+                                                    onClick={() =>
+                                                        toast.warning(
+                                                            "You must be logged in to generate a description with AI.",
+                                                        )
+                                                    }
+                                                >
+                                                    <FontAwesomeIcon icon={faWandMagicSparkles} /> AI Description
+                                                </button>
+                                            </>
                                         )}
                                     </>
                                 )}
@@ -932,43 +969,40 @@ export default function PlantDetails() {
                     <div className="plant-global-button-right">
                         {isLoggedIn ? (
                             <>
-                            <button
-                                className="archive-plant-btn"
-                                onClick={() => {
-                                    setIsArchiving(!plant.is_archived);
-                                    setArchiveModalOpen(true);
-                                }}
-                            >
-                                <FontAwesomeIcon icon={plant.is_archived ? faTrashCanArrowUp : faBoxArchive} /> 
-                                {plant.is_archived ? " Restore Plant" : " Archive Plant"}
-                            </button>
-                            <button
-                                className="delete-plant-btn"
-                                onClick={() => setDeleteModalOpen(true)}
-                            >
-                                <FontAwesomeIcon icon={faTrash} /> Delete Plant
-                            </button>
+                                <button
+                                    className="archive-plant-btn"
+                                    onClick={() => {
+                                        setIsArchiving(!plant.is_archived);
+                                        setArchiveModalOpen(true);
+                                    }}
+                                >
+                                    <FontAwesomeIcon icon={plant.is_archived ? faTrashCanArrowUp : faBoxArchive} />
+                                    {plant.is_archived ? " Restore Plant" : " Archive Plant"}
+                                </button>
+                                <button className="delete-plant-btn" onClick={() => setDeleteModalOpen(true)}>
+                                    <FontAwesomeIcon icon={faTrash} /> Delete Plant
+                                </button>
                             </>
                         ) : (
                             <>
-                            <button
-                                className="archive-plant-btn"
-                                onClick={() => {
-                                    setIsArchiving(!plant.is_archived);
-                                    toast.warning(`You must be logged in to ${plant.is_archived ? "restore" : "archive"} plants.`);
-                                }}
-                            >
-                                <FontAwesomeIcon icon={plant.is_archived ? faTrashCanArrowUp : faBoxArchive} /> 
-                                {plant.is_archived ? " Restore Plant" : " Archive Plant"}
-                            </button>
-                            <button
-                                className="delete-plant-btn"
-                                onClick={() =>
-                                toast.warning("You must be logged in to delete plants.")
-                                }
-                            >
-                                <FontAwesomeIcon icon={faTrash} /> Delete Plant
-                            </button>
+                                <button
+                                    className="archive-plant-btn"
+                                    onClick={() => {
+                                        setIsArchiving(!plant.is_archived);
+                                        toast.warning(
+                                            `You must be logged in to ${plant.is_archived ? "restore" : "archive"} plants.`,
+                                        );
+                                    }}
+                                >
+                                    <FontAwesomeIcon icon={plant.is_archived ? faTrashCanArrowUp : faBoxArchive} />
+                                    {plant.is_archived ? " Restore Plant" : " Archive Plant"}
+                                </button>
+                                <button
+                                    className="delete-plant-btn"
+                                    onClick={() => toast.warning("You must be logged in to delete plants.")}
+                                >
+                                    <FontAwesomeIcon icon={faTrash} /> Delete Plant
+                                </button>
                             </>
                         )}
                     </div>
@@ -998,10 +1032,10 @@ export default function PlantDetails() {
                         </div>
                         <div className="delete-plant-modal-buttons">
                             <button className="delete-plant-confirm" onClick={handleConfirmDelete}>
-                              <FontAwesomeIcon icon={faTrash} /> Delete
+                                <FontAwesomeIcon icon={faTrash} /> Delete
                             </button>
                             <button className="delete-plant-cancel" onClick={() => setDeleteModalOpen(false)}>
-                              <FontAwesomeIcon icon={faCircleXmark} /> Cancel
+                                <FontAwesomeIcon icon={faCircleXmark} /> Cancel
                             </button>
                         </div>
                     </div>
@@ -1031,7 +1065,8 @@ export default function PlantDetails() {
 
                         <div className="archive-plant-modal-buttons">
                             <button className="archive-plant-confirm" onClick={handleArchivePlant}>
-                                <FontAwesomeIcon icon={isArchiving ? faBoxArchive : faTrashCanArrowUp} /> {isArchiving ? "Archive" : "Restore"}
+                                <FontAwesomeIcon icon={isArchiving ? faBoxArchive : faTrashCanArrowUp} />{" "}
+                                {isArchiving ? "Archive" : "Restore"}
                             </button>
                             <button className="archive-plant-cancel" onClick={() => setArchiveModalOpen(false)}>
                                 <FontAwesomeIcon icon={faCircleXmark} /> Cancel
@@ -1058,11 +1093,7 @@ export default function PlantDetails() {
                                 className="note-input"
                             />
                             <div className="note-actions">
-                                <button
-                                    className="save-note-btn"
-                                    onClick={handleCreateNote}
-                                    disabled={!newNote.trim()}
-                                >
+                                <button className="save-note-btn" onClick={handleCreateNote} disabled={!newNote.trim()}>
                                     <FontAwesomeIcon icon={faPlus} /> Add Note
                                 </button>
                                 <button className="notes-modal-close" onClick={() => setNotesModalOpen(false)}>
@@ -1083,7 +1114,7 @@ export default function PlantDetails() {
                         </div>
 
                         <div className="note-input-container">
-                            <p style={{ marginBottom: '1rem', color: '#666', fontSize: '0.9rem' }}>
+                            <p style={{ marginBottom: "1rem", color: "#666", fontSize: "0.9rem" }}>
                                 Describe what you're observing with your plant (optional):
                             </p>
                             <textarea
@@ -1093,20 +1124,17 @@ export default function PlantDetails() {
                                 className="note-input"
                                 rows={4}
                                 style={{
-                                    width: '100%',
-                                    padding: '0.75rem',
-                                    borderRadius: '8px',
-                                    border: '1px solid #ddd',
-                                    fontFamily: 'inherit',
-                                    fontSize: '0.95rem',
-                                    resize: 'vertical'
+                                    width: "100%",
+                                    padding: "0.75rem",
+                                    borderRadius: "8px",
+                                    border: "1px solid #ddd",
+                                    fontFamily: "inherit",
+                                    fontSize: "0.95rem",
+                                    resize: "vertical",
                                 }}
                             />
                             <div className="note-actions">
-                                <button
-                                    className="save-note-btn"
-                                    onClick={handleGenerateCareAdvice}
-                                >
+                                <button className="save-note-btn" onClick={handleGenerateCareAdvice}>
                                     <FontAwesomeIcon icon={faWandMagicSparkles} /> Get AI Advice
                                 </button>
                                 <button className="notes-modal-close" onClick={() => setCareAdviceModalOpen(false)}>

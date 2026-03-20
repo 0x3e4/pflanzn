@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Text, Table, Index, Boolean, Float
-from sqlalchemy.orm import relationship
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Index, Integer, String, Table, Text, func
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
@@ -92,17 +92,17 @@ class PlantIdentification(Base):
 
 class PlantCareAdvice(Base):
     __tablename__ = "plant_care_advice"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     plant_id = Column(Integer, ForeignKey("plants.id"), nullable=False)
     advice_text = Column(Text, nullable=False)
     generated_at = Column(DateTime, default=func.now())
-    
+
     user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
 
     plant = relationship("Plant", back_populates="care_advice")
     created_by = relationship("User", back_populates="care_advice_created")
-    
+
     __table_args__ = (
         Index("idx_plant_care_advice_plant_id", "plant_id"),
         Index("idx_plant_care_advice_generated_at", "generated_at"),
@@ -110,17 +110,17 @@ class PlantCareAdvice(Base):
 
 class PlantNote(Base):
     __tablename__ = "plant_notes"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     plant_id = Column(Integer, ForeignKey("plants.id"), nullable=False)
     note_text = Column(Text, nullable=False)
     created_at = Column(DateTime, default=func.now())
-    
+
     user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
 
     plant = relationship("Plant", back_populates="notes")
     created_by = relationship("User", back_populates="notes_created")
-    
+
     __table_args__ = (
         Index("idx_plant_notes_plant_id", "plant_id"),
         Index("idx_plant_notes_created_at", "created_at"),

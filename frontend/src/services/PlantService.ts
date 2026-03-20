@@ -1,6 +1,6 @@
 import apiClient from "./apiClient";
 import { Plant } from "../types/Plant";
-import { PlantIdentification } from "../types/Identification"; 
+import { PlantIdentification } from "../types/Identification";
 
 const API_BASE = "/plants";
 
@@ -78,7 +78,7 @@ export const generatePlantDescription = async (plantId: number): Promise<{ descr
 // Care Helper
 export const generateCareAdvice = async (
     plantId: number,
-    userMessage?: string
+    userMessage?: string,
 ): Promise<{
     id: number;
     advice_text: string;
@@ -86,7 +86,7 @@ export const generateCareAdvice = async (
 }> => {
     const formData = new FormData();
     if (userMessage) {
-        formData.append('user_message', userMessage);
+        formData.append("user_message", userMessage);
     }
     const response = await apiClient.post(`${API_BASE}/${plantId}/care_advice`, formData);
     return response.data;
@@ -94,13 +94,15 @@ export const generateCareAdvice = async (
 
 // Get care advice history
 export const fetchCareAdvice = async (
-    plantId: number, 
-    params: { limit?: number; offset?: number } = {}
-): Promise<Array<{
-    id: number;
-    advice_text: string;
-    generated_at: string;
-}>> => {
+    plantId: number,
+    params: { limit?: number; offset?: number } = {},
+): Promise<
+    Array<{
+        id: number;
+        advice_text: string;
+        generated_at: string;
+    }>
+> => {
     const response = await apiClient.get(`${API_BASE}/${plantId}/care_advice`, { params });
     return response.data;
 };
@@ -135,31 +137,32 @@ export const removeTagFromPlant = async (plantId: number, tagId: number) => {
 
 // Archive plant
 export const archivePlant = async (plantId: number, archive: boolean = true, reason: string) => {
-    const response = await apiClient.post(`${API_BASE}/${plantId}/archive`, 
+    const response = await apiClient.post(
+        `${API_BASE}/${plantId}/archive`,
         { reason, archive },
         {
-            headers: { "Content-Type": "application/json" }
-        }
+            headers: { "Content-Type": "application/json" },
+        },
     );
     return response.data;
-}
+};
 
 // Get plant identifications
 export const fetchIdentifications = async (
-  params: { user_id?: number; session_id?: string; is_primary?: number } = {}
+    params: { user_id?: number; session_id?: string; is_primary?: number } = {},
 ): Promise<PlantIdentification[]> => {
-  const stringParams = {
-    ...params,
-    ...(params.is_primary !== undefined && {
-      is_primary: 1,
-    }),
-  };
+    const stringParams = {
+        ...params,
+        ...(params.is_primary !== undefined && {
+            is_primary: 1,
+        }),
+    };
 
-  const response = await apiClient.get(`${API_BASE}/identifications`, {
-    params: stringParams,
-  });
+    const response = await apiClient.get(`${API_BASE}/identifications`, {
+        params: stringParams,
+    });
 
-  return response.data;
+    return response.data;
 };
 
 export const deleteIdentification = async (
@@ -172,7 +175,10 @@ export const deleteIdentification = async (
 };
 
 // Plant Notes CRUD
-export const createPlantNote = async (plantId: number, noteText: string): Promise<{
+export const createPlantNote = async (
+    plantId: number,
+    noteText: string,
+): Promise<{
     id: number;
     note_text: string;
     created_at: string;
@@ -183,20 +189,22 @@ export const createPlantNote = async (plantId: number, noteText: string): Promis
 
 export const fetchPlantNotes = async (
     plantId: number,
-    params: { limit?: number; offset?: number } = {}
-): Promise<Array<{
-    id: number;
-    note_text: string;
-    created_at: string;
-}>> => {
+    params: { limit?: number; offset?: number } = {},
+): Promise<
+    Array<{
+        id: number;
+        note_text: string;
+        created_at: string;
+    }>
+> => {
     const response = await apiClient.get(`${API_BASE}/${plantId}/notes`, { params });
     return response.data;
 };
 
 export const updatePlantNote = async (
-    plantId: number, 
-    noteId: number, 
-    noteText: string
+    plantId: number,
+    noteId: number,
+    noteText: string,
 ): Promise<{
     id: number;
     note_text: string;
@@ -216,15 +224,17 @@ export const fetchPlantActivities = async (
     params: {
         limit?: number;
         offset?: number;
-    } = {}
-): Promise<Array<{
-    id: string;
-    plant_id: number;
-    plant_name: string;
-    activity_type: 'watering' | 'care_advice' | 'image_upload' | 'note';
-    activity_data: any;
-    timestamp: string;
-}>> => {
+    } = {},
+): Promise<
+    Array<{
+        id: string;
+        plant_id: number;
+        plant_name: string;
+        activity_type: "watering" | "care_advice" | "image_upload" | "note";
+        activity_data: any;
+        timestamp: string;
+    }>
+> => {
     const response = await apiClient.get(`${API_BASE}/${plantId}/activities`, { params });
     return response.data;
 };

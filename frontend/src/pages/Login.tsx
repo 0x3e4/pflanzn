@@ -57,10 +57,7 @@ const Login: React.FC = () => {
                     )}
 
                     {authMode === "oidc" && (
-                        <button
-                            onClick={() => window.location.href = "/api/auth/oidc-login"}
-                            className="oidc-btn"
-                        >
+                        <button onClick={() => (window.location.href = "/api/auth/oidc-login")} className="oidc-btn">
                             <FontAwesomeIcon icon={faRightToBracket} /> Continue with {oidcName}
                         </button>
                     )}

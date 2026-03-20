@@ -51,7 +51,7 @@ export default defineConfig(() => {
               },
             },
             {
-              urlPattern: /\/api\/uploads\/.+\.(webp|jpg|jpeg|png)$/i,
+              urlPattern: /\/api\/uploads\/.+/i,
               handler: 'CacheFirst',
               options: {
                 cacheName: 'plant-images',

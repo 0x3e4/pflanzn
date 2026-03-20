@@ -1,7 +1,8 @@
 import logging
-import requests
-import json
 import os
+
+import requests
+
 from app.core.config import settings
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")

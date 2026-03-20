@@ -60,7 +60,9 @@
     background-color: var(--background-color);
     color: var(--text-color);
     outline: none;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    transition:
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
     box-sizing: border-box;
 }
 
@@ -80,7 +82,9 @@
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.15s ease;
+    transition:
+        background-color 0.3s ease,
+        transform 0.15s ease;
     margin-top: 16px;
     display: flex;
     align-items: center;
@@ -106,7 +110,9 @@
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.15s ease;
+    transition:
+        background-color 0.3s ease,
+        transform 0.15s ease;
     background-color: var(--primary-color);
     color: white;
     display: flex;

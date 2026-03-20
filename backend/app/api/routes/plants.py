@@ -1,30 +1,40 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, Form
+import io
+import json
+import logging
+import mimetypes
+import os
+import traceback
+import uuid
+from datetime import datetime, timezone
+from typing import List, Optional
+from zoneinfo import ZoneInfo
+
+import pillow_heif
+from dotenv import load_dotenv
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
+from PIL import Image, ImageOps
 from sqlalchemy.orm import Session
+
 from app.core.config import settings
 from app.core.security import get_current_user
 from app.database import get_db
-from app.models import Plant, PlantImage, PlantWatering, PlantCareAdvice, PlantNote, Tag, PlantIdentification, User
+from app.models import Plant, PlantCareAdvice, PlantIdentification, PlantImage, PlantNote, PlantWatering, Tag, User
 from app.schemas import (
-    PlantCreate, PlantResponse, PlantUpdate, PlantImageResponse, 
-    PlantWateringCreate, PlantWateringResponse, PlantCareAdviceResponse,
-    PlantNoteCreate, PlantNoteResponse, TagResponse, ArchiveRequest, 
-    PlantIdentificationResponse, ActivityResponse
+    ArchiveRequest,
+    PlantCareAdviceResponse,
+    PlantCreate,
+    PlantIdentificationResponse,
+    PlantImageResponse,
+    PlantNoteCreate,
+    PlantNoteResponse,
+    PlantResponse,
+    PlantUpdate,
+    PlantWateringCreate,
+    PlantWateringResponse,
+    TagResponse,
 )
-from typing import List, Optional
-import os
-import io
-import uuid
-import logging
-import json
-from PIL import Image, ImageOps
-import pillow_heif
-import mimetypes
-from app.services.plantnet import identify_species_via_plantnet
 from app.services.llm_client import LLMClient
-import traceback
-from datetime import datetime, timezone
-from zoneinfo import ZoneInfo 
-from dotenv import load_dotenv
+from app.services.plantnet import identify_species_via_plantnet
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -39,8 +49,42 @@ os.makedirs(IDENTIFICATION_FOLDER, exist_ok=True)
 pillow_heif.register_heif_opener()
 
 load_dotenv()
-LOCAL_TZ = os.getenv("VITE_TZ", "UTC") 
+LOCAL_TZ = os.getenv("VITE_TZ", "UTC")
 tz = ZoneInfo(LOCAL_TZ)
+
+# Image variant sizes for responsive serving
+IMAGE_VARIANTS = {
+    "original": 2000,
+    "medium": 800,
+    "thumb": 300,
+}
+
+
+def _generate_image_variants(img: Image.Image, base_path: str) -> None:
+    """Generate thumb, medium, and original WebP variants from a PIL Image."""
+    for suffix, max_width in IMAGE_VARIANTS.items():
+        variant = img.copy()
+        if variant.width > max_width:
+            ratio = max_width / float(variant.width)
+            new_height = int(float(variant.height) * ratio)
+            variant = variant.resize((max_width, new_height), Image.LANCZOS)
+        output_path = f"{base_path}_{suffix}.webp"
+        variant.save(output_path, format="WEBP", quality=80, method=4)
+    logger.debug(f"Generated image variants at {base_path}")
+
+
+def _delete_image_files(image_path: str) -> None:
+    """Delete all image variants (new WebP format) and legacy single file."""
+    base_path = os.path.join(settings.UPLOAD_FOLDER, image_path)
+    # New variant format
+    for suffix in IMAGE_VARIANTS:
+        variant_path = f"{base_path}_{suffix}.webp"
+        if os.path.exists(variant_path):
+            os.remove(variant_path)
+    # Legacy single file (e.g. plants/uuid.jpg)
+    if os.path.exists(base_path):
+        os.remove(base_path)
+
 
 router = APIRouter()
 
@@ -91,7 +135,7 @@ def get_identifications(
         if r.result_images:
             try:
                 r.result_images = json.loads(r.result_images)
-            except:
+            except (json.JSONDecodeError, TypeError):
                 r.result_images = []
 
     return results
@@ -172,7 +216,7 @@ def update_plant(plant_id: int, plant_data: PlantUpdate, db: Session = Depends(g
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
-    
+
     for key, value in plant_data.dict(exclude_unset=True).items():
         logger.debug(f"Updating {key} to {value} for plant ID {plant_id}")
         setattr(plant, key, value)
@@ -190,10 +234,7 @@ def delete_plant(plant_id: int, db: Session = Depends(get_db)):
 
     # Remove associated images from storage
     for image in plant.images:
-        # Remove image file from disk
-        absolute_image_path = os.path.join(settings.UPLOAD_FOLDER, image.image_path)
-        if os.path.exists(absolute_image_path):
-            os.remove(absolute_image_path)
+        _delete_image_files(image.image_path)
 
     db.delete(plant)
     db.commit()
@@ -203,7 +244,7 @@ def delete_plant(plant_id: int, db: Session = Depends(get_db)):
 def upload_plant_image(
     plant_id: int,
     file: UploadFile = File(...),
-    uploaded_at: Optional[str] = Form(None), 
+    uploaded_at: Optional[str] = Form(None),
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user),
 ):
@@ -213,8 +254,8 @@ def upload_plant_image(
 
     logger.debug(f"Uploading image for plant ID {plant_id}...")
 
-    new_filename = f"{uuid.uuid4()}.jpg"
-    final_file_path = os.path.join(PLANT_FOLDER, new_filename)
+    base_name = str(uuid.uuid4())
+    base_path = os.path.join(PLANT_FOLDER, base_name)
 
     try:
         contents = file.file.read()
@@ -228,16 +269,9 @@ def upload_plant_image(
             logger.debug(f"Opened image: format={img.format}, size={img.size}")
             img = ImageOps.exif_transpose(img)
             img = img.convert("RGB")
+            _generate_image_variants(img, base_path)
 
-            max_width = 900
-            if img.width > max_width:
-                w_percent = max_width / float(img.width)
-                new_height = int(float(img.height) * float(w_percent))
-                img = img.resize((max_width, new_height), Image.LANCZOS)
-
-            img.save(final_file_path, format="JPEG", optimize=True, quality=80)
-
-        logger.debug(f"Optimized uploaded image saved for plant {plant_id}.")
+        logger.debug(f"Image variants saved for plant {plant_id}.")
 
         timestamp = None
         if uploaded_at:
@@ -252,9 +286,9 @@ def upload_plant_image(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error processing image: {str(e)}")
 
-    relative_path = f"plants/{new_filename}"
+    relative_path = f"plants/{base_name}"
     plant_image = PlantImage(
-        plant_id=plant_id, 
+        plant_id=plant_id,
         image_path=relative_path,
         uploaded_at=timestamp,
         user_id=(current_user.id if current_user else None),
@@ -263,7 +297,7 @@ def upload_plant_image(
     db.commit()
     db.refresh(plant_image)
 
-    logger.info(f"File successfully saved to {final_file_path}")
+    logger.info(f"Image variants saved at {base_path}")
     logger.info(f"Image record added to database: {relative_path}")
 
     return {"message": "Image uploaded successfully", "image_path": relative_path}
@@ -281,7 +315,7 @@ def get_plant_images(plant_id: int, db: Session = Depends(get_db)):
 
 @router.post("/{plant_id}/identify")
 def identify_species(
-    plant_id: int, 
+    plant_id: int,
     db: Session = Depends(get_db)
 ):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
@@ -319,7 +353,7 @@ def identify_species(
         # Sort results by score in descending order and format as needed
         if "results" in result and len(result["results"]) > 0:
             sorted_results = sorted(result["results"], key=lambda x: x["score"], reverse=True)
-            
+
             # Format the results to return the species and score
             species_data = []
             for res in sorted_results:
@@ -353,7 +387,7 @@ def identify_species(
                 db.add(identification)
 
             db.commit()
-            
+
             return {"identified_species": species_data}
 
     except Exception as e:
@@ -405,15 +439,19 @@ async def identify_species_from_image(
                 ext = file.filename.split(".")[-1].lower() if file.filename else None
                 if ext not in ["jpg", "jpeg", "png"]:
                     raise HTTPException(status_code=400, detail="Unsupported image format. Only JPG and PNG allowed.")
-                
+
                 mime_type = mimetypes.types_map.get(f".{ext}", "image/jpeg")  # Default to JPEG
 
                 id_uuid = str(uuid.uuid4())
+                # Save original format for PlantNet API (needs file on disk)
                 filename = f"{id_uuid}.{ext}"
-                relative_path = os.path.join("identifications", filename)
-                identification_file_path = os.path.join(settings.UPLOAD_FOLDER, relative_path)
-
+                identification_file_path = os.path.join(IDENTIFICATION_FOLDER, filename)
                 img.save(identification_file_path, format=img.format, optimize=True, quality=80)
+
+                # Generate WebP variants for frontend serving
+                base_path = os.path.join(IDENTIFICATION_FOLDER, id_uuid)
+                _generate_image_variants(img, base_path)
+                relative_path = os.path.join("identifications", id_uuid)
                 logger.debug(f"Image saved to: {identification_file_path}")
 
         except Exception as e:
@@ -436,7 +474,7 @@ async def identify_species_from_image(
         # Process and sort results
         if "results" in result and len(result["results"]) > 0:
             sorted_results = sorted(result["results"], key=lambda x: x["score"], reverse=True)
-            
+
             species_data = []
             for res in sorted_results:
                 scientific_name = res["species"].get("scientificNameWithoutAuthor", "Unknown")
@@ -494,10 +532,7 @@ def delete_plant_image(plant_id: int, image_id: int, db: Session = Depends(get_d
     if not image:
         raise HTTPException(status_code=404, detail="Image not found for this plant")
 
-    # Remove image file from disk
-    absolute_image_path = os.path.join(settings.UPLOAD_FOLDER, image.image_path)
-    if os.path.exists(absolute_image_path):
-        os.remove(absolute_image_path)
+    _delete_image_files(image.image_path)
 
     db.delete(image)
     db.commit()
@@ -506,7 +541,7 @@ def delete_plant_image(plant_id: int, image_id: int, db: Session = Depends(get_d
 
 @router.post("/{plant_id}/generate_description")
 async def generate_species_description_for_plant(
-    plant_id: int, 
+    plant_id: int,
     db: Session = Depends(get_db),
 ):
     """
@@ -682,7 +717,7 @@ def get_care_helper(plant_id: int, db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f"Failed to generate care advice: {e}")
         raise HTTPException(status_code=500, detail=f"Care helper failed: {str(e)}")
-    
+
 @router.get("/{plant_id}/activities")
 def get_plant_activities(
     plant_id: int,
@@ -698,9 +733,9 @@ def get_plant_activities(
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
-    
+
     activities = []
-    
+
     # Get waterings for this plant
     waterings = (
         db.query(PlantWatering)
@@ -722,7 +757,7 @@ def get_plant_activities(
             },
             "timestamp": watering.watered_at.isoformat()
         })
-    
+
     # Get images for this plant
     images = (
         db.query(PlantImage)
@@ -730,7 +765,7 @@ def get_plant_activities(
         .order_by(PlantImage.uploaded_at.desc())
         .all()
     )
-    
+
     for image in images:
         image.uploaded_at = image.uploaded_at.replace(tzinfo=timezone.utc).astimezone(tz)
         activities.append({
@@ -745,7 +780,7 @@ def get_plant_activities(
             },
             "timestamp": image.uploaded_at.isoformat()
         })
-    
+
     # Get care advice for this plant (if table exists)
     try:
         care_advice = (
@@ -754,7 +789,7 @@ def get_plant_activities(
             .order_by(PlantCareAdvice.generated_at.desc())
             .all()
         )
-        
+
         for advice in care_advice:
             advice.generated_at = advice.generated_at.replace(tzinfo=timezone.utc).astimezone(tz)
             activities.append({
@@ -772,7 +807,7 @@ def get_plant_activities(
     except Exception as e:
         # Table might not exist yet, continue without care advice
         logger.warning(f"Could not fetch care advice: {e}")
-    
+
     # Get notes for this plant (if table exists)
     try:
         notes = (
@@ -781,7 +816,7 @@ def get_plant_activities(
             .order_by(PlantNote.created_at.desc())
             .all()
         )
-        
+
         for note in notes:
             activities.append({
                 "id": f"note_{note.id}",
@@ -798,10 +833,10 @@ def get_plant_activities(
     except Exception as e:
         # Table might not exist yet, continue without notes
         logger.warning(f"Could not fetch notes: {e}")
-    
+
     # Sort all activities by timestamp (newest first)
     activities.sort(key=lambda x: x["timestamp"], reverse=True)
-    
+
     # Apply pagination
     return activities[offset:offset + limit]
 
@@ -827,7 +862,7 @@ def get_care_helper(
             logger.info(f"User message: {user_message}")
         advice_text = llm.care_helper(db, plant_id, user_message)
         logger.info(f"Generated advice text: {advice_text[:100]}...")
-        
+
         # Store the care advice in the database
         care_advice = PlantCareAdvice(
             plant_id=plant_id,
@@ -835,13 +870,13 @@ def get_care_helper(
             generated_at=datetime.utcnow(),
             user_id=(current_user.id if current_user else None),
         )
-        
+
         db.add(care_advice)
         db.commit()
         db.refresh(care_advice)
-        
+
         logger.info(f"Care advice saved with ID: {care_advice.id}")
-        
+
         return care_advice
 
     except HTTPException:
@@ -855,7 +890,7 @@ def get_care_helper(
 
 @router.get("/{plant_id}/care_advice", response_model=List[PlantCareAdviceResponse])
 def get_plant_care_advice(
-    plant_id: int, 
+    plant_id: int,
     db: Session = Depends(get_db),
     limit: int = Query(10, le=50),
     offset: int = Query(0, ge=0)
@@ -866,7 +901,7 @@ def get_plant_care_advice(
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
-    
+
     care_advice = (
         db.query(PlantCareAdvice)
         .filter(PlantCareAdvice.plant_id == plant_id)
@@ -875,7 +910,7 @@ def get_plant_care_advice(
         .limit(limit)
         .all()
     )
-    
+
     return care_advice
 
 @router.delete("/{plant_id}/care_advice/{advice_id}")
@@ -890,18 +925,18 @@ def delete_care_advice(
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
-    
+
     care_advice = db.query(PlantCareAdvice).filter(
         PlantCareAdvice.id == advice_id,
         PlantCareAdvice.plant_id == plant_id
     ).first()
-    
+
     if not care_advice:
         raise HTTPException(status_code=404, detail="Care advice not found")
-    
+
     db.delete(care_advice)
     db.commit()
-    
+
     return {"message": "Care advice deleted successfully"}
 
 @router.post("/{plant_id}/notes", response_model=PlantNoteResponse)
@@ -917,18 +952,18 @@ def create_plant_note(
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
-    
+
     note = PlantNote(
         plant_id=plant_id,
         note_text=note_data.note_text,
         created_at=datetime.utcnow(),
         user_id=(current_user.id if current_user else None),
     )
-    
+
     db.add(note)
     db.commit()
     db.refresh(note)
-    
+
     return note
 
 @router.get("/{plant_id}/notes", response_model=List[PlantNoteResponse])
@@ -944,7 +979,7 @@ def get_plant_notes(
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
-    
+
     notes = (
         db.query(PlantNote)
         .filter(PlantNote.plant_id == plant_id)
@@ -953,7 +988,7 @@ def get_plant_notes(
         .limit(limit)
         .all()
     )
-    
+
     return notes
 
 @router.put("/{plant_id}/notes/{note_id}", response_model=PlantNoteResponse)
@@ -969,19 +1004,19 @@ def update_plant_note(
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
-    
+
     note = db.query(PlantNote).filter(
         PlantNote.id == note_id,
         PlantNote.plant_id == plant_id
     ).first()
-    
+
     if not note:
         raise HTTPException(status_code=404, detail="Note not found")
-    
+
     note.note_text = note_data.note_text
     db.commit()
     db.refresh(note)
-    
+
     return note
 
 @router.delete("/{plant_id}/notes/{note_id}")
@@ -996,16 +1031,16 @@ def delete_plant_note(
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
-    
+
     note = db.query(PlantNote).filter(
         PlantNote.id == note_id,
         PlantNote.plant_id == plant_id
     ).first()
-    
+
     if not note:
         raise HTTPException(status_code=404, detail="Note not found")
-    
+
     db.delete(note)
     db.commit()
-    
+
     return {"message": "Note deleted successfully"}

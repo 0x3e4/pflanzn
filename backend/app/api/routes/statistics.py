@@ -1,11 +1,13 @@
+import logging
+from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import Date, and_, cast
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
-from sqlalchemy import and_, cast, Date
+
 from app.database import get_db
 from app.models import Plant, PlantImage, PlantWatering
-from datetime import datetime, timedelta
-import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -78,9 +80,9 @@ def get_daily_waterings(days: int = 7, db: Session = Depends(get_db)):
     """
     if days <= 0 or days > 365:
         raise HTTPException(status_code=400, detail="Days must be between 1 and 365")
-    
+
     daily_waterings = get_daily_waterings_data(db, days)
-    
+
     return {
         "dailyWaterings": daily_waterings,
         "totalDays": days,
@@ -98,7 +100,7 @@ def get_daily_waterings_data(db: Session, days: int = 7):
     # Calculate the date range
     end_date = datetime.now().date()
     start_date = end_date - timedelta(days=days-1)
-    
+
     # Query to get daily watering counts
     daily_counts = (
         db.query(
@@ -117,23 +119,23 @@ def get_daily_waterings_data(db: Session, days: int = 7):
         .order_by(cast(PlantWatering.watered_at, Date))
         .all()
     )
-    
+
     # Create a dictionary for quick lookup
     watering_dict = {str(row.date): row.waterings for row in daily_counts}
-    
+
     # Generate complete date range with 0 for days without waterings
     daily_waterings = []
     current_date = start_date
-    
+
     while current_date <= end_date:
         date_str = current_date.strftime("%Y-%m-%d")
         waterings_count = watering_dict.get(date_str, 0)
-        
+
         daily_waterings.append({
             "date": date_str,
             "waterings": waterings_count
         })
-        
+
         current_date += timedelta(days=1)
-    
+
     return daily_waterings

@@ -73,7 +73,9 @@
     font-size: 20px;
     margin-top: -20px;
     box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
 }
 
 .bottom-nav-identify:hover .bottom-nav-identify-circle,

@@ -76,7 +76,12 @@ apiClient.interceptors.response.use(
         const originalRequest = error.config as RetriableRequestConfig | undefined;
         const status = error.response?.status;
 
-        if (!originalRequest || status !== 401 || !shouldHandleUnauthorized(originalRequest.url) || originalRequest._retry) {
+        if (
+            !originalRequest ||
+            status !== 401 ||
+            !shouldHandleUnauthorized(originalRequest.url) ||
+            originalRequest._retry
+        ) {
             return Promise.reject(error);
         }
 
@@ -84,9 +89,12 @@ apiClient.interceptors.response.use(
 
         try {
             if (!refreshPromise) {
-                refreshPromise = apiClient.post("/auth/refresh").then(() => undefined).finally(() => {
-                    refreshPromise = null;
-                });
+                refreshPromise = apiClient
+                    .post("/auth/refresh")
+                    .then(() => undefined)
+                    .finally(() => {
+                        refreshPromise = null;
+                    });
             }
 
             await refreshPromise;
@@ -105,7 +113,7 @@ apiClient.interceptors.response.use(
             await redirectToLogin();
             return Promise.reject(error);
         }
-    }
+    },
 );
 
 export default apiClient;

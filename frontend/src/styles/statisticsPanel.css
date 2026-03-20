@@ -32,7 +32,9 @@
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     text-align: center;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
     border: 1px solid var(--border-color);
 }
 
@@ -137,24 +139,24 @@
     .statistics-panel {
         padding: 1rem;
     }
-    
+
     .stats-row {
         grid-template-columns: 1fr;
         gap: 1rem;
     }
-    
+
     .stats-card {
         padding: 1rem;
     }
-    
+
     .chart-container {
         height: 320px;
     }
-    
+
     .chart-section {
         padding: 1rem;
     }
-    
+
     .chart-section h3 {
         font-size: 1.1rem;
     }
@@ -164,15 +166,15 @@
     .statistics-panel {
         padding: 0.5rem;
     }
-    
+
     .stats-card h3 {
         font-size: 1.5rem;
     }
-    
+
     .stats-icon {
         font-size: 1.5rem;
     }
-    
+
     .chart-container {
         height: 270px;
         padding: 8px;

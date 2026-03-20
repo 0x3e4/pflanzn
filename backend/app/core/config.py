@@ -1,5 +1,7 @@
-from pydantic_settings import BaseSettings
 import os
+
+from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
     TZ: str = os.getenv("TZ", "UTC")
@@ -39,7 +41,7 @@ class Settings(BaseSettings):
     ).strip().lower() in ("1", "true", "yes", "on")
     BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     UPLOAD_FOLDER: str = os.path.join(BASE_DIR, "uploads")
-    
+
     class Config:
         env_file = ".env"
 

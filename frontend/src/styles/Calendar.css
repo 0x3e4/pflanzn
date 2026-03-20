@@ -15,7 +15,9 @@
     width: auto;
 }
 
-.react-calendar button, .react-calendar button:hover, .react-calendar button:active {
+.react-calendar button,
+.react-calendar button:hover,
+.react-calendar button:active {
     border-radius: 8px;
 }
 
@@ -23,22 +25,26 @@
     background: var(--background-color);
 }
 
-.react-calendar__tile--now:enabled:hover, .react-calendar__tile--now:enabled:focus {
+.react-calendar__tile--now:enabled:hover,
+.react-calendar__tile--now:enabled:focus {
     background: var(--background-color);
 }
 
-.react-calendar__tile--active:enabled:hover, .react-calendar__tile--active:enabled:focus {
+.react-calendar__tile--active:enabled:hover,
+.react-calendar__tile--active:enabled:focus {
     background: var(--primary-color);
-  }
+}
 
-.react-calendar__tile:enabled:hover, .react-calendar__tile:enabled:focus {
+.react-calendar__tile:enabled:hover,
+.react-calendar__tile:enabled:focus {
     background-color: var(--background-color);
     color: var(--text-color);
 }
 
-.react-calendar__navigation button:enabled:hover, .react-calendar__navigation button:enabled:focus {
+.react-calendar__navigation button:enabled:hover,
+.react-calendar__navigation button:enabled:focus {
     background-color: var(--background-color);
-  }
+}
 
 .react-calendar__month-view__days__day--weekend {
     color: var(--tertiary-color);
@@ -66,7 +72,8 @@
     background-color: var(--nonal-color);
 }
 
-.react-calendar__tile.watered-day:enabled:hover, .react-calendar__tile.watered-day:enabled:focus {
+.react-calendar__tile.watered-day:enabled:hover,
+.react-calendar__tile.watered-day:enabled:focus {
     background-color: var(--nonal-color);
 }
 
@@ -81,7 +88,8 @@
     background-color: var(--senary-color);
 }
 
-.react-calendar__tile.image-day:enabled:hover, .react-calendar__tile.image-day:enabled:focus {
+.react-calendar__tile.image-day:enabled:hover,
+.react-calendar__tile.image-day:enabled:focus {
     background-color: var(--senary-color);
 }
 
@@ -96,16 +104,13 @@
     background-color: var(--undecimal-color);
 }
 
-.react-calendar__tile.advice-day:enabled:hover, .react-calendar__tile.advice-day:enabled:focus {
+.react-calendar__tile.advice-day:enabled:hover,
+.react-calendar__tile.advice-day:enabled:focus {
     background-color: var(--undecimal-color);
 }
 
 .both-day {
-    background: linear-gradient(
-        135deg,
-        var(--octal-color) 50%,
-        var(--quinary-color) 50%
-    );
+    background: linear-gradient(135deg, var(--octal-color) 50%, var(--quinary-color) 50%);
     border-radius: 50%;
     color: white;
     font-weight: bold;
@@ -113,28 +118,16 @@
 }
 
 .react-calendar__tile.both-day:hover {
-    background: linear-gradient(
-        135deg,
-        var(--nonal-color) 50%,
-        var(--senary-color) 50%
-    );
+    background: linear-gradient(135deg, var(--nonal-color) 50%, var(--senary-color) 50%);
 }
 
-.react-calendar__tile.both-day:enabled:hover, .react-calendar__tile.both-day:enabled:focus {
-    background: linear-gradient(
-        135deg,
-        var(--nonal-color) 50%,
-        var(--senary-color) 50%
-    );
+.react-calendar__tile.both-day:enabled:hover,
+.react-calendar__tile.both-day:enabled:focus {
+    background: linear-gradient(135deg, var(--nonal-color) 50%, var(--senary-color) 50%);
 }
 
 .triple-day {
-    background: linear-gradient(
-        135deg,
-        var(--octal-color) 50%,
-        var(--quinary-color) 50%,
-        var(--decimal-color) 50%
-    );
+    background: linear-gradient(135deg, var(--octal-color) 50%, var(--quinary-color) 50%, var(--decimal-color) 50%);
     border-radius: 50%;
     color: white;
     font-weight: bold;
@@ -142,21 +135,12 @@
 }
 
 .react-calendar__tile.triple-day:hover {
-    background: linear-gradient(
-        135deg,
-        var(--nonal-color) 50%,
-        var(--senary-color) 50%,
-        var(--undecimal-color) 50%
-    );
+    background: linear-gradient(135deg, var(--nonal-color) 50%, var(--senary-color) 50%, var(--undecimal-color) 50%);
 }
 
-.react-calendar__tile.triple-day:enabled:hover, .react-calendar__tile.triple-day:enabled:focus {
-    background: linear-gradient(
-        135deg,
-        var(--nonal-color) 50%,
-        var(--senary-color) 50%,
-        var(--undecimal-color) 50%
-    );
+.react-calendar__tile.triple-day:enabled:hover,
+.react-calendar__tile.triple-day:enabled:focus {
+    background: linear-gradient(135deg, var(--nonal-color) 50%, var(--senary-color) 50%, var(--undecimal-color) 50%);
 }
 
 .quadruple-day {
@@ -183,7 +167,8 @@
     );
 }
 
-.react-calendar__tile.quadruple-day:enabled:hover, .react-calendar__tile.quadruple-day:enabled:focus {
+.react-calendar__tile.quadruple-day:enabled:hover,
+.react-calendar__tile.quadruple-day:enabled:focus {
     background: linear-gradient(
         135deg,
         var(--nonal-color) 50%,
@@ -195,35 +180,35 @@
 
 /* Notes days */
 .react-calendar__tile.note-day {
-  background-color: var(--primary-color);
-  color: var(--text-color);
-  font-weight: bold;
-  border-radius: 8px;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    font-weight: bold;
+    border-radius: 8px;
 }
 
 .react-calendar__tile.note-day:hover,
 .react-calendar__tile.note-day:enabled:hover,
 .react-calendar__tile.note-day:enabled:focus {
-  background-color: var(--secondary-color);
-  color: var(--text-color);
+    background-color: var(--secondary-color);
+    color: var(--text-color);
 }
 
 .react-calendar__tile.season-day {
-  background-color: #b8892d;
-  color: #fff;
-  font-weight: bold;
-  border-radius: 8px;
+    background-color: #b8892d;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 8px;
 }
 
 .react-calendar__tile.season-day:hover,
 .react-calendar__tile.season-day:enabled:hover,
 .react-calendar__tile.season-day:enabled:focus {
-  background-color: #8f6a1f;
-  color: #fff;
+    background-color: #8f6a1f;
+    color: #fff;
 }
 
 .react-calendar__tile.location-triple-day::after {
-  box-shadow: 0 0 0 2px rgba(184, 137, 45, 0.8);
+    box-shadow: 0 0 0 2px rgba(184, 137, 45, 0.8);
 }
 
 .watering-tooltip-content {
@@ -288,7 +273,7 @@ li {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.6);
+    background-color: rgba(0, 0, 0, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -299,7 +284,7 @@ li {
     background: var(--secondary-background-color);
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     color: var(--text-color);
     text-align: center;
     width: 90%;
@@ -313,7 +298,8 @@ li {
     justify-content: center;
 }
 
-.watering-delete-confirm, .watering-delete-cancel {
+.watering-delete-confirm,
+.watering-delete-cancel {
     padding: 10px 15px;
     border: none;
     cursor: pointer;

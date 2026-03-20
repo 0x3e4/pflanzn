@@ -15,7 +15,7 @@ export default function EditableDiv({
     onChange,
     editable = true,
     placeholder = "Click to edit...",
-    className = ""
+    className = "",
 }: EditableDivProps) {
     const [editing, setEditing] = useState(false);
     const divRef = useRef<HTMLDivElement>(null);
@@ -60,13 +60,13 @@ export default function EditableDiv({
 
         // click outside to exit
         const handleClickOutside = (e: MouseEvent | TouchEvent) => {
-        if (el && !el.contains(e.target as Node)) exitEditingMode();
+            if (el && !el.contains(e.target as Node)) exitEditingMode();
         };
         document.addEventListener("mousedown", handleClickOutside);
         document.addEventListener("touchstart", handleClickOutside);
         return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-        document.removeEventListener("touchstart", handleClickOutside);
+            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("touchstart", handleClickOutside);
         };
     }, [editing, localValue]);
 
@@ -81,26 +81,26 @@ export default function EditableDiv({
 
     return (
         <div
-        className={`editable-div ${editing ? "editing" : ""} ${className}`}
-        contentEditable={editable && editing}
-        suppressContentEditableWarning
-        ref={divRef}
-        onClick={() => editable && setEditing(true)}
-        onInput={(e) => {
-            const v = e.currentTarget.textContent ?? "";
-            setLocalValue(v);
-            onChange?.(v);
-        }}
-        onBlur={exitEditingMode}
-        onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            exitEditingMode();
-            }
-        }}
-        style={{ direction: "ltr", unicodeBidi: "plaintext" }}
+            className={`editable-div ${editing ? "editing" : ""} ${className}`}
+            contentEditable={editable && editing}
+            suppressContentEditableWarning
+            ref={divRef}
+            onClick={() => editable && setEditing(true)}
+            onInput={(e) => {
+                const v = e.currentTarget.textContent ?? "";
+                setLocalValue(v);
+                onChange?.(v);
+            }}
+            onBlur={exitEditingMode}
+            onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    exitEditingMode();
+                }
+            }}
+            style={{ direction: "ltr", unicodeBidi: "plaintext" }}
         >
-        {!editing ? (localValue || placeholder) : null}
+            {!editing ? localValue || placeholder : null}
         </div>
     );
-    }
+}

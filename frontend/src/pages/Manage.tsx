@@ -18,29 +18,36 @@ import "react-loading-skeleton/dist/skeleton.css";
 import { APP_VERSION } from "../config/appInfo";
 import { getUiPreferences, updateUiPreferences } from "../config/uiPreferences";
 
-type ManageSection = "profile" | "statistics" | "identification" | "users" | "plants" | "locations" | "customize" | "share";
+type ManageSection =
+    | "profile"
+    | "statistics"
+    | "identification"
+    | "users"
+    | "plants"
+    | "locations"
+    | "customize"
+    | "share";
 
 const Manage: React.FC = () => {
     const { user, logout, fetchProfile, isLoggedIn } = useAuth();
     const navigate = useNavigate();
     const authMode = import.meta.env.VITE_AUTH_MODE || "no";
     const showProtectedView = !["false", "0", "no", "off"].includes(
-        (import.meta.env.VITE_SHOW_PROTECTED_VIEW || "true").trim().toLowerCase()
+        (import.meta.env.VITE_SHOW_PROTECTED_VIEW || "true").trim().toLowerCase(),
     );
     const showShare = (authMode === "oidc" || authMode === "local") && showProtectedView;
     const [loading, setLoading] = useState(true);
     const [activeSection, setActiveSection] = useState<ManageSection>("statistics");
     const [editedUser, setEditedUser] = useState<Partial<User>>({
         username: user?.username || "",
-        email: user?.email || ""
-    });    
+        email: user?.email || "",
+    });
     const [passwords, setPasswords] = useState({
         oldPassword: "",
         newPassword: "",
         confirmPassword: "",
     });
     const [defaultWidescreen, setDefaultWidescreen] = useState(() => getUiPreferences().defaultWidescreen);
-    
 
     useEffect(() => {
         const loadProfile = async () => {
@@ -51,22 +58,22 @@ const Manage: React.FC = () => {
                     toast.error("Failed to load profile data.");
                 }
             }
-    
+
             setLoading(false);
         };
-    
+
         loadProfile();
-    }, [user]) 
-    
+    }, [user]);
+
     useEffect(() => {
         if (user) {
             setEditedUser({
                 id: user.id,
                 username: user.username,
-                email: user.email
+                email: user.email,
             });
         }
-    }, [user]);    
+    }, [user]);
 
     useEffect(() => {
         if (!loading && authMode === "local" && !isLoggedIn) {
@@ -86,7 +93,7 @@ const Manage: React.FC = () => {
                 toast.error("Username and email cannot be empty.");
                 return;
             }
-    
+
             if (user!.id === 1) {
                 toast.warning("Cannot update the default admin.");
                 return;
@@ -97,13 +104,13 @@ const Manage: React.FC = () => {
                 toast.error("You can only update your own profile.");
                 return;
             }
-    
+
             await updateUser(user!.id, editedUser);
             toast.success("User details updated successfully!");
         } catch {
             toast.error("Failed to update user details.");
         }
-    };    
+    };
 
     const handleChangePassword = async () => {
         if (user!.id === 1) {
@@ -119,9 +126,12 @@ const Manage: React.FC = () => {
             toast.error("New passwords do not match.");
             return;
         }
-    
+
         try {
-            await updateUserPassword(user!.id, { oldPassword: passwords.oldPassword, newPassword: passwords.newPassword });
+            await updateUserPassword(user!.id, {
+                oldPassword: passwords.oldPassword,
+                newPassword: passwords.newPassword,
+            });
             toast.success("Password changed successfully!");
             setPasswords({ oldPassword: "", newPassword: "", confirmPassword: "" });
         } catch {
@@ -166,7 +176,7 @@ const Manage: React.FC = () => {
                     {authMode !== "no" && (
                         <>
                             <h3>Details</h3>
-                            <li 
+                            <li
                                 className={`sidebar-subsection ${activeSection === "profile" ? "active" : ""}`}
                                 onClick={() => setActiveSection("profile")}
                             >
@@ -178,8 +188,8 @@ const Manage: React.FC = () => {
                     {(authMode === "no" || (authMode !== "no" && user?.role === "admin")) && (
                         <>
                             <h3>Management</h3>
-                            
-                            <li 
+
+                            <li
                                 className={`sidebar-subsection ${activeSection === "statistics" ? "active" : ""}`}
                                 onClick={() => setActiveSection("statistics")}
                             >
@@ -187,15 +197,15 @@ const Manage: React.FC = () => {
                             </li>
 
                             {authMode !== "no" && (
-                                <li 
+                                <li
                                     className={`sidebar-subsection ${activeSection === "users" ? "active" : ""}`}
                                     onClick={() => setActiveSection("users")}
                                 >
                                     Users
                                 </li>
                             )}
-                            
-                            <li 
+
+                            <li
                                 className={`sidebar-subsection ${activeSection === "plants" ? "active" : ""}`}
                                 onClick={() => setActiveSection("plants")}
                             >
@@ -209,7 +219,7 @@ const Manage: React.FC = () => {
                                 Locations
                             </li>
 
-                            <li 
+                            <li
                                 className={`sidebar-subsection ${activeSection === "identification" ? "active" : ""}`}
                                 onClick={() => setActiveSection("identification")}
                             >
@@ -236,7 +246,9 @@ const Manage: React.FC = () => {
                     <li className="sidebar-info-item">Version {APP_VERSION}</li>
 
                     {authMode !== "no" && (
-                        <li className="logout-link" onClick={handleLogout}>Logout</li>
+                        <li className="logout-link" onClick={handleLogout}>
+                            Logout
+                        </li>
                     )}
                 </ul>
             </aside>
@@ -245,7 +257,7 @@ const Manage: React.FC = () => {
                 {activeSection === "profile" && authMode !== "no" && (
                     <div className="profile-info">
                         <h2>User Details</h2>
-                        
+
                         <label>Username</label>
                         <input
                             type="text"
@@ -306,9 +318,7 @@ const Manage: React.FC = () => {
                     </div>
                 )}
 
-                {activeSection === "statistics" && (
-                    <StatisticsPanel />
-                )}
+                {activeSection === "statistics" && <StatisticsPanel />}
 
                 {activeSection === "identification" && (authMode === "no" || user?.role === "admin") && (
                     <IdentificationsPanel />
@@ -318,17 +328,11 @@ const Manage: React.FC = () => {
                     <UsersPanel />
                 )}
 
-                {activeSection === "plants" && (authMode === "no" || user?.role === "admin") && (
-                    <PlantsPanel />
-                )}
+                {activeSection === "plants" && (authMode === "no" || user?.role === "admin") && <PlantsPanel />}
 
-                {activeSection === "locations" && (authMode === "no" || user?.role === "admin") && (
-                    <LocationsPanel />
-                )}
+                {activeSection === "locations" && (authMode === "no" || user?.role === "admin") && <LocationsPanel />}
 
-                {activeSection === "share" && showShare && user?.role === "admin" && (
-                    <SharePanel />
-                )}
+                {activeSection === "share" && showShare && user?.role === "admin" && <SharePanel />}
 
                 {activeSection === "customize" && (
                     <div className="profile-info manage-customize-panel">
@@ -345,7 +349,8 @@ const Manage: React.FC = () => {
                         </label>
 
                         <small className="manage-setting-hint">
-                            You can still collapse the page width with the expand/collapse icon directly in Plants and Locations.
+                            You can still collapse the page width with the expand/collapse icon directly in Plants and
+                            Locations.
                         </small>
                     </div>
                 )}

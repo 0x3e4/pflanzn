@@ -1,13 +1,14 @@
-from datetime import datetime
-import logging
-from anthropic import Anthropic, HUMAN_PROMPT, AI_PROMPT
-from app.core.config import settings
-from app.utils.llm_text_cleaner import clean_generated_text
-from app.services.prompt_config import PromptConfig
-from sqlalchemy.orm import Session
-from app.models import Plant
 import base64
+import logging
 from typing import Optional
+
+from anthropic import Anthropic
+from sqlalchemy.orm import Session
+
+from app.core.config import settings
+from app.models import Plant
+from app.services.prompt_config import PromptConfig
+from app.utils.llm_text_cleaner import clean_generated_text
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -89,7 +90,6 @@ class ClaudeClient:
         Optionally includes user's observation for more targeted advice.
         """
         import os
-        from app.models import Plant
 
         # Recompute BASE_DIR and UPLOAD_FOLDER exactly as in plants.py
         BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))

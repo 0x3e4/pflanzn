@@ -1,45 +1,45 @@
 .auth-splash {
-  min-height: 100vh;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background:
-      radial-gradient(600px circle at 10% -10%, rgba(76, 175, 80, 0.2), transparent 45%),
-      radial-gradient(500px circle at 90% 10%, rgba(121, 76, 175, 0.16), transparent 48%),
-      var(--secondary-background-color);
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background:
+        radial-gradient(600px circle at 10% -10%, rgba(76, 175, 80, 0.2), transparent 45%),
+        radial-gradient(500px circle at 90% 10%, rgba(121, 76, 175, 0.16), transparent 48%),
+        var(--secondary-background-color);
 }
 
 .auth-splash-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    text-align: center;
 }
 
 .auth-splash-logo {
-  width: 150px;
-  height: 150px;
-  object-fit: contain;
+    width: 150px;
+    height: 150px;
+    object-fit: contain;
 }
 
 .auth-splash-content h1 {
-  margin: 0;
-  font-size: clamp(3rem, 7vw, 4.75rem);
-  font-weight: 800;
-  line-height: 1.2;
+    margin: 0;
+    font-size: clamp(3rem, 7vw, 4.75rem);
+    font-weight: 800;
+    line-height: 1.2;
 }
 
 .auth-splash-loader {
-  width: min(72px, 18vw);
-  height: auto;
+    width: min(72px, 18vw);
+    height: auto;
 }
 
 @media (max-width: 768px) {
-  .auth-splash-logo {
-    width: 118px;
-    height: 118px;
-  }
+    .auth-splash-logo {
+        width: 118px;
+        height: 118px;
+    }
 }

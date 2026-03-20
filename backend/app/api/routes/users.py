@@ -1,11 +1,13 @@
 import logging
+from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+
+from app.core.security import get_current_admin_user, get_current_user, hash_password, verify_password
 from app.database import get_db
 from app.models import User
-from app.schemas import UserResponse, UserCreate, UserUpdate, UserPasswordUpdate
-from typing import List, Optional
-from app.core.security import hash_password, get_current_user, get_current_admin_user, verify_password
+from app.schemas import UserCreate, UserPasswordUpdate, UserResponse, UserUpdate
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -66,13 +68,13 @@ def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
 
 @router.put("/{user_id}", response_model=UserResponse)
 def update_user(
-    user_id: int, 
-    user_data: UserUpdate, 
-    db: Session = Depends(get_db), 
+    user_id: int,
+    user_data: UserUpdate,
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Allow users to update their own profile, but only admins can update others."""
-    
+
     # Fetch the user to be updated
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -93,13 +95,13 @@ def update_user(
 
 @router.put("/{user_id}/changepassword")
 def update_password(
-    user_id: int, 
-    password_data: UserPasswordUpdate, 
-    db: Session = Depends(get_db), 
+    user_id: int,
+    password_data: UserPasswordUpdate,
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Allow users to update their own password after verifying the old password."""
-    
+
     # Ensure the logged-in user is only updating their own password
     if current_user.id != user_id:
         raise HTTPException(status_code=403, detail="You can only update your own password")
