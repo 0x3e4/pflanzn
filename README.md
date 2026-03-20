@@ -10,7 +10,7 @@
 
 <div align="center">
 
-![](./.git/images/pflanzn-home.png)
+![](./docs/images/pflanzn-home.png)
 
 </div>
 
@@ -37,8 +37,8 @@ A public demo is available at **[pflanzn.app](https://pflanzn.app)** — login w
 
 |         |         |
 |:-------:|:-------:|
-| ![](./.git/images/pflanzn-plants.png) | ![](./.git/images/pflanzn-plant.png) |
-| ![](./.git/images/planzn-identification.png) | ![](./.git/images/pflanzn-home.png) |
+| ![](./docs/images/pflanzn-plants.png) | ![](./docs/images/pflanzn-plant.png) |
+| ![](./docs/images/planzn-identification.png) | ![](./docs/images/pflanzn-home.png) |
 
 </div>
 
