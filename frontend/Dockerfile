@@ -22,7 +22,7 @@ ENV VITE_LLM_PROVIDER=$VITE_LLM_PROVIDER
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 COPY . .
 
