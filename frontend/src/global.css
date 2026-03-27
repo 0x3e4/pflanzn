@@ -13,10 +13,18 @@
     --nonal-color: #2e456a;
     --decimal-color: #794caf;
     --undecimal-color: #642e6a;
+    --duodecimal-color: #af4ca7;
+    --tridecimal-color: #6a2e64;
     --background-color: #2c2c2c;
     --secondary-background-color: #333;
     --text-color: #ffffff;
+    --muted-text-color: #b0b0b0;
     --border-color: #ccc;
+    --card-background: rgba(0, 0, 0, 0.16);
+    --card-border: rgba(255, 255, 255, 0.12);
+    --overlay-background: rgba(22, 22, 22, 0.82);
+    --input-background: #222;
+    --input-border: #555;
 }
 
 /* Light theme overrides */
@@ -32,10 +40,18 @@
     --nonal-color: #1a237e;
     --decimal-color: #6a1b9a;
     --undecimal-color: #4a148c;
+    --duodecimal-color: #ad1457;
+    --tridecimal-color: #880e4f;
     --background-color: #fafafa;
     --secondary-background-color: #ffffff;
     --text-color: #212121;
+    --muted-text-color: #666666;
     --border-color: #e0e0e0;
+    --card-background: rgba(0, 0, 0, 0.04);
+    --card-border: rgba(0, 0, 0, 0.1);
+    --overlay-background: rgba(255, 255, 255, 0.92);
+    --input-background: #f5f5f5;
+    --input-border: #ccc;
 }
 
 ::selection {
@@ -231,7 +247,7 @@ select {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23ffffff" d="M2 0L0 2h4zM2 5L0 3h4z"/></svg>');
+    background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23888888" d="M2 0L0 2h4zM2 5L0 3h4z"/></svg>');
     background-repeat: no-repeat;
     background-position: right 10px center;
     background-size: 10px;
@@ -240,11 +256,11 @@ select {
 }
 
 small {
-    color: #ccc;
+    color: var(--muted-text-color);
 }
 
 small:hover {
-    color: #ccc;
+    color: var(--muted-text-color);
 }
 
 .Toastify {

@@ -6,6 +6,7 @@ import {
     updatePlant,
     generatePlantDescription,
     waterPlant,
+    fertilizePlant,
     identifyPlant,
     uploadPlantImage,
     assignTagToPlant,
@@ -34,6 +35,7 @@ import {
     faTrashCanArrowUp,
     faCamera,
     faStickyNote,
+    faSeedling,
     faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import EditableDiv from "../components/EditableDiv";
@@ -252,6 +254,36 @@ export default function PlantDetails() {
             loadActivities();
         } catch (error) {
             toast.error((error as Error).message || "Failed to log watering.");
+        }
+    };
+
+    const handleFertilizePlant = async () => {
+        if (!isLoggedIn) {
+            toast.error("You must be logged in to fertilize plants.");
+            return;
+        }
+
+        try {
+            const fertilizingDateTimeUTC = DateTime.fromISO(selectedDateTime, { zone: import.meta.env.VITE_TZ })
+                .toUTC()
+                .toISO({ includeOffset: false });
+
+            const newFertilizing = await fertilizePlant(Number(plantId), {
+                fertilized_at: fertilizingDateTimeUTC,
+            });
+
+            if (plant) {
+                setPlant({
+                    ...plant,
+                    last_fertilized: new Date(fertilizingDateTimeUTC),
+                    fertilizings: [...(plant.fertilizings || []), newFertilizing],
+                });
+            }
+
+            toast.success("Fertilizing logged successfully!");
+            loadActivities();
+        } catch (error) {
+            toast.error((error as Error).message || "Failed to log fertilizing.");
         }
     };
 
@@ -486,6 +518,8 @@ export default function PlantDetails() {
         switch (activityType) {
             case "watering":
                 return faDroplet;
+            case "fertilizing":
+                return faSeedling;
             case "care_advice":
                 return faWandMagicSparkles;
             case "image_upload":
@@ -501,6 +535,8 @@ export default function PlantDetails() {
         switch (activity.activity_type) {
             case "watering":
                 return "Watered";
+            case "fertilizing":
+                return "Fertilized";
             case "care_advice":
                 return "Care Advice";
             case "image_upload":
@@ -518,6 +554,8 @@ export default function PlantDetails() {
         switch (activity.activity_type) {
             case "watering":
                 return `Plant was watered${userName ? ` by ${userName}` : ""}`;
+            case "fertilizing":
+                return `Plant was fertilized${userName ? ` by ${userName}` : ""}`;
             case "care_advice":
                 return `${activity.activity_data?.advice || "Care advice was generated"}${
                     userName ? ` by ${userName}` : ""
@@ -754,6 +792,7 @@ export default function PlantDetails() {
                     <TimelineImages images={plant.images} plantId={plant.id} />
                     <Calendar
                         waterings={plant.waterings}
+                        fertilizings={plant.fertilizings}
                         images={plant.images}
                         careadvice={plant.care_advice}
                         notes={plant.notes}
@@ -881,6 +920,21 @@ export default function PlantDetails() {
                                         />
                                     </div>
                                 </div>
+
+                                {isLoggedIn ? (
+                                    <button className="fertilize-plant-btn" onClick={handleFertilizePlant}>
+                                        <FontAwesomeIcon icon={faSeedling} /> Fertilize
+                                    </button>
+                                ) : (
+                                    <button
+                                        className="fertilize-plant-btn"
+                                        onClick={() =>
+                                            toast.warning("You must be logged in to fertilize plants.")
+                                        }
+                                    >
+                                        <FontAwesomeIcon icon={faSeedling} /> Fertilize
+                                    </button>
+                                )}
 
                                 {isLoggedIn ? (
                                     <>

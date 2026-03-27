@@ -419,17 +419,8 @@ export default function Locations() {
                         className={`hashtag ${selectedSpotType === "all" ? "active" : ""}`}
                         onClick={() => setSelectedSpotType("all")}
                     >
-                        #all_spots
+                        #all
                     </span>
-                    {Object.entries(spotTypeLabels).map(([value, label]) => (
-                        <span
-                            key={value}
-                            className={`hashtag ${selectedSpotType === value ? "active" : ""}`}
-                            onClick={() => setSelectedSpotType(value as SpotType)}
-                        >
-                            #{label.toLowerCase().replace(/\s+/g, "_")}
-                        </span>
-                    ))}
                 </div>
 
                 <div className="location-search-container">

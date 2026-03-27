@@ -188,7 +188,7 @@
 
 .location-inline-editable[data-placeholder]:empty::before {
     content: attr(data-placeholder);
-    color: #999;
+    color: var(--muted-text-color);
 }
 
 .location-calendar-section {
@@ -555,7 +555,7 @@
     background: var(--background-color);
     border-radius: 10px;
     padding: 12px;
-    color: #ddd;
+    color: var(--muted-text-color);
 }
 
 @media (max-width: 992px) {

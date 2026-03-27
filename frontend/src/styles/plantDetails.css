@@ -43,6 +43,7 @@
 .generate-description-btn,
 .ai-care-helper-btn,
 .water-plant-btn,
+.fertilize-plant-btn,
 .identify-plant-btn,
 .file-input-plant-btn,
 .notes-btn {
@@ -74,15 +75,15 @@
 }
 
 .archive-plant-btn {
-    background-color: var(--text-color);
-    color: var(--quaternary-color);
-    border: 1px solid var(--quaternary-color);
+    background-color: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
 }
 
 .archive-plant-btn:hover {
-    background-color: var(--septimal-color);
-    color: var(--quaternary-color);
-    border: 1px solid var(--tertiary-color);
+    background-color: var(--card-background);
+    color: var(--text-color);
+    border: 1px solid var(--text-color);
 }
 
 .generate-description-btn,
@@ -101,6 +102,14 @@
 
 .water-plant-btn:hover {
     background-color: var(--nonal-color);
+}
+
+.fertilize-plant-btn {
+    background-color: var(--duodecimal-color);
+}
+
+.fertilize-plant-btn:hover {
+    background-color: var(--tridecimal-color);
 }
 
 .plant-information-names {
@@ -237,6 +246,11 @@ h3 {
 
 .activity-icon.note {
     background-color: var(--primary-color);
+    color: white;
+}
+
+.activity-icon.fertilizing {
+    background-color: var(--duodecimal-color);
     color: white;
 }
 

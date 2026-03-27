@@ -4,8 +4,14 @@ import "../styles/Calendar.css";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useModalA11y } from "../hooks/useModalA11y";
 import { createPortal } from "react-dom";
-import { deleteWatering, deletePlantImage, deleteCareAdvice, deletePlantNote } from "../services/PlantService";
-import { PlantWatering, PlantImage, PlantCareAdvice, PlantNote } from "../types/Plant";
+import {
+    deleteWatering,
+    deleteFertilizing,
+    deletePlantImage,
+    deleteCareAdvice,
+    deletePlantNote,
+} from "../services/PlantService";
+import { PlantWatering, PlantFertilizing, PlantImage, PlantCareAdvice, PlantNote } from "../types/Plant";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faTrash,
@@ -14,6 +20,7 @@ import {
     faCamera,
     faStickyNote,
     faWandMagicSparkles,
+    faSeedling,
 } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
@@ -21,6 +28,7 @@ import { setOverlayOpen } from "../services/overlayControl";
 
 interface Props {
     waterings: PlantWatering[];
+    fertilizings: PlantFertilizing[];
     images: PlantImage[];
     careadvice: PlantCareAdvice[];
     notes: PlantNote[];
@@ -68,10 +76,19 @@ function TooltipOverlay({
     );
 }
 
-export default function LogCalendar({ waterings, images, careadvice, notes, plantId, onChanged }: Props) {
+const EVENT_COLORS: Record<string, string> = {
+    "watered-day": "var(--octal-color)",
+    "fertilized-day": "var(--duodecimal-color)",
+    "image-day": "var(--quinary-color)",
+    "advice-day": "var(--decimal-color)",
+    "note-day": "var(--primary-color)",
+};
+
+export default function LogCalendar({ waterings, fertilizings, images, careadvice, notes, plantId, onChanged }: Props) {
     const { isLoggedIn } = useAuth();
 
     const [localWaterings, setLocalWaterings] = useState<PlantWatering[]>(waterings);
+    const [localFertilizings, setLocalFertilizings] = useState<PlantFertilizing[]>(fertilizings);
     const [uploadedImages, setUploadedImages] = useState<PlantImage[]>(images);
     const [careAdvices, setCareAdvices] = useState<PlantCareAdvice[]>(careadvice);
     const [plantNotes, setPlantNotes] = useState<PlantNote[]>(notes);
@@ -81,7 +98,7 @@ export default function LogCalendar({ waterings, images, careadvice, notes, plan
     const closeDeleteModal = useCallback(() => setDeleteModalOpen(false), []);
     const { modalRef: deleteModalRef } = useModalA11y({ isOpen: deleteModalOpen, onClose: closeDeleteModal });
     const [deleteTarget, setDeleteTarget] = useState<{
-        type: "watering" | "image" | "advice" | "note";
+        type: "watering" | "fertilizing" | "image" | "advice" | "note";
         id: number;
     } | null>(null);
 
@@ -89,10 +106,11 @@ export default function LogCalendar({ waterings, images, careadvice, notes, plan
 
     useEffect(() => {
         setLocalWaterings(waterings);
+        setLocalFertilizings(fertilizings);
         setUploadedImages(images);
         setCareAdvices(careadvice);
         setPlantNotes(notes);
-    }, [waterings, images, careadvice, notes]);
+    }, [waterings, fertilizings, images, careadvice, notes]);
 
     const locale = import.meta.env.VITE_LOCALE;
     const timezone = import.meta.env.VITE_TZ;
@@ -158,33 +176,54 @@ export default function LogCalendar({ waterings, images, careadvice, notes, plan
         {} as Record<string, PlantNote[]>,
     );
 
+    const fertilizedDates = localFertilizings.reduce(
+        (acc, fertilizing) => {
+            const dateKey = formatDateKey(new Date(fertilizing.fertilized_at));
+            if (!acc[dateKey]) acc[dateKey] = [];
+            acc[dateKey].push(fertilizing);
+            return acc;
+        },
+        {} as Record<string, PlantFertilizing[]>,
+    );
+
+    const getActiveEventTypes = (dateKey: string): string[] => {
+        const types: string[] = [];
+        if (wateredDates[dateKey]) types.push("watered-day");
+        if (fertilizedDates[dateKey]) types.push("fertilized-day");
+        if (imageDates[dateKey]) types.push("image-day");
+        if (adviceDates[dateKey]) types.push("advice-day");
+        if (noteDates[dateKey]) types.push("note-day");
+        return types;
+    };
+
     const tileClassName = ({ date }: { date: Date }) => {
         const dateKey = formatDateKey(date);
-        const classes: string[] = [];
-        if (wateredDates[dateKey]) classes.push("watered-day");
-        if (imageDates[dateKey]) classes.push("image-day");
-        if (adviceDates[dateKey]) classes.push("advice-day");
-        if (noteDates[dateKey]) classes.push("note-day");
-
-        if (
-            classes.includes("watered-day") &&
-            classes.includes("image-day") &&
-            classes.includes("advice-day") &&
-            classes.includes("note-day")
-        ) {
-            classes.push("quadruple-day");
-        } else if (classes.includes("watered-day") && classes.includes("image-day") && classes.includes("advice-day")) {
-            classes.push("triple-day");
-        } else if (classes.includes("watered-day") && classes.includes("image-day")) {
-            classes.push("both-day");
-        }
+        const classes = getActiveEventTypes(dateKey);
+        if (classes.length >= 2) classes.push("multi-day");
         return classes.join(" ");
+    };
+
+    const tileContent = ({ date }: { date: Date }) => {
+        const dateKey = formatDateKey(date);
+        const activeTypes = getActiveEventTypes(dateKey);
+        if (activeTypes.length < 2) return null;
+
+        const pct = 100 / activeTypes.length;
+        const stops = activeTypes
+            .map((t, i) => `${EVENT_COLORS[t]} ${i * pct}%, ${EVENT_COLORS[t]} ${(i + 1) * pct}%`)
+            .join(", ");
+        return (
+            <div
+                className="multi-day-indicator"
+                style={{ background: `linear-gradient(135deg, ${stops})` }}
+            />
+        );
     };
 
     const handleClickDay = (date: Date, event: React.MouseEvent) => {
         const dateKey = formatDateKey(date);
 
-        if (wateredDates[dateKey] || imageDates[dateKey] || adviceDates[dateKey] || noteDates[dateKey]) {
+        if (wateredDates[dateKey] || fertilizedDates[dateKey] || imageDates[dateKey] || adviceDates[dateKey] || noteDates[dateKey]) {
             setHoveredDate(dateKey);
 
             const rect = (event.target as HTMLElement).getBoundingClientRect();
@@ -199,7 +238,7 @@ export default function LogCalendar({ waterings, images, careadvice, notes, plan
         }
     };
 
-    const openDeleteModal = (type: "watering" | "image" | "advice" | "note", id: number) => {
+    const openDeleteModal = (type: "watering" | "fertilizing" | "image" | "advice" | "note", id: number) => {
         // Hide tooltip immediately before showing modal
         setHoveredDate(null);
         setTooltipPosition(null);
@@ -221,6 +260,10 @@ export default function LogCalendar({ waterings, images, careadvice, notes, plan
                 await deleteWatering(plantId, deleteTarget.id);
                 setLocalWaterings((prev) => prev.filter((w) => w.id !== deleteTarget.id));
                 toast.success("Watering deleted successfully!");
+            } else if (deleteTarget.type === "fertilizing") {
+                await deleteFertilizing(plantId, deleteTarget.id);
+                setLocalFertilizings((prev) => prev.filter((f) => f.id !== deleteTarget.id));
+                toast.success("Fertilizing deleted successfully!");
             } else if (deleteTarget.type === "image") {
                 await deletePlantImage(plantId, deleteTarget.id);
                 setUploadedImages((prev) => prev.filter((img) => img.id !== deleteTarget.id));
@@ -272,6 +315,7 @@ export default function LogCalendar({ waterings, images, careadvice, notes, plan
         if (
             !hoveredDate ||
             (!wateredDates[hoveredDate] &&
+                !fertilizedDates[hoveredDate] &&
                 !imageDates[hoveredDate] &&
                 !adviceDates[hoveredDate] &&
                 !noteDates[hoveredDate]) ||
@@ -312,6 +356,43 @@ export default function LogCalendar({ waterings, images, careadvice, notes, plan
                                                     onClick={() =>
                                                         toast.warning(
                                                             "You must be logged in to delete watering events.",
+                                                        )
+                                                    }
+                                                >
+                                                    <FontAwesomeIcon icon={faTrash} />
+                                                </button>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </>
+                        )}
+
+                        {fertilizedDates[hoveredDate] && (
+                            <>
+                                <strong>Fertilized at:</strong>
+                                <ul>
+                                    {fertilizedDates[hoveredDate].map((fertilizing) => (
+                                        <li className="watering-tooltip-item" key={fertilizing.id}>
+                                            <FontAwesomeIcon icon={faSeedling} className="image-icon" />
+                                            {new Date(fertilizing.fertilized_at).toLocaleTimeString(locale, {
+                                                timeZone: timezone,
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                            })}
+                                            {isLoggedIn ? (
+                                                <button
+                                                    className="watering-delete-btn"
+                                                    onClick={() => openDeleteModal("fertilizing", fertilizing.id)}
+                                                >
+                                                    <FontAwesomeIcon icon={faTrash} />
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    className="watering-delete-btn"
+                                                    onClick={() =>
+                                                        toast.warning(
+                                                            "You must be logged in to delete fertilizing events.",
                                                         )
                                                     }
                                                 >
@@ -447,6 +528,7 @@ export default function LogCalendar({ waterings, images, careadvice, notes, plan
             <Calendar
                 locale={locale}
                 tileClassName={tileClassName}
+                tileContent={tileContent}
                 onActiveStartDateChange={() => {
                     setHoveredDate(null);
                     setTooltipPosition(null);

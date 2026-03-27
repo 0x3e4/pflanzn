@@ -18,11 +18,13 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.security import get_current_user
 from app.database import get_db
-from app.models import Plant, PlantCareAdvice, PlantIdentification, PlantImage, PlantNote, PlantWatering, Tag, User
+from app.models import Plant, PlantCareAdvice, PlantFertilizing, PlantIdentification, PlantImage, PlantNote, PlantWatering, Tag, User
 from app.schemas import (
     ArchiveRequest,
     PlantCareAdviceResponse,
     PlantCreate,
+    PlantFertilizingCreate,
+    PlantFertilizingResponse,
     PlantIdentificationResponse,
     PlantImageResponse,
     PlantNoteCreate,
@@ -109,6 +111,12 @@ def get_all_plants(db: Session = Depends(get_db)):
             plant.last_watered = plant.last_watered.replace(tzinfo=timezone.utc).astimezone(tz)
         else:
             plant.last_watered = None
+
+        if plant.fertilizings:
+            plant.last_fertilized = max(f.fertilized_at for f in plant.fertilizings)
+            plant.last_fertilized = plant.last_fertilized.replace(tzinfo=timezone.utc).astimezone(tz)
+        else:
+            plant.last_fertilized = None
 
     return plants
 
@@ -198,6 +206,9 @@ def get_plant(plant_id: int, db: Session = Depends(get_db)):
     for watering in plant.waterings:
         watering.watered_at = watering.watered_at.replace(tzinfo=timezone.utc).astimezone(tz)
 
+    for fertilizing in plant.fertilizings:
+        fertilizing.fertilized_at = fertilizing.fertilized_at.replace(tzinfo=timezone.utc).astimezone(tz)
+
     for advice in plant.care_advice:
         advice.generated_at = advice.generated_at.replace(tzinfo=timezone.utc).astimezone(tz)
 
@@ -208,6 +219,17 @@ def get_plant(plant_id: int, db: Session = Depends(get_db)):
         plant.last_watered = latest_watering.watered_at.replace(tzinfo=timezone.utc).astimezone(tz)
     else:
         plant.last_watered = None
+
+    latest_fertilizing = (
+        db.query(PlantFertilizing)
+        .filter(PlantFertilizing.plant_id == plant_id)
+        .order_by(PlantFertilizing.fertilized_at.desc())
+        .first()
+    )
+    if latest_fertilizing and latest_fertilizing.fertilized_at:
+        plant.last_fertilized = latest_fertilizing.fertilized_at.replace(tzinfo=timezone.utc).astimezone(tz)
+    else:
+        plant.last_fertilized = None
 
     return plant
 
@@ -621,6 +643,51 @@ def delete_watering(
 
     return {"message": "Watering deleted successfully"}
 
+@router.post("/{plant_id}/fertilizing", response_model=PlantFertilizingResponse)
+def fertilize_plant(
+    plant_id: int,
+    fertilizing_data: PlantFertilizingCreate,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user),
+):
+    plant = db.query(Plant).filter(Plant.id == plant_id).first()
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+
+    fertilizing = PlantFertilizing(
+        plant_id=plant_id,
+        fertilized_at=fertilizing_data.fertilized_at or datetime.utcnow(),
+        user_id=(current_user.id if current_user else None),
+    )
+    db.add(fertilizing)
+    db.commit()
+    db.refresh(fertilizing)
+
+    return fertilizing
+
+@router.delete("/{plant_id}/fertilizing/{fertilizing_id}", status_code=204)
+def delete_fertilizing(
+    plant_id: int,
+    fertilizing_id: int,
+    db: Session = Depends(get_db)
+):
+    plant = db.query(Plant).filter(Plant.id == plant_id).first()
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+
+    fertilizing = db.query(PlantFertilizing).filter(
+        PlantFertilizing.id == fertilizing_id,
+        PlantFertilizing.plant_id == plant_id
+    ).first()
+
+    if not fertilizing:
+        raise HTTPException(status_code=404, detail="Fertilizing entry not found")
+
+    db.delete(fertilizing)
+    db.commit()
+
+    return {"message": "Fertilizing deleted successfully"}
+
 # Assign tags to a plant
 @router.post("/{plant_id}/assign", response_model=PlantResponse)
 def assign_tags_to_plant(plant_id: int, tag_names: List[str], db: Session = Depends(get_db)):
@@ -657,7 +724,9 @@ def assign_tags_to_plant(plant_id: int, tag_names: List[str], db: Session = Depe
         description=plant.description,
         images=[PlantImageResponse(id=img.id, image_path=img.image_path, uploaded_at=img.uploaded_at) for img in plant.images],
         waterings=[PlantWateringResponse(id=w.id, watered_at=w.watered_at) for w in plant.waterings],
+        fertilizings=[PlantFertilizingResponse(id=f.id, fertilized_at=f.fertilized_at) for f in plant.fertilizings],
         last_watered=max([w.watered_at for w in plant.waterings], default=None),
+        last_fertilized=max([f.fertilized_at for f in plant.fertilizings], default=None),
         tags=[TagResponse(id=t.id, name=t.name) for t in plant.tags],
         notes=[PlantNoteResponse(id=n.id, note_text=n.note_text, created_at=n.created_at) for n in plant.notes],
     )
@@ -687,7 +756,9 @@ def remove_tag_from_plant(plant_id: int, tag_id: int, db: Session = Depends(get_
         description=plant.description,
         images=[PlantImageResponse(id=img.id, image_path=img.image_path, uploaded_at=img.uploaded_at) for img in plant.images],
         waterings=[PlantWateringResponse(id=w.id, watered_at=w.watered_at) for w in plant.waterings],
+        fertilizings=[PlantFertilizingResponse(id=f.id, fertilized_at=f.fertilized_at) for f in plant.fertilizings],
         last_watered=max([w.watered_at for w in plant.waterings], default=None),
+        last_fertilized=max([f.fertilized_at for f in plant.fertilizings], default=None),
         tags=[TagResponse(id=t.id, name=t.name) for t in plant.tags]
     )
 
@@ -756,6 +827,28 @@ def get_plant_activities(
                 "user_name": watering.created_by.username if watering.created_by else None,
             },
             "timestamp": watering.watered_at.isoformat()
+        })
+
+    # Get fertilizings for this plant
+    fertilizings = (
+        db.query(PlantFertilizing)
+        .filter(PlantFertilizing.plant_id == plant_id)
+        .order_by(PlantFertilizing.fertilized_at.desc())
+        .all()
+    )
+
+    for fertilizing in fertilizings:
+        fertilizing.fertilized_at = fertilizing.fertilized_at.replace(tzinfo=timezone.utc).astimezone(tz)
+        activities.append({
+            "id": f"fertilizing_{fertilizing.id}",
+            "plant_id": plant_id,
+            "plant_name": plant.name,
+            "activity_type": "fertilizing",
+            "activity_data": {
+                "fertilizing_id": fertilizing.id,
+                "user_name": fertilizing.created_by.username if fertilizing.created_by else None,
+            },
+            "timestamp": fertilizing.fertilized_at.isoformat()
         })
 
     # Get images for this plant

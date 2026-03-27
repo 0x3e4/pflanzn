@@ -85,6 +85,14 @@ def _ensure_share_links_schema():
         return  # create_all already handled it
 
 
+def _ensure_fertilizings_schema():
+    """Idempotent migration for the plant_fertilizings table."""
+    inspector = inspect(engine)
+    tables = set(inspector.get_table_names())
+    if "plant_fertilizings" not in tables:
+        return  # create_all already handled it
+
+
 def get_db():
     db = None
     for attempt in range(3):
@@ -108,4 +116,5 @@ def init_db():
     models.Base.metadata.create_all(bind=engine)
     _ensure_locations_schema()
     _ensure_share_links_schema()
+    _ensure_fertilizings_schema()
     logger.debug("Database tables ensured.")

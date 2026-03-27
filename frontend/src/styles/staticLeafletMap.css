@@ -3,7 +3,7 @@
     height: 100%;
     min-height: 180px;
     border-radius: inherit;
-    background: #1e1e1e;
+    background: var(--background-color);
 }
 
 .static-leaflet-map .leaflet-control-container {

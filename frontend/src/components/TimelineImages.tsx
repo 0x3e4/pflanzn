@@ -298,7 +298,6 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
                                     key={`preload-${image.id}`}
                                     src={`/api/uploads/${image.image_path}?size=thumb`}
                                     alt=""
-                                    loading="lazy"
                                     onLoad={() => handleImageLoad(image.id)}
                                     onError={() => handleImageError(image.id)}
                                     style={{ width: "1px", height: "1px" }}

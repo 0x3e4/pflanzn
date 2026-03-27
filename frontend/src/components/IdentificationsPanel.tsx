@@ -337,7 +337,7 @@ export default function IdentificationsPanel() {
                                             alt={item.scientific_name}
                                             className="identification-image"
                                             loading="lazy"
-                                            style={{ display: imageLoaded ? "block" : "none" }}
+                                            style={{ visibility: imageLoaded ? "visible" : "hidden", opacity: imageLoaded ? 1 : 0 }}
                                             onLoad={() => handleImageLoad(item.id)}
                                             onError={() => handleImageError(item.id)}
                                         />

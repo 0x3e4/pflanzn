@@ -21,6 +21,7 @@ class User(Base):
     auth_type = Column(String(10), default="local", nullable=False)
 
     waterings_created = relationship("PlantWatering", back_populates="created_by")
+    fertilizings_created = relationship("PlantFertilizing", back_populates="created_by")
     images_uploaded = relationship("PlantImage", back_populates="uploaded_by")
     care_advice_created = relationship("PlantCareAdvice", back_populates="created_by")
     notes_created = relationship("PlantNote", back_populates="created_by")
@@ -37,6 +38,7 @@ class Plant(Base):
     tags = relationship("Tag", secondary=plant_tag_association, back_populates="plants")
     images = relationship("PlantImage", back_populates="plant", cascade="all, delete-orphan")
     waterings = relationship("PlantWatering", back_populates="plant", cascade="all, delete-orphan")
+    fertilizings = relationship("PlantFertilizing", back_populates="plant", cascade="all, delete-orphan")
     care_advice = relationship("PlantCareAdvice", back_populates="plant", cascade="all, delete-orphan")
     notes = relationship("PlantNote", back_populates="plant", cascade="all, delete-orphan")
 
@@ -60,6 +62,21 @@ class PlantWatering(Base):
 
     __table_args__ = (
         Index("idx_plant_waterings_plant_id", "plant_id"),
+    )
+
+class PlantFertilizing(Base):
+    __tablename__ = "plant_fertilizings"
+    id = Column(Integer, primary_key=True, index=True)
+    plant_id = Column(Integer, ForeignKey("plants.id"), nullable=False)
+    fertilized_at = Column(DateTime, nullable=False)
+
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+
+    plant = relationship("Plant", back_populates="fertilizings")
+    created_by = relationship("User", back_populates="fertilizings_created")
+
+    __table_args__ = (
+        Index("idx_plant_fertilizings_plant_id", "plant_id"),
     )
 
 class PlantImage(Base):

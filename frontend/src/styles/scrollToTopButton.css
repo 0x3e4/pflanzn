@@ -1,7 +1,7 @@
 .scroll-to-top-btn {
     position: fixed;
     right: 20px;
-    background-color: #939393;
+    background-color: var(--quinary-color);
     color: white;
     border: none;
     width: 40px;

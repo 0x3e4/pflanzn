@@ -20,12 +20,12 @@ Pflanzn is a self-hostable **plant management app** for tracking your collection
 
 **Core Features:**
 - Catalog plants with photos, species info, and care notes
-- Track watering schedules with calendar view
+- Track watering and fertilizing schedules with calendar view
 - Identify species via PlantNet API
 - AI-powered care advice (supports OpenAI, Claude, Mistral, HuggingFace, Ollama)
 - Organize plants by location with GPS coordinates
 - Share your collection via token-based links
-- Dark and light theme
+- Dark and light theme with full theming support
 
 No telemetry. No tracking. No ads.
 

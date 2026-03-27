@@ -63,7 +63,7 @@
 
 .react-calendar__tile.watered-day {
     background-color: var(--octal-color);
-    color: var(--text-color);
+    color: white;
     font-weight: bold;
     border-radius: 8px;
 }
@@ -79,7 +79,7 @@
 
 .react-calendar__tile.image-day {
     background-color: var(--quinary-color);
-    color: var(--text-color);
+    color: white;
     font-weight: bold;
     border-radius: 8px;
 }
@@ -95,7 +95,7 @@
 
 .react-calendar__tile.advice-day {
     background-color: var(--decimal-color);
-    color: var(--text-color);
+    color: white;
     font-weight: bold;
     border-radius: 8px;
 }
@@ -109,79 +109,38 @@
     background-color: var(--undecimal-color);
 }
 
-.both-day {
-    background: linear-gradient(135deg, var(--octal-color) 50%, var(--quinary-color) 50%);
-    border-radius: 50%;
+/* Multi-event day overlay */
+.react-calendar__tile.multi-day {
+    position: relative;
+    font-weight: bold;
+    color: white;
+}
+
+.multi-day-indicator {
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+    pointer-events: none;
+}
+
+/* Fertilized days */
+.react-calendar__tile.fertilized-day {
+    background-color: var(--duodecimal-color);
     color: white;
     font-weight: bold;
     border-radius: 8px;
 }
 
-.react-calendar__tile.both-day:hover {
-    background: linear-gradient(135deg, var(--nonal-color) 50%, var(--senary-color) 50%);
-}
-
-.react-calendar__tile.both-day:enabled:hover,
-.react-calendar__tile.both-day:enabled:focus {
-    background: linear-gradient(135deg, var(--nonal-color) 50%, var(--senary-color) 50%);
-}
-
-.triple-day {
-    background: linear-gradient(135deg, var(--octal-color) 50%, var(--quinary-color) 50%, var(--decimal-color) 50%);
-    border-radius: 50%;
-    color: white;
-    font-weight: bold;
-    border-radius: 8px;
-}
-
-.react-calendar__tile.triple-day:hover {
-    background: linear-gradient(135deg, var(--nonal-color) 50%, var(--senary-color) 50%, var(--undecimal-color) 50%);
-}
-
-.react-calendar__tile.triple-day:enabled:hover,
-.react-calendar__tile.triple-day:enabled:focus {
-    background: linear-gradient(135deg, var(--nonal-color) 50%, var(--senary-color) 50%, var(--undecimal-color) 50%);
-}
-
-.quadruple-day {
-    background: linear-gradient(
-        135deg,
-        var(--octal-color) 50%,
-        var(--quinary-color) 50%,
-        var(--decimal-color) 50%,
-        var(--primary-color) 50%
-    );
-    border-radius: 50%;
-    color: white;
-    font-weight: bold;
-    border-radius: 8px;
-}
-
-.react-calendar__tile.quadruple-day:hover {
-    background: linear-gradient(
-        135deg,
-        var(--nonal-color) 50%,
-        var(--senary-color) 50%,
-        var(--undecimal-color) 50%,
-        var(--secondary-color) 50%
-    );
-}
-
-.react-calendar__tile.quadruple-day:enabled:hover,
-.react-calendar__tile.quadruple-day:enabled:focus {
-    background: linear-gradient(
-        135deg,
-        var(--nonal-color) 50%,
-        var(--senary-color) 50%,
-        var(--undecimal-color) 50%,
-        var(--secondary-color) 50%
-    );
+.react-calendar__tile.fertilized-day:hover,
+.react-calendar__tile.fertilized-day:enabled:hover,
+.react-calendar__tile.fertilized-day:enabled:focus {
+    background-color: var(--tridecimal-color);
 }
 
 /* Notes days */
 .react-calendar__tile.note-day {
     background-color: var(--primary-color);
-    color: var(--text-color);
+    color: white;
     font-weight: bold;
     border-radius: 8px;
 }
@@ -190,7 +149,7 @@
 .react-calendar__tile.note-day:enabled:hover,
 .react-calendar__tile.note-day:enabled:focus {
     background-color: var(--secondary-color);
-    color: var(--text-color);
+    color: white;
 }
 
 .react-calendar__tile.season-day {

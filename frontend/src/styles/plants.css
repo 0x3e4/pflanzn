@@ -80,7 +80,7 @@
 }
 
 .add-plant-modal-content .close:hover {
-    color: #aaa;
+    color: var(--muted-text-color);
 }
 
 /* Modal Input Fields */
@@ -88,10 +88,10 @@
     width: 100%;
     padding: 10px;
     margin: 10px 0;
-    border: 1px solid #555;
+    border: 1px solid var(--input-border);
     border-radius: 6px;
     font-size: 16px;
-    background: #222;
+    background: var(--input-background);
     color: var(--text-color);
 }
 
@@ -146,7 +146,7 @@
 }
 
 .plant-card:hover {
-    box-shadow: 0px 12px 20px rgba(0, 0, 0, 0.7);
+    box-shadow: 0px 12px 20px rgba(0, 0, 0, 0.15);
 }
 
 /* Plant image styling */
@@ -154,7 +154,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 .plant-image-container {
@@ -178,7 +178,7 @@
 
 .plant-card p {
     font-size: 14px;
-    color: #ccc;
+    color: var(--muted-text-color);
     margin: 3px 0;
 }
 
@@ -226,17 +226,17 @@
 }
 
 .plant-buttons .archive-plant-btn {
-    background-color: var(--text-color);
-    color: var(--quaternary-color);
-    border: 1px solid var(--quaternary-color);
+    background-color: var(--secondary-background-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
     border-radius: 0;
     z-index: 100;
 }
 
 .plant-buttons .archive-plant-btn:hover {
-    background-color: var(--septimal-color);
-    color: var(--quaternary-color);
-    border: 1px solid var(--tertiary-color);
+    background-color: var(--card-background);
+    color: var(--text-color);
+    border: 1px solid var(--text-color);
 }
 
 /* Hide the file input text */

@@ -10,28 +10,41 @@ import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCamera, faDroplet, faSeedling, faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
+import {
+    faCamera,
+    faDroplet,
+    faFlask,
+    faImage,
+    faMagnifyingGlass,
+    faSeedling,
+    faWandMagicSparkles,
+} from "@fortawesome/free-solid-svg-icons";
 
 type HomeOverview = {
     total: number;
     active: number;
+    identified: number;
     species: number;
     totalWaterings: number;
+    totalFertilizings: number;
+    totalPhotos: number;
 };
 
 export default function Home() {
     const [plants, setPlants] = useState<Plant[]>([]);
     const [loadingPlants, setLoadingPlants] = useState(true);
     const [speciesCounts, setSpeciesCounts] = useState<Record<string, number>>({});
-    const [wordPositions, setWordPositions] = useState<{ species: string }[]>([]);
     const [allImagesLoaded, setAllImagesLoaded] = useState(false);
     const [loadedImagesCount, setLoadedImagesCount] = useState(0);
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
     const [overview, setOverview] = useState<HomeOverview>({
         total: 0,
         active: 0,
+        identified: 0,
         species: 0,
         totalWaterings: 0,
+        totalFertilizings: 0,
+        totalPhotos: 0,
     });
 
     useEffect(() => {
@@ -81,18 +94,28 @@ export default function Home() {
             );
             setSpeciesCounts(speciesCountMap);
 
+            const identifiedPlants = nonArchivedPlants.filter(
+                (plant) => plant.species && plant.species !== "Unknown",
+            );
+
             setOverview({
                 total: data.length,
                 active: nonArchivedPlants.length,
+                identified: identifiedPlants.length,
                 species: Object.keys(speciesCountMap).length,
                 totalWaterings: data.reduce(
                     (sum, plant) => sum + (Array.isArray(plant.waterings) ? plant.waterings.length : 0),
                     0,
                 ),
+                totalFertilizings: data.reduce(
+                    (sum, plant) => sum + (Array.isArray(plant.fertilizings) ? plant.fertilizings.length : 0),
+                    0,
+                ),
+                totalPhotos: data.reduce(
+                    (sum, plant) => sum + (Array.isArray(plant.images) ? plant.images.length : 0),
+                    0,
+                ),
             });
-
-            const speciesList = Object.keys(speciesCountMap);
-            setWordPositions(generateWordPositions(speciesList));
 
             // Only show 5 plants with images
             const plantsWithImages = nonArchivedPlants.filter((plant) => plant.images?.length);
@@ -107,24 +130,10 @@ export default function Home() {
 
     const shuffleArray = <T,>(array: T[]): T[] => [...array].sort(() => Math.random() - 0.5);
 
-    const generateWordPositions = (speciesList: string[]) => {
-        return shuffleArray(speciesList)
-            .slice(0, 10)
-            .map((species) => ({ species }));
-    };
-
+    const sortedSpecies = Object.entries(speciesCounts)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 12);
     const maxCount = Math.max(1, ...Object.values(speciesCounts));
-
-    const getSpeciesColor = (species: string) => {
-        const intensity = (speciesCounts[species] || 0) / maxCount;
-        const greyScale = Math.floor(100 + intensity * 155);
-        return `rgb(${greyScale}, ${greyScale}, ${greyScale})`;
-    };
-
-    const getFontSize = (species: string) => {
-        const intensity = (speciesCounts[species] || 0) / maxCount;
-        return `${Math.max(1.0, 0.3 + intensity)}rem`;
-    };
 
     const handleImageLoad = () => {
         setLoadedImagesCount((count) => count + 1);
@@ -206,20 +215,36 @@ export default function Home() {
             <section className="home-stats-grid">
                 <article className="home-stat-card">
                     <FontAwesomeIcon icon={faSeedling} className="home-stat-icon" />
-                    <span className="home-stat-value">{loadingPlants ? <Skeleton width={56} /> : overview.total}</span>
-                    <span className="home-stat-label">Total Plants</span>
-                </article>
-                <article className="home-stat-card">
-                    <FontAwesomeIcon icon={faSeedling} className="home-stat-icon" />
                     <span className="home-stat-value">{loadingPlants ? <Skeleton width={56} /> : overview.active}</span>
                     <span className="home-stat-label">Active Plants</span>
+                </article>
+                <article className="home-stat-card">
+                    <FontAwesomeIcon icon={faMagnifyingGlass} className="home-stat-icon" />
+                    <span className="home-stat-value">
+                        {loadingPlants ? <Skeleton width={56} /> : overview.identified}
+                    </span>
+                    <span className="home-stat-label">Identified Plants</span>
                 </article>
                 <article className="home-stat-card">
                     <FontAwesomeIcon icon={faDroplet} className="home-stat-icon" />
                     <span className="home-stat-value">
                         {loadingPlants ? <Skeleton width={72} /> : overview.totalWaterings}
                     </span>
-                    <span className="home-stat-label">Total Waterings Logged</span>
+                    <span className="home-stat-label">Total Waterings</span>
+                </article>
+                <article className="home-stat-card">
+                    <FontAwesomeIcon icon={faFlask} className="home-stat-icon" />
+                    <span className="home-stat-value">
+                        {loadingPlants ? <Skeleton width={56} /> : overview.totalFertilizings}
+                    </span>
+                    <span className="home-stat-label">Total Fertilizings</span>
+                </article>
+                <article className="home-stat-card">
+                    <FontAwesomeIcon icon={faImage} className="home-stat-icon" />
+                    <span className="home-stat-value">
+                        {loadingPlants ? <Skeleton width={56} /> : overview.totalPhotos}
+                    </span>
+                    <span className="home-stat-label">Photos Captured</span>
                 </article>
                 <article className="home-stat-card">
                     <FontAwesomeIcon icon={faWandMagicSparkles} className="home-stat-icon" />
@@ -314,24 +339,28 @@ export default function Home() {
             <section className="species-wordcloud">
                 <div className="home-section-heading">
                     <h2>Species Snapshot</h2>
-                    <span>Most frequent species in your collection</span>
+                    <span>Top species in your collection</span>
                 </div>
-                <div className="wordcloud">
+                <div className="species-bar-list">
                     {loadingPlants ? (
                         [...Array(6)].map((_, index) => (
-                            <Skeleton key={index} height={32} width={100 + index * 10} borderRadius={6} />
+                            <Skeleton key={index} height={36} borderRadius={8} />
                         ))
-                    ) : wordPositions.length > 0 ? (
-                        wordPositions.map(({ species }) => (
-                            <Link
-                                key={species}
-                                to={`/plants?species=${encodeURIComponent(species)}`}
-                                className="wordcloud-item species-link"
-                                style={{ color: getSpeciesColor(species), fontSize: getFontSize(species) }}
-                            >
-                                {species}
-                            </Link>
-                        ))
+                    ) : sortedSpecies.length > 0 ? (
+                        sortedSpecies.map(([species, count]) => {
+                            const pct = (count / maxCount) * 100;
+                            return (
+                                <Link
+                                    key={species}
+                                    to={`/plants?species=${encodeURIComponent(species)}`}
+                                    className="species-bar-row"
+                                >
+                                    <div className="species-bar-fill" style={{ width: `${pct}%` }} />
+                                    <span className="species-bar-name">{species}</span>
+                                    <span className="species-bar-count">{count}</span>
+                                </Link>
+                            );
+                        })
                     ) : (
                         <p className="home-wordcloud-empty">No species data yet.</p>
                     )}

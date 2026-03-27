@@ -20,8 +20,8 @@
     border-radius: 12px;
     max-width: min(640px, calc(100vw - 2rem));
     text-align: left;
-    background: rgba(22, 22, 22, 0.82);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--overlay-background);
+    border: 1px solid var(--card-border);
 }
 
 .loading-gif {

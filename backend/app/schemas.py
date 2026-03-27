@@ -94,6 +94,16 @@ class PlantWateringResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class PlantFertilizingCreate(BaseModel):
+    fertilized_at: Optional[datetime] = None
+
+class PlantFertilizingResponse(BaseModel):
+    id: int
+    fertilized_at: datetime
+
+    class Config:
+        from_attributes = True
+
 class PlantIdentificationCreate(BaseModel):
     scientific_name: str
     common_name: Optional[str] = None
@@ -156,9 +166,11 @@ class PlantResponse(BaseModel):
     description: Optional[str] = None
     images: List[PlantImageResponse] = []
     waterings: List[PlantWateringResponse] = []
+    fertilizings: List["PlantFertilizingResponse"] = []
     care_advice: List[PlantCareAdviceResponse] = []
     notes: List[PlantNoteResponse] = []
     last_watered: Optional[datetime] = None
+    last_fertilized: Optional[datetime] = None
     tags: Optional[List[TagResponse]] = []
     is_archived: Optional[bool] = None
     archive_reason: Optional[str] = None

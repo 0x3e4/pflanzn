@@ -123,6 +123,17 @@ export const deleteWatering = async (plantId: number, wateringId: number) => {
     await apiClient.delete(`${API_BASE}/${plantId}/watering/${wateringId}`);
 };
 
+// Fertilize plant
+export const fertilizePlant = async (plantId: number, data: { fertilized_at?: string }) => {
+    const response = await apiClient.post(`${API_BASE}/${plantId}/fertilizing`, data);
+    return response.data;
+};
+
+// Delete fertilizing
+export const deleteFertilizing = async (plantId: number, fertilizingId: number) => {
+    await apiClient.delete(`${API_BASE}/${plantId}/fertilizing/${fertilizingId}`);
+};
+
 // Assign a tag to a plant
 export const assignTagToPlant = async (plantId: number, tagName: string) => {
     const response = await apiClient.post(`${API_BASE}/${plantId}/assign`, [tagName]);
@@ -230,7 +241,7 @@ export const fetchPlantActivities = async (
         id: string;
         plant_id: number;
         plant_name: string;
-        activity_type: "watering" | "care_advice" | "image_upload" | "note";
+        activity_type: "watering" | "fertilizing" | "care_advice" | "image_upload" | "note";
         activity_data: any;
         timestamp: string;
     }>

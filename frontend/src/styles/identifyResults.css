@@ -36,7 +36,7 @@
 }
 
 .identify-modal .close:hover {
-    color: #aaa;
+    color: var(--muted-text-color);
 }
 
 /* Modal Header */

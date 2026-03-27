@@ -59,7 +59,7 @@
 }
 
 .nav-links a:hover {
-    color: #4caf50;
+    color: var(--primary-color);
 }
 
 .nav-toggle {

@@ -60,7 +60,7 @@ footer {
 
 .footer-column a {
     text-decoration: none;
-    color: var(--septimal-color);
+    color: rgba(255, 255, 255, 0.75);
     font-size: 0.8rem;
     transition: color 0.3s;
 }

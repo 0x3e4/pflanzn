@@ -409,39 +409,6 @@ export default function Plants() {
             }
         });
 
-    // Add mobile-specific optimization
-    useEffect(() => {
-        // For mobile, preload images more aggressively
-        const isMobile = /Android|webOS|iPhone|iPad||Opera Mini/i.test(navigator.userAgent);
-
-        if (isMobile && filteredPlants.length > 0) {
-            // Preload visible images immediately
-            const visiblePlants = filteredPlants.slice(0, 8);
-
-            visiblePlants.forEach((plant) => {
-                if (!loadedImages.has(plant.id)) {
-                    const sortedImages = [...(plant.images || [])].sort(
-                        (a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime(),
-                    );
-                    const latestImage = sortedImages[0];
-
-                    if (latestImage) {
-                        const img = new Image();
-                        img.onload = () => handleImageLoad(plant.id);
-                        img.onerror = () => handleImageError(plant.id);
-                        img.src = `/api/uploads/${latestImage.image_path}?size=thumb`;
-                    } else {
-                        // Preload placeholder
-                        const img = new Image();
-                        img.onload = () => handleImageLoad(plant.id);
-                        img.onerror = () => handleImageError(plant.id);
-                        img.src = "/placeholder-plant.webp";
-                    }
-                }
-            });
-        }
-    }, [filteredPlants, loadedImages]);
-
     useEffect(() => {
         if (modalOpen || plantIdentifyResults || selectedImage || archiveModalOpen) {
             setOverlayOpen(true);
@@ -663,7 +630,7 @@ export default function Plants() {
                                               alt={plant.name}
                                               className="plant-image"
                                               loading="lazy"
-                                              style={{ display: imageLoaded ? "block" : "none" }}
+                                              style={{ visibility: imageLoaded ? "visible" : "hidden", opacity: imageLoaded ? 1 : 0 }}
                                               onLoad={() => handleImageLoad(plant.id)}
                                               onError={() => handleImageError(plant.id)}
                                           />
