@@ -28,7 +28,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.2.0",
     "@fortawesome/free-solid-svg-icons": "^7.2.0",
-    "@fortawesome/react-fontawesome": "~3.2.0",
+    "@fortawesome/react-fontawesome": "^3.2.0",
     "@icons-pack/react-simple-icons": "^13.13.0",
     "@types/react-slick": "^0.23.13",
     "axios": "^1.14.0",
@@ -39,7 +39,7 @@
     "react-dom": "^19.2.4",
     "react-loading-skeleton": "^3.5.0",
     "react-router-dom": "^7.13.2",
-    "react-slick": "^0.31.0",
+    "react-slick": "^0.30.3",
     "react-toastify": "^11.0.5",
     "slick-carousel": "^1.8.1",
     "vite-plugin-pwa": "^1.2.0"

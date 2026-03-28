@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import Slider from "react-slick";
+import SliderModule from "react-slick";
+const Slider = (SliderModule as { default?: typeof SliderModule }).default || SliderModule;
 import { Plant } from "../types/Plant";
 import { fetchPlants } from "../services/PlantService";
 import "../styles/home.css";
