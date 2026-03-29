@@ -94,7 +94,9 @@ router = APIRouter()
 def create_plant(plant_data: PlantCreate, db: Session = Depends(get_db)):
     new_plant = Plant(
         name=plant_data.name,
-        species=plant_data.species if plant_data.species else None
+        species=plant_data.species if plant_data.species else None,
+        is_outdoor=plant_data.is_outdoor or False,
+        reaches_rain=plant_data.reaches_rain or False,
     )
     db.add(new_plant)
     db.commit()

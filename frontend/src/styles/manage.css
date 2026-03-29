@@ -116,7 +116,9 @@
 .statistics-panel,
 .plants-panel,
 .users-panel,
-.locations-panel {
+.locations-panel,
+.weather-panel,
+.map-panel {
     padding: 20px;
     border-radius: 8px;
     color: var(--text-color);
@@ -128,7 +130,9 @@
 .statistics-panel h2,
 .plants-panel h2,
 .users-panel h2,
-.locations-panel h2 {
+.locations-panel h2,
+.weather-panel h2,
+.map-panel h2 {
     margin-top: 0;
     font-size: 1.5rem;
 }
@@ -239,6 +243,7 @@
 .data-table input,
 .data-table select {
     border: none;
+    background: transparent;
     color: var(--text-color);
     font-size: inherit;
     width: 100%;
@@ -246,6 +251,15 @@
     outline: none;
     line-height: 1.4;
     box-sizing: border-box;
+}
+
+.data-table input:focus,
+.data-table input:focus-visible,
+.data-table select:focus,
+.data-table select:focus-visible {
+    outline: none;
+    border: none;
+    box-shadow: none;
 }
 
 /* Ensure action buttons cell has consistent height */
@@ -480,9 +494,19 @@
     padding: 10px 0 10px 5px;
     cursor: text;
     background-color: var(--background-color);
-    border: 1px solid var(--primary-color);
+    border: 1px solid var(--primary-color) !important;
     outline: none;
     border-radius: 4px;
+}
+
+.tags-panel-used-by {
+    font-size: 0.85rem;
+    color: var(--muted-text-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+    max-width: 180px;
 }
 
 /* Loading States */
@@ -578,7 +602,9 @@
     .statistics-panel,
     .users-panel,
     .plants-panel,
-    .locations-panel {
+    .locations-panel,
+    .weather-panel,
+    .map-panel {
         width: 100%;
         padding: 15px 0;
         box-sizing: border-box;

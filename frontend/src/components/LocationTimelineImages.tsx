@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useModalA11y } from "../hooks/useModalA11y";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft, faChevronRight, faCircleXmark, faExpand, faTrash } from "@fortawesome/free-solid-svg-icons";
@@ -26,8 +26,25 @@ export default function LocationTimelineImages({ locationId, images, onChanged }
     const [activeIndex, setActiveIndex] = useState<number>(sortedImages.length > 0 ? sortedImages.length - 1 : 0);
     const [fullSizeModalOpen, setFullSizeModalOpen] = useState(false);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [zoomScale, setZoomScale] = useState(1);
+    const [zoomTranslate, setZoomTranslate] = useState({ x: 0, y: 0 });
+    const isDragging = useRef(false);
+    const dragStart = useRef({ x: 0, y: 0 });
+    const lastTranslate = useRef({ x: 0, y: 0 });
+    const pinchStartDist = useRef<number | null>(null);
+    const pinchStartScale = useRef(1);
+
+    const resetZoom = useCallback(() => {
+        setZoomScale(1);
+        setZoomTranslate({ x: 0, y: 0 });
+        lastTranslate.current = { x: 0, y: 0 };
+    }, []);
+
     const closeDeleteModal = useCallback(() => setDeleteModalOpen(false), []);
-    const closeFullSizeModal = useCallback(() => setFullSizeModalOpen(false), []);
+    const closeFullSizeModal = useCallback(() => {
+        setFullSizeModalOpen(false);
+        resetZoom();
+    }, [resetZoom]);
     const { modalRef: deleteModalRef } = useModalA11y({ isOpen: deleteModalOpen, onClose: closeDeleteModal });
     const { modalRef: fullSizeModalRef } = useModalA11y({ isOpen: fullSizeModalOpen, onClose: closeFullSizeModal });
 
@@ -45,6 +62,89 @@ export default function LocationTimelineImages({ locationId, images, onChanged }
         setOverlayOpen(fullSizeModalOpen || deleteModalOpen);
         return () => setOverlayOpen(false);
     }, [fullSizeModalOpen, deleteModalOpen]);
+
+    const handleZoomWheel = useCallback((e: React.WheelEvent) => {
+        e.stopPropagation();
+        const delta = e.deltaY > 0 ? -0.2 : 0.2;
+        setZoomScale((prev) => {
+            const next = Math.min(5, Math.max(1, prev + delta));
+            if (next === 1) {
+                setZoomTranslate({ x: 0, y: 0 });
+                lastTranslate.current = { x: 0, y: 0 };
+            }
+            return next;
+        });
+    }, []);
+
+    const handleZoomPointerDown = useCallback(
+        (e: React.PointerEvent) => {
+            if (zoomScale <= 1) return;
+            e.preventDefault();
+            isDragging.current = true;
+            dragStart.current = { x: e.clientX, y: e.clientY };
+            lastTranslate.current = { ...zoomTranslate };
+        },
+        [zoomScale, zoomTranslate],
+    );
+
+    const handleZoomPointerMove = useCallback(
+        (e: React.PointerEvent) => {
+            if (!isDragging.current) return;
+            const dx = e.clientX - dragStart.current.x;
+            const dy = e.clientY - dragStart.current.y;
+            setZoomTranslate({
+                x: lastTranslate.current.x + dx / zoomScale,
+                y: lastTranslate.current.y + dy / zoomScale,
+            });
+        },
+        [zoomScale],
+    );
+
+    const handleZoomPointerUp = useCallback(() => {
+        isDragging.current = false;
+    }, []);
+
+    const getTouchDistance = (touches: React.TouchList) => {
+        const dx = touches[0].clientX - touches[1].clientX;
+        const dy = touches[0].clientY - touches[1].clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    };
+
+    const handleZoomTouchStart = useCallback(
+        (e: React.TouchEvent) => {
+            if (e.touches.length === 2) {
+                pinchStartDist.current = getTouchDistance(e.touches);
+                pinchStartScale.current = zoomScale;
+            }
+        },
+        [zoomScale],
+    );
+
+    const handleZoomTouchMove = useCallback((e: React.TouchEvent) => {
+        if (e.touches.length === 2 && pinchStartDist.current !== null) {
+            e.preventDefault();
+            const dist = getTouchDistance(e.touches);
+            const ratio = dist / pinchStartDist.current;
+            const next = Math.min(5, Math.max(1, pinchStartScale.current * ratio));
+            setZoomScale(next);
+            if (next === 1) {
+                setZoomTranslate({ x: 0, y: 0 });
+                lastTranslate.current = { x: 0, y: 0 };
+            }
+        }
+    }, []);
+
+    const handleZoomTouchEnd = useCallback(() => {
+        pinchStartDist.current = null;
+    }, []);
+
+    const handleFullsizeOverlayClick = useCallback(
+        (e: React.MouseEvent) => {
+            if (zoomScale > 1) return;
+            if (e.target === e.currentTarget) closeFullSizeModal();
+        },
+        [zoomScale, closeFullSizeModal],
+    );
 
     if (sortedImages.length === 0) {
         return null;
@@ -102,11 +202,35 @@ export default function LocationTimelineImages({ locationId, images, onChanged }
             )}
 
             {fullSizeModalOpen && (
-                <div className="location-fullsize-modal-overlay" ref={fullSizeModalRef} role="dialog" aria-modal="true" aria-label="Full size image" onClick={closeFullSizeModal}>
+                <div
+                    className="location-fullsize-modal-overlay"
+                    ref={fullSizeModalRef}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Full size image"
+                    onClick={handleFullsizeOverlayClick}
+                >
+                    <button className="fullsize-close-btn" onClick={closeFullSizeModal}>
+                        <FontAwesomeIcon icon={faCircleXmark} />
+                    </button>
                     <img
-                        className="location-fullsize-image"
+                        className={`location-fullsize-image${zoomScale > 1 ? " zoomed" : ""}`}
                         src={`/api/uploads/${activeImage.image_path}?size=original`}
                         alt="Location full size"
+                        draggable={false}
+                        style={{
+                            transform: `scale(${zoomScale}) translate(${zoomTranslate.x}px, ${zoomTranslate.y}px)`,
+                            cursor: zoomScale > 1 ? "grab" : "default",
+                        }}
+                        onWheel={handleZoomWheel}
+                        onPointerDown={handleZoomPointerDown}
+                        onPointerMove={handleZoomPointerMove}
+                        onPointerUp={handleZoomPointerUp}
+                        onPointerLeave={handleZoomPointerUp}
+                        onTouchStart={handleZoomTouchStart}
+                        onTouchMove={handleZoomTouchMove}
+                        onTouchEnd={handleZoomTouchEnd}
+                        onDoubleClick={resetZoom}
                     />
                 </div>
             )}

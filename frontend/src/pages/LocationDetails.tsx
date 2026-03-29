@@ -6,6 +6,7 @@ import {
     faCamera,
     faCircleXmark,
     faFingerprint,
+    faLocationCrosshairs,
     faPlus,
     faSeedling,
     faStickyNote,
@@ -116,6 +117,7 @@ export default function LocationDetails() {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [generatingDescription, setGeneratingDescription] = useState(false);
     const [actionLoading, setActionLoading] = useState<ActionLoadingState>(null);
+    const [gpsLoading, setGpsLoading] = useState(false);
 
     const sortedImages = useMemo(() => {
         if (!location?.images.length) {
@@ -442,6 +444,29 @@ export default function LocationDetails() {
         if (location[field] === null || Math.abs(location[field] - numeric) > Number.EPSILON) {
             await patchLocation({ [field]: numeric });
         }
+    };
+
+    const fillFromGps = () => {
+        if (!location) return;
+        if (!navigator.geolocation) {
+            toast.error("Geolocation is not supported by your browser.");
+            return;
+        }
+        setGpsLoading(true);
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                await patchLocation({
+                    latitude: Number(pos.coords.latitude.toFixed(6)),
+                    longitude: Number(pos.coords.longitude.toFixed(6)),
+                });
+                setGpsLoading(false);
+                toast.success("Location updated from GPS.");
+            },
+            (err) => {
+                toast.error("Could not get location: " + err.message);
+                setGpsLoading(false);
+            },
+        );
     };
 
     const handleDescriptionSave = async (value: string) => {
@@ -902,6 +927,17 @@ export default function LocationDetails() {
                                 </span>
                             )}
                         </span>
+
+                        {isLoggedIn && (
+                            <button
+                                className="gps-btn gps-btn-inline"
+                                onClick={fillFromGps}
+                                disabled={gpsLoading}
+                                title="Use my location"
+                            >
+                                <FontAwesomeIcon icon={faLocationCrosshairs} spin={gpsLoading} /> Use my location
+                            </button>
+                        )}
                     </div>
 
                     <LocationTimelineImages

@@ -9,6 +9,19 @@ export const fetchTags = async (): Promise<Tag[]> => {
     return response.data.tags;
 };
 
+export interface TagDetailed {
+    id: number;
+    name: string;
+    plant_count: number;
+    plant_names: string[];
+}
+
+// Fetch all tags with usage details
+export const fetchTagsDetailed = async (): Promise<TagDetailed[]> => {
+    const response = await apiClient.get(`${API_BASE}/detailed`);
+    return response.data;
+};
+
 // Create tag
 export const createTag = async (name: string) => {
     const body = { name };

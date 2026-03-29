@@ -1,0 +1,27 @@
+.map-panel {
+    text-align: left;
+}
+
+.map-panel h2 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+.map-panel-container {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.map-panel-map {
+    width: 100%;
+    height: 70vh;
+    min-height: 400px;
+}
+
+.map-panel-empty {
+    color: var(--muted-text-color);
+    padding: 2rem;
+    text-align: center;
+}

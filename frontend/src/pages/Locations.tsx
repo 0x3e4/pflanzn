@@ -1,7 +1,14 @@
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCompress, faExpand, faFingerprint, faPlus, faUpload } from "@fortawesome/free-solid-svg-icons";
+import {
+    faCompress,
+    faExpand,
+    faFingerprint,
+    faLocationCrosshairs,
+    faPlus,
+    faUpload,
+} from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import {
     createLocation,
@@ -14,6 +21,7 @@ import IdentifyResults from "../components/IdentifyResults";
 import StaticLeafletMap from "../components/StaticLeafletMap";
 import { Location, SpotType } from "../types/Location";
 import { useAuth } from "../context/AuthContext";
+import "../styles/identifyResults.css";
 import "../styles/locations.css";
 import { getUiPreferences } from "../config/uiPreferences";
 
@@ -46,6 +54,7 @@ export default function Locations() {
         results: LocationIdentifyResult[];
     } | null>(null);
     const [identifyingLocationId, setIdentifyingLocationId] = useState<number | null>(null);
+    const [gpsLoading, setGpsLoading] = useState(false);
     const [newLocation, setNewLocation] = useState({
         name: "",
         item_name: "",
@@ -53,6 +62,29 @@ export default function Locations() {
         latitude: "",
         longitude: "",
     });
+
+    const fillFromGps = () => {
+        if (!navigator.geolocation) {
+            toast.error("Geolocation is not supported by your browser.");
+            return;
+        }
+        setGpsLoading(true);
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                setNewLocation((prev) => ({
+                    ...prev,
+                    latitude: pos.coords.latitude.toFixed(6),
+                    longitude: pos.coords.longitude.toFixed(6),
+                }));
+                setGpsLoading(false);
+                toast.success("Location detected.");
+            },
+            (err) => {
+                toast.error("Could not get location: " + err.message);
+                setGpsLoading(false);
+            },
+        );
+    };
 
     const filteredLocations = useMemo(() => {
         const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -375,36 +407,72 @@ export default function Locations() {
                             </button>
                         )}
                         {modalIdentifyResults && (
-                            <ul className="location-identify-results-list">
+                            <ul className="identify-results-list">
                                 {[...modalIdentifyResults]
                                     .sort((a, b) => parseFloat(b.score) - parseFloat(a.score))
                                     .map((result, index) => (
                                         <li
                                             key={`${result.species}-${index}`}
-                                            className="location-identify-item"
+                                            className="species-item"
                                             onClick={() =>
                                                 handleSelectIdentifiedItem(result.species, result.commonName)
                                             }
                                         >
-                                            <strong>{result.species}</strong> | {result.commonName} (
-                                            {parseFloat(result.score).toFixed(2)}%)
+                                            <div className="species-header">
+                                                <div className="species-name">
+                                                    <strong>{result.species}</strong>
+                                                    <br />
+                                                    <span>{result.commonName || "No common name"}</span>
+                                                </div>
+                                                <div className="species-percentage">
+                                                    <span>{parseFloat(result.score).toFixed(2)}%</span>
+                                                </div>
+                                            </div>
+                                            {Array.isArray(result.images) && result.images.length > 0 && (
+                                                <div className="species-images">
+                                                    {result.images.map((imageUrl, i) => (
+                                                        <div key={i} className="image-container">
+                                                            <img
+                                                                src={imageUrl}
+                                                                alt={`Related ${result.species}`}
+                                                                className="species-image"
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </li>
                                     ))}
                             </ul>
                         )}
-                        <div className="location-coord-grid">
-                            <input
-                                type="text"
-                                placeholder="Latitude (optional)"
-                                value={newLocation.latitude}
-                                onChange={(e) => setNewLocation((prev) => ({ ...prev, latitude: e.target.value }))}
-                            />
-                            <input
-                                type="text"
-                                placeholder="Longitude (optional)"
-                                value={newLocation.longitude}
-                                onChange={(e) => setNewLocation((prev) => ({ ...prev, longitude: e.target.value }))}
-                            />
+                        <div className="location-coord-row">
+                            <div className="location-coord-grid">
+                                <input
+                                    type="text"
+                                    placeholder="Latitude (optional)"
+                                    value={newLocation.latitude}
+                                    onChange={(e) =>
+                                        setNewLocation((prev) => ({ ...prev, latitude: e.target.value }))
+                                    }
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Longitude (optional)"
+                                    value={newLocation.longitude}
+                                    onChange={(e) =>
+                                        setNewLocation((prev) => ({ ...prev, longitude: e.target.value }))
+                                    }
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                className="gps-btn"
+                                onClick={fillFromGps}
+                                disabled={gpsLoading}
+                                title="Use my location"
+                            >
+                                <FontAwesomeIcon icon={faLocationCrosshairs} spin={gpsLoading} />
+                            </button>
                         </div>
                         <button onClick={handleCreateLocation} disabled={saving}>
                             {saving ? "Saving..." : "Create"}
@@ -421,6 +489,15 @@ export default function Locations() {
                     >
                         #all
                     </span>
+                    {Object.entries(spotTypeLabels).map(([value, label]) => (
+                        <span
+                            key={value}
+                            className={`hashtag ${selectedSpotType === value ? "active" : ""}`}
+                            onClick={() => setSelectedSpotType(value as SpotType)}
+                        >
+                            #{label.toLowerCase().replace(/\s+/g, "_")}
+                        </span>
+                    ))}
                 </div>
 
                 <div className="location-search-container">

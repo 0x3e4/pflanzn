@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     CLAUDE_MODEL_NAME: str = os.getenv("CLAUDE_MODEL_NAME", "claude-opus-4-20250514")
     OLLAMA_URL: str = os.getenv("OLLAMA_URL")
     OLLAMA_MODEL_NAME: str = os.getenv("OLLAMA_MODEL_NAME")
+    OPENWEATHERMAP_API_KEY: str = os.getenv("OPENWEATHERMAP_API_KEY", "")
+    WEATHER_CHECK_INTERVAL_HOURS: int = int(os.getenv("WEATHER_CHECK_INTERVAL_HOURS", "1"))
+    WEATHER_RAINFALL_THRESHOLD_MM: float = float(os.getenv("WEATHER_RAINFALL_THRESHOLD_MM", "1.0"))
+    WEATHER_ENABLED: bool = os.getenv("WEATHER_ENABLED", "true").strip().lower() in ("1", "true", "yes", "on")
     VITE_ENABLE_LOCATIONS: bool = (
         os.getenv("VITE_ENABLE_LOCATIONS")
         or os.getenv("VITE_ENABLE_HERBALIST_LOCATIONS", "false")

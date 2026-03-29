@@ -1,7 +1,9 @@
 
 from datetime import datetime
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -9,6 +11,35 @@ from app.models import Plant, PlantWatering, Tag, plant_tag_association
 from app.schemas import PlantWateringCreate, TagCreate, TagListResponse, TagResponse
 
 router = APIRouter()
+
+
+@router.get("/detailed")
+def get_tags_detailed(db: Session = Depends(get_db)):
+    """Get all tags with plant usage counts."""
+    tags = db.query(Tag).all()
+
+    result = []
+    for tag in tags:
+        plant_count = (
+            db.query(func.count(plant_tag_association.c.plant_id))
+            .filter(plant_tag_association.c.tag_id == tag.id)
+            .scalar()
+        )
+        plant_names = (
+            db.query(Plant.name)
+            .join(plant_tag_association, Plant.id == plant_tag_association.c.plant_id)
+            .filter(plant_tag_association.c.tag_id == tag.id)
+            .all()
+        )
+        result.append({
+            "id": tag.id,
+            "name": tag.name,
+            "plant_count": plant_count,
+            "plant_names": [p[0] for p in plant_names],
+        })
+
+    return result
+
 
 # Create a new tag
 @router.post("/", response_model=TagResponse)

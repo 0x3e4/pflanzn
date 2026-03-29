@@ -59,12 +59,18 @@ class PlantCreate(BaseModel):
     species: Optional[str] = None
     description: Optional[str] = None
     tags: Optional[List[str]] = []
+    is_outdoor: Optional[bool] = False
+    reaches_rain: Optional[bool] = False
+    weather_config_id: Optional[int] = None
 
 class PlantUpdate(BaseModel):
     name: Optional[str] = None
     species: Optional[str] = None
     description: Optional[str] = None
     tags: Optional[List[str]] = []
+    is_outdoor: Optional[bool] = None
+    reaches_rain: Optional[bool] = None
+    weather_config_id: Optional[int] = None
 
 class PlantImageResponse(BaseModel):
     id: int
@@ -174,6 +180,9 @@ class PlantResponse(BaseModel):
     tags: Optional[List[TagResponse]] = []
     is_archived: Optional[bool] = None
     archive_reason: Optional[str] = None
+    is_outdoor: Optional[bool] = False
+    reaches_rain: Optional[bool] = False
+    weather_config_id: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -233,6 +242,41 @@ class ShareLinkResponse(BaseModel):
     alias: str
     expires_at: Optional[datetime] = None
     created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class WeatherConfigCreate(BaseModel):
+    city_name: Optional[str] = None
+    latitude: float
+    longitude: float
+    enabled: Optional[bool] = True
+
+class WeatherConfigUpdate(BaseModel):
+    city_name: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    enabled: Optional[bool] = None
+
+class WeatherConfigResponse(BaseModel):
+    id: int
+    city_name: Optional[str] = None
+    latitude: float
+    longitude: float
+    enabled: bool
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class WeatherLogResponse(BaseModel):
+    id: int
+    checked_at: datetime
+    weather_condition: Optional[str] = None
+    rainfall_mm: float
+    temperature: Optional[float] = None
+    auto_watered_count: int
 
     class Config:
         from_attributes = True

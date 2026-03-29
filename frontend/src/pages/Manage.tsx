@@ -8,7 +8,10 @@ import UsersPanel from "../components/UsersPanel";
 import PlantsPanel from "../components/PlantsPanel";
 import IdentificationsPanel from "../components/IdentificationsPanel";
 import LocationsPanel from "../components/LocationsPanel";
+import MapPanel from "../components/MapPanel";
 import SharePanel from "../components/SharePanel";
+import TagsPanel from "../components/TagsPanel";
+import WeatherPanel from "../components/WeatherPanel";
 import "../styles/manage.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPenToSquare, faUnlock } from "@fortawesome/free-solid-svg-icons";
@@ -25,7 +28,10 @@ type ManageSection =
     | "users"
     | "plants"
     | "locations"
+    | "map"
+    | "tags"
     | "customize"
+    | "weather"
     | "share";
 
 const Manage: React.FC = () => {
@@ -220,6 +226,20 @@ const Manage: React.FC = () => {
                             </li>
 
                             <li
+                                className={`sidebar-subsection ${activeSection === "tags" ? "active" : ""}`}
+                                onClick={() => setActiveSection("tags")}
+                            >
+                                Tags
+                            </li>
+
+                            <li
+                                className={`sidebar-subsection ${activeSection === "map" ? "active" : ""}`}
+                                onClick={() => setActiveSection("map")}
+                            >
+                                Map
+                            </li>
+
+                            <li
                                 className={`sidebar-subsection ${activeSection === "identification" ? "active" : ""}`}
                                 onClick={() => setActiveSection("identification")}
                             >
@@ -234,6 +254,12 @@ const Manage: React.FC = () => {
                         onClick={() => setActiveSection("customize")}
                     >
                         Customize
+                    </li>
+                    <li
+                        className={`sidebar-subsection ${activeSection === "weather" ? "active" : ""}`}
+                        onClick={() => setActiveSection("weather")}
+                    >
+                        Weather
                     </li>
                     {showShare && user?.role === "admin" && (
                         <li
@@ -332,7 +358,13 @@ const Manage: React.FC = () => {
 
                 {activeSection === "locations" && (authMode === "no" || user?.role === "admin") && <LocationsPanel />}
 
+                {activeSection === "map" && (authMode === "no" || user?.role === "admin") && <MapPanel />}
+
+                {activeSection === "tags" && (authMode === "no" || user?.role === "admin") && <TagsPanel />}
+
                 {activeSection === "share" && showShare && user?.role === "admin" && <SharePanel />}
+
+                {activeSection === "weather" && <WeatherPanel />}
 
                 {activeSection === "customize" && (
                     <div className="profile-info manage-customize-panel">

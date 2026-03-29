@@ -152,6 +152,36 @@
     max-width: 90%;
     max-height: 90%;
     border-radius: 8px;
+    transition: transform 0.1s ease-out;
+    touch-action: none;
+    user-select: none;
+}
+
+.plant-fullsize-image.zoomed {
+    transition: none;
+}
+
+.fullsize-close-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 1001;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.fullsize-close-btn:hover {
+    background: rgba(0, 0, 0, 0.8);
 }
 
 .plant-carousel-nav-btn {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { deletePlantImage } from "../services/PlantService";
 import { PlantImage } from "../types/Plant";
 import { toast } from "react-toastify";
@@ -74,8 +74,25 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
     const openDeleteModal = () => setDeleteModalOpen(true);
     const closeDeleteModal = useCallback(() => setDeleteModalOpen(false), []);
 
+    const [zoomScale, setZoomScale] = useState(1);
+    const [zoomTranslate, setZoomTranslate] = useState({ x: 0, y: 0 });
+    const isDragging = useRef(false);
+    const dragStart = useRef({ x: 0, y: 0 });
+    const lastTranslate = useRef({ x: 0, y: 0 });
+    const pinchStartDist = useRef<number | null>(null);
+    const pinchStartScale = useRef(1);
+
+    const resetZoom = useCallback(() => {
+        setZoomScale(1);
+        setZoomTranslate({ x: 0, y: 0 });
+        lastTranslate.current = { x: 0, y: 0 };
+    }, []);
+
     const openFullSizeModal = () => setFullSizeModalOpen(true);
-    const closeFullSizeModal = useCallback(() => setFullSizeModalOpen(false), []);
+    const closeFullSizeModal = useCallback(() => {
+        setFullSizeModalOpen(false);
+        resetZoom();
+    }, [resetZoom]);
 
     const { modalRef: deleteModalRef } = useModalA11y({ isOpen: deleteModalOpen, onClose: closeDeleteModal });
     const { modalRef: fullSizeModalRef } = useModalA11y({ isOpen: fullSizeModalOpen, onClose: closeFullSizeModal });
@@ -124,35 +141,17 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
     const goToPrevious = () => setActiveIndex((prev) => (prev > 0 ? prev - 1 : sortedImages.length - 1));
     const goToNext = () => setActiveIndex((prev) => (prev < sortedImages.length - 1 ? prev + 1 : 0));
 
-    if (sortedImages.length === 0) {
-        return;
-    }
-
-    const formattedDate = new Date(activeImage.uploaded_at).toLocaleString(import.meta.env.VITE_Locale, {
-        timeZone: import.meta.env.VITE_TZ,
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-    });
-
     const minSwipeDistance = 50;
 
     const handleTouchStart = (e: React.TouchEvent) => {
-        setTouchEndX(null); // Reset previous
+        setTouchEndX(null);
         setTouchStartX(e.targetTouches[0].clientX);
     };
 
     const handleTouchMove = (e: React.TouchEvent) => {
         const currentX = e.targetTouches[0].clientX;
-
         setTouchEndX(currentX);
-
         const deltaX = currentX - (touchStartX ?? 0);
-
-        // If mostly horizontal, prevent scrolling the page
         if (Math.abs(deltaX) > 10) {
             e.preventDefault();
         }
@@ -160,9 +159,7 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
 
     const handleTouchEnd = () => {
         if (!touchStartX || !touchEndX) return;
-
         const distance = touchStartX - touchEndX;
-
         if (distance > minSwipeDistance) {
             goToNext();
         } else if (distance < -minSwipeDistance) {
@@ -171,16 +168,13 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
     };
 
     useEffect(() => {
-        // Mobile-specific aggressive preloading
         const isMobile = /Android|webOS|iPhone|iPad|Opera Mini/i.test(navigator.userAgent);
-
         if (isMobile && sortedImages.length > 0) {
-            // On mobile, prioritize loading the current image and nearby images first
             const priorityImages = [
-                sortedImages[activeIndex], // Current image
-                sortedImages[activeIndex - 1], // Previous
-                sortedImages[activeIndex + 1], // Next
-            ].filter(Boolean); // Remove undefined entries
+                sortedImages[activeIndex],
+                sortedImages[activeIndex - 1],
+                sortedImages[activeIndex + 1],
+            ].filter(Boolean);
 
             priorityImages.forEach((image) => {
                 if (!loadedImages.has(image.id)) {
@@ -191,7 +185,6 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
                 }
             });
 
-            // Then load the rest with a small delay to prioritize visible content
             setTimeout(() => {
                 sortedImages.forEach((image) => {
                     if (!loadedImages.has(image.id) && !priorityImages.includes(image)) {
@@ -206,13 +199,10 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
     }, [sortedImages, activeIndex, loadedImages]);
 
     useEffect(() => {
-        // Immediately check if current image is loaded when component mounts
         if (activeImage && loadedImages.has(activeImage.id)) {
             setCurrentImageLoaded(true);
         } else if (activeImage) {
             setCurrentImageLoaded(false);
-
-            // Force load the current image if not already loaded
             const img = new Image();
             img.onload = () => {
                 handleImageLoad(activeImage.id);
@@ -234,6 +224,111 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
         }
     }, [fullSizeModalOpen, deleteModalOpen]);
 
+    const handleZoomWheel = useCallback(
+        (e: React.WheelEvent) => {
+            e.stopPropagation();
+            const delta = e.deltaY > 0 ? -0.2 : 0.2;
+            setZoomScale((prev) => {
+                const next = Math.min(5, Math.max(1, prev + delta));
+                if (next === 1) {
+                    setZoomTranslate({ x: 0, y: 0 });
+                    lastTranslate.current = { x: 0, y: 0 };
+                }
+                return next;
+            });
+        },
+        [],
+    );
+
+    const handleZoomPointerDown = useCallback(
+        (e: React.PointerEvent) => {
+            if (zoomScale <= 1) return;
+            e.preventDefault();
+            isDragging.current = true;
+            dragStart.current = { x: e.clientX, y: e.clientY };
+            lastTranslate.current = { ...zoomTranslate };
+        },
+        [zoomScale, zoomTranslate],
+    );
+
+    const handleZoomPointerMove = useCallback(
+        (e: React.PointerEvent) => {
+            if (!isDragging.current) return;
+            const dx = e.clientX - dragStart.current.x;
+            const dy = e.clientY - dragStart.current.y;
+            setZoomTranslate({
+                x: lastTranslate.current.x + dx / zoomScale,
+                y: lastTranslate.current.y + dy / zoomScale,
+            });
+        },
+        [zoomScale],
+    );
+
+    const handleZoomPointerUp = useCallback(() => {
+        isDragging.current = false;
+    }, []);
+
+    const getTouchDistance = (touches: React.TouchList) => {
+        const dx = touches[0].clientX - touches[1].clientX;
+        const dy = touches[0].clientY - touches[1].clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    };
+
+    const handleZoomTouchStart = useCallback(
+        (e: React.TouchEvent) => {
+            if (e.touches.length === 2) {
+                pinchStartDist.current = getTouchDistance(e.touches);
+                pinchStartScale.current = zoomScale;
+            }
+        },
+        [zoomScale],
+    );
+
+    const handleZoomTouchMove = useCallback(
+        (e: React.TouchEvent) => {
+            if (e.touches.length === 2 && pinchStartDist.current !== null) {
+                e.preventDefault();
+                const dist = getTouchDistance(e.touches);
+                const ratio = dist / pinchStartDist.current;
+                const next = Math.min(5, Math.max(1, pinchStartScale.current * ratio));
+                setZoomScale(next);
+                if (next === 1) {
+                    setZoomTranslate({ x: 0, y: 0 });
+                    lastTranslate.current = { x: 0, y: 0 };
+                }
+            }
+        },
+        [],
+    );
+
+    const handleZoomTouchEnd = useCallback(() => {
+        pinchStartDist.current = null;
+    }, []);
+
+    const handleFullsizeOverlayClick = useCallback(
+        (e: React.MouseEvent) => {
+            if (zoomScale > 1) return;
+            if (e.target === e.currentTarget) {
+                closeFullSizeModal();
+            }
+        },
+        [zoomScale, closeFullSizeModal],
+    );
+
+    if (sortedImages.length === 0) {
+        return;
+    }
+
+    const formattedDate = new Date(activeImage.uploaded_at).toLocaleString(import.meta.env.VITE_Locale, {
+        timeZone: import.meta.env.VITE_TZ,
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+
     return (
         <div className="plant-carousel-container">
             {deleteModalOpen && (
@@ -253,11 +348,35 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
             )}
 
             {fullSizeModalOpen && (
-                <div className="plant-fullsize-modal-overlay" ref={fullSizeModalRef} role="dialog" aria-modal="true" aria-label="Full size image" onClick={closeFullSizeModal}>
+                <div
+                    className="plant-fullsize-modal-overlay"
+                    ref={fullSizeModalRef}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Full size image"
+                    onClick={handleFullsizeOverlayClick}
+                >
+                    <button className="fullsize-close-btn" onClick={closeFullSizeModal}>
+                        <FontAwesomeIcon icon={faCircleXmark} />
+                    </button>
                     <img
-                        className="plant-fullsize-image"
+                        className={`plant-fullsize-image${zoomScale > 1 ? " zoomed" : ""}`}
                         src={`/api/uploads/${activeImage.image_path}?size=original`}
                         alt="Full Size Plant"
+                        draggable={false}
+                        style={{
+                            transform: `scale(${zoomScale}) translate(${zoomTranslate.x}px, ${zoomTranslate.y}px)`,
+                            cursor: zoomScale > 1 ? "grab" : "default",
+                        }}
+                        onWheel={handleZoomWheel}
+                        onPointerDown={handleZoomPointerDown}
+                        onPointerMove={handleZoomPointerMove}
+                        onPointerUp={handleZoomPointerUp}
+                        onPointerLeave={handleZoomPointerUp}
+                        onTouchStart={handleZoomTouchStart}
+                        onTouchMove={handleZoomTouchMove}
+                        onTouchEnd={handleZoomTouchEnd}
+                        onDoubleClick={resetZoom}
                     />
                 </div>
             )}

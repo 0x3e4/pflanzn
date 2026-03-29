@@ -15,6 +15,9 @@ export interface Plant {
     images: PlantImage[];
     is_archived: boolean;
     archive_reason: string;
+    is_outdoor: boolean;
+    reaches_rain: boolean;
+    weather_config_id: number | null;
 }
 
 export interface PlantImage {

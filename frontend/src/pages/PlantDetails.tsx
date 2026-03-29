@@ -18,6 +18,7 @@ import {
     fetchPlantNotes,
 } from "../services/PlantService";
 import { fetchTags, deleteTag } from "../services/TagService";
+import { fetchWeatherConfigs, WeatherConfig } from "../services/WeatherService";
 import { Plant } from "../types/Plant";
 import { Tag } from "../types/Tag";
 import TimelineImages from "../components/TimelineImages";
@@ -61,6 +62,7 @@ export default function PlantDetails() {
     const navigate = useNavigate();
     const [plant, setPlant] = useState<Plant | null>(null);
     const [loadingPlant, setLoadingPlant] = useState(true);
+    const [weatherConfigs, setWeatherConfigs] = useState<WeatherConfig[]>([]);
     const [availableTags, setAvailableTags] = useState<Tag[]>([]);
     const [filteredTags, setFilteredTags] = useState<Tag[]>([]);
     const [newTag, setNewTag] = useState("");
@@ -94,6 +96,7 @@ export default function PlantDetails() {
             loadActivities();
         }
         loadAvailableTags();
+        fetchWeatherConfigs().then(setWeatherConfigs).catch(() => {});
     }, [plantId]);
 
     const loadPlant = async () => {
@@ -802,6 +805,78 @@ export default function PlantDetails() {
                             loadActivities();
                         }}
                     />
+
+                    {!plant.is_archived && (
+                        <div className="plant-outdoor-section">
+                            <h4>Environment</h4>
+                            <label className="plant-toggle-row">
+                                <input
+                                    type="checkbox"
+                                    checked={plant.is_outdoor}
+                                    onChange={async (e) => {
+                                        const val = e.target.checked;
+                                        const updates: Record<string, boolean> = { is_outdoor: val };
+                                        if (!val) updates.reaches_rain = false;
+                                        await updatePlant(Number(plantId), updates);
+                                        let tagged: Plant = { ...plant, ...updates };
+                                        if (val) {
+                                            tagged = { ...(await assignTagToPlant(plant.id, "outdoor")), ...updates };
+                                        } else {
+                                            const outdoorTag = plant.tags.find((t: { name: string }) => t.name === "outdoor");
+                                            if (outdoorTag) tagged = { ...(await removeTagFromPlant(plant.id, outdoorTag.id)), ...updates };
+                                            const rainTag = tagged.tags?.find((t: { name: string }) => t.name === "rain");
+                                            if (rainTag) tagged = { ...(await removeTagFromPlant(plant.id, rainTag.id)), ...updates };
+                                        }
+                                        setPlant(tagged);
+                                    }}
+                                    disabled={!isLoggedIn}
+                                />
+                                <span>Outdoor Plant</span>
+                            </label>
+                            {plant.is_outdoor && (
+                                <label className="plant-toggle-row">
+                                    <input
+                                        type="checkbox"
+                                        checked={plant.reaches_rain}
+                                        onChange={async (e) => {
+                                            const val = e.target.checked;
+                                            await updatePlant(Number(plantId), { reaches_rain: val });
+                                            let tagged: Plant;
+                                            if (val) {
+                                                tagged = await assignTagToPlant(plant.id, "rain");
+                                            } else {
+                                                const rainTag = plant.tags.find((t: { name: string }) => t.name === "rain");
+                                                tagged = rainTag ? await removeTagFromPlant(plant.id, rainTag.id) : plant;
+                                            }
+                                            setPlant({ ...tagged, is_outdoor: plant.is_outdoor, reaches_rain: val });
+                                        }}
+                                        disabled={!isLoggedIn}
+                                    />
+                                    <span>Reaches Rain</span>
+                                </label>
+                            )}
+                            {plant.is_outdoor && plant.reaches_rain && weatherConfigs.length > 0 && (
+                                <div className="plant-weather-zone">
+                                    <label>Weather Zone</label>
+                                    <select
+                                        value={plant.weather_config_id ?? weatherConfigs[0]?.id ?? ""}
+                                        onChange={async (e) => {
+                                            const val = e.target.value ? Number(e.target.value) : null;
+                                            await updatePlant(Number(plantId), { weather_config_id: val });
+                                            setPlant({ ...plant, weather_config_id: val });
+                                        }}
+                                        disabled={!isLoggedIn}
+                                    >
+                                        {weatherConfigs.map((wc, i) => (
+                                            <option key={wc.id} value={wc.id}>
+                                                {wc.city_name || `Location ${wc.id}`}{i === 0 ? " (default)" : ""}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Right Column - Description */}

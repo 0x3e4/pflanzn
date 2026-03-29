@@ -34,8 +34,12 @@ class Plant(Base):
     description = Column(Text, nullable=True)
     is_archived = Column(Boolean, default=False)
     archive_reason = Column(Text, nullable=True)
+    is_outdoor = Column(Boolean, default=False)
+    reaches_rain = Column(Boolean, default=False)
+    weather_config_id = Column(Integer, ForeignKey("weather_configs.id", ondelete="SET NULL"), nullable=True)
 
     tags = relationship("Tag", secondary=plant_tag_association, back_populates="plants")
+    weather_config = relationship("WeatherConfig", foreign_keys=[weather_config_id])
     images = relationship("PlantImage", back_populates="plant", cascade="all, delete-orphan")
     waterings = relationship("PlantWatering", back_populates="plant", cascade="all, delete-orphan")
     fertilizings = relationship("PlantFertilizing", back_populates="plant", cascade="all, delete-orphan")
@@ -194,4 +198,36 @@ class LocationImage(Base):
 
     __table_args__ = (
         Index("idx_location_images_location_id", "location_id"),
+    )
+
+
+class WeatherConfig(Base):
+    __tablename__ = "weather_configs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    city_name = Column(String(255), nullable=True)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    enabled = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
+
+    user = relationship("User")
+
+
+class WeatherLog(Base):
+    __tablename__ = "weather_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    checked_at = Column(DateTime, default=func.now(), nullable=False)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    weather_condition = Column(String(100), nullable=True)
+    rainfall_mm = Column(Float, default=0.0)
+    temperature = Column(Float, nullable=True)
+    auto_watered_count = Column(Integer, default=0)
+
+    __table_args__ = (
+        Index("idx_weather_logs_checked_at", "checked_at"),
     )

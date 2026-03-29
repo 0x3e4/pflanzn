@@ -98,7 +98,7 @@
     min-height: 90px;
 }
 
-.add-location-modal-content button {
+.add-location-modal-content button:not(.gps-btn) {
     background-color: var(--primary-color);
     color: white;
     border: none;
@@ -109,7 +109,7 @@
     padding: 10px;
 }
 
-.add-location-modal-content button:hover {
+.add-location-modal-content button:not(.gps-btn):hover {
     background-color: var(--secondary-color);
 }
 
@@ -122,13 +122,11 @@
     background-color: var(--senary-color) !important;
 }
 
-.location-identify-results-list {
-    list-style: none;
+.add-location-modal-content .identify-results-list {
+    list-style-type: none;
     padding: 0;
-    margin: 10px 0;
-    max-height: 180px;
+    max-height: 300px;
     overflow-y: auto;
-    text-align: left;
 }
 
 .location-identify-item {
@@ -153,10 +151,54 @@
     gap: 10px;
 }
 
+.location-coord-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.location-coord-row .location-coord-grid {
+    flex: 1;
+}
+
+.location-coord-row .location-coord-grid input {
+    margin: 0;
+}
+
 .location-coord-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
+}
+
+.gps-btn {
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+    transition: background-color 0.2s;
+}
+
+.gps-btn:hover {
+    background-color: var(--secondary-color);
+}
+
+.gps-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.gps-btn-inline {
+    margin-top: 4px;
+    font-size: 0.85rem;
+    padding: 6px 10px;
 }
 
 .locations-empty {
@@ -428,6 +470,10 @@
     .location-select-grid,
     .location-coord-grid {
         grid-template-columns: 1fr;
+    }
+
+    .location-coord-row {
+        flex-direction: column;
     }
 
     .location-filter-sort-bar {

@@ -93,6 +93,29 @@ def _ensure_fertilizings_schema():
         return  # create_all already handled it
 
 
+def _ensure_weather_schema():
+    """Idempotent migration for weather and plant outdoor fields."""
+    inspector = inspect(engine)
+    tables = set(inspector.get_table_names())
+
+    if "plants" in tables:
+        plant_columns = {column["name"] for column in inspector.get_columns("plants")}
+        if "is_outdoor" not in plant_columns:
+            _execute_ddl("ALTER TABLE plants ADD COLUMN is_outdoor TINYINT(1) NOT NULL DEFAULT 0")
+        if "reaches_rain" not in plant_columns:
+            _execute_ddl("ALTER TABLE plants ADD COLUMN reaches_rain TINYINT(1) NOT NULL DEFAULT 0")
+        if "weather_config_id" not in plant_columns:
+            _execute_ddl("ALTER TABLE plants ADD COLUMN weather_config_id INT NULL")
+            # FK can only be added after weather_configs table exists (create_all runs first)
+            try:
+                _execute_ddl(
+                    "ALTER TABLE plants ADD CONSTRAINT fk_plants_weather_config "
+                    "FOREIGN KEY (weather_config_id) REFERENCES weather_configs(id) ON DELETE SET NULL"
+                )
+            except Exception:
+                pass  # FK may already exist or table not ready
+
+
 def get_db():
     db = None
     for attempt in range(3):
@@ -117,4 +140,5 @@ def init_db():
     _ensure_locations_schema()
     _ensure_share_links_schema()
     _ensure_fertilizings_schema()
+    _ensure_weather_schema()
     logger.debug("Database tables ensured.")
