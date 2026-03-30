@@ -84,8 +84,14 @@ def update_user(
     if current_user.id != user_id and current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Not authorized to update this user")
 
-    # Update only provided fields
+    # Prevent demoting the last admin
     update_fields = user_data.dict(exclude_unset=True)
+    if update_fields.get("role") and update_fields["role"] != "admin" and user.role == "admin":
+        admin_count = db.query(User).filter(User.role == "admin").count()
+        if admin_count <= 1:
+            raise HTTPException(status_code=400, detail="Cannot demote the last admin user")
+
+    # Update only provided fields
     for key, value in update_fields.items():
         setattr(user, key, value)
 

@@ -144,6 +144,16 @@ export default function UsersPanel() {
             return;
         }
 
+        // Prevent demoting the last admin
+        if (changes.role && changes.role !== "admin") {
+            const adminCount = users.filter((u) => u.role === "admin").length;
+            const currentUser = users.find((u) => u.id === userId);
+            if (adminCount === 1 && currentUser?.role === "admin") {
+                toast.error("Cannot demote the last admin user.");
+                return;
+            }
+        }
+
         try {
             await updateUser(userId, changes);
             toast.success("User updated successfully.");
