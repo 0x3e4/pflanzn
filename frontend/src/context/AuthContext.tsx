@@ -39,8 +39,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         (async () => {
             setLoading(true);
             if (authMode !== "no") {
-                await refreshToken(true);
-                await fetchProfile();
+                const token = await refreshToken(true);
+                if (token) {
+                    await fetchProfile();
+                } else {
+                    setUser(null);
+                    setIsLoggedIn(false);
+                }
             } else {
                 setUser(null);
                 setIsLoggedIn(false);
@@ -87,24 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         } catch (error: any) {
             if (error.response?.status === 401) {
-                console.warn("Access token expired or invalid. Trying refresh...");
-                const refreshed = await refreshToken();
-
-                if (refreshed) {
-                    try {
-                        // Retry fetching profile after refresh
-                        const retryResponse = await apiClient.get<User>("/users/profile");
-                        if (retryResponse.data) {
-                            setUser(retryResponse.data);
-                            setIsLoggedIn(true);
-                            return;
-                        }
-                    } catch (retryError) {
-                        console.error("Retry fetchProfile failed:", retryError);
-                    }
-                }
-
-                // If refresh or retry failed
+                console.warn("Profile fetch failed after interceptor retry.");
                 setUser(null);
                 setIsLoggedIn(false);
 
