@@ -273,6 +273,7 @@ class WeatherConfigResponse(BaseModel):
 class WeatherLogResponse(BaseModel):
     id: int
     checked_at: datetime
+    city_name: Optional[str] = None
     weather_condition: Optional[str] = None
     rainfall_mm: float
     temperature: Optional[float] = None
@@ -280,5 +281,12 @@ class WeatherLogResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class AutoWateringResponse(BaseModel):
+    id: int
+    plant_name: str
+    watered_at: datetime
+    city_name: Optional[str] = None
 
 PlantResponse.model_rebuild()

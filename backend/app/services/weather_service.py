@@ -180,11 +180,8 @@ def check_and_auto_water(db: Session) -> int:
         # Use the higher of current or recent rainfall
         effective_rainfall = max(current_rainfall, recent_rainfall)
 
-        # Check if it rained (by condition or rainfall amount)
-        is_raining = (
-            weather_main.lower() in ("rain", "drizzle", "thunderstorm")
-            or effective_rainfall >= settings.WEATHER_RAINFALL_THRESHOLD_MM
-        )
+        # Check if rainfall exceeds configured threshold
+        is_raining = effective_rainfall >= settings.WEATHER_RAINFALL_THRESHOLD_MM
 
         watered_count = 0
         if is_raining:
@@ -222,6 +219,7 @@ def check_and_auto_water(db: Session) -> int:
         log = WeatherLog(
             latitude=config.latitude,
             longitude=config.longitude,
+            city_name=config.city_name,
             weather_condition=weather_main,
             rainfall_mm=effective_rainfall,
             temperature=temperature,

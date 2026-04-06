@@ -98,6 +98,11 @@ def _ensure_weather_schema():
     inspector = inspect(engine)
     tables = set(inspector.get_table_names())
 
+    if "weather_logs" in tables:
+        log_columns = {column["name"] for column in inspector.get_columns("weather_logs")}
+        if "city_name" not in log_columns:
+            _execute_ddl("ALTER TABLE weather_logs ADD COLUMN city_name VARCHAR(255) NULL AFTER longitude")
+
     if "plants" in tables:
         plant_columns = {column["name"] for column in inspector.get_columns("plants")}
         if "is_outdoor" not in plant_columns:

@@ -7,8 +7,9 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.security import get_current_user
 from app.database import get_db
-from app.models import User, WeatherConfig, WeatherLog
+from app.models import Plant, PlantWatering, User, WeatherConfig, WeatherLog
 from app.schemas import (
+    AutoWateringResponse,
     WeatherConfigCreate,
     WeatherConfigResponse,
     WeatherConfigUpdate,
@@ -154,6 +155,33 @@ def get_weather_logs(
         .all()
     )
     return logs
+
+
+@router.get("/waterings", response_model=List[AutoWateringResponse])
+def get_auto_waterings(
+    limit: int = 20,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user),
+):
+    """Get recent auto-waterings (weather-triggered, user_id is NULL)."""
+    rows = (
+        db.query(PlantWatering, Plant.name, WeatherConfig.city_name)
+        .join(Plant, PlantWatering.plant_id == Plant.id)
+        .outerjoin(WeatherConfig, Plant.weather_config_id == WeatherConfig.id)
+        .filter(PlantWatering.user_id == None)
+        .order_by(PlantWatering.watered_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        AutoWateringResponse(
+            id=w.id,
+            plant_name=plant_name,
+            watered_at=w.watered_at,
+            city_name=city_name,
+        )
+        for w, plant_name, city_name in rows
+    ]
 
 
 @router.post("/check")

@@ -9,10 +9,12 @@ import {
     deleteWeatherConfig,
     fetchCurrentWeather,
     fetchWeatherLogs,
+    fetchAutoWaterings,
     triggerWeatherCheck,
     WeatherConfig,
     WeatherCurrent,
     WeatherLog,
+    AutoWatering,
 } from "../services/WeatherService";
 import "../styles/weatherPanel.css";
 
@@ -23,6 +25,7 @@ export default function WeatherPanel() {
     const [checking, setChecking] = useState(false);
     const [gpsLoading, setGpsLoading] = useState(false);
     const [logs, setLogs] = useState<WeatherLog[]>([]);
+    const [waterings, setWaterings] = useState<AutoWatering[]>([]);
     const [weatherPreviews, setWeatherPreviews] = useState<Record<number, WeatherCurrent>>({});
 
     // New location form
@@ -58,6 +61,13 @@ export default function WeatherPanel() {
                 setLogs(logData);
             } catch {
                 /* no logs */
+            }
+
+            try {
+                const wateringData = await fetchAutoWaterings(10);
+                setWaterings(wateringData);
+            } catch {
+                /* no waterings */
             }
         } catch {
             /* no configs */
@@ -132,8 +142,12 @@ export default function WeatherPanel() {
         try {
             const result = await triggerWeatherCheck();
             toast.success(result.message);
-            const logData = await fetchWeatherLogs(10);
+            const [logData, wateringData] = await Promise.all([
+                fetchWeatherLogs(10),
+                fetchAutoWaterings(10),
+            ]);
             setLogs(logData);
+            setWaterings(wateringData);
         } catch {
             toast.error("Weather check failed.");
         } finally {
@@ -292,6 +306,7 @@ export default function WeatherPanel() {
                         <thead>
                             <tr>
                                 <th>Time</th>
+                                <th>Location</th>
                                 <th>Condition</th>
                                 <th>Rain</th>
                                 <th>Temp</th>
@@ -309,10 +324,43 @@ export default function WeatherPanel() {
                                             minute: "2-digit",
                                         })}
                                     </td>
+                                    <td>{log.city_name || "-"}</td>
                                     <td>{log.weather_condition || "-"}</td>
                                     <td>{log.rainfall_mm.toFixed(1)} mm</td>
                                     <td>{log.temperature !== null ? `${log.temperature.toFixed(1)}°C` : "-"}</td>
                                     <td>{log.auto_watered_count > 0 ? `${log.auto_watered_count} plants` : "-"}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {/* Auto-waterings */}
+            {waterings.length > 0 && (
+                <div className="weather-logs">
+                    <h3>Recent Auto-Waterings</h3>
+                    <table className="weather-logs-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Plant</th>
+                                <th>Location</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {waterings.map((w) => (
+                                <tr key={w.id}>
+                                    <td>
+                                        {new Date(w.watered_at).toLocaleString(undefined, {
+                                            month: "short",
+                                            day: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                        })}
+                                    </td>
+                                    <td>{w.plant_name}</td>
+                                    <td>{w.city_name || "-"}</td>
                                 </tr>
                             ))}
                         </tbody>

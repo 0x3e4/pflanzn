@@ -24,10 +24,18 @@ export interface WeatherCurrent {
 export interface WeatherLog {
     id: number;
     checked_at: string;
+    city_name: string | null;
     weather_condition: string | null;
     rainfall_mm: number;
     temperature: number | null;
     auto_watered_count: number;
+}
+
+export interface AutoWatering {
+    id: number;
+    plant_name: string;
+    watered_at: string;
+    city_name: string | null;
 }
 
 export const fetchWeatherConfigs = async (): Promise<WeatherConfig[]> => {
@@ -66,6 +74,11 @@ export const fetchCurrentWeather = async (configId?: number): Promise<WeatherCur
 
 export const fetchWeatherLogs = async (limit = 20): Promise<WeatherLog[]> => {
     const response = await apiClient.get(`${API_BASE}/logs`, { params: { limit } });
+    return response.data;
+};
+
+export const fetchAutoWaterings = async (limit = 20): Promise<AutoWatering[]> => {
+    const response = await apiClient.get(`${API_BASE}/waterings`, { params: { limit } });
     return response.data;
 };
 

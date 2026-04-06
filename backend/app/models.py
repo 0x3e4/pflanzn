@@ -223,6 +223,7 @@ class WeatherLog(Base):
     checked_at = Column(DateTime, default=func.now(), nullable=False)
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
+    city_name = Column(String(255), nullable=True)
     weather_condition = Column(String(100), nullable=True)
     rainfall_mm = Column(Float, default=0.0)
     temperature = Column(Float, nullable=True)
