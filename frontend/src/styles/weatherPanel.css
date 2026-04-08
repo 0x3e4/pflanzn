@@ -292,6 +292,11 @@
     font-size: 0.75rem;
 }
 
+.weather-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 /* ── Mobile ──────────────────────────────────────── */
 
 @media (max-width: 768px) {
@@ -301,5 +306,9 @@
 
     .weather-coord-inputs {
         grid-template-columns: 1fr;
+    }
+
+    .weather-logs-table {
+        min-width: 500px;
     }
 }

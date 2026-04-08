@@ -24,7 +24,7 @@ Pflanzn is a self-hostable **plant management app** for tracking your collection
 - Identify species via PlantNet API
 - AI-powered care advice (supports OpenAI, Claude, Mistral, HuggingFace, Ollama)
 - Organize plants by location with GPS coordinates and interactive map
-- Automatic weather-based watering for outdoor plants (OpenWeatherMap)
+- Automatic weather-based watering for outdoor plants (Open-Meteo / OpenWeatherMap)
 - GPS-based location detection for quick coordinate entry
 - Zoomable fullsize photo viewer (scroll wheel, pinch-to-zoom)
 - Share your collection via token-based links

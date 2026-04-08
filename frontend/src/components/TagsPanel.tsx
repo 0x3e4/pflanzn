@@ -160,6 +160,7 @@ export default function TagsPanel() {
             </div>
 
             <div className="table-container">
+                <div className="table-scroll-wrapper">
                 <table className="data-table">
                     <thead>
                         <tr>
@@ -253,6 +254,7 @@ export default function TagsPanel() {
                               ))}
                     </tbody>
                 </table>
+                </div>
 
                 {!loading && totalPages > 1 && (
                     <div className="pagination">

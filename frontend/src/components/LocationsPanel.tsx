@@ -243,6 +243,7 @@ export default function LocationsPanel() {
             <p>Here you can manage all the locations.</p>
 
             <div className="table-container">
+                <div className="table-scroll-wrapper">
                 <table className="data-table">
                     <thead>
                         <tr>
@@ -381,6 +382,7 @@ export default function LocationsPanel() {
                               ))}
                     </tbody>
                 </table>
+                </div>
 
                 {!loading && totalPages > 1 && (
                     <div className="pagination">

@@ -446,7 +446,7 @@ export default function Locations() {
                             </ul>
                         )}
                         <div className="location-coord-row">
-                            <div className="location-coord-grid">
+                            <div className="location-coord-input-row">
                                 <input
                                     type="text"
                                     placeholder="Latitude (optional)"
@@ -455,6 +455,8 @@ export default function Locations() {
                                         setNewLocation((prev) => ({ ...prev, latitude: e.target.value }))
                                     }
                                 />
+                            </div>
+                            <div className="location-coord-input-row">
                                 <input
                                     type="text"
                                     placeholder="Longitude (optional)"
@@ -463,16 +465,16 @@ export default function Locations() {
                                         setNewLocation((prev) => ({ ...prev, longitude: e.target.value }))
                                     }
                                 />
+                                <button
+                                    type="button"
+                                    className="gps-btn"
+                                    onClick={fillFromGps}
+                                    disabled={gpsLoading}
+                                    title="Use my location"
+                                >
+                                    <FontAwesomeIcon icon={faLocationCrosshairs} spin={gpsLoading} />
+                                </button>
                             </div>
-                            <button
-                                type="button"
-                                className="gps-btn"
-                                onClick={fillFromGps}
-                                disabled={gpsLoading}
-                                title="Use my location"
-                            >
-                                <FontAwesomeIcon icon={faLocationCrosshairs} spin={gpsLoading} />
-                            </button>
                         </div>
                         <button onClick={handleCreateLocation} disabled={saving}>
                             {saving ? "Saving..." : "Create"}

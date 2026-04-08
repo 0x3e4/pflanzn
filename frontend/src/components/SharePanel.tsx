@@ -108,6 +108,7 @@ export default function SharePanel() {
             <p>Create read-only links to share your site without requiring login.</p>
 
             <div className="table-container">
+                <div className="table-scroll-wrapper">
                 <table className="data-table">
                     <thead>
                         <tr>
@@ -178,6 +179,7 @@ export default function SharePanel() {
                         )}
                     </tbody>
                 </table>
+                </div>
             </div>
 
             {modalOpen && (

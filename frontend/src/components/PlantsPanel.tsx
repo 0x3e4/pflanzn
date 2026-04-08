@@ -181,6 +181,7 @@ export default function PlantsPanel() {
             <p>Here you can manage all the plants.</p>
 
             <div className="table-container">
+                <div className="table-scroll-wrapper">
                 <table className="data-table">
                     <thead>
                         <tr>
@@ -244,6 +245,7 @@ export default function PlantsPanel() {
                               ))}
                     </tbody>
                 </table>
+                </div>
 
                 {!loading && totalPages > 1 && (
                     <div className="pagination">

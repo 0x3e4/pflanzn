@@ -302,37 +302,45 @@ export default function WeatherPanel() {
             {logs.length > 0 && (
                 <div className="weather-logs">
                     <h3>Recent Weather Checks</h3>
-                    <table className="weather-logs-table">
-                        <thead>
-                            <tr>
-                                <th>Time</th>
-                                <th>Location</th>
-                                <th>Condition</th>
-                                <th>Rain</th>
-                                <th>Temp</th>
-                                <th>Watered</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {logs.map((log) => (
-                                <tr key={log.id}>
-                                    <td>
-                                        {new Date(log.checked_at).toLocaleString(undefined, {
-                                            month: "short",
-                                            day: "numeric",
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                        })}
-                                    </td>
-                                    <td>{log.city_name || "-"}</td>
-                                    <td>{log.weather_condition || "-"}</td>
-                                    <td>{log.rainfall_mm.toFixed(1)} mm</td>
-                                    <td>{log.temperature !== null ? `${log.temperature.toFixed(1)}°C` : "-"}</td>
-                                    <td>{log.auto_watered_count > 0 ? `${log.auto_watered_count} plants` : "-"}</td>
+                    <div className="weather-table-scroll">
+                        <table className="weather-logs-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Location</th>
+                                    <th>Condition</th>
+                                    <th>Rain</th>
+                                    <th>Temp</th>
+                                    <th>Watered</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {logs.map((log) => (
+                                    <tr key={log.id}>
+                                        <td>
+                                            {new Date(log.checked_at).toLocaleString(undefined, {
+                                                month: "short",
+                                                day: "numeric",
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                            })}
+                                        </td>
+                                        <td>{log.city_name || "-"}</td>
+                                        <td>{log.weather_condition || "-"}</td>
+                                        <td>{log.rainfall_mm.toFixed(1)} mm</td>
+                                        <td>
+                                            {log.temperature !== null ? `${log.temperature.toFixed(1)}°C` : "-"}
+                                        </td>
+                                        <td>
+                                            {log.auto_watered_count > 0
+                                                ? `${log.auto_watered_count} plants`
+                                                : "-"}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
 
@@ -340,31 +348,33 @@ export default function WeatherPanel() {
             {waterings.length > 0 && (
                 <div className="weather-logs">
                     <h3>Recent Auto-Waterings</h3>
-                    <table className="weather-logs-table">
-                        <thead>
-                            <tr>
-                                <th>Time</th>
-                                <th>Plant</th>
-                                <th>Location</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {waterings.map((w) => (
-                                <tr key={w.id}>
-                                    <td>
-                                        {new Date(w.watered_at).toLocaleString(undefined, {
-                                            month: "short",
-                                            day: "numeric",
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                        })}
-                                    </td>
-                                    <td>{w.plant_name}</td>
-                                    <td>{w.city_name || "-"}</td>
+                    <div className="weather-table-scroll">
+                        <table className="weather-logs-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Plant</th>
+                                    <th>Location</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {waterings.map((w) => (
+                                    <tr key={w.id}>
+                                        <td>
+                                            {new Date(w.watered_at).toLocaleString(undefined, {
+                                                month: "short",
+                                                day: "numeric",
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                            })}
+                                        </td>
+                                        <td>{w.plant_name}</td>
+                                        <td>{w.city_name || "-"}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
         </div>

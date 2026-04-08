@@ -214,6 +214,7 @@ export default function UsersPanel() {
             <p>Here you can manage all the users.</p>
 
             <div className="table-container">
+                <div className="table-scroll-wrapper">
                 <table className="data-table">
                     <thead>
                         <tr>
@@ -303,6 +304,7 @@ export default function UsersPanel() {
                               ))}
                     </tbody>
                 </table>
+                </div>
 
                 {!loading && totalPages > 1 && (
                     <div className="pagination">

@@ -153,16 +153,18 @@
 
 .location-coord-row {
     display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.location-coord-input-row {
+    display: flex;
     gap: 10px;
     align-items: center;
 }
 
-.location-coord-row .location-coord-grid {
+.location-coord-input-row input {
     flex: 1;
-}
-
-.location-coord-row .location-coord-grid input {
-    margin: 0;
 }
 
 .location-coord-grid {
@@ -470,10 +472,6 @@
     .location-select-grid,
     .location-coord-grid {
         grid-template-columns: 1fr;
-    }
-
-    .location-coord-row {
-        flex-direction: column;
     }
 
     .location-filter-sort-bar {
