@@ -1,0 +1,9 @@
+onlyBuiltDependencies:
+  - '@fortawesome/fontawesome-svg-core'
+minimumReleaseAge: 20160
+minimumReleaseAgeExclude:
+  - '@rolldown/*'
+  - rolldown
+  - vite
+  - '@vite/*'
+  - '@napi-rs/*'

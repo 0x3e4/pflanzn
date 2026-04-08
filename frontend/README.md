@@ -15,12 +15,12 @@ React-based single-page application for the Pflanzn plant management system. Bui
 ## Development
 
 ```bash
-npm install
-npm run dev          # Vite dev server with hot reload
-npm run build        # TypeScript check + production build
-npm run lint         # ESLint
-npm test             # Run tests
-npm run test:watch   # Tests in watch mode
+pnpm install
+pnpm run dev          # Vite dev server with hot reload
+pnpm run build        # TypeScript check + production build
+pnpm run lint         # ESLint
+pnpm test             # Run tests
+pnpm run test:watch   # Tests in watch mode
 ```
 
 Requires Node >= 24.

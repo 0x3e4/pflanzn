@@ -3,6 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": ">=24"
   },
@@ -28,25 +29,25 @@
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.2.0",
     "@fortawesome/free-solid-svg-icons": "^7.2.0",
-    "@fortawesome/react-fontawesome": "^3.2.0",
+    "@fortawesome/react-fontawesome": "^3.3.0",
     "@icons-pack/react-simple-icons": "^13.13.0",
     "@types/react-slick": "^0.23.13",
-    "axios": "^1.14.0",
+    "axios": "^1.15.0",
     "chart.js": "^4.5.1",
     "luxon": "^3.7.2",
-    "react": "^19.2.4",
-    "react-calendar": "^6.0.0",
-    "react-dom": "^19.2.4",
+    "react": "^19.2.5",
+    "react-calendar": "^6.0.1",
+    "react-dom": "^19.2.5",
     "react-loading-skeleton": "^3.5.0",
-    "react-router-dom": "^7.13.2",
-    "react-slick": "^0.30.3",
+    "react-router-dom": "^7.14.0",
+    "react-slick": "^0.31.0",
     "react-toastify": "^11.0.5",
     "slick-carousel": "^1.8.1",
     "vite-plugin-pwa": "^1.2.0"
   },
-  "overrides": {
-    "vite-plugin-pwa": {
-      "vite": "$vite"
+  "pnpm": {
+    "overrides": {
+      "vite-plugin-pwa>vite": "$vite"
     }
   },
   "devDependencies": {
@@ -55,21 +56,21 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/luxon": "^3.7.1",
-    "@types/node": "^25.5.0",
+    "@types/node": "^25.5.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
-    "eslint": "^10.1.0",
+    "eslint": "^10.2.0",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
     "husky": "^9.1.7",
-    "jsdom": "^29.0.1",
+    "jsdom": "^29.0.2",
     "lint-staged": "^16.4.0",
     "prettier": "^3.8.1",
     "typescript": "^6.0.2",
-    "typescript-eslint": "^8.57.2",
-    "vite": "^8.0.3",
-    "vitest": "^4.1.2"
+    "typescript-eslint": "^8.58.1",
+    "vite": "^8.0.7",
+    "vitest": "^4.1.3"
   }
 }

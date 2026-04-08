@@ -1,0 +1,38 @@
+[tool.poetry]
+name = "pflanzn-backend"
+version = "1.0.0"
+description = "Pflanzn plant management backend"
+authors = []
+
+[tool.poetry.dependencies]
+python = "^3.13"
+fastapi = "*"
+uvicorn = "*"
+sqlalchemy = "*"
+pydantic = {version = "*", extras = ["email"]}
+pydantic-settings = "*"
+passlib = {version = "*", extras = ["argon2"]}
+python-dotenv = "*"
+redis = "*"
+mariadb = "*"
+python-jose = "*"
+python-multipart = "*"
+requests = "*"
+pillow = "*"
+pillow-heif = "*"
+huggingface-hub = "*"
+httpx = "*"
+openai = "*"
+ollama = "*"
+authlib = "*"
+itsdangerous = "*"
+anthropic = "*"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "*"
+pytest-asyncio = "*"
+ruff = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

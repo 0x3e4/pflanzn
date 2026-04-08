@@ -20,14 +20,16 @@ ENV VITE_TZ=$VITE_TZ
 ENV VITE_LOCALE=$VITE_LOCALE
 ENV VITE_LLM_PROVIDER=$VITE_LLM_PROVIDER
 
-COPY package*.json ./
+RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
 
-RUN npm install --legacy-peer-deps
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+RUN pnpm install --frozen-lockfile
 
 COPY . .
 
-RUN npm run build
+RUN pnpm run build
 
 EXPOSE 4173
 
-CMD ["npx", "vite", "preview", "--host", "--port", "4173"]
+CMD ["pnpm", "exec", "vite", "preview", "--host", "--port", "4173"]

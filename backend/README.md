@@ -20,15 +20,16 @@ FastAPI REST API for the Pflanzn plant management system. Handles authentication
 docker-compose up -d
 
 # Or manually:
-pip install -r requirements.txt
+pip install poetry
+poetry install
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 ### Testing & Linting
 
 ```bash
-pytest tests/ -v
-ruff check app/ --fix
+poetry run pytest tests/ -v
+poetry run ruff check app/ --fix
 ```
 
 ## Project Structure
