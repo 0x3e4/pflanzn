@@ -72,6 +72,10 @@ def _ensure_locations_schema():
         if "idx_locations_visibility" not in location_indexes:
             _execute_ddl("CREATE INDEX idx_locations_visibility ON locations (visibility)")
 
+        unique_constraints = {uc["name"] for uc in inspector.get_unique_constraints("locations")}
+        if "name" in unique_constraints:
+            _execute_ddl("ALTER TABLE locations DROP INDEX `name`")
+
     if "location_images" in tables:
         location_image_indexes = {index["name"] for index in inspector.get_indexes("location_images")}
         if "idx_location_images_location_id" not in location_image_indexes:
