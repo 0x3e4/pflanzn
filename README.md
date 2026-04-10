@@ -65,12 +65,12 @@ See [.env.example](.env.example) for all available settings including database, 
 
 ```bash
 cd frontend
-npm install
-npm run dev          # Dev server with hot reload
-npm run build        # Production build
-npm run lint         # ESLint
-npm test             # Run tests
-npm run test:watch   # Tests in watch mode
+pnpm install
+pnpm run dev          # Dev server with hot reload
+pnpm run build        # Production build
+pnpm run lint         # ESLint
+pnpm test             # Run tests
+pnpm run test:watch   # Tests in watch mode
 ```
 
 ### Backend
@@ -79,7 +79,7 @@ The backend runs in Docker with auto-reload. For manual setup:
 
 ```bash
 cd backend
-pip install -r requirements.txt
+poetry install
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
@@ -87,7 +87,7 @@ Run tests:
 
 ```bash
 cd backend
-pytest tests/ -v
+poetry run pytest tests/ -v
 ```
 
 ### Linting
@@ -97,7 +97,7 @@ Pre-commit hooks (husky + lint-staged) run ESLint and Prettier automatically on 
 Backend uses ruff:
 
 ```bash
-ruff check backend/app/ --fix
+poetry run ruff check backend/app/ --fix
 ```
 
 ## Tech Stack

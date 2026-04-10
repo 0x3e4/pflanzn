@@ -1,4 +1,5 @@
 import logging
+from datetime import timedelta
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -9,10 +10,12 @@ from app.core.security import get_current_user
 from app.database import get_db
 from app.models import Plant, PlantWatering, User, WeatherConfig, WeatherLog
 from app.schemas import (
+    AutoWateringPaginatedResponse,
     AutoWateringResponse,
     WeatherConfigCreate,
     WeatherConfigResponse,
     WeatherConfigUpdate,
+    WeatherLogPaginatedResponse,
     WeatherLogResponse,
 )
 from app.services.weather_service import check_and_auto_water, get_current_weather
@@ -141,47 +144,89 @@ def get_current_weather_endpoint(
         raise HTTPException(status_code=502, detail=f"Failed to fetch weather: {str(e)}")
 
 
-@router.get("/logs", response_model=List[WeatherLogResponse])
+@router.get("/logs", response_model=WeatherLogPaginatedResponse)
 def get_weather_logs(
-    limit: int = 20,
+    limit: int = 10,
+    offset: int = 0,
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user),
 ):
     """Get recent weather check logs."""
+    total = db.query(WeatherLog).count()
     logs = (
         db.query(WeatherLog)
         .order_by(WeatherLog.checked_at.desc())
+        .offset(offset)
         .limit(limit)
         .all()
     )
-    return logs
+    return WeatherLogPaginatedResponse(items=logs, total=total, limit=limit, offset=offset)
 
 
-@router.get("/waterings", response_model=List[AutoWateringResponse])
+@router.get("/waterings", response_model=AutoWateringPaginatedResponse)
 def get_auto_waterings(
-    limit: int = 20,
+    limit: int = 10,
+    offset: int = 0,
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user),
 ):
     """Get recent auto-waterings (weather-triggered, user_id is NULL)."""
-    rows = (
-        db.query(PlantWatering, Plant.name, WeatherConfig.city_name)
+    base_query = (
+        db.query(PlantWatering, Plant.name, Plant.weather_config_id, WeatherConfig.city_name)
         .join(Plant, PlantWatering.plant_id == Plant.id)
         .outerjoin(WeatherConfig, Plant.weather_config_id == WeatherConfig.id)
         .filter(PlantWatering.user_id == None)
+    )
+    total = (
+        db.query(PlantWatering)
+        .filter(PlantWatering.user_id == None)
+        .count()
+    )
+    rows = (
+        base_query
         .order_by(PlantWatering.watered_at.desc())
+        .offset(offset)
         .limit(limit)
         .all()
     )
-    return [
-        AutoWateringResponse(
+
+    # For plants with no weather_config_id, use the default (first) config name
+    default_city = None
+    if any(wc_id is None for _, _, wc_id, _ in rows):
+        default_config = db.query(WeatherConfig).order_by(WeatherConfig.id).first()
+        if default_config:
+            default_city = default_config.city_name
+
+    # Find closest weather log to each watering to get rainfall_mm
+    items = []
+    for w, plant_name, wc_id, city_name in rows:
+        rain_log = (
+            db.query(WeatherLog.rainfall_mm)
+            .filter(
+                WeatherLog.checked_at >= w.watered_at,
+                WeatherLog.checked_at <= w.watered_at,
+            )
+            .first()
+        )
+        if not rain_log:
+            # Find nearest log within 2 minutes of watering time
+            rain_log = (
+                db.query(WeatherLog.rainfall_mm)
+                .filter(
+                    WeatherLog.checked_at >= w.watered_at - timedelta(minutes=2),
+                    WeatherLog.checked_at <= w.watered_at + timedelta(minutes=2),
+                )
+                .order_by(WeatherLog.checked_at.desc())
+                .first()
+            )
+        items.append(AutoWateringResponse(
             id=w.id,
             plant_name=plant_name,
             watered_at=w.watered_at,
-            city_name=city_name,
-        )
-        for w, plant_name, city_name in rows
-    ]
+            city_name=city_name or default_city,
+            rainfall_mm=rain_log.rainfall_mm if rain_log else None,
+        ))
+    return AutoWateringPaginatedResponse(items=items, total=total, limit=limit, offset=offset)
 
 
 @router.post("/check")

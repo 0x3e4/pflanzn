@@ -278,10 +278,12 @@ export default function LocationsPanel() {
                                       <td>
                                           <Skeleton />
                                       </td>
-                                      <td className="action-buttons">
-                                          <Skeleton circle width={30} height={30} />
-                                          <Skeleton circle width={30} height={30} />
-                                          <Skeleton circle width={30} height={30} />
+                                      <td>
+                                          <div className="action-buttons">
+                                              <Skeleton circle width={30} height={30} />
+                                              <Skeleton circle width={30} height={30} />
+                                              <Skeleton circle width={30} height={30} />
+                                          </div>
                                       </td>
                                   </tr>
                               ))
@@ -358,25 +360,27 @@ export default function LocationsPanel() {
                                               placeholder="-"
                                           />
                                       </td>
-                                      <td className="action-buttons">
-                                          <button
-                                              className="view-btn"
-                                              onClick={() => navigate(`/location/${location.id}`)}
-                                          >
-                                              <FontAwesomeIcon icon={faEye} />
-                                          </button>
-                                          <button
-                                              className="update-btn"
-                                              onClick={() => handleUpdateLocation(location.id)}
-                                          >
-                                              <FontAwesomeIcon icon={faSave} />
-                                          </button>
-                                          <button
-                                              className="delete-btn"
-                                              onClick={() => setDeleteModalOpen(location.id)}
-                                          >
-                                              <FontAwesomeIcon icon={faTrash} />
-                                          </button>
+                                      <td>
+                                          <div className="action-buttons">
+                                              <button
+                                                  className="view-btn"
+                                                  onClick={() => navigate(`/location/${location.id}`)}
+                                              >
+                                                  <FontAwesomeIcon icon={faEye} />
+                                              </button>
+                                              <button
+                                                  className="update-btn"
+                                                  onClick={() => handleUpdateLocation(location.id)}
+                                              >
+                                                  <FontAwesomeIcon icon={faSave} />
+                                              </button>
+                                              <button
+                                                  className="delete-btn"
+                                                  onClick={() => setDeleteModalOpen(location.id)}
+                                              >
+                                                  <FontAwesomeIcon icon={faTrash} />
+                                              </button>
+                                          </div>
                                       </td>
                                   </tr>
                               ))}

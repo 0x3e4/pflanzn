@@ -266,13 +266,12 @@
     box-shadow: none;
 }
 
-/* Ensure action buttons cell has consistent height */
+/* Action buttons container */
 .action-buttons {
     display: flex;
     gap: 8px;
     justify-content: flex-end;
     align-items: center;
-    height: 100%; /* Take full cell height */
 }
 
 .update-btn,
@@ -659,4 +658,109 @@
         padding: 20px;
         margin: 20px;
     }
+
+    .tag-plants-modal {
+        width: 95vw !important;
+        max-height: 85vh !important;
+    }
+}
+
+/* ── Tag plants modal ──────────────────────────── */
+
+.tag-plants-modal {
+    background: var(--secondary-background-color);
+    border-radius: 12px;
+    padding: 24px;
+    width: 500px;
+    max-width: 95vw;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.tag-plants-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.tag-plants-modal-header h3 {
+    margin: 0;
+    color: var(--text-color);
+}
+
+.tag-plants-count {
+    font-size: 0.85rem;
+    color: var(--muted-text-color);
+}
+
+.tag-plants-search {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--background-color);
+    color: var(--text-color);
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+    box-sizing: border-box;
+}
+
+.tag-plants-list {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--background-color);
+    max-height: 400px;
+}
+
+.tag-plants-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.15s;
+}
+
+.tag-plants-item:last-child {
+    border-bottom: none;
+}
+
+.tag-plants-item:hover {
+    background: var(--senary-color);
+}
+
+.tag-plants-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    accent-color: var(--primary-color);
+}
+
+.tag-plants-item-name {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.tag-plants-item-species {
+    color: var(--muted-text-color);
+    font-size: 0.8rem;
+    margin-left: auto;
+}
+
+.tag-plants-empty {
+    padding: 20px;
+    text-align: center;
+    color: var(--muted-text-color);
+}
+
+.tag-plants-modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    justify-content: flex-end;
 }

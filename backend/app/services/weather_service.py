@@ -78,7 +78,7 @@ def _get_recent_rainfall(latitude: float, longitude: float, hours: int) -> float
         "hourly": "precipitation",
         "start_date": start.strftime("%Y-%m-%d"),
         "end_date": now.strftime("%Y-%m-%d"),
-        "timezone": "auto",
+        "timezone": "UTC",
     }
     response = requests.get(url, params=params, timeout=10)
     response.raise_for_status()
@@ -88,11 +88,12 @@ def _get_recent_rainfall(latitude: float, longitude: float, hours: int) -> float
     times = hourly.get("time", [])
     precip = hourly.get("precipitation", [])
 
-    # Sum precipitation for the last N hours
+    # Sum precipitation for the last N hours only (exclude future forecast)
     total = 0.0
     cutoff = start.strftime("%Y-%m-%dT%H:00")
+    now_str = now.strftime("%Y-%m-%dT%H:00")
     for i, t in enumerate(times):
-        if t >= cutoff and i < len(precip) and precip[i] is not None:
+        if cutoff <= t <= now_str and i < len(precip) and precip[i] is not None:
             total += precip[i]
 
     return total
@@ -155,6 +156,7 @@ def check_and_auto_water(db: Session) -> int:
 
     check_interval = settings.WEATHER_CHECK_INTERVAL_HOURS
     total_watered = 0
+    watered_plant_ids: set = set()
 
     for config in configs:
         try:
@@ -207,13 +209,14 @@ def check_and_auto_water(db: Session) -> int:
                     )
                     .first()
                 )
-                if not already_watered:
+                if not already_watered and plant.id not in watered_plant_ids:
                     watering = PlantWatering(
                         plant_id=plant.id,
                         watered_at=datetime.utcnow(),
                         user_id=None,
                     )
                     db.add(watering)
+                    watered_plant_ids.add(plant.id)
                     watered_count += 1
 
         log = WeatherLog(

@@ -4,8 +4,8 @@ React-based single-page application for the Pflanzn plant management system. Bui
 
 ## Tech Stack
 
-- **Framework:** React 19 with TypeScript 5.9
-- **Build Tool:** Vite 7.3
+- **Framework:** React 19 with TypeScript 6
+- **Build Tool:** Vite 8
 - **Routing:** React Router v7
 - **HTTP Client:** Axios with auth interceptors
 - **PWA:** vite-plugin-pwa + Workbox (CacheFirst for images, StaleWhileRevalidate for API, NetworkFirst for navigation)

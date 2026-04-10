@@ -242,9 +242,11 @@ export default function UsersPanel() {
                                           <Skeleton width={70} />
                                       </td>
                                       {authMode !== "no" && (
-                                          <td className="action-buttons">
-                                              <Skeleton circle width={30} height={30} />
-                                              <Skeleton circle width={30} height={30} />
+                                          <td>
+                                              <div className="action-buttons">
+                                                  <Skeleton circle width={30} height={30} />
+                                                  <Skeleton circle width={30} height={30} />
+                                              </div>
                                           </td>
                                       )}
                                   </tr>
@@ -285,19 +287,21 @@ export default function UsersPanel() {
                                           </select>
                                       </td>
                                       {authMode !== "no" && (
-                                          <td className="action-buttons">
-                                              <button
-                                                  className="update-btn"
-                                                  onClick={() => handleUpdateUser(u.id, u.username)}
-                                              >
-                                                  <FontAwesomeIcon icon={faSave} />
-                                              </button>
-                                              <button
-                                                  className="delete-btn"
-                                                  onClick={() => handleDeleteUser(u.id, u.username)}
-                                              >
-                                                  <FontAwesomeIcon icon={faTrash} />
-                                              </button>
+                                          <td>
+                                              <div className="action-buttons">
+                                                  <button
+                                                      className="update-btn"
+                                                      onClick={() => handleUpdateUser(u.id, u.username)}
+                                                  >
+                                                      <FontAwesomeIcon icon={faSave} />
+                                                  </button>
+                                                  <button
+                                                      className="delete-btn"
+                                                      onClick={() => handleDeleteUser(u.id, u.username)}
+                                                  >
+                                                      <FontAwesomeIcon icon={faTrash} />
+                                                  </button>
+                                              </div>
                                           </td>
                                       )}
                                   </tr>

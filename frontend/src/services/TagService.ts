@@ -13,6 +13,7 @@ export interface TagDetailed {
     id: number;
     name: string;
     plant_count: number;
+    plant_ids: number[];
     plant_names: string[];
 }
 
@@ -38,4 +39,10 @@ export const updateTag = async (tagId: number, data: Partial<Tag>) => {
 // Delete tag
 export const deleteTag = async (tagId: number) => {
     await apiClient.delete(`${API_BASE}/${tagId}`);
+};
+
+// Set plants for a tag (bulk assign/unassign)
+export const setTagPlants = async (tagId: number, plantIds: number[]): Promise<TagDetailed> => {
+    const response = await apiClient.put(`${API_BASE}/${tagId}/plants`, { plant_ids: plantIds });
+    return response.data;
 };

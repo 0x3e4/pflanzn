@@ -3,12 +3,17 @@ from datetime import datetime
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Plant, PlantWatering, Tag, plant_tag_association
 from app.schemas import PlantWateringCreate, TagCreate, TagListResponse, TagResponse
+
+
+class TagPlantsUpdate(BaseModel):
+    plant_ids: List[int]
 
 router = APIRouter()
 
@@ -20,13 +25,8 @@ def get_tags_detailed(db: Session = Depends(get_db)):
 
     result = []
     for tag in tags:
-        plant_count = (
-            db.query(func.count(plant_tag_association.c.plant_id))
-            .filter(plant_tag_association.c.tag_id == tag.id)
-            .scalar()
-        )
-        plant_names = (
-            db.query(Plant.name)
+        plants = (
+            db.query(Plant.id, Plant.name)
             .join(plant_tag_association, Plant.id == plant_tag_association.c.plant_id)
             .filter(plant_tag_association.c.tag_id == tag.id)
             .all()
@@ -34,8 +34,9 @@ def get_tags_detailed(db: Session = Depends(get_db)):
         result.append({
             "id": tag.id,
             "name": tag.name,
-            "plant_count": plant_count,
-            "plant_names": [p[0] for p in plant_names],
+            "plant_count": len(plants),
+            "plant_ids": [p.id for p in plants],
+            "plant_names": [p.name for p in plants],
         })
 
     return result
@@ -97,6 +98,62 @@ def delete_tag(tag_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Tag deleted successfully"}
+
+# Set plants for a tag (bulk assign/unassign)
+@router.put("/{tag_id}/plants")
+def set_tag_plants(tag_id: int, data: TagPlantsUpdate, db: Session = Depends(get_db)):
+    """Replace the plant list for a tag. Plants in the list get the tag, others lose it."""
+    tag = db.query(Tag).filter(Tag.id == tag_id).first()
+    if not tag:
+        raise HTTPException(status_code=404, detail="Tag not found")
+
+    # Get current plant IDs for this tag
+    current_ids = set(
+        r[0] for r in db.query(plant_tag_association.c.plant_id)
+        .filter(plant_tag_association.c.tag_id == tag_id)
+        .all()
+    )
+    new_ids = set(data.plant_ids)
+
+    # Remove tag from plants no longer in the list
+    to_remove = current_ids - new_ids
+    if to_remove:
+        db.execute(
+            plant_tag_association.delete().where(
+                plant_tag_association.c.tag_id == tag_id,
+                plant_tag_association.c.plant_id.in_(to_remove),
+            )
+        )
+
+    # Add tag to new plants
+    to_add = new_ids - current_ids
+    if to_add:
+        # Verify plants exist
+        existing = set(
+            r[0] for r in db.query(Plant.id).filter(Plant.id.in_(to_add)).all()
+        )
+        for pid in existing:
+            db.execute(
+                plant_tag_association.insert().values(tag_id=tag_id, plant_id=pid)
+            )
+
+    db.commit()
+
+    # Return updated tag info
+    plants = (
+        db.query(Plant.id, Plant.name)
+        .join(plant_tag_association, Plant.id == plant_tag_association.c.plant_id)
+        .filter(plant_tag_association.c.tag_id == tag_id)
+        .all()
+    )
+    return {
+        "id": tag.id,
+        "name": tag.name,
+        "plant_count": len(plants),
+        "plant_ids": [p.id for p in plants],
+        "plant_names": [p.name for p in plants],
+    }
+
 
 # Water plants by tag
 @router.post("/{tag_id}/water")

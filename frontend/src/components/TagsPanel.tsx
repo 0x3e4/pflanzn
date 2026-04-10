@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { fetchTagsDetailed, createTag, updateTag, deleteTag, TagDetailed } from "../services/TagService";
+import { fetchTagsDetailed, createTag, updateTag, deleteTag, setTagPlants, TagDetailed } from "../services/TagService";
+import { fetchPlants } from "../services/PlantService";
+import { Plant } from "../types/Plant";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -10,8 +12,10 @@ import {
     faChevronLeft,
     faChevronRight,
     faCircleXmark,
+    faListCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import { setOverlayOpen } from "../services/overlayControl";
+import { useModalA11y } from "../hooks/useModalA11y";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
@@ -31,6 +35,13 @@ export default function TagsPanel() {
 
     const [sortField, setSortField] = useState<SortField>("id");
     const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+    // Plant selector modal state
+    const [plantModalTag, setPlantModalTag] = useState<TagDetailed | null>(null);
+    const [allPlants, setAllPlants] = useState<Plant[]>([]);
+    const [selectedPlantIds, setSelectedPlantIds] = useState<Set<number>>(new Set());
+    const [plantSearch, setPlantSearch] = useState("");
+    const [savingPlants, setSavingPlants] = useState(false);
 
     const totalPages = Math.ceil(tags.length / itemsPerPage);
 
@@ -134,9 +145,62 @@ export default function TagsPanel() {
         }
     };
 
+    // Plant selector modal
+    const openPlantModal = async (tag: TagDetailed) => {
+        setPlantModalTag(tag);
+        setSelectedPlantIds(new Set(tag.plant_ids));
+        setPlantSearch("");
+        try {
+            const plants = await fetchPlants();
+            setAllPlants(plants.filter((p) => !p.is_archived));
+        } catch {
+            toast.error("Failed to load plants.");
+        }
+    };
+
+    const closePlantModal = () => {
+        setPlantModalTag(null);
+        setAllPlants([]);
+        setSelectedPlantIds(new Set());
+        setPlantSearch("");
+    };
+
+    const togglePlant = (plantId: number) => {
+        setSelectedPlantIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(plantId)) {
+                next.delete(plantId);
+            } else {
+                next.add(plantId);
+            }
+            return next;
+        });
+    };
+
+    const handleSavePlants = async () => {
+        if (!plantModalTag) return;
+        setSavingPlants(true);
+        try {
+            const updated = await setTagPlants(plantModalTag.id, Array.from(selectedPlantIds));
+            toast.success(`Updated plants for "#${plantModalTag.name}".`);
+            setTags((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+            closePlantModal();
+        } catch {
+            toast.error("Failed to update plants.");
+        } finally {
+            setSavingPlants(false);
+        }
+    };
+
+    const filteredPlants = allPlants.filter(
+        (p) => p.name.toLowerCase().includes(plantSearch.toLowerCase()) || (p.species && p.species.toLowerCase().includes(plantSearch.toLowerCase())),
+    );
+
+    const { modalRef: plantModalRef } = useModalA11y({ isOpen: !!plantModalTag, onClose: closePlantModal });
+
     useEffect(() => {
-        setOverlayOpen(!!deleteModalOpen);
-    }, [deleteModalOpen]);
+        setOverlayOpen(!!deleteModalOpen || !!plantModalTag);
+    }, [deleteModalOpen, plantModalTag]);
 
     if (!isLoggedIn && authMode !== "no") {
         return <p>Access denied</p>;
@@ -193,19 +257,21 @@ export default function TagsPanel() {
                                 </td>
                                 <td>-</td>
                                 <td>-</td>
-                                <td className="action-buttons">
-                                    <button className="update-btn" onClick={handleCreateTag}>
-                                        <FontAwesomeIcon icon={faSave} />
-                                    </button>
-                                    <button
-                                        className="delete-btn"
-                                        onClick={() => {
-                                            setShowAddRow(false);
-                                            setNewTagName("");
-                                        }}
-                                    >
-                                        <FontAwesomeIcon icon={faCircleXmark} />
-                                    </button>
+                                <td>
+                                    <div className="action-buttons">
+                                        <button className="update-btn" onClick={handleCreateTag}>
+                                            <FontAwesomeIcon icon={faSave} />
+                                        </button>
+                                        <button
+                                            className="delete-btn"
+                                            onClick={() => {
+                                                setShowAddRow(false);
+                                                setNewTagName("");
+                                            }}
+                                        >
+                                            <FontAwesomeIcon icon={faCircleXmark} />
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         )}
@@ -216,9 +282,12 @@ export default function TagsPanel() {
                                       <td><Skeleton /></td>
                                       <td><Skeleton width={30} /></td>
                                       <td><Skeleton /></td>
-                                      <td className="action-buttons">
-                                          <Skeleton circle width={30} height={30} />
-                                          <Skeleton circle width={30} height={30} />
+                                      <td>
+                                          <div className="action-buttons">
+                                              <Skeleton circle width={30} height={30} />
+                                              <Skeleton circle width={30} height={30} />
+                                              <Skeleton circle width={30} height={30} />
+                                          </div>
                                       </td>
                                   </tr>
                               ))
@@ -242,13 +311,18 @@ export default function TagsPanel() {
                                                   : "-"}
                                           </span>
                                       </td>
-                                      <td className="action-buttons">
-                                          <button className="update-btn" onClick={() => handleUpdateTag(tag.id)}>
-                                              <FontAwesomeIcon icon={faSave} />
-                                          </button>
-                                          <button className="delete-btn" onClick={() => setDeleteModalOpen(tag.id)}>
-                                              <FontAwesomeIcon icon={faTrash} />
-                                          </button>
+                                      <td>
+                                          <div className="action-buttons">
+                                              <button className="view-btn" onClick={() => openPlantModal(tag)} title="Manage plants">
+                                                  <FontAwesomeIcon icon={faListCheck} />
+                                              </button>
+                                              <button className="update-btn" onClick={() => handleUpdateTag(tag.id)}>
+                                                  <FontAwesomeIcon icon={faSave} />
+                                              </button>
+                                              <button className="delete-btn" onClick={() => setDeleteModalOpen(tag.id)}>
+                                                  <FontAwesomeIcon icon={faTrash} />
+                                              </button>
+                                          </div>
                                       </td>
                                   </tr>
                               ))}
@@ -270,6 +344,7 @@ export default function TagsPanel() {
                     </div>
                 )}
 
+                {/* Delete confirmation modal */}
                 {deleteModalOpen && (
                     <div className="delete-plant-modal-overlay">
                         <div className="delete-plant-modal">
@@ -293,6 +368,64 @@ export default function TagsPanel() {
                                 </button>
                                 <button className="delete-plant-cancel" onClick={() => setDeleteModalOpen(null)}>
                                     <FontAwesomeIcon icon={faCircleXmark} /> Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Plant selector modal */}
+                {plantModalTag && (
+                    <div className="delete-plant-modal-overlay">
+                        <div
+                            className="tag-plants-modal"
+                            ref={plantModalRef}
+                            role="dialog"
+                            aria-modal="true"
+                            aria-label={`Manage plants for #${plantModalTag.name}`}
+                        >
+                            <div className="tag-plants-modal-header">
+                                <h3>Plants for #{plantModalTag.name}</h3>
+                                <span className="tag-plants-count">
+                                    {selectedPlantIds.size} selected
+                                </span>
+                            </div>
+                            <input
+                                type="text"
+                                className="tag-plants-search"
+                                placeholder="Search plants..."
+                                value={plantSearch}
+                                onChange={(e) => setPlantSearch(e.target.value)}
+                                autoFocus
+                            />
+                            <div className="tag-plants-list">
+                                {filteredPlants.map((plant) => (
+                                    <label key={plant.id} className="tag-plants-item">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedPlantIds.has(plant.id)}
+                                            onChange={() => togglePlant(plant.id)}
+                                        />
+                                        <span className="tag-plants-item-name">{plant.name}</span>
+                                        {plant.species && (
+                                            <span className="tag-plants-item-species">{plant.species}</span>
+                                        )}
+                                    </label>
+                                ))}
+                                {filteredPlants.length === 0 && (
+                                    <div className="tag-plants-empty">No plants found.</div>
+                                )}
+                            </div>
+                            <div className="tag-plants-modal-actions">
+                                <button
+                                    className="weather-save-btn"
+                                    onClick={handleSavePlants}
+                                    disabled={savingPlants}
+                                >
+                                    {savingPlants ? "Saving..." : "Save"}
+                                </button>
+                                <button className="weather-cancel-btn" onClick={closePlantModal}>
+                                    Cancel
                                 </button>
                             </div>
                         </div>

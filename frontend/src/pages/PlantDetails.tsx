@@ -556,6 +556,11 @@ export default function PlantDetails() {
 
         switch (activity.activity_type) {
             case "watering":
+                if (activity.activity_data?.is_auto_watered) {
+                    const zone = activity.activity_data.weather_zone;
+                    const threshold = activity.activity_data.rainfall_threshold_mm;
+                    return `Plant was watered due to rain${threshold ? ` (≥${threshold}mm` : ""}${zone ? `, ${zone})` : threshold ? ")" : ""}`;
+                }
                 return `Plant was watered${userName ? ` by ${userName}` : ""}`;
             case "fertilizing":
                 return `Plant was fertilized${userName ? ` by ${userName}` : ""}`;

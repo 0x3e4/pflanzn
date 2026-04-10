@@ -288,5 +288,20 @@ class AutoWateringResponse(BaseModel):
     plant_name: str
     watered_at: datetime
     city_name: Optional[str] = None
+    rainfall_mm: Optional[float] = None
+
+
+class AutoWateringPaginatedResponse(BaseModel):
+    items: List[AutoWateringResponse]
+    total: int
+    limit: int
+    offset: int
+
+
+class WeatherLogPaginatedResponse(BaseModel):
+    items: List[WeatherLogResponse]
+    total: int
+    limit: int
+    offset: int
 
 PlantResponse.model_rebuild()

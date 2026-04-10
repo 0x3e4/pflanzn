@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.security import get_current_user
 from app.database import get_db
-from app.models import Plant, PlantCareAdvice, PlantFertilizing, PlantIdentification, PlantImage, PlantNote, PlantWatering, Tag, User
+from app.models import Plant, PlantCareAdvice, PlantFertilizing, PlantIdentification, PlantImage, PlantNote, PlantWatering, Tag, User, WeatherConfig
 from app.schemas import (
     ArchiveRequest,
     PlantCareAdviceResponse,
@@ -202,6 +202,25 @@ def get_plant(plant_id: int, db: Session = Depends(get_db)):
         .first()
     )
 
+    latest_fertilizing = (
+        db.query(PlantFertilizing)
+        .filter(PlantFertilizing.plant_id == plant_id)
+        .order_by(PlantFertilizing.fertilized_at.desc())
+        .first()
+    )
+
+    # Compute last_watered/last_fertilized BEFORE in-place timezone conversion
+    # to avoid double-conversion via SQLAlchemy identity map
+    if latest_watering and latest_watering.watered_at:
+        plant.last_watered = latest_watering.watered_at.replace(tzinfo=timezone.utc).astimezone(tz)
+    else:
+        plant.last_watered = None
+
+    if latest_fertilizing and latest_fertilizing.fertilized_at:
+        plant.last_fertilized = latest_fertilizing.fertilized_at.replace(tzinfo=timezone.utc).astimezone(tz)
+    else:
+        plant.last_fertilized = None
+
     for image in plant.images:
         image.uploaded_at = image.uploaded_at.replace(tzinfo=timezone.utc).astimezone(tz)
 
@@ -216,22 +235,6 @@ def get_plant(plant_id: int, db: Session = Depends(get_db)):
 
     for note in plant.notes:
         note.created_at = note.created_at.replace(tzinfo=timezone.utc).astimezone(tz)
-
-    if latest_watering and latest_watering.watered_at:
-        plant.last_watered = latest_watering.watered_at.replace(tzinfo=timezone.utc).astimezone(tz)
-    else:
-        plant.last_watered = None
-
-    latest_fertilizing = (
-        db.query(PlantFertilizing)
-        .filter(PlantFertilizing.plant_id == plant_id)
-        .order_by(PlantFertilizing.fertilized_at.desc())
-        .first()
-    )
-    if latest_fertilizing and latest_fertilizing.fertilized_at:
-        plant.last_fertilized = latest_fertilizing.fertilized_at.replace(tzinfo=timezone.utc).astimezone(tz)
-    else:
-        plant.last_fertilized = None
 
     return plant
 
@@ -809,6 +812,13 @@ def get_plant_activities(
 
     activities = []
 
+    # Pre-load weather config for auto-watering info
+    weather_zone_name = None
+    if plant.weather_config_id:
+        wc = db.query(WeatherConfig).filter(WeatherConfig.id == plant.weather_config_id).first()
+        if wc:
+            weather_zone_name = wc.city_name
+
     # Get waterings for this plant
     waterings = (
         db.query(PlantWatering)
@@ -819,15 +829,20 @@ def get_plant_activities(
 
     for watering in waterings:
         watering.watered_at = watering.watered_at.replace(tzinfo=timezone.utc).astimezone(tz)
+        activity_data = {
+            "watering_id": watering.id,
+            "user_name": watering.created_by.username if watering.created_by else None,
+            "is_auto_watered": watering.user_id is None,
+        }
+        if watering.user_id is None:
+            activity_data["rainfall_threshold_mm"] = settings.WEATHER_RAINFALL_THRESHOLD_MM
+            activity_data["weather_zone"] = weather_zone_name
         activities.append({
             "id": f"watering_{watering.id}",
             "plant_id": plant_id,
             "plant_name": plant.name,
             "activity_type": "watering",
-            "activity_data": {
-                "watering_id": watering.id,
-                "user_name": watering.created_by.username if watering.created_by else None,
-            },
+            "activity_data": activity_data,
             "timestamp": watering.watered_at.isoformat()
         })
 

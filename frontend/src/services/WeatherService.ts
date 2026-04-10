@@ -36,6 +36,7 @@ export interface AutoWatering {
     plant_name: string;
     watered_at: string;
     city_name: string | null;
+    rainfall_mm: number | null;
 }
 
 export const fetchWeatherConfigs = async (): Promise<WeatherConfig[]> => {
@@ -72,13 +73,27 @@ export const fetchCurrentWeather = async (configId?: number): Promise<WeatherCur
     return response.data;
 };
 
-export const fetchWeatherLogs = async (limit = 20): Promise<WeatherLog[]> => {
-    const response = await apiClient.get(`${API_BASE}/logs`, { params: { limit } });
+export interface WeatherLogPaginated {
+    items: WeatherLog[];
+    total: number;
+    limit: number;
+    offset: number;
+}
+
+export const fetchWeatherLogs = async (limit = 10, offset = 0): Promise<WeatherLogPaginated> => {
+    const response = await apiClient.get(`${API_BASE}/logs`, { params: { limit, offset } });
     return response.data;
 };
 
-export const fetchAutoWaterings = async (limit = 20): Promise<AutoWatering[]> => {
-    const response = await apiClient.get(`${API_BASE}/waterings`, { params: { limit } });
+export interface AutoWateringPaginated {
+    items: AutoWatering[];
+    total: number;
+    limit: number;
+    offset: number;
+}
+
+export const fetchAutoWaterings = async (limit = 10, offset = 0): Promise<AutoWateringPaginated> => {
+    const response = await apiClient.get(`${API_BASE}/waterings`, { params: { limit, offset } });
     return response.data;
 };
 

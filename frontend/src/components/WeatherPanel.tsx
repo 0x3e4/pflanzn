@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faLocationCrosshairs, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faChevronLeft, faChevronRight, faLocationCrosshairs, faPlus, faRotate, faTrash } from "@fortawesome/free-solid-svg-icons";
 import {
     fetchWeatherConfigs,
     saveWeatherConfig,
@@ -25,7 +25,11 @@ export default function WeatherPanel() {
     const [checking, setChecking] = useState(false);
     const [gpsLoading, setGpsLoading] = useState(false);
     const [logs, setLogs] = useState<WeatherLog[]>([]);
+    const [logPage, setLogPage] = useState(0);
+    const [logTotal, setLogTotal] = useState(0);
     const [waterings, setWaterings] = useState<AutoWatering[]>([]);
+    const [wateringPage, setWateringPage] = useState(0);
+    const [wateringTotal, setWateringTotal] = useState(0);
     const [weatherPreviews, setWeatherPreviews] = useState<Record<number, WeatherCurrent>>({});
 
     // New location form
@@ -57,15 +61,19 @@ export default function WeatherPanel() {
             setWeatherPreviews(previews);
 
             try {
-                const logData = await fetchWeatherLogs(10);
-                setLogs(logData);
+                const logData = await fetchWeatherLogs(10, 0);
+                setLogs(logData.items);
+                setLogTotal(logData.total);
+                setLogPage(0);
             } catch {
                 /* no logs */
             }
 
             try {
-                const wateringData = await fetchAutoWaterings(10);
-                setWaterings(wateringData);
+                const wateringData = await fetchAutoWaterings(10, 0);
+                setWaterings(wateringData.items);
+                setWateringTotal(wateringData.total);
+                setWateringPage(0);
             } catch {
                 /* no waterings */
             }
@@ -143,11 +151,15 @@ export default function WeatherPanel() {
             const result = await triggerWeatherCheck();
             toast.success(result.message);
             const [logData, wateringData] = await Promise.all([
-                fetchWeatherLogs(10),
-                fetchAutoWaterings(10),
+                fetchWeatherLogs(10, 0),
+                fetchAutoWaterings(10, 0),
             ]);
-            setLogs(logData);
-            setWaterings(wateringData);
+            setLogs(logData.items);
+            setLogTotal(logData.total);
+            setLogPage(0);
+            setWaterings(wateringData.items);
+            setWateringTotal(wateringData.total);
+            setWateringPage(0);
         } catch {
             toast.error("Weather check failed.");
         } finally {
@@ -174,6 +186,32 @@ export default function WeatherPanel() {
             },
         );
     };
+
+    const loadLogsPage = async (page: number) => {
+        try {
+            const data = await fetchWeatherLogs(10, page * 10);
+            setLogs(data.items);
+            setLogTotal(data.total);
+            setLogPage(page);
+        } catch {
+            /* ignore */
+        }
+    };
+
+    const loadWateringsPage = async (page: number) => {
+        try {
+            const data = await fetchAutoWaterings(10, page * 10);
+            setWaterings(data.items);
+            setWateringTotal(data.total);
+            setWateringPage(page);
+        } catch {
+            /* ignore */
+        }
+    };
+
+    const MAX_PAGES = 10;
+    const logTotalPages = Math.min(Math.ceil(logTotal / 10), MAX_PAGES);
+    const wateringTotalPages = Math.min(Math.ceil(wateringTotal / 10), MAX_PAGES);
 
     if (loading) {
         return <div className="weather-panel-empty">Loading weather settings...</div>;
@@ -289,58 +327,92 @@ export default function WeatherPanel() {
                 </div>
             )}
 
-            {/* Check now */}
-            {configs.length > 0 && (
-                <div className="weather-check-section">
-                    <button className="weather-check-btn" onClick={handleCheck} disabled={checking}>
-                        {checking ? "Checking..." : "Check Now"}
-                    </button>
-                </div>
-            )}
-
             {/* Logs */}
-            {logs.length > 0 && (
+            {(logs.length > 0 || configs.length > 0) && (
                 <div className="weather-logs">
-                    <h3>Recent Weather Checks</h3>
-                    <div className="weather-table-scroll">
-                        <table className="weather-logs-table">
-                            <thead>
-                                <tr>
-                                    <th>Time</th>
-                                    <th>Location</th>
-                                    <th>Condition</th>
-                                    <th>Rain</th>
-                                    <th>Temp</th>
-                                    <th>Watered</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {logs.map((log) => (
-                                    <tr key={log.id}>
-                                        <td>
-                                            {new Date(log.checked_at).toLocaleString(undefined, {
-                                                month: "short",
-                                                day: "numeric",
-                                                hour: "2-digit",
-                                                minute: "2-digit",
-                                            })}
-                                        </td>
-                                        <td>{log.city_name || "-"}</td>
-                                        <td>{log.weather_condition || "-"}</td>
-                                        <td>{log.rainfall_mm.toFixed(1)} mm</td>
-                                        <td>
-                                            {log.temperature !== null ? `${log.temperature.toFixed(1)}°C` : "-"}
-                                        </td>
-                                        <td>
-                                            {log.auto_watered_count > 0
-                                                ? `${log.auto_watered_count} plants`
-                                                : "-"}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                    <div className="weather-section-header">
+                        <h3>Recent Weather Checks</h3>
+                        {configs.length > 0 && (
+                            <button
+                                className="weather-check-icon-btn"
+                                onClick={handleCheck}
+                                disabled={checking}
+                                title="Check Now"
+                            >
+                                <FontAwesomeIcon icon={faRotate} spin={checking} />
+                            </button>
+                        )}
                     </div>
+                    {logs.length > 0 && (
+                        <>
+                            <div className="weather-table-scroll">
+                                <table className="weather-logs-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Time</th>
+                                            <th>Location</th>
+                                            <th>Condition</th>
+                                            <th>Rain</th>
+                                            <th>Temp</th>
+                                            <th>Watered</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {logs.map((log) => (
+                                            <tr key={log.id}>
+                                                <td>
+                                                    {new Date(log.checked_at).toLocaleString(
+                                                        import.meta.env.VITE_LOCALE,
+                                                        {
+                                                            timeZone: import.meta.env.VITE_TZ,
+                                                            month: "short",
+                                                            day: "numeric",
+                                                            hour: "2-digit",
+                                                            minute: "2-digit",
+                                                        },
+                                                    )}
+                                                </td>
+                                                <td>{log.city_name || "-"}</td>
+                                                <td>{log.weather_condition || "-"}</td>
+                                                <td>{log.rainfall_mm.toFixed(1)} mm</td>
+                                                <td>
+                                                    {log.temperature !== null
+                                                        ? `${log.temperature.toFixed(1)}°C`
+                                                        : "-"}
+                                                </td>
+                                                <td>
+                                                    {log.auto_watered_count > 0
+                                                        ? `${log.auto_watered_count} plants`
+                                                        : "-"}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {logTotalPages > 1 && (
+                                <div className="weather-pagination">
+                                    <button
+                                        disabled={logPage === 0}
+                                        onClick={() => loadLogsPage(logPage - 1)}
+                                        title="Previous page"
+                                    >
+                                        <FontAwesomeIcon icon={faChevronLeft} />
+                                    </button>
+                                    <span>
+                                        {logPage + 1} / {logTotalPages}
+                                    </span>
+                                    <button
+                                        disabled={logPage >= logTotalPages - 1}
+                                        onClick={() => loadLogsPage(logPage + 1)}
+                                        title="Next page"
+                                    >
+                                        <FontAwesomeIcon icon={faChevronRight} />
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
             )}
 
@@ -354,6 +426,7 @@ export default function WeatherPanel() {
                                 <tr>
                                     <th>Time</th>
                                     <th>Plant</th>
+                                    <th>Rain</th>
                                     <th>Location</th>
                                 </tr>
                             </thead>
@@ -361,7 +434,8 @@ export default function WeatherPanel() {
                                 {waterings.map((w) => (
                                     <tr key={w.id}>
                                         <td>
-                                            {new Date(w.watered_at).toLocaleString(undefined, {
+                                            {new Date(w.watered_at).toLocaleString(import.meta.env.VITE_LOCALE, {
+                                                timeZone: import.meta.env.VITE_TZ,
                                                 month: "short",
                                                 day: "numeric",
                                                 hour: "2-digit",
@@ -369,12 +443,34 @@ export default function WeatherPanel() {
                                             })}
                                         </td>
                                         <td>{w.plant_name}</td>
+                                        <td>{w.rainfall_mm !== null ? `${w.rainfall_mm.toFixed(1)} mm` : "-"}</td>
                                         <td>{w.city_name || "-"}</td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
                     </div>
+                    {wateringTotalPages > 1 && (
+                        <div className="weather-pagination">
+                            <button
+                                disabled={wateringPage === 0}
+                                onClick={() => loadWateringsPage(wateringPage - 1)}
+                                title="Previous page"
+                            >
+                                <FontAwesomeIcon icon={faChevronLeft} />
+                            </button>
+                            <span>
+                                {wateringPage + 1} / {wateringTotalPages}
+                            </span>
+                            <button
+                                disabled={wateringPage >= wateringTotalPages - 1}
+                                onClick={() => loadWateringsPage(wateringPage + 1)}
+                                title="Next page"
+                            >
+                                <FontAwesomeIcon icon={faChevronRight} />
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
