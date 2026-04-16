@@ -432,7 +432,7 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
                         sizes="(max-width: 768px) 100vw, 800px"
                         alt="Plant Image"
                         tabIndex={-1}
-                        style={{ display: currentImageLoaded ? "block" : "none" }}
+                        style={{ visibility: currentImageLoaded ? "visible" : "hidden" }}
                     />
 
                     <div className="plant-fullsize-overlay" style={{ display: currentImageLoaded ? "block" : "none" }}>

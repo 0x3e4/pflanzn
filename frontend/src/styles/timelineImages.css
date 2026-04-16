@@ -18,24 +18,14 @@
     touch-action: none;
     position: relative;
     display: inline-block;
-    height: 400px;
 }
 
 .plant-carousel-image {
-    max-width: 300px;
+    width: 100%;
+    height: auto;
     border-radius: 8px;
     display: block;
     outline: none;
-}
-
-@media (max-width: 768px) {
-    .plant-image-container {
-        height: 450px;
-    }
-
-    .plant-carousel-image {
-        max-width: 340px;
-    }
 }
 
 .plant-uploaded-date-overlay {
@@ -319,14 +309,14 @@ h5 {
 .plant-image-container.timeline-images {
     position: relative;
     overflow: hidden;
-    width: 300px;
-    height: 400px;
+    width: 100%;
+    max-width: 300px;
+    height: auto;
 }
 
 @media (max-width: 768px) {
     .plant-image-container.timeline-images {
-        width: 340px;
-        height: 450px;
+        max-width: 100%;
     }
 }
 
