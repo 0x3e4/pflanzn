@@ -33,6 +33,7 @@ export interface WeatherLog {
 
 export interface AutoWatering {
     id: number;
+    plant_id: number;
     plant_name: string;
     watered_at: string;
     city_name: string | null;

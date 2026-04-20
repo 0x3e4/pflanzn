@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft, faChevronRight, faLocationCrosshairs, faPlus, faRotate, faTrash } from "@fortawesome/free-solid-svg-icons";
@@ -442,7 +443,9 @@ export default function WeatherPanel() {
                                                 minute: "2-digit",
                                             })}
                                         </td>
-                                        <td>{w.plant_name}</td>
+                                        <td>
+                                            <Link to={`/plant/${w.plant_id}`}>{w.plant_name}</Link>
+                                        </td>
                                         <td>{w.rainfall_mm !== null ? `${w.rainfall_mm.toFixed(1)} mm` : "-"}</td>
                                         <td>{w.city_name || "-"}</td>
                                     </tr>

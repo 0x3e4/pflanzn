@@ -107,6 +107,11 @@ def _ensure_weather_schema():
         if "city_name" not in log_columns:
             _execute_ddl("ALTER TABLE weather_logs ADD COLUMN city_name VARCHAR(255) NULL AFTER longitude")
 
+    if "plant_waterings" in tables:
+        watering_columns = {column["name"] for column in inspector.get_columns("plant_waterings")}
+        if "rainfall_mm" not in watering_columns:
+            _execute_ddl("ALTER TABLE plant_waterings ADD COLUMN rainfall_mm FLOAT NULL")
+
     if "plants" in tables:
         plant_columns = {column["name"] for column in inspector.get_columns("plants")}
         if "is_outdoor" not in plant_columns:

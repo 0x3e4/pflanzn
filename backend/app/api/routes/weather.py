@@ -1,5 +1,4 @@
 import logging
-from datetime import timedelta
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -172,7 +171,7 @@ def get_auto_waterings(
 ):
     """Get recent auto-waterings (weather-triggered, user_id is NULL)."""
     base_query = (
-        db.query(PlantWatering, Plant.name, Plant.weather_config_id, WeatherConfig.city_name)
+        db.query(PlantWatering, Plant.id, Plant.name, Plant.weather_config_id, WeatherConfig.city_name)
         .join(Plant, PlantWatering.plant_id == Plant.id)
         .outerjoin(WeatherConfig, Plant.weather_config_id == WeatherConfig.id)
         .filter(PlantWatering.user_id == None)
@@ -192,40 +191,22 @@ def get_auto_waterings(
 
     # For plants with no weather_config_id, use the default (first) config name
     default_city = None
-    if any(wc_id is None for _, _, wc_id, _ in rows):
+    if any(wc_id is None for _, _, _, wc_id, _ in rows):
         default_config = db.query(WeatherConfig).order_by(WeatherConfig.id).first()
         if default_config:
             default_city = default_config.city_name
 
-    # Find closest weather log to each watering to get rainfall_mm
-    items = []
-    for w, plant_name, wc_id, city_name in rows:
-        rain_log = (
-            db.query(WeatherLog.rainfall_mm)
-            .filter(
-                WeatherLog.checked_at >= w.watered_at,
-                WeatherLog.checked_at <= w.watered_at,
-            )
-            .first()
-        )
-        if not rain_log:
-            # Find nearest log within 2 minutes of watering time
-            rain_log = (
-                db.query(WeatherLog.rainfall_mm)
-                .filter(
-                    WeatherLog.checked_at >= w.watered_at - timedelta(minutes=2),
-                    WeatherLog.checked_at <= w.watered_at + timedelta(minutes=2),
-                )
-                .order_by(WeatherLog.checked_at.desc())
-                .first()
-            )
-        items.append(AutoWateringResponse(
+    items = [
+        AutoWateringResponse(
             id=w.id,
+            plant_id=plant_id,
             plant_name=plant_name,
             watered_at=w.watered_at,
             city_name=city_name or default_city,
-            rainfall_mm=rain_log.rainfall_mm if rain_log else None,
-        ))
+            rainfall_mm=w.rainfall_mm,
+        )
+        for w, plant_id, plant_name, _wc_id, city_name in rows
+    ]
     return AutoWateringPaginatedResponse(items=items, total=total, limit=limit, offset=offset)
 
 

@@ -285,6 +285,7 @@ class WeatherLogResponse(BaseModel):
 
 class AutoWateringResponse(BaseModel):
     id: int
+    plant_id: int
     plant_name: str
     watered_at: datetime
     city_name: Optional[str] = None

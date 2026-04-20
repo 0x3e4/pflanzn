@@ -58,6 +58,7 @@ class PlantWatering(Base):
     id = Column(Integer, primary_key=True, index=True)
     plant_id = Column(Integer, ForeignKey("plants.id"), nullable=False)
     watered_at = Column(DateTime, nullable=False)
+    rainfall_mm = Column(Float, nullable=True)
 
     user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
 

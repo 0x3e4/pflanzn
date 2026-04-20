@@ -214,6 +214,7 @@ def check_and_auto_water(db: Session) -> int:
                         plant_id=plant.id,
                         watered_at=datetime.utcnow(),
                         user_id=None,
+                        rainfall_mm=effective_rainfall,
                     )
                     db.add(watering)
                     watered_plant_ids.add(plant.id)
