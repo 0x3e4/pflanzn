@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useModalA11y } from "../hooks/useModalA11y";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useConfig } from "../context/ConfigContext";
 import { deleteLocation, fetchLocations, updateLocation } from "../services/LocationService";
 import { Location, LocationUpdateInput, SpotType } from "../types/Location";
 import { toast } from "react-toastify";
@@ -36,7 +37,7 @@ type LocationEditDraft = {
 
 export default function LocationsPanel() {
     const navigate = useNavigate();
-    const authMode = import.meta.env.VITE_AUTH_MODE || "no";
+    const { authMode } = useConfig();
     const { user, isLoggedIn } = useAuth();
     const [locations, setLocations] = useState<Location[]>([]);
     const [editedLocations, setEditedLocations] = useState<Record<number, LocationEditDraft>>({});

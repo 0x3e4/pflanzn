@@ -12,6 +12,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../context/AuthContext";
 import { useShare } from "../context/ShareContext";
+import { useConfig } from "../context/ConfigContext";
 import { identifyPlantFromImage } from "../services/PlantService";
 import IdentifyResults from "./IdentifyResults";
 import { toast } from "react-toastify";
@@ -22,14 +23,7 @@ export default function BottomNav() {
     const location = useLocation();
     const { isLoggedIn, loading } = useAuth();
     const { isShareAccess } = useShare();
-    const authMode = import.meta.env.VITE_AUTH_MODE || "no";
-    const showLocations = !["false", "0", "no", "off"].includes(
-        (
-            import.meta.env.VITE_ENABLE_LOCATIONS ||
-            import.meta.env.VITE_ENABLE_HERBALIST_LOCATIONS ||
-            "false"
-        ).toLowerCase(),
-    );
+    const { authMode, enableLocations: showLocations } = useConfig();
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [loadingIdentification, setLoadingIdentification] = useState(false);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useConfig } from "../context/ConfigContext";
 import { fetchTagsDetailed, createTag, updateTag, deleteTag, setTagPlants, TagDetailed } from "../services/TagService";
 import { fetchPlants } from "../services/PlantService";
 import { Plant } from "../types/Plant";
@@ -22,7 +23,7 @@ import "react-loading-skeleton/dist/skeleton.css";
 type SortField = "id" | "name" | "plant_count";
 
 export default function TagsPanel() {
-    const authMode = import.meta.env.VITE_AUTH_MODE || "no";
+    const { authMode } = useConfig();
     const { user, isLoggedIn } = useAuth();
     const [tags, setTags] = useState<TagDetailed[]>([]);
     const [editedTags, setEditedTags] = useState<{ [tagId: number]: { name: string } }>({});

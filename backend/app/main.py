@@ -1,13 +1,12 @@
 import asyncio
 import logging
-import os
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from app.api.routes import auth, locations, plants, share, statistics, tags, uploads, users, weather
+from app.api.routes import auth, config as config_route, locations, plants, share, statistics, tags, uploads, users, weather
 from app.core.config import settings
 from app.core.security import create_admin_user
 from app.database import SessionLocal, init_db
@@ -33,15 +32,15 @@ app = FastAPI(
 # CORS settings
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.VITE_DOMAIN],
+    allow_origins=[settings.DOMAIN],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Add SessionMiddleware BEFORE mounting routers
-if os.getenv("VITE_AUTH_MODE") == "oidc":
-    same_site_setting = "none" if "://" in settings.OIDC_PROVIDER_URL and not settings.VITE_DOMAIN.endswith(settings.OIDC_PROVIDER_URL.split("//")[1]) else "strict"
+if settings.AUTH_MODE == "oidc":
+    same_site_setting = "none" if "://" in settings.OIDC_PROVIDER_URL and not settings.DOMAIN.endswith(settings.OIDC_PROVIDER_URL.split("//")[1]) else "strict"
 
     app.add_middleware(
         SessionMiddleware,
@@ -52,13 +51,14 @@ if os.getenv("VITE_AUTH_MODE") == "oidc":
     )
 
 # Include routers
+app.include_router(config_route.router, prefix="/api/config", tags=["Config"])
 app.include_router(uploads.router, prefix="/api/uploads", tags=["Uploads"])
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(plants.router, prefix="/api/plants", tags=["Plants"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(statistics.router, prefix="/api/statistics", tags=["Statistics"])
 app.include_router(tags.router, prefix="/api/tags", tags=["Tags"])
-if settings.VITE_ENABLE_LOCATIONS:
+if settings.ENABLE_LOCATIONS:
     app.include_router(locations.router, prefix="/api/locations", tags=["Locations"])
 app.include_router(share.router, prefix="/api/share", tags=["Share"])
 app.include_router(weather.router, prefix="/api/weather", tags=["Weather"])
@@ -86,7 +86,7 @@ async def _weather_check_loop():
 
 @app.on_event("startup")
 def startup_event():
-    if os.getenv("VITE_AUTH_MODE") == "local":
+    if settings.AUTH_MODE == "local":
         create_admin_user()
 
     if settings.WEATHER_ENABLED:

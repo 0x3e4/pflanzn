@@ -32,6 +32,7 @@ import {
     faCompress,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../context/AuthContext";
+import { useConfig } from "../context/ConfigContext";
 import { setOverlayOpen } from "../services/overlayControl";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -76,15 +77,16 @@ export default function Plants() {
         results: { species: string; commonName: string; score: string; images: string[] }[];
     } | null>(null);
 
+    const { isLoggedIn } = useAuth();
+    const { tz: timezone, locale } = useConfig();
+
     const [selectedDateTime, setSelectedDateTime] = useState<string>(
         DateTime.now()
-            .setZone(import.meta.env.VITE_TZ)
+            .setZone(timezone)
             .toISO({ includeOffset: false }) ?? "",
     );
 
     const [searchTerm, setSearchTerm] = useState<string>("");
-
-    const { isLoggedIn } = useAuth();
     const [searchParams] = useSearchParams();
     const speciesFilter = searchParams.get("species");
 
@@ -184,7 +186,7 @@ export default function Plants() {
             await waterPlant(plantId, { watered_at: currentDateTimeUTC });
 
             const currentDateTimeLocale = DateTime.fromISO(currentDateTimeUTC, { zone: "utc" })
-                .setZone(import.meta.env.VITE_TZ)
+                .setZone(timezone)
                 .toISO({ includeOffset: false });
 
             // Update only the specific plant's data without refetching everything
@@ -265,7 +267,7 @@ export default function Plants() {
 
         try {
             // Convert the user's selected local time to UTC for storage
-            const wateringDateTimeUTC = DateTime.fromISO(selectedDateTime, { zone: import.meta.env.VITE_TZ })
+            const wateringDateTimeUTC = DateTime.fromISO(selectedDateTime, { zone: timezone })
                 .toUTC()
                 .toISO({ includeOffset: false });
 
@@ -595,8 +597,6 @@ export default function Plants() {
                           const latestImage = sortedImages[0] || null;
                           const imageLoaded = loadedImages.has(plant.id);
 
-                          const timezone = import.meta.env.VITE_TZ;
-                          const locale = import.meta.env.VITE_LOCALE;
                           const lastWateredText = plant.last_watered
                               ? new Date(plant.last_watered).toLocaleString(locale, {
                                     timeZone: timezone,

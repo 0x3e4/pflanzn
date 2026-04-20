@@ -16,6 +16,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
+import { useConfig } from "../context/ConfigContext";
 import { setOverlayOpen } from "../services/overlayControl";
 import EditableDiv from "../components/EditableDiv";
 import IdentifyResults from "../components/IdentifyResults";
@@ -130,8 +131,7 @@ export default function LocationDetails() {
 
     const latestImage = sortedImages[0] || null;
 
-    const locale = import.meta.env.VITE_LOCALE;
-    const timezone = import.meta.env.VITE_TZ;
+    const { locale, tz: timezone, llmProvider } = useConfig();
 
     const mapLocations = useMemo(() => {
         const byId = new Map<number, Location>();
@@ -1155,7 +1155,7 @@ export default function LocationDetails() {
                                     {identifying ? "Identifying..." : "Identify Crop/Herb"}
                                 </button>
 
-                                {import.meta.env.VITE_LLM_PROVIDER && (
+                                {llmProvider && (
                                     <button
                                         className="generate-location-description-btn"
                                         onClick={handleGenerateLocationDescription}
@@ -1197,7 +1197,7 @@ export default function LocationDetails() {
                                     <FontAwesomeIcon icon={faFingerprint} /> Identify Crop/Herb
                                 </button>
 
-                                {import.meta.env.VITE_LLM_PROVIDER && (
+                                {llmProvider && (
                                     <button
                                         className="generate-location-description-btn"
                                         onClick={() =>

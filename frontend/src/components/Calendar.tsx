@@ -24,6 +24,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
+import { useConfig } from "../context/ConfigContext";
 import { setOverlayOpen } from "../services/overlayControl";
 
 interface Props {
@@ -112,8 +113,7 @@ export default function LogCalendar({ waterings, fertilizings, images, careadvic
         setPlantNotes(notes);
     }, [waterings, fertilizings, images, careadvice, notes]);
 
-    const locale = import.meta.env.VITE_LOCALE;
-    const timezone = import.meta.env.VITE_TZ;
+    const { locale, tz: timezone } = useConfig();
 
     const formatDateKey = (date: Date) => {
         const formatter = new Intl.DateTimeFormat(locale, {

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useConfig } from "../context/ConfigContext";
 import { faChevronLeft, faChevronRight, faLocationCrosshairs, faPlus, faRotate, faTrash } from "@fortawesome/free-solid-svg-icons";
 import {
     fetchWeatherConfigs,
@@ -20,6 +21,7 @@ import {
 import "../styles/weatherPanel.css";
 
 export default function WeatherPanel() {
+    const { locale, tz: timezone } = useConfig();
     const [configs, setConfigs] = useState<WeatherConfig[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -363,9 +365,9 @@ export default function WeatherPanel() {
                                             <tr key={log.id}>
                                                 <td>
                                                     {new Date(log.checked_at).toLocaleString(
-                                                        import.meta.env.VITE_LOCALE,
+                                                        locale,
                                                         {
-                                                            timeZone: import.meta.env.VITE_TZ,
+                                                            timeZone: timezone,
                                                             month: "short",
                                                             day: "numeric",
                                                             hour: "2-digit",
@@ -435,8 +437,8 @@ export default function WeatherPanel() {
                                 {waterings.map((w) => (
                                     <tr key={w.id}>
                                         <td>
-                                            {new Date(w.watered_at).toLocaleString(import.meta.env.VITE_LOCALE, {
-                                                timeZone: import.meta.env.VITE_TZ,
+                                            {new Date(w.watered_at).toLocaleString(locale, {
+                                                timeZone: timezone,
                                                 month: "short",
                                                 day: "numeric",
                                                 hour: "2-digit",

@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { LocationImage } from "../types/Location";
 import { setOverlayOpen } from "../services/overlayControl";
 import { useAuth } from "../context/AuthContext";
+import { useConfig } from "../context/ConfigContext";
 import { deleteLocationImage } from "../services/LocationService";
 import "../styles/locationTimelineImages.css";
 
@@ -17,6 +18,7 @@ interface LocationTimelineImagesProps {
 
 export default function LocationTimelineImages({ locationId, images, onChanged }: LocationTimelineImagesProps) {
     const { isLoggedIn } = useAuth();
+    const { locale, tz: timezone } = useConfig();
 
     const sortedImages = useMemo(
         () => [...images].sort((a, b) => new Date(a.uploaded_at).getTime() - new Date(b.uploaded_at).getTime()),
@@ -151,8 +153,6 @@ export default function LocationTimelineImages({ locationId, images, onChanged }
     }
 
     const activeImage = sortedImages[activeIndex];
-    const locale = import.meta.env.VITE_LOCALE;
-    const timezone = import.meta.env.VITE_TZ;
 
     const formattedDate = new Date(activeImage.uploaded_at).toLocaleString(locale, {
         timeZone: timezone,

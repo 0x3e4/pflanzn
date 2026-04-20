@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
 import apiClient from "../services/apiClient";
+import { useConfig } from "./ConfigContext";
 
 type User = {
     id: number;
@@ -19,21 +20,13 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const isTruthyEnv = (value: string | undefined, defaultValue = true) => {
-    if (!value) {
-        return defaultValue;
-    }
-    return !["false", "0", "no", "off"].includes(value.trim().toLowerCase());
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
 
-    const authMode = import.meta.env.VITE_AUTH_MODE || "no";
+    const { authMode, showProtectedView } = useConfig();
     const isAuthDisabled = authMode === "no";
-    const showProtectedView = isTruthyEnv(import.meta.env.VITE_SHOW_PROTECTED_VIEW, true);
 
     useEffect(() => {
         (async () => {

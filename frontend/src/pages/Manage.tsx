@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useConfig } from "../context/ConfigContext";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { updateUser, updateUserPassword } from "../services/UserService";
@@ -37,10 +38,7 @@ type ManageSection =
 const Manage: React.FC = () => {
     const { user, logout, fetchProfile, isLoggedIn } = useAuth();
     const navigate = useNavigate();
-    const authMode = import.meta.env.VITE_AUTH_MODE || "no";
-    const showProtectedView = !["false", "0", "no", "off"].includes(
-        (import.meta.env.VITE_SHOW_PROTECTED_VIEW || "true").trim().toLowerCase(),
-    );
+    const { authMode, showProtectedView } = useConfig();
     const showShare = (authMode === "oidc" || authMode === "local") && showProtectedView;
     const [loading, setLoading] = useState(true);
     const [activeSection, setActiveSection] = useState<ManageSection>("statistics");

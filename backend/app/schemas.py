@@ -305,4 +305,16 @@ class WeatherLogPaginatedResponse(BaseModel):
     limit: int
     offset: int
 
+
+class AppConfigResponse(BaseModel):
+    tz: str
+    locale: str
+    auth_mode: str
+    show_protected_view: bool
+    enable_locations: bool
+    llm_provider: str
+    domain: str
+    oidc_name: str
+    admin_user: Optional[str] = None
+
 PlantResponse.model_rebuild()

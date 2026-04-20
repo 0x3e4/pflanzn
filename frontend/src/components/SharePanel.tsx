@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faPlus, faCopy } from "@fortawesome/free-solid-svg-icons";
 import { ShareLink } from "../types/ShareLink";
 import { fetchShareLinks, createShareLink, deleteShareLink } from "../services/ShareService";
+import { useConfig } from "../context/ConfigContext";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
@@ -25,7 +26,8 @@ export default function SharePanel() {
     const { modalRef } = useModalA11y({ isOpen: modalOpen, onClose: closeModal });
     const [newAlias, setNewAlias] = useState("");
     const [newExpiry, setNewExpiry] = useState<number | null>(null);
-    const domain = import.meta.env.VITE_DOMAIN || window.location.origin;
+    const { domain: configDomain } = useConfig();
+    const domain = configDomain || window.location.origin;
 
     const loadLinks = async () => {
         try {

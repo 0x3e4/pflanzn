@@ -25,13 +25,13 @@ logger = logging.getLogger(__name__)
 FAILED_LOGIN_ATTEMPTS = {}
 
 # Load auth mode
-AUTH_MODE = settings.VITE_AUTH_MODE
+AUTH_MODE = settings.AUTH_MODE
 
 # OIDC Settings
 OIDC_PROVIDER_URL = settings.OIDC_PROVIDER_URL
 OIDC_CLIENT_ID = settings.OIDC_CLIENT_ID
 OIDC_CLIENT_SECRET = settings.OIDC_CLIENT_SECRET
-OIDC_REDIRECT_URI = settings.VITE_DOMAIN + "/api/auth/oidc/callback"
+OIDC_REDIRECT_URI = settings.DOMAIN + "/api/auth/oidc/callback"
 
 # Redis client
 REDIS_URL = settings.REDIS_URL
@@ -43,7 +43,7 @@ def _is_truthy(value: Optional[str], default: bool = False) -> bool:
         return default
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
-parsed_domain = urlparse(settings.VITE_DOMAIN or "")
+parsed_domain = urlparse(settings.DOMAIN or "")
 derived_secure = parsed_domain.scheme.lower() == "https"
 cookie_secure_override = os.getenv("COOKIE_SECURE")
 COOKIE_SECURE = _is_truthy(cookie_secure_override, default=derived_secure)
@@ -254,21 +254,28 @@ async def oidc_callback(request: Request, db: Session = Depends(get_db)):
         elif token.get("refresh_expires_in"):
             idp_rt_expires_at = now + int(token["refresh_expires_in"])
 
-        # Build deltas (fallback refresh lifetime if IdP didn't share one)
+        # Build deltas. App access mirrors IdP; app refresh is decoupled from
+        # the IdP's refresh_expires_in so short-lived IdP refresh tokens don't
+        # force a full re-login every hour — the IdP call may still fail
+        # later, in which case we'll 401 on that attempt.
         access_delta_seconds = max(1, idp_at_expires_at - now)
-        refresh_delta_seconds = max(1, (idp_rt_expires_at - now)) if idp_rt_expires_at else 30 * 24 * 3600
+        refresh_delta_seconds = max(
+            30 * 24 * 3600,
+            (idp_rt_expires_at - now) if idp_rt_expires_at else 0,
+        )
+        app_refresh_expires_at = now + refresh_delta_seconds
 
         app_access = create_access_token({"sub": user.email}, expires_delta=timedelta(seconds=access_delta_seconds))
         app_refresh = create_refresh_token({"sub": user.email}, expires_delta=timedelta(seconds=refresh_delta_seconds))
 
-        # 7) Set APP cookies with expiries matching IdP's schedule
+        # 7) Set APP cookies (access mirrors IdP; refresh uses app lifetime)
         response = RedirectResponse(url="/", status_code=302)
         _set_auth_cookies(
             resp=response,
             access_token=app_access,
             access_expires_at=idp_at_expires_at,
             refresh_token=app_refresh,
-            refresh_expires_at=idp_rt_expires_at  # may be None → session-style cookie
+            refresh_expires_at=app_refresh_expires_at,
         )
 
         logger.info(f"OIDC login successful for {user.email}, redirecting to home")
@@ -366,14 +373,19 @@ async def refresh_token(request: Request, db: Session = Depends(get_db)):
             idp_rt_expires_at = now + int(new_tok["refresh_expires_in"])
 
         access_delta = timedelta(seconds=idp_at_expires_at - now)
-        refresh_delta = timedelta(seconds=(idp_rt_expires_at - now)) if idp_rt_expires_at else timedelta(days=30)
+        refresh_delta_seconds = max(
+            30 * 24 * 3600,
+            (idp_rt_expires_at - now) if idp_rt_expires_at else 0,
+        )
+        refresh_delta = timedelta(seconds=refresh_delta_seconds)
+        app_refresh_expires_at = now + refresh_delta_seconds
 
         app_access = create_access_token({"sub": subject}, expires_delta=access_delta)
         app_refresh = create_refresh_token({"sub": subject}, expires_delta=refresh_delta)
 
-        # 7) Set cookies to YOUR app tokens with IdP-aligned expiries
+        # 7) Set cookies (access mirrors IdP; refresh uses app lifetime)
         response = JSONResponse(content={"message": "Access token refreshed"})
-        _set_auth_cookies(response, app_access, idp_at_expires_at, app_refresh, idp_rt_expires_at)
+        _set_auth_cookies(response, app_access, idp_at_expires_at, app_refresh, app_refresh_expires_at)
         return response
 
     finally:

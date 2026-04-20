@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import { LocationImage } from "../types/Location";
 import { deleteLocationImage } from "../services/LocationService";
 import { useAuth } from "../context/AuthContext";
+import { useConfig } from "../context/ConfigContext";
 import { setOverlayOpen } from "../services/overlayControl";
 
 export interface LocationLocalNote {
@@ -100,9 +101,7 @@ export default function LocationCalendar({
     onChanged,
 }: LocationCalendarProps) {
     const { isLoggedIn } = useAuth();
-
-    const locale = import.meta.env.VITE_LOCALE;
-    const timezone = import.meta.env.VITE_TZ;
+    const { locale, tz: timezone } = useConfig();
     const [hoveredDate, setHoveredDate] = useState<string | null>(null);
     const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition | null>(null);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);

@@ -198,7 +198,8 @@ def check_and_auto_water(db: Session) -> int:
             )
             plants = query.all()
 
-            today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+            check_time = datetime.now()
+            today_start = check_time.replace(hour=0, minute=0, second=0, microsecond=0)
             for plant in plants:
                 already_watered = (
                     db.query(PlantWatering)
@@ -212,7 +213,7 @@ def check_and_auto_water(db: Session) -> int:
                 if not already_watered and plant.id not in watered_plant_ids:
                     watering = PlantWatering(
                         plant_id=plant.id,
-                        watered_at=datetime.utcnow(),
+                        watered_at=check_time,
                         user_id=None,
                         rainfall_mm=effective_rainfall,
                     )

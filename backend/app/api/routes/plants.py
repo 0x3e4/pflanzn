@@ -64,7 +64,7 @@ os.makedirs(IDENTIFICATION_FOLDER, exist_ok=True)
 pillow_heif.register_heif_opener()
 
 load_dotenv()
-LOCAL_TZ = os.getenv("VITE_TZ", "UTC")
+LOCAL_TZ = settings.TZ
 tz = ZoneInfo(LOCAL_TZ)
 
 # Image variant sizes for responsive serving

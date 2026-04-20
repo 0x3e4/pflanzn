@@ -1,5 +1,6 @@
 import { useAuth } from "../context/AuthContext";
 import { useShare } from "../context/ShareContext";
+import { useConfig } from "../context/ConfigContext";
 import AuthSplash from "./AuthSplash";
 
 interface ProtectedRouteProps {
@@ -8,13 +9,6 @@ interface ProtectedRouteProps {
     enforceAuth?: boolean;
 }
 
-const isTruthyEnv = (value: string | undefined, defaultValue = true) => {
-    if (!value) {
-        return defaultValue;
-    }
-    return !["false", "0", "no", "off"].includes(value.trim().toLowerCase());
-};
-
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     children,
     requireAuth = true,
@@ -22,8 +16,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
     const { isLoggedIn, loading } = useAuth();
     const { isShareAccess } = useShare();
-    const authMode = import.meta.env.VITE_AUTH_MODE || "no";
-    const showProtectedView = isTruthyEnv(import.meta.env.VITE_SHOW_PROTECTED_VIEW, true);
+    const { authMode, showProtectedView } = useConfig();
     const isAuthEnabled = authMode === "oidc" || authMode === "local";
     const shouldProtectView = isAuthEnabled && (showProtectedView || enforceAuth);
 

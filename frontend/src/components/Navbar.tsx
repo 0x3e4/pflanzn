@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import "../styles/navbar.css";
 import { useAuth } from "../context/AuthContext";
+import { useConfig } from "../context/ConfigContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCamera, faSpinner, faSun, faMoon } from "@fortawesome/free-solid-svg-icons";
 import { useTheme } from "../hooks/useTheme";
@@ -18,14 +19,7 @@ export default function Navbar() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const navRef = useRef<HTMLElement | null>(null);
     const { isLoggedIn, loading } = useAuth();
-    const authMode = import.meta.env.VITE_AUTH_MODE;
-    const showLocations = !["false", "0", "no", "off"].includes(
-        (
-            import.meta.env.VITE_ENABLE_LOCATIONS ||
-            import.meta.env.VITE_ENABLE_HERBALIST_LOCATIONS ||
-            "false"
-        ).toLowerCase(),
-    );
+    const { authMode, enableLocations: showLocations } = useConfig();
     const [loadingIdentification, setLoading] = useState<boolean>(false);
     const { theme, toggleTheme } = useTheme();
 

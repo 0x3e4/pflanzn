@@ -5,7 +5,7 @@ import { manualChunks } from './vite/chunk-split'
 import packageJson from './package.json'
 
 export default defineConfig(() => {
-  const raw = process.env.VITE_DOMAIN ?? ''
+  const raw = process.env.DOMAIN ?? process.env.VITE_DOMAIN ?? ''
   const domain = raw.replace(/^https?:\/\//, '').replace(/\/$/, '')
 
   return {

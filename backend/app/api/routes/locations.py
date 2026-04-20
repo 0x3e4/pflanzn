@@ -35,7 +35,7 @@ pillow_heif.register_heif_opener()
 
 
 def ensure_feature_enabled():
-    if not settings.VITE_ENABLE_LOCATIONS:
+    if not settings.ENABLE_LOCATIONS:
         raise HTTPException(status_code=404, detail="Locations feature is disabled")
 
 

@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faCircleXmark, faChevronLeft, faChevronRight, faExpand } from "@fortawesome/free-solid-svg-icons";
 import "../styles/timelineImages.css";
 import { useAuth } from "../context/AuthContext";
+import { useConfig } from "../context/ConfigContext";
 import { setOverlayOpen } from "../services/overlayControl";
 import { useModalA11y } from "../hooks/useModalA11y";
 import Skeleton from "react-loading-skeleton";
@@ -18,6 +19,7 @@ interface TimelineImagesProps {
 
 export default function TimelineImages({ images, plantId }: TimelineImagesProps) {
     const { isLoggedIn } = useAuth();
+    const { locale, tz: timezone } = useConfig();
 
     const [touchStartX, setTouchStartX] = useState<number | null>(null);
     const [touchEndX, setTouchEndX] = useState<number | null>(null);
@@ -319,8 +321,8 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
         return;
     }
 
-    const formattedDate = new Date(activeImage.uploaded_at).toLocaleString(import.meta.env.VITE_Locale, {
-        timeZone: import.meta.env.VITE_TZ,
+    const formattedDate = new Date(activeImage.uploaded_at).toLocaleString(locale, {
+        timeZone: timezone,
         weekday: "long",
         year: "numeric",
         month: "long",

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useConfig } from "../context/ConfigContext";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -9,12 +10,11 @@ import "../styles/login.css";
 const Login: React.FC = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
+    const { authMode, oidcName: configOidcName } = useConfig();
+    const oidcName = configOidcName || "SSO";
 
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-
-    const authMode = import.meta.env.VITE_AUTH_MODE || "no";
-    const oidcName = import.meta.env.VITE_OIDC_NAME || "SSO";
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

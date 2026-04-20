@@ -13,7 +13,7 @@ from app.services.openai import OpenAIClient
 class LLMClient:
 
     def __init__(self):
-        provider = settings.VITE_LLM_PROVIDER.lower()
+        provider = (settings.LLM_PROVIDER or "").lower()
         if provider == "huggingface":
             self.client = HuggingFaceClient()
         elif provider == "mistralai":

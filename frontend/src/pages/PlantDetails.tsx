@@ -46,6 +46,7 @@ import { toast } from "react-toastify";
 import LoadingOverlay from "../components/LoadingOverlay";
 import IdentifyResults from "../components/IdentifyResults";
 import { useAuth } from "../context/AuthContext";
+import { useConfig } from "../context/ConfigContext";
 import { setOverlayOpen } from "../services/overlayControl";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -58,6 +59,7 @@ type ActionLoadingState = {
 
 export default function PlantDetails() {
     const { isLoggedIn } = useAuth();
+    const { tz: timezone, locale, llmProvider } = useConfig();
     const { plantId } = useParams();
     const navigate = useNavigate();
     const [plant, setPlant] = useState<Plant | null>(null);
@@ -69,7 +71,7 @@ export default function PlantDetails() {
     const [showTagDropdown, setShowTagDropdown] = useState(false);
     const [selectedDateTime, setSelectedDateTime] = useState<string>(
         DateTime.now()
-            .setZone(import.meta.env.VITE_TZ)
+            .setZone(timezone)
             .toISO({ includeOffset: false }) ?? "",
     );
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -236,7 +238,7 @@ export default function PlantDetails() {
         }
 
         try {
-            const wateringDateTimeUTC = DateTime.fromISO(selectedDateTime, { zone: import.meta.env.VITE_TZ })
+            const wateringDateTimeUTC = DateTime.fromISO(selectedDateTime, { zone: timezone })
                 .toUTC()
                 .toISO({ includeOffset: false });
 
@@ -267,7 +269,7 @@ export default function PlantDetails() {
         }
 
         try {
-            const fertilizingDateTimeUTC = DateTime.fromISO(selectedDateTime, { zone: import.meta.env.VITE_TZ })
+            const fertilizingDateTimeUTC = DateTime.fromISO(selectedDateTime, { zone: timezone })
                 .toUTC()
                 .toISO({ includeOffset: false });
 
@@ -650,8 +652,8 @@ export default function PlantDetails() {
                                 <div className="activity-header">
                                     <p className="activity-title">{getActivityTitle(activity)}</p>
                                     <p className="activity-timestamp">
-                                        {new Date(activity.timestamp).toLocaleString(import.meta.env.VITE_LOCALE, {
-                                            timeZone: import.meta.env.VITE_TZ,
+                                        {new Date(activity.timestamp).toLocaleString(locale, {
+                                            timeZone: timezone,
                                             weekday: "short",
                                             month: "short",
                                             day: "numeric",
@@ -784,8 +786,8 @@ export default function PlantDetails() {
                         <span className="plant-information-names">
                             <strong>Last Watered:</strong>{" "}
                             {plant.last_watered
-                                ? new Date(plant.last_watered).toLocaleString(import.meta.env.VITE_LOCALE, {
-                                      timeZone: import.meta.env.VITE_TZ,
+                                ? new Date(plant.last_watered).toLocaleString(locale, {
+                                      timeZone: timezone,
                                       weekday: "long",
                                       year: "numeric",
                                       month: "long",
@@ -1055,7 +1057,7 @@ export default function PlantDetails() {
                                     </button>
                                 )}
 
-                                {import.meta.env.VITE_LLM_PROVIDER && (
+                                {llmProvider && (
                                     <>
                                         {isLoggedIn ? (
                                             <>

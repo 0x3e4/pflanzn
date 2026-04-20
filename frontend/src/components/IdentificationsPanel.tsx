@@ -15,6 +15,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import "../styles/identificationsPanel.css";
 import { setOverlayOpen } from "../services/overlayControl";
+import { useConfig } from "../context/ConfigContext";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { toast } from "react-toastify";
@@ -40,8 +41,7 @@ export default function IdentificationsPanel() {
 
     const [loading, setLoading] = useState(true);
 
-    const timezone = import.meta.env.VITE_TZ;
-    const locale = import.meta.env.VITE_Locale;
+    const { tz: timezone, locale } = useConfig();
 
     const sortRef = useRef<HTMLDivElement>(null);
 

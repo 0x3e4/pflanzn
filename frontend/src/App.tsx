@@ -16,26 +16,18 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ShareProvider, useShare } from "./context/ShareContext";
+import { ConfigProvider, useConfig } from "./context/ConfigContext";
 import { usePullToRefresh } from "./hooks/usePullToRefresh";
 import { ProtectedRoute } from "./components/Protection";
 import AuthSplash from "./components/AuthSplash";
 import ErrorBoundary from "./components/ErrorBoundary";
 import OfflineBanner from "./components/OfflineBanner";
 
-const isTruthyEnv = (value: string | undefined, defaultValue = true) => {
-    if (!value) {
-        return defaultValue;
-    }
-    return !["false", "0", "no", "off"].includes(value.trim().toLowerCase());
-};
-
 function AppLayout() {
-    const authMode = import.meta.env.VITE_AUTH_MODE || "no";
-    const showProtectedView = isTruthyEnv(import.meta.env.VITE_SHOW_PROTECTED_VIEW, true);
-    const showLocations = isTruthyEnv(
-        import.meta.env.VITE_ENABLE_LOCATIONS || import.meta.env.VITE_ENABLE_HERBALIST_LOCATIONS,
-        false,
-    );
+    const config = useConfig();
+    const authMode = config.authMode;
+    const showProtectedView = config.showProtectedView;
+    const showLocations = config.enableLocations;
     const { loading, isLoggedIn } = useAuth();
     const { isShareAccess, shareLoading } = useShare();
     const location = useLocation();
@@ -176,10 +168,12 @@ function AppShell() {
 
 export default function App() {
     return (
-        <AuthProvider>
-            <ShareProvider>
-                <AppShell />
-            </ShareProvider>
-        </AuthProvider>
+        <ConfigProvider>
+            <AuthProvider>
+                <ShareProvider>
+                    <AppShell />
+                </ShareProvider>
+            </AuthProvider>
+        </ConfigProvider>
     );
 }

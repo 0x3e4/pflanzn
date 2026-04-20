@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useConfig } from "../context/ConfigContext";
 import { fetchUsers, addUser, updateUser, deleteUser } from "../services/UserService";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -11,7 +12,7 @@ import "react-loading-skeleton/dist/skeleton.css";
 const roles = ["user", "admin"];
 
 export default function UsersPanel() {
-    const authMode = import.meta.env.VITE_AUTH_MODE || "no";
+    const { authMode, adminUser } = useConfig();
     const { user, isLoggedIn } = useAuth();
     const [users, setUsers] = useState<User[]>([]);
     const [newUser, setNewUser] = useState({ username: "", email: "", password: "", role: "user" });
@@ -133,7 +134,7 @@ export default function UsersPanel() {
 
     // Update User
     const handleUpdateUser = async (userId: number, username: string) => {
-        if (username === import.meta.env.VITE_ADMIN_USER) {
+        if (adminUser && username === adminUser) {
             toast.error("Cannot update the default admin.");
             return;
         }
@@ -173,7 +174,7 @@ export default function UsersPanel() {
 
     // Delete User
     const handleDeleteUser = async (userId: number, username: string) => {
-        if (username === import.meta.env.VITE_ADMIN_USER) {
+        if (adminUser && username === adminUser) {
             toast.error("Cannot delete the default admin.");
             return;
         }

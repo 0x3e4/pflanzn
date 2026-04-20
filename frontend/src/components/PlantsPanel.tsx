@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useConfig } from "../context/ConfigContext";
 import { fetchPlants, updatePlant, deletePlant, setPlantTags } from "../services/PlantService";
 import { fetchTags } from "../services/TagService";
 import { toast } from "react-toastify";
@@ -23,7 +24,7 @@ import "react-loading-skeleton/dist/skeleton.css";
 
 export default function PlantsPanel() {
     const navigate = useNavigate();
-    const authMode = import.meta.env.VITE_AUTH_MODE || "no";
+    const { authMode } = useConfig();
     const { user, isLoggedIn } = useAuth();
     const [plants, setPlants] = useState<Plant[]>([]);
     // Changed: Track edits per plant ID instead of a single editedPlant

@@ -14,7 +14,7 @@ from app.models import User
 # Environment variables / settings
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = "HS256"
-AUTH_MODE = settings.VITE_AUTH_MODE.lower()  # "no", "local", "oidc"
+AUTH_MODE = settings.AUTH_MODE.lower()  # "no", "local", "oidc"
 
 # Redis client
 REDIS_URL = settings.REDIS_URL

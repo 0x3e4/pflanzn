@@ -17,13 +17,7 @@ services:
   frontend:
     image: ghcr.io/0x3e4/pflanzn-frontend:latest
     environment:
-      VITE_AUTH_MODE: ${VITE_AUTH_MODE}
-      VITE_SHOW_PROTECTED_VIEW: ${VITE_SHOW_PROTECTED_VIEW}
-      VITE_ENABLE_LOCATIONS: ${VITE_ENABLE_LOCATIONS}
-      VITE_DOMAIN: ${VITE_DOMAIN}
-      VITE_TZ: ${VITE_TZ}
-      VITE_LOCALE: ${VITE_LOCALE}
-      VITE_LLM_PROVIDER: ${VITE_LLM_PROVIDER}
+      DOMAIN: ${DOMAIN}
     ports:
       - "4173:4173"
     env_file:
