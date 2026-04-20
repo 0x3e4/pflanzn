@@ -146,6 +146,12 @@ export const removeTagFromPlant = async (plantId: number, tagId: number) => {
     return response.data;
 };
 
+// Set tags for a plant (bulk assign/unassign)
+export const setPlantTags = async (plantId: number, tagIds: number[]): Promise<Plant> => {
+    const response = await apiClient.put(`${API_BASE}/${plantId}/tags`, { tag_ids: tagIds });
+    return response.data;
+};
+
 // Archive plant
 export const archivePlant = async (plantId: number, archive: boolean = true, reason: string) => {
     const response = await apiClient.post(

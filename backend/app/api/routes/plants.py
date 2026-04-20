@@ -13,12 +13,25 @@ import pillow_heif
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from PIL import Image, ImageOps
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.security import get_current_user
 from app.database import get_db
-from app.models import Plant, PlantCareAdvice, PlantFertilizing, PlantIdentification, PlantImage, PlantNote, PlantWatering, Tag, User, WeatherConfig
+from app.models import (
+    Plant,
+    PlantCareAdvice,
+    PlantFertilizing,
+    PlantIdentification,
+    PlantImage,
+    PlantNote,
+    PlantWatering,
+    Tag,
+    User,
+    WeatherConfig,
+    plant_tag_association,
+)
 from app.schemas import (
     ArchiveRequest,
     PlantCareAdviceResponse,
@@ -89,6 +102,11 @@ def _delete_image_files(image_path: str) -> None:
 
 
 router = APIRouter()
+
+
+class PlantTagsUpdate(BaseModel):
+    tag_ids: List[int]
+
 
 @router.post("/", response_model=PlantResponse)
 def create_plant(plant_data: PlantCreate, db: Session = Depends(get_db)):
@@ -765,6 +783,56 @@ def remove_tag_from_plant(plant_id: int, tag_id: int, db: Session = Depends(get_
         last_watered=max([w.watered_at for w in plant.waterings], default=None),
         last_fertilized=max([f.fertilized_at for f in plant.fertilizings], default=None),
         tags=[TagResponse(id=t.id, name=t.name) for t in plant.tags]
+    )
+
+# Set tags for a plant (bulk assign/unassign)
+@router.put("/{plant_id}/tags", response_model=PlantResponse)
+def set_plant_tags(plant_id: int, data: PlantTagsUpdate, db: Session = Depends(get_db)):
+    """Replace the tag list for a plant. Tags in the list get associated, others are removed."""
+    plant = db.query(Plant).filter(Plant.id == plant_id).first()
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+
+    current_ids = set(
+        r[0] for r in db.query(plant_tag_association.c.tag_id)
+        .filter(plant_tag_association.c.plant_id == plant_id)
+        .all()
+    )
+    new_ids = set(data.tag_ids)
+
+    to_remove = current_ids - new_ids
+    if to_remove:
+        db.execute(
+            plant_tag_association.delete().where(
+                plant_tag_association.c.plant_id == plant_id,
+                plant_tag_association.c.tag_id.in_(to_remove),
+            )
+        )
+
+    to_add = new_ids - current_ids
+    if to_add:
+        existing = set(
+            r[0] for r in db.query(Tag.id).filter(Tag.id.in_(to_add)).all()
+        )
+        for tid in existing:
+            db.execute(
+                plant_tag_association.insert().values(plant_id=plant_id, tag_id=tid)
+            )
+
+    db.commit()
+    db.refresh(plant)
+
+    return PlantResponse(
+        id=plant.id,
+        name=plant.name,
+        species=plant.species,
+        description=plant.description,
+        images=[PlantImageResponse(id=img.id, image_path=img.image_path, uploaded_at=img.uploaded_at) for img in plant.images],
+        waterings=[PlantWateringResponse(id=w.id, watered_at=w.watered_at) for w in plant.waterings],
+        fertilizings=[PlantFertilizingResponse(id=f.id, fertilized_at=f.fertilized_at) for f in plant.fertilizings],
+        last_watered=max([w.watered_at for w in plant.waterings], default=None),
+        last_fertilized=max([f.fertilized_at for f in plant.fertilizings], default=None),
+        tags=[TagResponse(id=t.id, name=t.name) for t in plant.tags],
     )
 
 # Archive or restore from archive

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { fetchPlants, updatePlant, deletePlant } from "../services/PlantService";
+import { fetchPlants, updatePlant, deletePlant, setPlantTags } from "../services/PlantService";
+import { fetchTags } from "../services/TagService";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -11,9 +12,12 @@ import {
     faChevronLeft,
     faChevronRight,
     faCircleXmark,
+    faListCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import { Plant } from "../types/Plant";
+import { Tag } from "../types/Tag";
 import { setOverlayOpen } from "../services/overlayControl";
+import { useModalA11y } from "../hooks/useModalA11y";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
@@ -35,6 +39,13 @@ export default function PlantsPanel() {
     const [sortField, setSortField] = useState<keyof Plant>("id");
     const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
     const [loading, setLoading] = useState(true);
+
+    // Tag selector modal state
+    const [tagModalPlant, setTagModalPlant] = useState<Plant | null>(null);
+    const [allTags, setAllTags] = useState<Tag[]>([]);
+    const [selectedTagIds, setSelectedTagIds] = useState<Set<number>>(new Set());
+    const [tagSearch, setTagSearch] = useState("");
+    const [savingTags, setSavingTags] = useState(false);
 
     // Sort function
     function compare<T>(a: T, b: T, field: keyof T, direction: "asc" | "desc") {
@@ -145,6 +156,61 @@ export default function PlantsPanel() {
         }
     };
 
+    // Tag selector modal
+    const openTagModal = async (plant: Plant) => {
+        setTagModalPlant(plant);
+        setSelectedTagIds(new Set(plant.tags.map((t) => t.id)));
+        setTagSearch("");
+        try {
+            const tags = await fetchTags();
+            setAllTags(tags);
+        } catch {
+            toast.error("Failed to load tags.");
+        }
+    };
+
+    const closeTagModal = () => {
+        setTagModalPlant(null);
+        setAllTags([]);
+        setSelectedTagIds(new Set());
+        setTagSearch("");
+    };
+
+    const toggleTag = (tagId: number) => {
+        setSelectedTagIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(tagId)) {
+                next.delete(tagId);
+            } else {
+                next.add(tagId);
+            }
+            return next;
+        });
+    };
+
+    const handleSaveTags = async () => {
+        if (!tagModalPlant) return;
+        setSavingTags(true);
+        try {
+            const updated = await setPlantTags(tagModalPlant.id, Array.from(selectedTagIds));
+            toast.success(`Updated tags for "${tagModalPlant.name}".`);
+            setPlants((prev) =>
+                prev.map((p) =>
+                    p.id === updated.id ? { ...p, tags: updated.tags, species: updated.species ?? "" } : p,
+                ),
+            );
+            closeTagModal();
+        } catch {
+            toast.error("Failed to update tags.");
+        } finally {
+            setSavingTags(false);
+        }
+    };
+
+    const filteredTags = allTags.filter((t) => t.name.toLowerCase().includes(tagSearch.toLowerCase()));
+
+    const { modalRef: tagModalRef } = useModalA11y({ isOpen: !!tagModalPlant, onClose: closeTagModal });
+
     // Delete Plant
     const handleConfirmDelete = async (plantId: number) => {
         if (!isLoggedIn) {
@@ -168,12 +234,8 @@ export default function PlantsPanel() {
     }
 
     useEffect(() => {
-        if (deleteModalOpen) {
-            setOverlayOpen(true);
-        } else {
-            setOverlayOpen(false);
-        }
-    }, [deleteModalOpen]);
+        setOverlayOpen(!!deleteModalOpen || !!tagModalPlant);
+    }, [deleteModalOpen, tagModalPlant]);
 
     return (
         <div className="plants-panel">
@@ -234,6 +296,9 @@ export default function PlantsPanel() {
                                       </td>
                                       <td>
                                           <div className="action-buttons">
+                                              <button className="view-btn" onClick={() => openTagModal(p)} title="Manage tags">
+                                                  <FontAwesomeIcon icon={faListCheck} />
+                                              </button>
                                               <button className="view-btn" onClick={() => handleNavigateToPlant(p.id)}>
                                                   <FontAwesomeIcon icon={faEye} />
                                               </button>
@@ -281,6 +346,59 @@ export default function PlantsPanel() {
                                 </button>
                                 <button className="delete-plant-cancel" onClick={() => setDeleteModalOpen(null)}>
                                     <FontAwesomeIcon icon={faCircleXmark} /> Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Tag selector modal */}
+                {tagModalPlant && (
+                    <div className="delete-plant-modal-overlay">
+                        <div
+                            className="tag-plants-modal"
+                            ref={tagModalRef}
+                            role="dialog"
+                            aria-modal="true"
+                            aria-label={`Manage tags for ${tagModalPlant.name}`}
+                        >
+                            <div className="tag-plants-modal-header">
+                                <h3>Tags for {tagModalPlant.name}</h3>
+                                <span className="tag-plants-count">{selectedTagIds.size} selected</span>
+                            </div>
+                            <input
+                                type="text"
+                                className="tag-plants-search"
+                                placeholder="Search tags..."
+                                value={tagSearch}
+                                onChange={(e) => setTagSearch(e.target.value)}
+                                autoFocus
+                            />
+                            <div className="tag-plants-list">
+                                {filteredTags.map((tag) => (
+                                    <label key={tag.id} className="tag-plants-item">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedTagIds.has(tag.id)}
+                                            onChange={() => toggleTag(tag.id)}
+                                        />
+                                        <span className="tag-plants-item-name">#{tag.name}</span>
+                                    </label>
+                                ))}
+                                {filteredTags.length === 0 && (
+                                    <div className="tag-plants-empty">No tags found.</div>
+                                )}
+                            </div>
+                            <div className="tag-plants-modal-actions">
+                                <button
+                                    className="weather-save-btn"
+                                    onClick={handleSaveTags}
+                                    disabled={savingTags}
+                                >
+                                    {savingTags ? "Saving..." : "Save"}
+                                </button>
+                                <button className="weather-cancel-btn" onClick={closeTagModal}>
+                                    Cancel
                                 </button>
                             </div>
                         </div>
