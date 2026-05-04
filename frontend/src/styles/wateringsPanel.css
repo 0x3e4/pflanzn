@@ -1,0 +1,141 @@
+.waterings-panel {
+    /* inherits .statistics-panel layout */
+}
+
+.waterings-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0;
+    flex-wrap: wrap;
+}
+
+.waterings-delete-btn {
+    background: var(--quinary-color, #c0392b);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: opacity 0.15s;
+}
+
+.waterings-delete-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.waterings-refresh-btn {
+    background: var(--secondary-background-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    border-radius: 6px;
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.waterings-refresh-btn:hover:not(:disabled) {
+    background: var(--senary-color);
+}
+
+.waterings-refresh-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.waterings-total {
+    color: var(--muted-text-color);
+    font-size: 0.85rem;
+    margin-left: auto;
+}
+
+.waterings-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.waterings-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.waterings-table th,
+.waterings-table td {
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+
+.waterings-table th {
+    font-weight: 600;
+    color: var(--muted-text-color);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+}
+
+.waterings-table tr.selected {
+    background: var(--senary-color);
+}
+
+.waterings-table .waterings-col-check {
+    width: 32px;
+}
+
+.waterings-table input[type="checkbox"] {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+}
+
+.waterings-empty {
+    text-align: center;
+    color: var(--muted-text-color);
+    padding: 24px 0;
+}
+
+.waterings-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: var(--text-color);
+}
+
+.waterings-pagination button {
+    background: var(--secondary-background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-color);
+    cursor: pointer;
+    padding: 6px 10px;
+    transition: background-color 0.2s;
+}
+
+.waterings-pagination button:hover:not(:disabled) {
+    background: var(--senary-color);
+}
+
+.waterings-pagination button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .waterings-table {
+        min-width: 520px;
+    }
+
+    .waterings-total {
+        margin-left: 0;
+        flex-basis: 100%;
+    }
+}

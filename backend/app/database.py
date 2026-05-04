@@ -130,6 +130,17 @@ def _ensure_weather_schema():
                 pass  # FK may already exist or table not ready
 
 
+def _ensure_users_schema():
+    """Idempotent migration for the users table (preferences column)."""
+    inspector = inspect(engine)
+    tables = set(inspector.get_table_names())
+    if "users" not in tables:
+        return  # create_all already handled it
+    user_columns = {column["name"] for column in inspector.get_columns("users")}
+    if "preferences" not in user_columns:
+        _execute_ddl("ALTER TABLE users ADD COLUMN preferences TEXT NOT NULL DEFAULT ('{}')")
+
+
 def get_db():
     db = None
     for attempt in range(3):
@@ -155,4 +166,5 @@ def init_db():
     _ensure_share_links_schema()
     _ensure_fertilizings_schema()
     _ensure_weather_schema()
+    _ensure_users_schema()
     logger.debug("Database tables ensured.")

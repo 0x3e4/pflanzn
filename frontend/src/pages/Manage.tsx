@@ -12,6 +12,7 @@ import LocationsPanel from "../components/LocationsPanel";
 import MapPanel from "../components/MapPanel";
 import SharePanel from "../components/SharePanel";
 import TagsPanel from "../components/TagsPanel";
+import WateringsPanel from "../components/WateringsPanel";
 import WeatherPanel from "../components/WeatherPanel";
 import "../styles/manage.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -20,7 +21,7 @@ import { User } from "../types/User";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { APP_VERSION } from "../config/appInfo";
-import { getUiPreferences, updateUiPreferences } from "../config/uiPreferences";
+import { getUiPreferences, pushUserPreferences, updateUiPreferences } from "../config/uiPreferences";
 
 type ManageSection =
     | "profile"
@@ -31,6 +32,7 @@ type ManageSection =
     | "locations"
     | "map"
     | "tags"
+    | "waterings"
     | "customize"
     | "weather"
     | "share";
@@ -143,9 +145,17 @@ const Manage: React.FC = () => {
         }
     };
 
-    const handleDefaultWidescreenChange = (enabled: boolean) => {
+    const handleDefaultWidescreenChange = async (enabled: boolean) => {
         setDefaultWidescreen(enabled);
         updateUiPreferences({ defaultWidescreen: enabled });
+        if (authMode !== "no" && isLoggedIn) {
+            try {
+                await pushUserPreferences({ defaultWidescreen: enabled });
+            } catch {
+                toast.error("Saved locally, but failed to sync to your account.");
+                return;
+            }
+        }
         toast.success(`Default widescreen ${enabled ? "enabled" : "disabled"}.`);
     };
 
@@ -242,6 +252,13 @@ const Manage: React.FC = () => {
                                 onClick={() => setActiveSection("identification")}
                             >
                                 Identifications
+                            </li>
+
+                            <li
+                                className={`sidebar-subsection ${activeSection === "waterings" ? "active" : ""}`}
+                                onClick={() => setActiveSection("waterings")}
+                            >
+                                Waterings
                             </li>
                         </>
                     )}
@@ -359,6 +376,8 @@ const Manage: React.FC = () => {
                 {activeSection === "map" && (authMode === "no" || user?.role === "admin") && <MapPanel />}
 
                 {activeSection === "tags" && (authMode === "no" || user?.role === "admin") && <TagsPanel />}
+
+                {activeSection === "waterings" && (authMode === "no" || user?.role === "admin") && <WateringsPanel />}
 
                 {activeSection === "share" && showShare && user?.role === "admin" && <SharePanel />}
 

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../styles/navbar.css";
 import { useAuth } from "../context/AuthContext";
 import { useConfig } from "../context/ConfigContext";
@@ -22,6 +22,14 @@ export default function Navbar() {
     const { authMode, enableLocations: showLocations } = useConfig();
     const [loadingIdentification, setLoading] = useState<boolean>(false);
     const { theme, toggleTheme } = useTheme();
+    const navigate = useNavigate();
+
+    const handleAddPlantFromIdentification = (commonName: string, species: string) => {
+        setIdentifyResults(null);
+        navigate("/plants", {
+            state: { prefillNewPlant: { name: commonName, species } },
+        });
+    };
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -157,7 +165,8 @@ export default function Navbar() {
                 <IdentifyResults
                     plantId={0} // No plant ID, just a quick scan
                     results={identifyResults}
-                    onSelectSpecies={() => setIdentifyResults(null)} // Just close when selecting
+                    onSelectSpecies={() => setIdentifyResults(null)}
+                    onAddPlant={handleAddPlantFromIdentification}
                     onClose={() => setIdentifyResults(null)}
                 />
             )}

@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import List, Optional
 
@@ -7,7 +8,14 @@ from sqlalchemy.orm import Session
 from app.core.security import get_current_admin_user, get_current_user, hash_password, verify_password
 from app.database import get_db
 from app.models import User
-from app.schemas import UserCreate, UserPasswordUpdate, UserResponse, UserUpdate
+from app.schemas import (
+    UserCreate,
+    UserPasswordUpdate,
+    UserPreferencesResponse,
+    UserPreferencesUpdate,
+    UserResponse,
+    UserUpdate,
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -27,6 +35,42 @@ def get_user_profile(current_user: Optional[User] = Depends(get_current_user)):
         email=current_user.email,
         role=current_user.role
     )
+
+
+def _load_user_preferences(user: User) -> dict:
+    if not user.preferences:
+        return {}
+    try:
+        parsed = json.loads(user.preferences)
+        return parsed if isinstance(parsed, dict) else {}
+    except (json.JSONDecodeError, TypeError):
+        return {}
+
+
+@router.get("/me/preferences", response_model=UserPreferencesResponse)
+def get_my_preferences(current_user: Optional[User] = Depends(get_current_user)):
+    """Returns the current user's UI preferences as a JSON object."""
+    if not current_user:
+        # AUTH_MODE=no — frontend should fall back to localStorage; return empty.
+        return UserPreferencesResponse(preferences={})
+    return UserPreferencesResponse(preferences=_load_user_preferences(current_user))
+
+
+@router.put("/me/preferences", response_model=UserPreferencesResponse)
+def update_my_preferences(
+    payload: UserPreferencesUpdate,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user),
+):
+    """Merge-update the current user's UI preferences."""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    merged = {**_load_user_preferences(current_user), **payload.preferences}
+    current_user.preferences = json.dumps(merged)
+    db.commit()
+    db.refresh(current_user)
+    return UserPreferencesResponse(preferences=merged)
+
 
 @router.get("/", response_model=List[UserResponse])
 def get_all_users(db: Session = Depends(get_db), current_user: User = Depends(get_current_admin_user)):

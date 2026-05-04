@@ -3,6 +3,7 @@ import SliderModule from "react-slick";
 const Slider = (SliderModule as { default?: typeof SliderModule }).default || SliderModule;
 import { Plant } from "../types/Plant";
 import { fetchPlants } from "../services/PlantService";
+import { fetchStatistics } from "../services/StatisticService";
 import "../styles/home.css";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -82,7 +83,10 @@ export default function Home() {
 
     const loadPlants = async () => {
         try {
-            const data = await fetchPlants();
+            const [data, stats] = await Promise.all([
+                fetchPlants(),
+                fetchStatistics().catch(() => null),
+            ]);
             const nonArchivedPlants = data.filter((plant) => !plant.is_archived);
 
             const speciesCountMap = nonArchivedPlants.reduce(
@@ -95,14 +99,10 @@ export default function Home() {
             );
             setSpeciesCounts(speciesCountMap);
 
-            const identifiedPlants = nonArchivedPlants.filter(
-                (plant) => plant.species && plant.species !== "Unknown",
-            );
-
             setOverview({
                 total: data.length,
                 active: nonArchivedPlants.length,
-                identified: identifiedPlants.length,
+                identified: stats?.identificationsCount ?? 0,
                 species: Object.keys(speciesCountMap).length,
                 totalWaterings: data.reduce(
                     (sum, plant) => sum + (Array.isArray(plant.waterings) ? plant.waterings.length : 0),

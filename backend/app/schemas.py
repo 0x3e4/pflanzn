@@ -299,6 +299,38 @@ class AutoWateringPaginatedResponse(BaseModel):
     offset: int
 
 
+class WateringListItemResponse(BaseModel):
+    id: int
+    plant_id: int
+    plant_name: str
+    watered_at: datetime
+    rainfall_mm: Optional[float] = None
+    user_id: Optional[int] = None
+
+
+class WateringListPaginatedResponse(BaseModel):
+    items: List[WateringListItemResponse]
+    total: int
+    limit: int
+    offset: int
+
+
+class WateringBulkDeleteRequest(BaseModel):
+    ids: List[int] = Field(..., min_length=1, max_length=500)
+
+
+class WateringBulkDeleteResponse(BaseModel):
+    deleted: int
+
+
+class UserPreferencesResponse(BaseModel):
+    preferences: dict
+
+
+class UserPreferencesUpdate(BaseModel):
+    preferences: dict
+
+
 class WeatherLogPaginatedResponse(BaseModel):
     items: List[WeatherLogResponse]
     total: int

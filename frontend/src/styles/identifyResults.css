@@ -45,6 +45,12 @@
     color: var(--text-color);
 }
 
+.identify-modal-hint {
+    margin: 0 0 10px 0;
+    color: var(--muted-text-color);
+    font-size: 0.85rem;
+}
+
 /* Species List */
 .identify-modal ul {
     list-style-type: none;

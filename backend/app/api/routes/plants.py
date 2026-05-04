@@ -47,6 +47,10 @@ from app.schemas import (
     PlantWateringCreate,
     PlantWateringResponse,
     TagResponse,
+    WateringBulkDeleteRequest,
+    WateringBulkDeleteResponse,
+    WateringListItemResponse,
+    WateringListPaginatedResponse,
 )
 from app.services.llm_client import LLMClient
 from app.services.plantnet import identify_species_via_plantnet
@@ -665,6 +669,51 @@ def delete_watering(
     db.commit()
 
     return {"message": "Watering deleted successfully"}
+
+
+@router.get("/waterings/all", response_model=WateringListPaginatedResponse)
+def list_all_waterings(
+    limit: int = Query(25, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    """Paginated list of all waterings (manual + auto), newest first, with plant info."""
+    total = db.query(PlantWatering).count()
+    rows = (
+        db.query(PlantWatering, Plant.name)
+        .join(Plant, PlantWatering.plant_id == Plant.id)
+        .order_by(PlantWatering.watered_at.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+    items = [
+        WateringListItemResponse(
+            id=w.id,
+            plant_id=w.plant_id,
+            plant_name=plant_name,
+            watered_at=w.watered_at,
+            rainfall_mm=w.rainfall_mm,
+            user_id=w.user_id,
+        )
+        for w, plant_name in rows
+    ]
+    return WateringListPaginatedResponse(items=items, total=total, limit=limit, offset=offset)
+
+
+@router.post("/waterings/bulk-delete", response_model=WateringBulkDeleteResponse)
+def bulk_delete_waterings(
+    payload: WateringBulkDeleteRequest,
+    db: Session = Depends(get_db),
+):
+    """Delete multiple waterings by id."""
+    deleted = (
+        db.query(PlantWatering)
+        .filter(PlantWatering.id.in_(payload.ids))
+        .delete(synchronize_session=False)
+    )
+    db.commit()
+    return WateringBulkDeleteResponse(deleted=deleted)
 
 @router.post("/{plant_id}/fertilizing", response_model=PlantFertilizingResponse)
 def fertilize_plant(

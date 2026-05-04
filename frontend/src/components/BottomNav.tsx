@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faHouse,
@@ -30,6 +30,14 @@ export default function BottomNav() {
     const [identifyResults, setIdentifyResults] = useState<
         { species: string; commonName: string; score: string; images: string[] }[] | null
     >(null);
+    const navigate = useNavigate();
+
+    const handleAddPlantFromIdentification = (commonName: string, species: string) => {
+        setIdentifyResults(null);
+        navigate("/plants", {
+            state: { prefillNewPlant: { name: commonName, species } },
+        });
+    };
 
     if (isShareAccess) return null;
 
@@ -151,6 +159,7 @@ export default function BottomNav() {
                     plantId={0}
                     results={identifyResults}
                     onSelectSpecies={() => setIdentifyResults(null)}
+                    onAddPlant={handleAddPlantFromIdentification}
                     onClose={() => setIdentifyResults(null)}
                 />
             )}

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 
 from app.database import get_db
-from app.models import Plant, PlantImage, PlantWatering
+from app.models import Plant, PlantIdentification, PlantImage, PlantWatering
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -61,12 +61,21 @@ def get_statistics(db: Session = Depends(get_db)):
         .count()
     )
 
+    # Count of identification sessions (one row per session via is_primary flag);
+    # includes standalone identifications not yet linked to a plant
+    identifications_count = (
+        db.query(PlantIdentification)
+        .filter(PlantIdentification.is_primary == True)
+        .count()
+    )
+
     return {
         "totalPlants": total_plants,
         "archivedPlants": archived_plants,
         "topSpecies": [{"name": s[0], "count": s[1]} for s in top_species],
         "totalWaterings": total_waterings,
         "totalImages": total_images,
+        "identificationsCount": identifications_count,
         "lastWateredPlant": {
             "id": last_watered.id,
             "name": last_watered.name

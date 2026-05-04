@@ -11,9 +11,15 @@ interface IdentifyResultsProps {
     results: IdentifyResult[];
     onSelectSpecies: (plantId: number, name: string, species: string) => void;
     onClose: () => void;
+    /**
+     * When provided, clicking a row triggers this callback instead of `onSelectSpecies`.
+     * Used by the standalone (camera-icon) flow to start an "add plant" flow,
+     * pre-filled with the picked species.
+     */
+    onAddPlant?: (commonName: string, species: string) => void;
 }
 
-export default function IdentifyResults({ plantId, results, onSelectSpecies, onClose }: IdentifyResultsProps) {
+export default function IdentifyResults({ plantId, results, onSelectSpecies, onClose, onAddPlant }: IdentifyResultsProps) {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const closeImageModal = useCallback(() => setSelectedImage(null), []);
     const { modalRef: resultsModalRef } = useModalA11y({ isOpen: true, onClose });
@@ -33,7 +39,8 @@ export default function IdentifyResults({ plantId, results, onSelectSpecies, onC
                 <span className="close" onClick={onClose}>
                     &times;
                 </span>
-                <h2>Select Identified Species</h2>
+                <h2>{onAddPlant ? "Add a plant from this identification" : "Select Identified Species"}</h2>
+                {onAddPlant && <p className="identify-modal-hint">Click a species to start adding a plant pre-filled with its details.</p>}
                 <ul>
                     {results.length > 0 ? (
                         results
@@ -41,7 +48,13 @@ export default function IdentifyResults({ plantId, results, onSelectSpecies, onC
                             .map((result, index) => (
                                 <li
                                     key={index}
-                                    onClick={() => onSelectSpecies(plantId, result.commonName, result.species)}
+                                    onClick={() => {
+                                        if (onAddPlant) {
+                                            onAddPlant(result.commonName, result.species);
+                                        } else {
+                                            onSelectSpecies(plantId, result.commonName, result.species);
+                                        }
+                                    }}
                                     className="species-item"
                                 >
                                     {/* Name & Percentage in the Same Row */}

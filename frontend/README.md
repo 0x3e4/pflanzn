@@ -45,7 +45,7 @@ src/
 │   ├── MapPanel.tsx, StaticLeafletMap.tsx
 │   ├── WeatherPanel.tsx, StatisticsPanel.tsx
 │   ├── LocationsPanel.tsx, PlantsPanel.tsx, UsersPanel.tsx
-│   ├── TagsPanel.tsx, SharePanel.tsx, IdentificationsPanel.tsx
+│   ├── TagsPanel.tsx, SharePanel.tsx, IdentificationsPanel.tsx, WateringsPanel.tsx
 │   ├── ErrorBoundary.tsx, OfflineBanner.tsx, LoadingOverlay.tsx
 │   └── ...
 ├── context/            # React Context providers

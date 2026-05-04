@@ -191,6 +191,35 @@ export const deleteIdentification = async (
     return response.data;
 };
 
+// Waterings — flat list & bulk delete (Manage > Waterings)
+export interface WateringListItem {
+    id: number;
+    plant_id: number;
+    plant_name: string;
+    watered_at: string;
+    rainfall_mm: number | null;
+    user_id: number | null;
+}
+
+export interface WateringListPaginated {
+    items: WateringListItem[];
+    total: number;
+    limit: number;
+    offset: number;
+}
+
+export const fetchAllWaterings = async (limit = 25, offset = 0): Promise<WateringListPaginated> => {
+    const response = await apiClient.get<WateringListPaginated>(`${API_BASE}/waterings/all`, {
+        params: { limit, offset },
+    });
+    return response.data;
+};
+
+export const bulkDeleteWaterings = async (ids: number[]): Promise<{ deleted: number }> => {
+    const response = await apiClient.post<{ deleted: number }>(`${API_BASE}/waterings/bulk-delete`, { ids });
+    return response.data;
+};
+
 // Plant Notes CRUD
 export const createPlantNote = async (
     plantId: number,

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
 import apiClient from "../services/apiClient";
 import { useConfig } from "./ConfigContext";
+import { syncUiPreferencesFromBackend } from "../config/uiPreferences";
 
 type User = {
     id: number;
@@ -86,6 +87,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (!user || user.id !== response.data.id) {
                     setUser(response.data);
                     setIsLoggedIn(true);
+                    // Pull this user's UI preferences from the backend into
+                    // localStorage so synchronous readers (Plants/Locations) see them.
+                    void syncUiPreferencesFromBackend();
                 }
             } else {
                 setUser(null);

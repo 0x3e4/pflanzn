@@ -19,6 +19,7 @@ class User(Base):
     password = Column(String(255), nullable=True)
     role = Column(String(50), default="user")
     auth_type = Column(String(10), default="local", nullable=False)
+    preferences = Column(Text, nullable=False, server_default="{}")
 
     waterings_created = relationship("PlantWatering", back_populates="created_by")
     fertilizings_created = relationship("PlantFertilizing", back_populates="created_by")

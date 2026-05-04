@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
     fetchPlants,
     createPlant,
@@ -89,6 +89,8 @@ export default function Plants() {
     const [searchTerm, setSearchTerm] = useState<string>("");
     const [searchParams] = useSearchParams();
     const speciesFilter = searchParams.get("species");
+    const location = useLocation();
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchPlantsFromService();
@@ -102,6 +104,19 @@ export default function Plants() {
             setSelectedTagId(null);
         }
     }, [speciesFilter]);
+
+    // Open the add-plant modal pre-filled when navigated here from the camera-icon
+    // identification flow (Navbar/BottomNav passes name+species via router state).
+    useEffect(() => {
+        const prefill = (location.state as { prefillNewPlant?: { name: string; species: string } } | null)
+            ?.prefillNewPlant;
+        if (prefill) {
+            setNewPlant({ name: prefill.name || "", species: prefill.species || "" });
+            setModalOpen(true);
+            // Clear the state so a refresh / back-nav doesn't re-trigger.
+            navigate(location.pathname + location.search, { replace: true, state: null });
+        }
+    }, [location.state]);
 
     useEffect(() => {
         if (plants.length === 0) {
