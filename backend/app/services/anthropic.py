@@ -89,11 +89,7 @@ class ClaudeClient:
         Generate care advice for a plant using Claude's vision capabilities.
         Optionally includes user's observation for more targeted advice.
         """
-        import os
-
-        # Recompute BASE_DIR and UPLOAD_FOLDER exactly as in plants.py
-        BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-        UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+        from app.utils.uploads import resolve_upload_path
 
         plant = db.query(Plant).filter(Plant.id == plant_id).first()
         if not plant:
@@ -110,11 +106,7 @@ class ClaudeClient:
         if not latest_images:
             raise ValueError("No images found for this plant")
 
-        relative_path = latest_images[0].image_path
-        image_path = os.path.join(UPLOAD_FOLDER, relative_path)
-
-        if not os.path.exists(image_path):
-            raise FileNotFoundError(f"Image file not found: {image_path}")
+        image_path, media_type = resolve_upload_path(latest_images[0].image_path)
 
         with open(image_path, "rb") as f:
             base64_image = base64.b64encode(f.read()).decode("utf-8")
@@ -138,7 +130,7 @@ class ClaudeClient:
                                 "type": "image",
                                 "source": {
                                     "type": "base64",
-                                    "media_type": "image/jpeg",
+                                    "media_type": media_type,
                                     "data": base64_image,
                                 },
                             },

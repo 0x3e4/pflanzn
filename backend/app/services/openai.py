@@ -88,13 +88,9 @@ class OpenAIClient:
         Optionally includes user's observation for more targeted advice.
         """
         import base64
-        import os
 
         from app.models import Plant
-
-        # Recompute BASE_DIR and UPLOAD_FOLDER
-        BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-        UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+        from app.utils.uploads import resolve_upload_path
 
         plant = db.query(Plant).filter(Plant.id == plant_id).first()
         if not plant:
@@ -111,11 +107,7 @@ class OpenAIClient:
         if not latest_images:
             raise ValueError("No images found for this plant")
 
-        relative_path = latest_images[0].image_path
-        image_path = os.path.join(UPLOAD_FOLDER, relative_path)
-
-        if not os.path.exists(image_path):
-            raise FileNotFoundError(f"Image file not found: {image_path}")
+        image_path, media_type = resolve_upload_path(latest_images[0].image_path)
 
         with open(image_path, "rb") as f:
             base64_image = base64.b64encode(f.read()).decode("utf-8")
@@ -136,7 +128,7 @@ class OpenAIClient:
                             {
                                 "type": "image_url",
                                 "image_url": {
-                                    "url": f"data:image/jpeg;base64,{base64_image}"
+                                    "url": f"data:{media_type};base64,{base64_image}"
                                 }
                             }
                         ]
