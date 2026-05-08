@@ -7,10 +7,5 @@ export default defineConfig({
         environment: "jsdom",
         globals: true,
         setupFiles: ["./src/test/setup.ts"],
-        env: {
-            VITE_AUTH_MODE: "local",
-            VITE_SHOW_PROTECTED_VIEW: "true",
-            VITE_ENABLE_LOCATIONS: "true",
-        },
     },
 });

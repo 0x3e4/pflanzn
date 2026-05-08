@@ -1,0 +1,54 @@
+# Secrets — never bake into image
+.env
+.env.*
+
+# VCS
+.git
+.gitignore
+.gitattributes
+
+# Python build / cache
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Tests & lint config (not needed at runtime)
+tests/
+conftest.py
+ruff.toml
+.ruff.toml
+pytest.ini
+
+# Runtime user data — never copy into image
+app/uploads/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Docs / build metadata
+README.md
+Dockerfile
+.dockerignore
+
+# Logs
+*.log
+logs/

@@ -14,6 +14,7 @@ import SharePanel from "../components/SharePanel";
 import TagsPanel from "../components/TagsPanel";
 import WateringsPanel from "../components/WateringsPanel";
 import WeatherPanel from "../components/WeatherPanel";
+import SupportPanel from "../components/SupportPanel";
 import "../styles/manage.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPenToSquare, faUnlock } from "@fortawesome/free-solid-svg-icons";
@@ -35,7 +36,8 @@ type ManageSection =
     | "waterings"
     | "customize"
     | "weather"
-    | "share";
+    | "share"
+    | "support";
 
 const Manage: React.FC = () => {
     const { user, logout, fetchProfile, isLoggedIn } = useAuth();
@@ -284,6 +286,12 @@ const Manage: React.FC = () => {
                             Share
                         </li>
                     )}
+                    <li
+                        className={`sidebar-subsection ${activeSection === "support" ? "active" : ""}`}
+                        onClick={() => setActiveSection("support")}
+                    >
+                        Support
+                    </li>
                     <li className="sidebar-info-item">Version {APP_VERSION}</li>
 
                     {authMode !== "no" && (
@@ -382,6 +390,8 @@ const Manage: React.FC = () => {
                 {activeSection === "share" && showShare && user?.role === "admin" && <SharePanel />}
 
                 {activeSection === "weather" && <WeatherPanel />}
+
+                {activeSection === "support" && <SupportPanel />}
 
                 {activeSection === "customize" && (
                     <div className="profile-info manage-customize-panel">

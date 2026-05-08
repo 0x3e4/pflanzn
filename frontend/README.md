@@ -11,6 +11,7 @@ React-based single-page application for the Pflanzn plant management system. Bui
 - **PWA:** vite-plugin-pwa + Workbox (CacheFirst for images, StaleWhileRevalidate for API, NetworkFirst for navigation)
 - **Testing:** Vitest + @testing-library/react (jsdom)
 - **Linting:** ESLint + Prettier (enforced via Husky pre-commit hooks)
+- **Production serving:** nginx (multi-stage Dockerfile — `builder` runs `vite build`, `runtime` is nginx alpine serving `dist/` on port 4173). Cache headers in [nginx.conf](nginx.conf): immutable for hashed `/assets/*`, no-cache for `sw.js` / `manifest.webmanifest` so PWA updates propagate
 
 ## Development
 
@@ -77,4 +78,4 @@ src/
 - State management via React Context API (no Redux)
 - CSS variables for theming (dark/light mode), 768px responsive breakpoint
 - All modals use `useModalA11y` hook for keyboard accessibility
-- Feature flags via environment variables (`VITE_AUTH_MODE`, `VITE_ENABLE_LOCATIONS`, etc.)
+- Configuration is fetched from the backend at startup via `GET /api/config` and read through `useConfig()` (`AUTH_MODE`, `ENABLE_LOCATIONS`, `SHOW_PROTECTED_VIEW`, `DOMAIN`, …); `import.meta.env` is not used. Legacy `VITE_*` env names still resolve as backend fallbacks but are deprecated.

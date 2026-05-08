@@ -1,0 +1,47 @@
+# Secrets — never bake into image
+.env
+.env.*
+
+# VCS
+.git
+.gitignore
+.gitattributes
+
+# Dependencies & build output (built inside the container)
+node_modules/
+dist/
+build/
+.vite/
+
+# Tests & coverage
+coverage/
+.nyc_output/
+src/test/
+
+# Lint / format caches
+.eslintcache
+.prettiercache
+.stylelintcache
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Husky (host-side git hooks, not needed in image)
+.husky/
+
+# Docs / build metadata
+README.md
+Dockerfile
+.dockerignore
