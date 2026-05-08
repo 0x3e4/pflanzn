@@ -112,4 +112,11 @@ apiClient.interceptors.response.use(
     },
 );
 
+export function extractErrorMessage(error: unknown, fallback: string): string {
+    const detail = (error as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail;
+    if (typeof detail === "string" && detail.length > 0) return detail;
+    if (error instanceof Error && error.message) return error.message;
+    return fallback;
+}
+
 export default apiClient;

@@ -8,6 +8,7 @@ export interface WeatherConfig {
     latitude: number;
     longitude: number;
     enabled: boolean;
+    is_default: boolean;
     created_at: string;
     updated_at: string;
 }
@@ -50,6 +51,7 @@ export const saveWeatherConfig = async (data: {
     latitude: number;
     longitude: number;
     enabled?: boolean;
+    is_default?: boolean;
 }): Promise<WeatherConfig> => {
     const response = await apiClient.post(`${API_BASE}/config`, data);
     return response.data;
@@ -57,7 +59,13 @@ export const saveWeatherConfig = async (data: {
 
 export const updateWeatherConfig = async (
     configId: number,
-    data: { city_name?: string | null; latitude?: number; longitude?: number; enabled?: boolean },
+    data: {
+        city_name?: string | null;
+        latitude?: number;
+        longitude?: number;
+        enabled?: boolean;
+        is_default?: boolean;
+    },
 ): Promise<WeatherConfig> => {
     const response = await apiClient.put(`${API_BASE}/config/${configId}`, data);
     return response.data;

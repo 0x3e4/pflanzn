@@ -61,13 +61,19 @@ def get_statistics(db: Session = Depends(get_db)):
         .count()
     )
 
-    # Count of identification sessions (one row per session via is_primary flag);
-    # includes standalone identifications not yet linked to a plant
-    identifications_count = (
+    # Identified Plants count = every plant (active + archived) plus standalone
+    # identifications that were never converted into a plant. Standalone rows are
+    # detected by image_path prefix — plant-linked identifications reuse the
+    # plant's image (plants/...), standalone ones live under identifications/.
+    standalone_identifications = (
         db.query(PlantIdentification)
-        .filter(PlantIdentification.is_primary == True)
+        .filter(
+            PlantIdentification.is_primary == True,
+            PlantIdentification.image_path.like("identifications/%"),
+        )
         .count()
     )
+    identifications_count = total_plants + archived_plants + standalone_identifications
 
     return {
         "totalPlants": total_plants,

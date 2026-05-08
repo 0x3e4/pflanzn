@@ -866,7 +866,12 @@ export default function PlantDetails() {
                                 <div className="plant-weather-zone">
                                     <label>Weather Zone</label>
                                     <select
-                                        value={plant.weather_config_id ?? weatherConfigs[0]?.id ?? ""}
+                                        value={
+                                            plant.weather_config_id ??
+                                            weatherConfigs.find((wc) => wc.is_default)?.id ??
+                                            weatherConfigs[0]?.id ??
+                                            ""
+                                        }
                                         onChange={async (e) => {
                                             const val = e.target.value ? Number(e.target.value) : null;
                                             await updatePlant(Number(plantId), { weather_config_id: val });
@@ -874,9 +879,9 @@ export default function PlantDetails() {
                                         }}
                                         disabled={!isLoggedIn}
                                     >
-                                        {weatherConfigs.map((wc, i) => (
+                                        {weatherConfigs.map((wc) => (
                                             <option key={wc.id} value={wc.id}>
-                                                {wc.city_name || `Location ${wc.id}`}{i === 0 ? " (default)" : ""}
+                                                {wc.city_name || `Location ${wc.id}`}{wc.is_default ? " (default)" : ""}
                                             </option>
                                         ))}
                                     </select>

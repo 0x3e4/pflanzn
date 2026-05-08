@@ -251,12 +251,14 @@ class WeatherConfigCreate(BaseModel):
     latitude: float
     longitude: float
     enabled: Optional[bool] = True
+    is_default: Optional[bool] = False
 
 class WeatherConfigUpdate(BaseModel):
     city_name: Optional[str] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     enabled: Optional[bool] = None
+    is_default: Optional[bool] = None
 
 class WeatherConfigResponse(BaseModel):
     id: int
@@ -264,6 +266,7 @@ class WeatherConfigResponse(BaseModel):
     latitude: float
     longitude: float
     enabled: bool
+    is_default: bool
     created_at: datetime
     updated_at: datetime
 
@@ -306,6 +309,8 @@ class WateringListItemResponse(BaseModel):
     watered_at: datetime
     rainfall_mm: Optional[float] = None
     user_id: Optional[int] = None
+    weather_config_name: Optional[str] = None
+    tags: List[str] = []
 
 
 class WateringListPaginatedResponse(BaseModel):

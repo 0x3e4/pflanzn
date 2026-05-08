@@ -199,6 +199,8 @@ export interface WateringListItem {
     watered_at: string;
     rainfall_mm: number | null;
     user_id: number | null;
+    weather_config_name: string | null;
+    tags: string[];
 }
 
 export interface WateringListPaginated {

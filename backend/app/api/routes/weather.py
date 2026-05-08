@@ -24,6 +24,25 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def _clear_other_defaults(db: Session, keep_id: Optional[int]) -> None:
+    """Ensure at most one weather config has is_default=True."""
+    query = db.query(WeatherConfig).filter(WeatherConfig.is_default == True)
+    if keep_id is not None:
+        query = query.filter(WeatherConfig.id != keep_id)
+    for other in query.all():
+        other.is_default = False
+
+
+def _ensure_default_exists(db: Session) -> None:
+    """If no config is marked default, promote the lowest-id config."""
+    has_default = db.query(WeatherConfig).filter(WeatherConfig.is_default == True).first()
+    if has_default:
+        return
+    fallback = db.query(WeatherConfig).order_by(WeatherConfig.id).first()
+    if fallback:
+        fallback.is_default = True
+
+
 @router.get("/configs", response_model=List[WeatherConfigResponse])
 def get_weather_configs(
     db: Session = Depends(get_db),
@@ -38,8 +57,13 @@ def get_weather_config(
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user),
 ):
-    """Get the first weather configuration (default)."""
-    config = db.query(WeatherConfig).first()
+    """Get the default weather configuration."""
+    config = (
+        db.query(WeatherConfig)
+        .filter(WeatherConfig.is_default == True)
+        .first()
+        or db.query(WeatherConfig).order_by(WeatherConfig.id).first()
+    )
     if not config:
         raise HTTPException(status_code=404, detail="No weather configuration found.")
     return config
@@ -52,14 +76,24 @@ def create_weather_config(
     current_user: Optional[User] = Depends(get_current_user),
 ):
     """Create a new weather configuration."""
+    # First config created automatically becomes the default so NULL plants stay covered.
+    has_any = db.query(WeatherConfig).first() is not None
+    is_default = bool(data.is_default) if data.is_default is not None else False
+    if not has_any:
+        is_default = True
+
     config = WeatherConfig(
         user_id=current_user.id if current_user else None,
         city_name=data.city_name,
         latitude=data.latitude,
         longitude=data.longitude,
         enabled=data.enabled if data.enabled is not None else True,
+        is_default=is_default,
     )
     db.add(config)
+    db.flush()
+    if is_default:
+        _clear_other_defaults(db, keep_id=config.id)
     db.commit()
     db.refresh(config)
     return config
@@ -85,6 +119,17 @@ def update_weather_config(
         config.longitude = data.longitude
     if data.enabled is not None:
         config.enabled = data.enabled
+    if data.is_default is not None:
+        if data.is_default:
+            config.is_default = True
+            _clear_other_defaults(db, keep_id=config.id)
+        elif config.is_default:
+            # Refuse to leave the system without a default — caller must promote
+            # another config by setting is_default=True on it instead.
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot unset is_default. Mark another weather config as default instead.",
+            )
 
     db.commit()
     db.refresh(config)
@@ -102,7 +147,11 @@ def delete_weather_config(
     if not config:
         raise HTTPException(status_code=404, detail="Weather configuration not found.")
 
+    was_default = bool(config.is_default)
     db.delete(config)
+    db.flush()
+    if was_default:
+        _ensure_default_exists(db)
     db.commit()
 
 
@@ -189,10 +238,14 @@ def get_auto_waterings(
         .all()
     )
 
-    # For plants with no weather_config_id, use the default (first) config name
+    # For plants with no weather_config_id, use the default config name
     default_city = None
     if any(wc_id is None for _, _, _, wc_id, _ in rows):
-        default_config = db.query(WeatherConfig).order_by(WeatherConfig.id).first()
+        default_config = (
+            db.query(WeatherConfig)
+            .filter(WeatherConfig.is_default == True)
+            .first()
+        )
         if default_config:
             default_city = default_config.city_name
 

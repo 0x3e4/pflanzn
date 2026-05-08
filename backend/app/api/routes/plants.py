@@ -476,26 +476,19 @@ async def identify_species_from_image(
             with Image.open(image_stream) as img:
                 logger.debug(f"Opened image: format={img.format}, size={img.size}")
 
-                # Ensure the image format is valid
-                if img.format is None:
-                    raise ValueError("Invalid image format. Please upload a valid image.")
-
                 # Correct EXIF orientation and convert to RGB
                 img = ImageOps.exif_transpose(img)
                 img = img.convert("RGB")
 
-                # Detect file extension and MIME type
-                ext = file.filename.split(".")[-1].lower() if file.filename else None
-                if ext not in ["jpg", "jpeg", "png"]:
-                    raise HTTPException(status_code=400, detail="Unsupported image format. Only JPG and PNG allowed.")
-
-                mime_type = mimetypes.types_map.get(f".{ext}", "image/jpeg")  # Default to JPEG
-
+                # Normalize to JPEG before sending to PlantNet — accept any
+                # PIL-readable format (JPG, PNG, WebP, HEIC, …) and hand
+                # PlantNet a uniform JPEG so we never have to guess what it
+                # accepts.
                 id_uuid = str(uuid.uuid4())
-                # Save original format for PlantNet API (needs file on disk)
-                filename = f"{id_uuid}.{ext}"
+                filename = f"{id_uuid}.jpg"
                 identification_file_path = os.path.join(IDENTIFICATION_FOLDER, filename)
-                img.save(identification_file_path, format=img.format, optimize=True, quality=80)
+                img.save(identification_file_path, format="JPEG", optimize=True, quality=85)
+                mime_type = "image/jpeg"
 
                 # Generate WebP variants for frontend serving
                 base_path = os.path.join(IDENTIFICATION_FOLDER, id_uuid)
@@ -503,6 +496,8 @@ async def identify_species_from_image(
                 relative_path = os.path.join("identifications", id_uuid)
                 logger.debug(f"Image saved to: {identification_file_path}")
 
+        except HTTPException:
+            raise
         except Exception as e:
             logger.error(f"Error processing image: {str(e)}")
             raise HTTPException(status_code=400, detail=f"Error processing image: {str(e)}")
@@ -564,12 +559,11 @@ async def identify_species_from_image(
             logger.warning("No species identified from the image.")
             return {"identified_species": [], "message": "No species found"}
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error identifying plant: {str(e)}")
-        return {
-            "identified_species": [],
-            "message": f"Error identifying species: {str(e)}"
-        }
+        raise HTTPException(status_code=500, detail=f"Error identifying species: {str(e)}")
 
 @router.delete("/{plant_id}/images/{image_id}")
 def delete_plant_image(plant_id: int, image_id: int, db: Session = Depends(get_db)):
@@ -680,13 +674,40 @@ def list_all_waterings(
     """Paginated list of all waterings (manual + auto), newest first, with plant info."""
     total = db.query(PlantWatering).count()
     rows = (
-        db.query(PlantWatering, Plant.name)
+        db.query(PlantWatering, Plant.name, Plant.weather_config_id, WeatherConfig.city_name)
         .join(Plant, PlantWatering.plant_id == Plant.id)
+        .outerjoin(WeatherConfig, Plant.weather_config_id == WeatherConfig.id)
         .order_by(PlantWatering.watered_at.desc())
         .offset(offset)
         .limit(limit)
         .all()
     )
+
+    plant_ids = {w.plant_id for w, _, _, _ in rows}
+    tags_by_plant: dict[int, list[str]] = {pid: [] for pid in plant_ids}
+    if plant_ids:
+        tag_rows = (
+            db.query(plant_tag_association.c.plant_id, Tag.name)
+            .join(Tag, Tag.id == plant_tag_association.c.tag_id)
+            .filter(plant_tag_association.c.plant_id.in_(plant_ids))
+            .order_by(Tag.name)
+            .all()
+        )
+        for pid, tag_name in tag_rows:
+            tags_by_plant.setdefault(pid, []).append(tag_name)
+
+    # For auto-waterings, fall back to the default config's city when the plant
+    # has no weather_config_id (mirrors /api/weather/waterings behavior).
+    default_city: Optional[str] = None
+    if any(w.user_id is None and wc_id is None for w, _, wc_id, _ in rows):
+        default_config = (
+            db.query(WeatherConfig)
+            .filter(WeatherConfig.is_default == True)
+            .first()
+        )
+        if default_config:
+            default_city = default_config.city_name
+
     items = [
         WateringListItemResponse(
             id=w.id,
@@ -695,8 +716,12 @@ def list_all_waterings(
             watered_at=w.watered_at,
             rainfall_mm=w.rainfall_mm,
             user_id=w.user_id,
+            weather_config_name=(
+                (city_name or default_city) if w.user_id is None else None
+            ),
+            tags=tags_by_plant.get(w.plant_id, []),
         )
-        for w, plant_name in rows
+        for w, plant_name, _wc_id, city_name in rows
     ]
     return WateringListPaginatedResponse(items=items, total=total, limit=limit, offset=offset)
 

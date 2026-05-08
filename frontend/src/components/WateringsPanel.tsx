@@ -153,6 +153,7 @@ export default function WateringsPanel() {
                             </th>
                             <th>Watered at</th>
                             <th>Plant</th>
+                            <th>Tags</th>
                             <th>Rain</th>
                             <th>Source</th>
                         </tr>
@@ -164,33 +165,77 @@ export default function WateringsPanel() {
                                     <td><Skeleton width={16} /></td>
                                     <td><Skeleton width={140} /></td>
                                     <td><Skeleton width={160} /></td>
+                                    <td><Skeleton width={120} /></td>
                                     <td><Skeleton width={50} /></td>
-                                    <td><Skeleton width={70} /></td>
+                                    <td><Skeleton width={90} /></td>
                                 </tr>
                             ))
                         ) : items.length === 0 ? (
                             <tr>
-                                <td colSpan={5} className="waterings-empty">No waterings recorded.</td>
+                                <td colSpan={6} className="waterings-empty">No waterings recorded.</td>
                             </tr>
                         ) : (
-                            items.map((w) => (
-                                <tr key={w.id} className={selectedIds.has(w.id) ? "selected" : ""}>
-                                    <td>
-                                        <input
-                                            type="checkbox"
-                                            aria-label={`Select watering ${w.id}`}
-                                            checked={selectedIds.has(w.id)}
-                                            onChange={() => toggleOne(w.id)}
-                                        />
-                                    </td>
-                                    <td>{formatTime(w.watered_at)}</td>
-                                    <td>
-                                        <Link to={`/plant/${w.plant_id}`}>{w.plant_name}</Link>
-                                    </td>
-                                    <td>{w.rainfall_mm !== null && w.rainfall_mm !== undefined ? `${w.rainfall_mm.toFixed(1)} mm` : "—"}</td>
-                                    <td>{w.user_id === null ? "auto" : "manual"}</td>
-                                </tr>
-                            ))
+                            items.map((w) => {
+                                const isAuto = w.user_id === null;
+                                const sourceLabel = isAuto
+                                    ? w.weather_config_name
+                                        ? `auto · ${w.weather_config_name}`
+                                        : "auto"
+                                    : "manual";
+                                return (
+                                    <tr
+                                        key={w.id}
+                                        className={`waterings-row${selectedIds.has(w.id) ? " selected" : ""}`}
+                                        onClick={() => toggleOne(w.id)}
+                                        role="button"
+                                        tabIndex={0}
+                                        aria-pressed={selectedIds.has(w.id)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === " " || e.key === "Enter") {
+                                                e.preventDefault();
+                                                toggleOne(w.id);
+                                            }
+                                        }}
+                                    >
+                                        <td onClick={(e) => e.stopPropagation()}>
+                                            <input
+                                                type="checkbox"
+                                                aria-label={`Select watering ${w.id}`}
+                                                checked={selectedIds.has(w.id)}
+                                                onChange={() => toggleOne(w.id)}
+                                            />
+                                        </td>
+                                        <td>{formatTime(w.watered_at)}</td>
+                                        <td>
+                                            <Link
+                                                to={`/plant/${w.plant_id}`}
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                {w.plant_name}
+                                            </Link>
+                                        </td>
+                                        <td>
+                                            {w.tags.length > 0 ? (
+                                                <span className="waterings-tag-list">
+                                                    {w.tags.map((tag) => (
+                                                        <span key={tag} className="waterings-tag-chip">
+                                                            {tag}
+                                                        </span>
+                                                    ))}
+                                                </span>
+                                            ) : (
+                                                "—"
+                                            )}
+                                        </td>
+                                        <td>
+                                            {w.rainfall_mm !== null && w.rainfall_mm !== undefined
+                                                ? `${w.rainfall_mm.toFixed(1)} mm`
+                                                : "—"}
+                                        </td>
+                                        <td>{sourceLabel}</td>
+                                    </tr>
+                                );
+                            })
                         )}
                     </tbody>
                 </table>

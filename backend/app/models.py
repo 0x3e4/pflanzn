@@ -212,6 +212,7 @@ class WeatherConfig(Base):
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
     enabled = Column(Boolean, default=True)
+    is_default = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
 

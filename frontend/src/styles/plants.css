@@ -274,6 +274,50 @@
     background-color: var(--quaternary-color) !important;
 }
 
+.file-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 6px 6px 6px 6px;
+    margin: 10px 0;
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    background: var(--input-background);
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.file-input-row:hover,
+.file-input-row:focus-visible {
+    border-color: var(--text-color);
+    outline: none;
+}
+
+.file-input-button {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    border-radius: 4px;
+    background: var(--secondary-background-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    font-size: 0.9em;
+}
+
+.file-input-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-input-name.is-empty {
+    opacity: 0.6;
+}
+
 .modal-identify-button {
     background-color: var(--quinary-color) !important;
 }

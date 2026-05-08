@@ -34,8 +34,12 @@
     border: 1px solid var(--border-color);
     color: var(--text-color);
     border-radius: 6px;
-    padding: 8px 10px;
+    padding: 8px 14px;
     cursor: pointer;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     transition: background-color 0.15s;
 }
 
@@ -80,8 +84,22 @@
     font-size: 0.75rem;
 }
 
+.waterings-table tr.waterings-row {
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.waterings-table tr.waterings-row:hover {
+    background: var(--senary-color);
+}
+
 .waterings-table tr.selected {
     background: var(--senary-color);
+}
+
+.waterings-table tr.waterings-row:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
 }
 
 .waterings-table .waterings-col-check {
@@ -92,6 +110,23 @@
     cursor: pointer;
     width: 16px;
     height: 16px;
+}
+
+.waterings-tag-list {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.waterings-tag-chip {
+    background: var(--senary-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    white-space: nowrap;
 }
 
 .waterings-empty {
@@ -131,11 +166,20 @@
 
 @media (max-width: 768px) {
     .waterings-table {
-        min-width: 520px;
+        min-width: 640px;
     }
 
     .waterings-total {
         margin-left: 0;
         flex-basis: 100%;
+    }
+
+    .waterings-table tr.waterings-row {
+        /* Larger tap targets — entire row is the hit area on mobile */
+        min-height: 44px;
+    }
+
+    .waterings-table td {
+        padding: 12px 10px;
     }
 }

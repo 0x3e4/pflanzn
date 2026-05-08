@@ -14,6 +14,7 @@ import { useAuth } from "../context/AuthContext";
 import { useShare } from "../context/ShareContext";
 import { useConfig } from "../context/ConfigContext";
 import { identifyPlantFromImage } from "../services/PlantService";
+import { extractErrorMessage } from "../services/apiClient";
 import IdentifyResults from "./IdentifyResults";
 import { toast } from "react-toastify";
 import { useState } from "react";
@@ -30,13 +31,21 @@ export default function BottomNav() {
     const [identifyResults, setIdentifyResults] = useState<
         { species: string; commonName: string; score: string; images: string[] }[] | null
     >(null);
+    const [pendingFile, setPendingFile] = useState<File | null>(null);
     const navigate = useNavigate();
 
     const handleAddPlantFromIdentification = (commonName: string, species: string) => {
+        const file = pendingFile;
         setIdentifyResults(null);
+        setPendingFile(null);
         navigate("/plants", {
-            state: { prefillNewPlant: { name: commonName, species } },
+            state: { prefillNewPlant: { name: commonName, species, file } },
         });
+    };
+
+    const closeIdentifyResults = () => {
+        setIdentifyResults(null);
+        setPendingFile(null);
     };
 
     if (isShareAccess) return null;
@@ -54,11 +63,13 @@ export default function BottomNav() {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        setPendingFile(file);
         setLoadingIdentification(true);
         try {
             const result = await identifyPlantFromImage(file);
             if (!result || result.identified_species.length === 0) {
                 toast.warning("No species identified.");
+                setPendingFile(null);
                 return;
             }
             setIdentifyResults(
@@ -69,8 +80,9 @@ export default function BottomNav() {
                     images: r.images,
                 })),
             );
-        } catch {
-            toast.error("Error identifying plant. Please try again.");
+        } catch (error) {
+            toast.error(extractErrorMessage(error, "Error identifying plant. Please try again."));
+            setPendingFile(null);
         } finally {
             setLoadingIdentification(false);
             if (fileInputRef.current) fileInputRef.current.value = "";
@@ -158,9 +170,9 @@ export default function BottomNav() {
                 <IdentifyResults
                     plantId={0}
                     results={identifyResults}
-                    onSelectSpecies={() => setIdentifyResults(null)}
+                    onSelectSpecies={closeIdentifyResults}
                     onAddPlant={handleAddPlantFromIdentification}
-                    onClose={() => setIdentifyResults(null)}
+                    onClose={closeIdentifyResults}
                 />
             )}
         </>

@@ -55,6 +55,18 @@
     color: var(--text-color);
 }
 
+.weather-default-radio {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.weather-default-radio input[type="radio"] {
+    cursor: pointer;
+    accent-color: var(--primary-color);
+}
+
 .weather-default-badge {
     font-size: 0.7rem;
     text-transform: uppercase;

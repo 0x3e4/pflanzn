@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
     fetchPlants,
@@ -13,6 +13,7 @@ import {
 import { Plant } from "../types/Plant";
 import { Tag } from "../types/Tag";
 import { fetchTags } from "../services/TagService";
+import { extractErrorMessage } from "../services/apiClient";
 import "../styles/plants.css";
 import { toast } from "react-toastify";
 import { DateTime } from "luxon";
@@ -44,6 +45,7 @@ export default function Plants() {
     const [error, setError] = useState<string | null>(null);
     const [newPlant, setNewPlant] = useState({ name: "", species: "" });
     const [file, setFile] = useState<File | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [allTags, setAllTags] = useState<Tag[]>([]);
     const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
@@ -108,10 +110,14 @@ export default function Plants() {
     // Open the add-plant modal pre-filled when navigated here from the camera-icon
     // identification flow (Navbar/BottomNav passes name+species via router state).
     useEffect(() => {
-        const prefill = (location.state as { prefillNewPlant?: { name: string; species: string } } | null)
-            ?.prefillNewPlant;
+        const prefill = (
+            location.state as {
+                prefillNewPlant?: { name: string; species: string; file?: File | null };
+            } | null
+        )?.prefillNewPlant;
         if (prefill) {
             setNewPlant({ name: prefill.name || "", species: prefill.species || "" });
+            setFile(prefill.file ?? null);
             setModalOpen(true);
             // Clear the state so a refresh / back-nav doesn't re-trigger.
             navigate(location.pathname + location.search, { replace: true, state: null });
@@ -334,7 +340,7 @@ export default function Plants() {
                 })),
             );
         } catch (err) {
-            toast.error((err as Error).message);
+            toast.error(extractErrorMessage(err, "Error identifying plant. Please try again."));
         }
     };
 
@@ -765,7 +771,29 @@ export default function Plants() {
                             value={newPlant.species}
                             onChange={(e) => setNewPlant({ ...newPlant, species: e.target.value })}
                         />
-                        <input type="file" onChange={handleFileChange} />
+                        <div
+                            className="file-input-row"
+                            onClick={() => fileInputRef.current?.click()}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
+                                    fileInputRef.current?.click();
+                                }
+                            }}
+                        >
+                            <span className="file-input-button">Browse…</span>
+                            <span className={`file-input-name ${file ? "" : "is-empty"}`}>
+                                {file ? file.name : "No file selected"}
+                            </span>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                onChange={handleFileChange}
+                                style={{ display: "none" }}
+                            />
+                        </div>
                         {file && (
                             <button className="modal-identify-button" onClick={handleIdentifyPlant}>
                                 <FontAwesomeIcon icon={faFingerprint} /> Identify Plant

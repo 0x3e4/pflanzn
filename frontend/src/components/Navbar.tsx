@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCamera, faSpinner, faSun, faMoon } from "@fortawesome/free-solid-svg-icons";
 import { useTheme } from "../hooks/useTheme";
 import { identifyPlantFromImage } from "../services/PlantService";
+import { extractErrorMessage } from "../services/apiClient";
 import IdentifyResults from "./IdentifyResults";
 import { toast } from "react-toastify";
 
@@ -16,6 +17,7 @@ export default function Navbar() {
     const [identifyResults, setIdentifyResults] = useState<
         { species: string; commonName: string; score: string; images: string[] }[] | null
     >(null);
+    const [pendingFile, setPendingFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const navRef = useRef<HTMLElement | null>(null);
     const { isLoggedIn, loading } = useAuth();
@@ -25,10 +27,17 @@ export default function Navbar() {
     const navigate = useNavigate();
 
     const handleAddPlantFromIdentification = (commonName: string, species: string) => {
+        const file = pendingFile;
         setIdentifyResults(null);
+        setPendingFile(null);
         navigate("/plants", {
-            state: { prefillNewPlant: { name: commonName, species } },
+            state: { prefillNewPlant: { name: commonName, species, file } },
         });
+    };
+
+    const closeIdentifyResults = () => {
+        setIdentifyResults(null);
+        setPendingFile(null);
     };
 
     useEffect(() => {
@@ -62,7 +71,9 @@ export default function Navbar() {
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
         if (!selectedFile) return;
+        setPendingFile(selectedFile);
         await processPlantIdentification(selectedFile);
+        if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
     const processPlantIdentification = async (file: File) => {
@@ -74,6 +85,7 @@ export default function Navbar() {
 
             if (!result || result.identified_species.length === 0) {
                 toast.warning("No species identified.");
+                setPendingFile(null);
                 return;
             }
 
@@ -86,7 +98,8 @@ export default function Navbar() {
                 })),
             );
         } catch (error) {
-            toast.error("Error identifying plant. Please try again.");
+            toast.error(extractErrorMessage(error, "Error identifying plant. Please try again."));
+            setPendingFile(null);
         } finally {
             setLoading(false);
         }
@@ -165,9 +178,9 @@ export default function Navbar() {
                 <IdentifyResults
                     plantId={0} // No plant ID, just a quick scan
                     results={identifyResults}
-                    onSelectSpecies={() => setIdentifyResults(null)}
+                    onSelectSpecies={closeIdentifyResults}
                     onAddPlant={handleAddPlantFromIdentification}
-                    onClose={() => setIdentifyResults(null)}
+                    onClose={closeIdentifyResults}
                 />
             )}
         </nav>

@@ -129,6 +129,29 @@ def _ensure_weather_schema():
             except Exception:
                 pass  # FK may already exist or table not ready
 
+    if "weather_configs" in tables:
+        config_columns = {column["name"] for column in inspector.get_columns("weather_configs")}
+        if "is_default" not in config_columns:
+            _execute_ddl("ALTER TABLE weather_configs ADD COLUMN is_default TINYINT(1) NOT NULL DEFAULT 0")
+            # Mark the lowest-id existing config as default so NULL plants keep auto-watering somewhere
+            _execute_ddl(
+                "UPDATE weather_configs SET is_default = 1 "
+                "WHERE id = (SELECT id FROM (SELECT MIN(id) AS id FROM weather_configs) AS t) "
+                "AND id IS NOT NULL"
+            )
+
+    if "plants" in tables and "weather_configs" in tables:
+        # Backfill: assign every NULL outdoor rain-reaching plant to the default config
+        # so cross-zone watering can no longer leak via the OR-NULL filter.
+        # Idempotent: only updates rows still NULL, no-op once assignments exist.
+        _execute_ddl(
+            "UPDATE plants SET weather_config_id = "
+            "(SELECT id FROM weather_configs WHERE is_default = 1 LIMIT 1) "
+            "WHERE weather_config_id IS NULL "
+            "AND is_outdoor = 1 AND reaches_rain = 1 "
+            "AND (SELECT COUNT(*) FROM weather_configs WHERE is_default = 1) = 1"
+        )
+
 
 def _ensure_users_schema():
     """Idempotent migration for the users table (preferences column)."""

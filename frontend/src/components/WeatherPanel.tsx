@@ -133,6 +133,19 @@ export default function WeatherPanel() {
         }
     };
 
+    const handleSetDefault = async (config: WeatherConfig) => {
+        if (config.is_default) return;
+        try {
+            await updateWeatherConfig(config.id, { is_default: true });
+            // Re-fetch all configs so other rows reflect their cleared is_default flag.
+            const fresh = await fetchWeatherConfigs();
+            setConfigs(fresh);
+            toast.success(`${config.city_name || `Location ${config.id}`} is now the default zone.`);
+        } catch {
+            toast.error("Failed to set default location.");
+        }
+    };
+
     const handleDelete = async (configId: number) => {
         try {
             await deleteWeatherConfig(configId);
@@ -235,8 +248,21 @@ export default function WeatherPanel() {
                         <div key={config.id} className={`weather-location-card${config.enabled ? "" : " disabled"}`}>
                             <div className="weather-location-header">
                                 <div className="weather-location-title">
-                                    <strong>{config.city_name || `Location ${index + 1}`}</strong>
-                                    {index === 0 && <span className="weather-default-badge">Default</span>}
+                                    <label
+                                        className="weather-default-radio"
+                                        title="Set as default zone for unassigned plants"
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="weather-default-config"
+                                            checked={config.is_default}
+                                            onChange={() => handleSetDefault(config)}
+                                        />
+                                        <strong>{config.city_name || `Location ${index + 1}`}</strong>
+                                        {config.is_default && (
+                                            <span className="weather-default-badge">Default</span>
+                                        )}
+                                    </label>
                                 </div>
                                 <div className="weather-location-actions">
                                     <label className="weather-toggle-switch" title={config.enabled ? "Disable" : "Enable"}>

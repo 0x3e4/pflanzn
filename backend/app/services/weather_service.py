@@ -192,10 +192,15 @@ def check_and_auto_water(db: Session) -> int:
                 Plant.reaches_rain == True,
                 Plant.is_archived == False,
             )
-            # Only water plants assigned to this weather zone, or unassigned plants (default)
-            query = query.filter(
-                (Plant.weather_config_id == config.id) | (Plant.weather_config_id == None)
-            )
+            # Plants explicitly assigned to this zone always match. Unassigned plants
+            # (weather_config_id IS NULL) only match the single default config, so a
+            # rainy zone cannot water plants that belong to (or default to) a dry one.
+            if config.is_default:
+                query = query.filter(
+                    (Plant.weather_config_id == config.id) | (Plant.weather_config_id == None)
+                )
+            else:
+                query = query.filter(Plant.weather_config_id == config.id)
             plants = query.all()
 
             check_time = datetime.now()
