@@ -1,0 +1,30 @@
+name: Create GitHub Release
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract changelog section
+        id: changelog
+        uses: mindsers/changelog-reader-action@v2
+        with:
+          version: ${{ github.ref_name }}
+          path: ./CHANGELOG.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.changes }}
+          prerelease: ${{ contains(github.ref_name, '-') }}

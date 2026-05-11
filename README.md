@@ -131,10 +131,12 @@ docker compose up -d --build
 
 The app will be reachable at the domain you configured in `DOMAIN`. See [.env.example](.env.example) for all available settings.
 
-Prebuilt images are also published to GHCR on every push to `main` ([build-images.yml](.github/workflows/build-images.yml)):
+Prebuilt images are published to GHCR on every push to `main` and on every semver tag (`X.Y.Z`) by [build-images.yml](.github/workflows/build-images.yml):
 
 - `ghcr.io/0x3e4/pflanzn-backend`
 - `ghcr.io/0x3e4/pflanzn-frontend` (multi-stage build → nginx alpine)
+
+`main` builds get the `latest` and `main-<sha>` tags; release builds get `X.Y.Z`, `X.Y`, and `X` tags. For production, pin to an explicit semver tag — see [SECURITY.md](SECURITY.md) for the supported-version policy.
 
 ---
 
