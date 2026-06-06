@@ -13,6 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [1.0.1] - 2026-06-06
+
+### Added
+
+### Changed
+- Update backend and frontend dependencies
+
+### Fixed
+- Hecate badge now links to its scan page
+
 ## [1.0.0] - 2026-05-11
 
 Initial tagged release. Establishes the baseline for the semantic versioning timeline.

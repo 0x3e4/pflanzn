@@ -14,7 +14,7 @@
 ![MariaDB](https://img.shields.io/badge/MariaDB-003545?logo=mariadb&logoColor=white)
 ![PWA](https://img.shields.io/badge/PWA-Workbox-5A0FC8?logo=pwa&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
-[![Hecate](https://img.shields.io/endpoint?url=https%3A%2F%2Fhecate.pw%2Fapi%2Fv1%2Fscans%2Ftargets%2Fhttps%253A%252F%252Fgithub.com%252F0x3e4%252Fpflanzn%2Fshield?label=Hecate)](https://hecate.pw/scans)
+[![Hecate](https://img.shields.io/endpoint?url=https%3A%2F%2Fhecate.pw%2Fapi%2Fv1%2Fscans%2Ftargets%2Fhttps%253A%252F%252Fgithub.com%252F0x3e4%252Fpflanzn%2Fshield)](https://hecate.pw/scans/targets/https%3A%2F%2Fgithub.com%2F0x3e4%2Fpflanzn)
 
 ---
 

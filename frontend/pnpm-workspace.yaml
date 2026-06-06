@@ -7,3 +7,5 @@ minimumReleaseAgeExclude:
   - vite
   - '@vite/*'
   - '@napi-rs/*'
+  - '@oxc-project/*'
+  - tinyglobby
