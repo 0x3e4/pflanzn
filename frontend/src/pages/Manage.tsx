@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { updateUser, updateUserPassword } from "../services/UserService";
 import StatisticsPanel from "../components/StatisticsPanel";
 import UsersPanel from "../components/UsersPanel";
+import AuditPanel from "../components/AuditPanel";
 import PlantsPanel from "../components/PlantsPanel";
 import IdentificationsPanel from "../components/IdentificationsPanel";
 import LocationsPanel from "../components/LocationsPanel";
@@ -29,6 +30,7 @@ type ManageSection =
     | "statistics"
     | "identification"
     | "users"
+    | "audit"
     | "plants"
     | "locations"
     | "map"
@@ -222,6 +224,13 @@ const Manage: React.FC = () => {
                             )}
 
                             <li
+                                className={`sidebar-subsection ${activeSection === "audit" ? "active" : ""}`}
+                                onClick={() => setActiveSection("audit")}
+                            >
+                                Audit
+                            </li>
+
+                            <li
                                 className={`sidebar-subsection ${activeSection === "plants" ? "active" : ""}`}
                                 onClick={() => setActiveSection("plants")}
                             >
@@ -376,6 +385,8 @@ const Manage: React.FC = () => {
                 {activeSection === "users" && authMode !== "no" && (authMode === "no" || user?.role === "admin") && (
                     <UsersPanel />
                 )}
+
+                {activeSection === "audit" && (authMode === "no" || user?.role === "admin") && <AuditPanel />}
 
                 {activeSection === "plants" && (authMode === "no" || user?.role === "admin") && <PlantsPanel />}
 

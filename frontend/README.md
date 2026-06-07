@@ -45,7 +45,7 @@ src/
 │   ├── TimelineImages.tsx, LocationTimelineImages.tsx
 │   ├── MapPanel.tsx, StaticLeafletMap.tsx
 │   ├── WeatherPanel.tsx, StatisticsPanel.tsx
-│   ├── LocationsPanel.tsx, PlantsPanel.tsx, UsersPanel.tsx
+│   ├── LocationsPanel.tsx, PlantsPanel.tsx, UsersPanel.tsx, AuditPanel.tsx
 │   ├── TagsPanel.tsx, SharePanel.tsx, IdentificationsPanel.tsx, WateringsPanel.tsx
 │   ├── ErrorBoundary.tsx, OfflineBanner.tsx, LoadingOverlay.tsx
 │   └── ...
@@ -60,7 +60,8 @@ src/
 │   ├── UserService.ts
 │   ├── TagService.ts
 │   ├── ShareService.ts
-│   └── StatisticService.ts
+│   ├── StatisticService.ts
+│   └── AuditService.ts
 ├── hooks/              # Custom React hooks
 │   ├── useModalA11y.ts       # Modal keyboard accessibility
 │   ├── useOnlineStatus.ts    # Online/offline detection

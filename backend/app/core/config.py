@@ -86,6 +86,7 @@ class Settings(BaseSettings):
     WEATHER_CHECK_INTERVAL_HOURS: int = int(os.getenv("WEATHER_CHECK_INTERVAL_HOURS", "1"))
     WEATHER_RAINFALL_THRESHOLD_MM: float = float(os.getenv("WEATHER_RAINFALL_THRESHOLD_MM", "1.0"))
     WEATHER_ENABLED: bool = _truthy(os.getenv("WEATHER_ENABLED"), default=True)
+    AUDIT_ENABLED: bool = _truthy(os.getenv("AUDIT_ENABLED"), default=True)
     BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     UPLOAD_FOLDER: str = os.path.join(BASE_DIR, "uploads")
 

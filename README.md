@@ -75,6 +75,7 @@
 | **PWA** | Installable on phone or desktop; Workbox runtime caching (CacheFirst for images, StaleWhileRevalidate for API, NetworkFirst for navigation). |
 | **Sharing** | Token-based public collection links with a dedicated read-only view. |
 | **Auth modes** | `no` (open), `local` (JWT + Argon2 + Redis sessions with theft detection), or `oidc` (external IdP). |
+| **Audit log** | Every write action and authentication event is recorded to an immutable log, viewable by admins under Manage → Audit with filters for action, entity, user, date, and free-text search. |
 | **No telemetry** | No tracking. No ads. |
 
 ---
@@ -194,7 +195,7 @@ Everything is driven through environment variables — see [.env.example](.env.e
 | **OIDC** | `OIDC_NAME`, `OIDC_PROVIDER_URL`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` |
 | **Database** | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_ROOT_PASSWORD`, `DB_NAME` |
 | **Redis** | `REDIS_URL` |
-| **Features** | `ENABLE_LOCATIONS` |
+| **Features** | `ENABLE_LOCATIONS`, `AUDIT_ENABLED` |
 | **Identification** | `PLANTNET_API_KEY`, `PLANTNET_LANGUAGE` |
 | **AI providers (optional)** | `LLM_LANGUAGE`, `OPENAI_API_KEY` / `OPENAI_MODEL_NAME`, `CLAUDE_API_KEY` / `CLAUDE_MODEL_NAME`, `MISTRALAI_API_KEY` / `MISTRALAI_API_URL` / `MISTRALAI_MODEL_NAME`, `HUGGINGFACE_API_KEY` / `HUGGINGFACE_MODEL_NAME`, `OLLAMA_URL` / `OLLAMA_MODEL_NAME`. Provider auto-detected from whichever key is set; priority `openai > claude > mistralai > huggingface > ollama`. |
 | **Weather** | `WEATHER_ENABLED`, `WEATHER_CHECK_INTERVAL_HOURS`, `WEATHER_RAINFALL_THRESHOLD_MM`, `OPENWEATHERMAP_API_KEY` (optional) |

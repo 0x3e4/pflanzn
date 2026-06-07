@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
+from app.core.audit import record_audit
 from app.core.config import settings
 from app.core.security import create_access_token, create_refresh_token, decode_token, verify_password
 from app.database import get_db
@@ -139,21 +140,30 @@ def _set_auth_cookies(resp, access_token: str, access_expires_at: Optional[int],
 
 # Routes
 @router.post("/login")
-def login(user_data: LoginRequest, db: Session = Depends(get_db)):
+def login(user_data: LoginRequest, request: Request, db: Session = Depends(get_db)):
     """Handles user authentication and issues access & refresh tokens."""
     logger.debug(f"Login attempt for user: '{user_data.username}'")
 
     user = db.query(User).filter(User.username == user_data.username).first()
 
     if not user or not verify_password(user_data.password, user.password):
+        record_audit(request, action="login_failed", entity_type="auth",
+                     username=user_data.username, status_code=401,
+                     details={"reason": "invalid_credentials"})
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     # Reject login if not 'local' user
     if user.auth_type != "local":
+        record_audit(request, action="login_failed", entity_type="auth",
+                     username=user_data.username, status_code=401,
+                     details={"reason": "wrong_auth_type"})
         raise HTTPException(status_code=401, detail="User must log in via OIDC")
 
     # Reject login if password is missing
     if not user.password or not verify_password(user_data.password, user.password):
+        record_audit(request, action="login_failed", entity_type="auth",
+                     username=user_data.username, status_code=401,
+                     details={"reason": "invalid_credentials"})
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     # Generate tokens
@@ -170,6 +180,8 @@ def login(user_data: LoginRequest, db: Session = Depends(get_db)):
     response = JSONResponse(content={"message": "Login successful"})
     _set_auth_cookies(response, access_token, access_expires_at, refresh_token, refresh_expires_at)
 
+    record_audit(request, action="login", entity_type="auth",
+                 user_id=user.id, username=user.username, status_code=200)
     return response
 
 @router.get("/oidc-login")
@@ -229,6 +241,7 @@ async def oidc_callback(request: Request, db: Session = Depends(get_db)):
 
         # 4) Upsert user locally
         user = db.query(User).filter(User.email == email).first()
+        created = False
         if not user:
             if not username:
                 username = email.split("@")[0]
@@ -237,6 +250,7 @@ async def oidc_callback(request: Request, db: Session = Depends(get_db)):
             db.add(user)
             db.commit()
             db.refresh(user)
+            created = True
             logger.info(f"Created new OIDC user: {user.email}")
         else:
             logger.debug(f"Found existing OIDC user: {user.email}")
@@ -278,6 +292,9 @@ async def oidc_callback(request: Request, db: Session = Depends(get_db)):
             refresh_expires_at=app_refresh_expires_at,
         )
 
+        record_audit(request, action="login", entity_type="auth",
+                     user_id=user.id, username=user.username, status_code=302,
+                     details={"auth_type": "oidc", "new_user": created})
         logger.info(f"OIDC login successful for {user.email}, redirecting to home")
         return response
 
@@ -288,14 +305,17 @@ async def oidc_callback(request: Request, db: Session = Depends(get_db)):
         logger.error(f"Request URL: {request.url}")
         import traceback
         logger.error(f"Full traceback: {traceback.format_exc()}")
+        record_audit(request, action="login_failed", entity_type="auth",
+                     status_code=302, details={"auth_type": "oidc"})
         return RedirectResponse(url="/login?error=auth_failed", status_code=302)
 
 @router.post("/logout")
-def logout():
+def logout(request: Request):
     """Clears the authentication cookie."""
     response = JSONResponse(content={"message": "Logout successful"})
     response.delete_cookie("access_token", domain=COOKIE_DOMAIN, path=COOKIE_PATH)
     response.delete_cookie("refresh_token", domain=COOKIE_DOMAIN, path=COOKIE_PATH)
+    record_audit(request, action="logout", entity_type="auth", status_code=200)
     return response
 
 @router.post("/refresh")

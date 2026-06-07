@@ -2,9 +2,10 @@ import json
 import logging
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
+from app.core.audit import record_audit
 from app.core.security import get_current_admin_user, get_current_user, hash_password, verify_password
 from app.database import get_db
 from app.models import User
@@ -90,7 +91,7 @@ def get_user(user_id: int, db: Session = Depends(get_db), current_user: User = D
     return user
 
 @router.post("/", response_model=UserResponse)
-def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
+def create_user(user_data: UserCreate, request: Request, db: Session = Depends(get_db)):
     """Create a new user with a securely hashed password."""
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
@@ -108,12 +109,18 @@ def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
+    request.state.audit_recorded = True
+    record_audit(request, action="user.create", entity_type="user", entity_id=new_user.id,
+                 status_code=200,
+                 details={"username": new_user.username, "email": new_user.email, "role": new_user.role})
     return new_user
 
 @router.put("/{user_id}", response_model=UserResponse)
 def update_user(
     user_id: int,
     user_data: UserUpdate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -135,18 +142,29 @@ def update_user(
         if admin_count <= 1:
             raise HTTPException(status_code=400, detail="Cannot demote the last admin user")
 
+    old_role = user.role
+
     # Update only provided fields
     for key, value in update_fields.items():
         setattr(user, key, value)
 
     db.commit()
     db.refresh(user)
+
+    details = {"fields": list(update_fields.keys())}
+    if "role" in update_fields and update_fields["role"] != old_role:
+        details["role"] = {"old": old_role, "new": update_fields["role"]}
+    request.state.audit_recorded = True
+    record_audit(request, action="user.update", entity_type="user", entity_id=user.id,
+                 user_id=current_user.id, username=current_user.username, status_code=200,
+                 details=details)
     return user
 
 @router.put("/{user_id}/changepassword")
 def update_password(
     user_id: int,
     password_data: UserPasswordUpdate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -169,15 +187,24 @@ def update_password(
     user.password = hash_password(password_data.new_password)
     db.commit()
 
+    request.state.audit_recorded = True
+    record_audit(request, action="user.password_change", entity_type="user", entity_id=user.id,
+                 user_id=current_user.id, username=current_user.username, status_code=200)
     return {"message": "Password updated successfully"}
 
 @router.delete("/{user_id}")
-def delete_user(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_admin_user)):
+def delete_user(user_id: int, request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_admin_user)):
     """Delete a user (Admin-only)."""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    deleted_username = user.username
     db.delete(user)
     db.commit()
+
+    request.state.audit_recorded = True
+    record_audit(request, action="user.delete", entity_type="user", entity_id=user_id,
+                 user_id=current_user.id, username=current_user.username, status_code=200,
+                 details={"deleted_username": deleted_username})
     return {"message": "User deleted successfully"}

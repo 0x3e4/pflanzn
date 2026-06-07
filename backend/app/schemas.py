@@ -343,6 +343,32 @@ class WeatherLogPaginatedResponse(BaseModel):
     offset: int
 
 
+class AuditLogResponse(BaseModel):
+    id: int
+    created_at: datetime
+    user_id: Optional[int] = None
+    username: Optional[str] = None
+    action: str
+    entity_type: Optional[str] = None
+    entity_id: Optional[int] = None
+    method: Optional[str] = None
+    path: Optional[str] = None
+    status_code: Optional[int] = None
+    ip_address: Optional[str] = None
+    user_agent: Optional[str] = None
+    details: Optional[dict] = None  # parsed JSON, not the raw stored string
+
+    class Config:
+        from_attributes = True
+
+
+class AuditLogPage(BaseModel):
+    items: List[AuditLogResponse]
+    total: int
+    page: int
+    per_page: int
+
+
 class AppConfigResponse(BaseModel):
     tz: str
     locale: str

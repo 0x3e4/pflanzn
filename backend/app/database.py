@@ -164,6 +164,24 @@ def _ensure_users_schema():
         _execute_ddl("ALTER TABLE users ADD COLUMN preferences TEXT NOT NULL DEFAULT ('{}')")
 
 
+def _ensure_audit_logs_schema():
+    """Idempotent migration for the audit_logs table (indexes)."""
+    inspector = inspect(engine)
+    tables = set(inspector.get_table_names())
+    if "audit_logs" not in tables:
+        return  # create_all already handled it on a fresh DB
+    existing = {index["name"] for index in inspector.get_indexes("audit_logs")}
+    wanted = {
+        "idx_audit_logs_created_at": "created_at",
+        "idx_audit_logs_user_id": "user_id",
+        "idx_audit_logs_action": "action",
+        "idx_audit_logs_entity_type": "entity_type",
+    }
+    for name, column in wanted.items():
+        if name not in existing:
+            _execute_ddl(f"CREATE INDEX {name} ON audit_logs ({column})")
+
+
 def get_db():
     db = None
     for attempt in range(3):
@@ -190,4 +208,5 @@ def init_db():
     _ensure_fertilizings_schema()
     _ensure_weather_schema()
     _ensure_users_schema()
+    _ensure_audit_logs_schema()
     logger.debug("Database tables ensured.")

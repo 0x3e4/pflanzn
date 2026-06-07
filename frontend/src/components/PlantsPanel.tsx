@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useConfig } from "../context/ConfigContext";
-import { fetchPlants, updatePlant, deletePlant, setPlantTags } from "../services/PlantService";
+import { fetchPlants, updatePlant, deletePlant, setPlantTags, archivePlant } from "../services/PlantService";
 import { fetchTags } from "../services/TagService";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -14,6 +14,8 @@ import {
     faChevronRight,
     faCircleXmark,
     faListCheck,
+    faBoxArchive,
+    faTrashCanArrowUp,
 } from "@fortawesome/free-solid-svg-icons";
 import { Plant } from "../types/Plant";
 import { Tag } from "../types/Tag";
@@ -30,6 +32,8 @@ export default function PlantsPanel() {
     // Changed: Track edits per plant ID instead of a single editedPlant
     const [editedPlants, setEditedPlants] = useState<{ [plantId: number]: Partial<Plant> }>({});
     const [deleteModalOpen, setDeleteModalOpen] = useState<number | null>(null);
+    const [archiveModalOpen, setArchiveModalOpen] = useState<number | null>(null);
+    const [archiveReason, setArchiveReason] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 20;
 
@@ -230,13 +234,37 @@ export default function PlantsPanel() {
         }
     };
 
+    // Archive / Restore Plant
+    const handleConfirmArchive = async (plantId: number) => {
+        if (!isLoggedIn) {
+            toast.error("You must be logged in to archive plants.");
+            return;
+        }
+
+        const archive = !plants.find((p) => p.id === plantId)?.is_archived;
+
+        try {
+            await archivePlant(plantId, archive, archiveReason);
+            toast.success(archive ? "Plant archived successfully." : "Plant restored successfully.");
+            fetchPlants().then((plants) => setPlants(plants.map((p) => ({ ...p, species: p.species ?? "" }))));
+        } catch {
+            toast.error(archive ? "Failed to archive plant." : "Failed to restore plant.");
+        } finally {
+            setArchiveModalOpen(null);
+            setArchiveReason("");
+        }
+    };
+
     if (!isLoggedIn && authMode !== "no") {
         return <p>Access denied</p>;
     }
 
     useEffect(() => {
-        setOverlayOpen(!!deleteModalOpen || !!tagModalPlant);
-    }, [deleteModalOpen, tagModalPlant]);
+        setOverlayOpen(!!deleteModalOpen || !!tagModalPlant || archiveModalOpen !== null);
+    }, [deleteModalOpen, tagModalPlant, archiveModalOpen]);
+
+    const archiveTarget = archiveModalOpen !== null ? plants.find((p) => p.id === archiveModalOpen) : undefined;
+    const isArchivingTarget = !archiveTarget?.is_archived;
 
     return (
         <div className="plants-panel">
@@ -306,6 +334,18 @@ export default function PlantsPanel() {
                                               <button className="update-btn" onClick={() => handleUpdatePlant(p.id)}>
                                                   <FontAwesomeIcon icon={faSave} />
                                               </button>
+                                              <button
+                                                  className="archive-btn"
+                                                  onClick={() => {
+                                                      setArchiveReason("");
+                                                      setArchiveModalOpen(p.id);
+                                                  }}
+                                                  title={p.is_archived ? "Restore plant" : "Archive plant"}
+                                              >
+                                                  <FontAwesomeIcon
+                                                      icon={p.is_archived ? faTrashCanArrowUp : faBoxArchive}
+                                                  />
+                                              </button>
                                               <button className="delete-btn" onClick={() => setDeleteModalOpen(p.id)}>
                                                   <FontAwesomeIcon icon={faTrash} />
                                               </button>
@@ -346,6 +386,49 @@ export default function PlantsPanel() {
                                     <FontAwesomeIcon icon={faTrash} /> Delete
                                 </button>
                                 <button className="delete-plant-cancel" onClick={() => setDeleteModalOpen(null)}>
+                                    <FontAwesomeIcon icon={faCircleXmark} /> Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Archive Confirmation Modal */}
+                {archiveModalOpen !== null && (
+                    <div className="archive-plant-modal-overlay">
+                        <div className="archive-plant-modal">
+                            <div className="archive-modal-header">
+                                <span>
+                                    {isArchivingTarget
+                                        ? "Are you sure you want to archive this plant?"
+                                        : "Are you sure you want to restore this plant?"}
+                                </span>
+                            </div>
+
+                            {isArchivingTarget && (
+                                <textarea
+                                    className="archive-reason"
+                                    value={archiveReason}
+                                    onChange={(e) => setArchiveReason(e.target.value)}
+                                    placeholder="e.g. Dead, moved, donated, etc."
+                                />
+                            )}
+
+                            <div className="archive-plant-modal-buttons">
+                                <button
+                                    className="archive-plant-confirm"
+                                    onClick={() => handleConfirmArchive(archiveModalOpen)}
+                                >
+                                    <FontAwesomeIcon icon={isArchivingTarget ? faBoxArchive : faTrashCanArrowUp} />{" "}
+                                    {isArchivingTarget ? "Archive" : "Restore"}
+                                </button>
+                                <button
+                                    className="archive-plant-cancel"
+                                    onClick={() => {
+                                        setArchiveModalOpen(null);
+                                        setArchiveReason("");
+                                    }}
+                                >
                                     <FontAwesomeIcon icon={faCircleXmark} /> Cancel
                                 </button>
                             </div>

@@ -63,6 +63,22 @@
     opacity: 0.8;
 }
 
+/* Text values (e.g. last watered plant name) wrap and shrink for long names */
+.stats-card h3.stats-card-text {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    hyphens: auto;
+    line-height: 1.2;
+}
+
+.stats-card h3.stats-card-text--sm {
+    font-size: 1.5rem;
+}
+
+.stats-card h3.stats-card-text--xs {
+    font-size: 1.2rem;
+}
+
 .stats-card ul {
     list-style: none;
     padding: 0;

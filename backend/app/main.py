@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from app.api.routes import auth, config as config_route, locations, plants, share, statistics, tags, uploads, users, weather
+from app.api.routes import audit, auth, config as config_route, locations, plants, share, statistics, tags, uploads, users, weather
 from app.core.config import settings
 from app.core.security import create_admin_user
 from app.database import SessionLocal, init_db
@@ -50,12 +50,17 @@ if settings.AUTH_MODE == "oidc":
         https_only=True,
     )
 
+# Audit logging middleware (logs every write request as a baseline row)
+from app.core.audit_middleware import audit_middleware
+app.middleware("http")(audit_middleware)
+
 # Include routers
 app.include_router(config_route.router, prefix="/api/config", tags=["Config"])
 app.include_router(uploads.router, prefix="/api/uploads", tags=["Uploads"])
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(plants.router, prefix="/api/plants", tags=["Plants"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
+app.include_router(audit.router, prefix="/api/audit", tags=["Audit"])
 app.include_router(statistics.router, prefix="/api/statistics", tags=["Statistics"])
 app.include_router(tags.router, prefix="/api/tags", tags=["Tags"])
 if settings.ENABLE_LOCATIONS:

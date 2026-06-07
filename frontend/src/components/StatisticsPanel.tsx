@@ -360,7 +360,21 @@ export default function StatisticsPanel() {
                 </div>
                 <div className="stats-card">
                     <FontAwesomeIcon icon={faClock} className="stats-icon" />
-                    <h3>{loading ? <Skeleton width={120} /> : stats?.lastWateredPlant?.name || "N/A"}</h3>
+                    {loading ? (
+                        <h3>
+                            <Skeleton width={120} />
+                        </h3>
+                    ) : (
+                        (() => {
+                            const name = stats?.lastWateredPlant?.name || "N/A";
+                            const sizeClass = name.length > 16 ? "stats-card-text--xs" : name.length > 10 ? "stats-card-text--sm" : "";
+                            return (
+                                <h3 className={`stats-card-text ${sizeClass}`.trim()} title={name}>
+                                    {name}
+                                </h3>
+                            );
+                        })()
+                    )}
                     <p>Last Watered Plant</p>
                 </div>
             </div>

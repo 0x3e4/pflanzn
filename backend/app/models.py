@@ -235,3 +235,31 @@ class WeatherLog(Base):
     __table_args__ = (
         Index("idx_weather_logs_checked_at", "checked_at"),
     )
+
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False, index=True)
+    # Denormalized username snapshot survives user deletion (FK is SET NULL).
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    username = Column(String(255), nullable=True)
+    action = Column(String(100), nullable=False)  # "login", "login_failed", "logout", "user.update", "create", ...
+    entity_type = Column(String(100), nullable=True)  # "plant", "user", "tag", ...
+    entity_id = Column(Integer, nullable=True)
+    method = Column(String(10), nullable=True)
+    path = Column(String(512), nullable=True)  # path only, never query string or body
+    status_code = Column(Integer, nullable=True)
+    ip_address = Column(String(45), nullable=True)  # IPv6-safe length
+    user_agent = Column(String(512), nullable=True)
+    details = Column(Text, nullable=True)  # JSON string (json.dumps); scrubbed semantic before/after
+
+    user = relationship("User")
+
+    __table_args__ = (
+        Index("idx_audit_logs_created_at", "created_at"),
+        Index("idx_audit_logs_user_id", "user_id"),
+        Index("idx_audit_logs_action", "action"),
+        Index("idx_audit_logs_entity_type", "entity_type"),
+    )

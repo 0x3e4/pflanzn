@@ -281,7 +281,8 @@
 
 .update-btn,
 .delete-btn,
-.view-btn {
+.view-btn,
+.archive-btn {
     border: none;
     cursor: pointer;
     border-radius: 4px;
@@ -294,6 +295,15 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0; /* Prevent buttons from shrinking */
+}
+
+.archive-btn {
+    background: #c8901f;
+    color: white;
+}
+
+.archive-btn:hover {
+    background: #a8780f;
 }
 
 .view-btn {
@@ -647,7 +657,8 @@
     /* Make action buttons smaller on mobile */
     .update-btn,
     .delete-btn,
-    .view-btn {
+    .view-btn,
+    .archive-btn {
         min-width: 30px;
         height: 30px;
         padding: 6px 8px;
@@ -768,4 +779,73 @@
     gap: 10px;
     margin-top: 16px;
     justify-content: flex-end;
+}
+
+/* --- Audit Panel --- */
+.audit-filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.audit-filters select,
+.audit-filters input {
+    background: var(--secondary-background-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 0.9rem;
+}
+
+.audit-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.audit-badge.action {
+    background: var(--senary-color);
+    color: var(--text-color);
+}
+
+.audit-badge.method {
+    background: var(--quinary-color);
+    color: var(--text-color);
+}
+
+.audit-badge.status-2xx {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.audit-badge.status-4xx {
+    background: var(--tertiary-color);
+    color: #fff;
+}
+
+.audit-badge.status-5xx {
+    background: var(--quaternary-color);
+    color: #fff;
+}
+
+.audit-empty {
+    text-align: center;
+    color: var(--muted-text-color);
+}
+
+.audit-details-row td {
+    background: var(--background-color);
+}
+
+.audit-details-row pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 12px;
+    color: var(--text-color);
 }
