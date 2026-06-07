@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pflanzn-backend"
-version = "1.0.1"
+version = "1.0.2"
 description = "Pflanzn plant management backend"
 authors = []
 
