@@ -138,6 +138,29 @@ button:hover {
     background-color: var(--secondary-color);
 }
 
+/* Sort direction toggle — shared by the Plants and Locations sort controls.
+   Sits next to the field <select> and flips ascending/descending. Styled to
+   match the adjacent select rather than the default green button. */
+.sort-direction-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 auto;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background-color: var(--secondary-background-color);
+    color: var(--text-color);
+    font-size: 0.95rem;
+}
+
+.sort-direction-toggle:hover {
+    background-color: var(--secondary-color);
+    color: #ffffff;
+}
+
 /* Containers */
 .container {
     max-width: 1200px;

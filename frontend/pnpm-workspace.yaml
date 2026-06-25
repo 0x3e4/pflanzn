@@ -9,3 +9,4 @@ minimumReleaseAgeExclude:
   - '@napi-rs/*'
   - '@oxc-project/*'
   - tinyglobby
+  - '@tybys/wasm-util'

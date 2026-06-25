@@ -31,6 +31,8 @@ import {
     faFont,
     faExpand,
     faCompress,
+    faArrowDownWideShort,
+    faArrowUpShortWide,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../context/AuthContext";
 import { useConfig } from "../context/ConfigContext";
@@ -38,6 +40,7 @@ import { setOverlayOpen } from "../services/overlayControl";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { getUiPreferences } from "../config/uiPreferences";
+import { getViewPreferences, updatePlantsViewPreferences } from "../config/viewPreferences";
 
 export default function Plants() {
     const [plants, setPlants] = useState<Plant[]>([]);
@@ -48,7 +51,7 @@ export default function Plants() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [allTags, setAllTags] = useState<Tag[]>([]);
-    const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
+    const [selectedTagId, setSelectedTagId] = useState<number | null>(() => getViewPreferences().plants.selectedTagId);
     const [archiveModalOpen, setArchiveModalOpen] = useState(false);
     const [unarchiveReason, setUnarchiveReason] = useState("");
     const [selectedPlantToUnarchive, setSelectedPlantToUnarchive] = useState<number | null>(null);
@@ -57,8 +60,10 @@ export default function Plants() {
 
     type FilterMode = "species" | "name";
 
-    const [filterMode, setFilterMode] = useState<FilterMode>("species");
-    const [selectedFilterValue, setSelectedFilterValue] = useState<string | null>(null);
+    const [filterMode, setFilterMode] = useState<FilterMode>(() => getViewPreferences().plants.filterMode);
+    const [selectedFilterValue, setSelectedFilterValue] = useState<string | null>(
+        () => getViewPreferences().plants.selectedFilterValue,
+    );
 
     type SortOption =
         | "lastWateredDesc"
@@ -68,7 +73,12 @@ export default function Plants() {
         | "lastImageUploadedDesc"
         | "lastImageUploadedAsc";
 
-    const [sortBy, setSortBy] = useState<SortOption>("idDesc");
+    const [sortBy, setSortBy] = useState<SortOption>(() => getViewPreferences().plants.sortBy);
+
+    const sortField = sortBy.replace(/(Desc|Asc)$/, "");
+    const sortDir: "asc" | "desc" = sortBy.endsWith("Desc") ? "desc" : "asc";
+    const composeSort = (field: string, dir: "asc" | "desc") =>
+        `${field}${dir === "desc" ? "Desc" : "Asc"}` as SortOption;
 
     const [modalIdentifyResults, setModalIdentifyResults] = useState<
         { species: string; commonName: string; score: string; images: string[] }[] | null
@@ -130,6 +140,24 @@ export default function Plants() {
         }
     }, [plants.length]);
 
+    // Persist filter/sort selections so they survive navigation. These only
+    // mirror state into localStorage (never set state), so there is no loop.
+    useEffect(() => {
+        updatePlantsViewPreferences({ selectedTagId });
+    }, [selectedTagId]);
+
+    useEffect(() => {
+        updatePlantsViewPreferences({ sortBy });
+    }, [sortBy]);
+
+    useEffect(() => {
+        updatePlantsViewPreferences({ filterMode });
+    }, [filterMode]);
+
+    useEffect(() => {
+        updatePlantsViewPreferences({ selectedFilterValue });
+    }, [selectedFilterValue]);
+
     const handleImageLoad = (plantId: number) => {
         setLoadedImages((prev) => new Set(prev).add(plantId));
     };
@@ -154,6 +182,12 @@ export default function Plants() {
         try {
             const tags = await fetchTags();
             setAllTags(tags);
+            // If a persisted custom-tag filter points at a tag that no longer
+            // exists, fall back to #all so the user isn't shown an empty list.
+            // The specials (-1 archive, -2 untagged) and #all (null) are always valid.
+            setSelectedTagId((current) =>
+                current !== null && current > 0 && !tags.some((t) => t.id === current) ? null : current,
+            );
         } catch (err) {
             toast.error((err as Error).message);
         }
@@ -577,14 +611,24 @@ export default function Plants() {
                 </div>
 
                 <div className="plant-sort-container">
-                    <select id="sort-select" value={sortBy} onChange={(e) => setSortBy(e.target.value as SortOption)}>
-                        <option value="idDesc">Newest</option>
-                        <option value="idAsc">Oldest</option>
-                        <option value="lastWateredDesc">Newest Watering ↓</option>
-                        <option value="lastWateredAsc">Oldest Watering ↑</option>
-                        <option value="lastImageUploadedDesc">Newest Image ↓</option>
-                        <option value="lastImageUploadedAsc">Oldest Image ↑</option>
+                    <select
+                        id="sort-select"
+                        value={sortField}
+                        onChange={(e) => setSortBy(composeSort(e.target.value, sortDir))}
+                    >
+                        <option value="id">Added</option>
+                        <option value="lastWatered">Watered</option>
+                        <option value="lastImageUploaded">Photo</option>
                     </select>
+                    <button
+                        type="button"
+                        className="sort-direction-toggle"
+                        onClick={() => setSortBy(composeSort(sortField, sortDir === "desc" ? "asc" : "desc"))}
+                        title={sortDir === "desc" ? "Newest first" : "Oldest first"}
+                        aria-label={sortDir === "desc" ? "Sort descending, newest first" : "Sort ascending, oldest first"}
+                    >
+                        <FontAwesomeIcon icon={sortDir === "desc" ? faArrowDownWideShort : faArrowUpShortWide} />
+                    </button>
                 </div>
             </div>
 

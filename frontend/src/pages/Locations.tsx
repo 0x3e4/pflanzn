@@ -8,6 +8,8 @@ import {
     faLocationCrosshairs,
     faPlus,
     faUpload,
+    faArrowDownWideShort,
+    faArrowUpShortWide,
 } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import {
@@ -24,6 +26,7 @@ import { useAuth } from "../context/AuthContext";
 import "../styles/identifyResults.css";
 import "../styles/locations.css";
 import { getUiPreferences } from "../config/uiPreferences";
+import { getViewPreferences, updateLocationsViewPreferences } from "../config/viewPreferences";
 
 const spotTypeLabels: Record<SpotType, string> = {
     field: "Field",
@@ -44,9 +47,16 @@ export default function Locations() {
     const [identifying, setIdentifying] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
-    const [sortBy, setSortBy] = useState<LocationSortOption>("updatedDesc");
+    const [sortBy, setSortBy] = useState<LocationSortOption>(() => getViewPreferences().locations.sortBy);
     const [isStretched, setIsStretched] = useState(() => getUiPreferences().defaultWidescreen);
-    const [selectedSpotType, setSelectedSpotType] = useState<SpotType | "all">("all");
+    const [selectedSpotType, setSelectedSpotType] = useState<SpotType | "all">(
+        () => getViewPreferences().locations.selectedSpotType,
+    );
+
+    const sortField = sortBy.replace(/(Desc|Asc)$/, "");
+    const sortDir: "asc" | "desc" = sortBy.endsWith("Desc") ? "desc" : "asc";
+    const composeSort = (field: string, dir: "asc" | "desc") =>
+        `${field}${dir === "desc" ? "Desc" : "Asc"}` as LocationSortOption;
     const [newLocationImage, setNewLocationImage] = useState<File | null>(null);
     const [modalIdentifyResults, setModalIdentifyResults] = useState<LocationIdentifyResult[] | null>(null);
     const [locationIdentifyResults, setLocationIdentifyResults] = useState<{
@@ -136,6 +146,15 @@ export default function Locations() {
     useEffect(() => {
         loadLocations();
     }, []);
+
+    // Persist filter/sort selections so they survive navigation.
+    useEffect(() => {
+        updateLocationsViewPreferences({ selectedSpotType });
+    }, [selectedSpotType]);
+
+    useEffect(() => {
+        updateLocationsViewPreferences({ sortBy });
+    }, [sortBy]);
 
     const resetModal = () => {
         setNewLocation({
@@ -513,14 +532,20 @@ export default function Locations() {
                 </div>
 
                 <div className="location-sort-container">
-                    <select value={sortBy} onChange={(event) => setSortBy(event.target.value as LocationSortOption)}>
-                        <option value="updatedDesc">Updated (newest)</option>
-                        <option value="updatedAsc">Updated (oldest)</option>
-                        <option value="createdDesc">Created (newest)</option>
-                        <option value="createdAsc">Created (oldest)</option>
-                        <option value="nameAsc">Name (A-Z)</option>
-                        <option value="nameDesc">Name (Z-A)</option>
+                    <select value={sortField} onChange={(event) => setSortBy(composeSort(event.target.value, sortDir))}>
+                        <option value="updated">Updated</option>
+                        <option value="created">Created</option>
+                        <option value="name">Name</option>
                     </select>
+                    <button
+                        type="button"
+                        className="sort-direction-toggle"
+                        onClick={() => setSortBy(composeSort(sortField, sortDir === "desc" ? "asc" : "desc"))}
+                        title={sortField === "name" ? (sortDir === "desc" ? "Z to A" : "A to Z") : sortDir === "desc" ? "Newest first" : "Oldest first"}
+                        aria-label="Toggle sort direction"
+                    >
+                        <FontAwesomeIcon icon={sortDir === "desc" ? faArrowDownWideShort : faArrowUpShortWide} />
+                    </button>
                 </div>
             </div>
 

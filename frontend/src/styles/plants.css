@@ -366,14 +366,17 @@
     background-color: var(--secondary-color);
 }
 
-.hashtag-archive:hover {
-    background-color: var(--text-color);
-    color: var(--quaternary-color);
+/* Higher specificity (0,3,0) than the generic `.hashtag.active` green rule
+   (which is duplicated across plants.css/locations.css) so the archive tag keeps
+   its distinct red identity regardless of stylesheet bundle order. */
+.hashtag.hashtag-archive:hover {
+    background-color: var(--quaternary-color);
+    color: #ffffff;
 }
 
-.hashtag-archive.active {
-    background-color: var(--text-color);
-    color: var(--tertiary-color);
+.hashtag.hashtag-archive.active {
+    background-color: var(--tertiary-color);
+    color: #ffffff;
 }
 
 .plant-sort-container,
