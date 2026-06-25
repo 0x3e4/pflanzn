@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remember plant and location filter and sort selections
 
 ### Changed
+- Update backend and frontend dependencies
 
 ### Fixed
 

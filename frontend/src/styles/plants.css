@@ -388,6 +388,12 @@
     flex: 0 0 auto;
 }
 
+/* Keep the sort field <select> and its direction-toggle button on one line
+   so the arrow never drops onto its own row. */
+.plant-sort-container {
+    flex-wrap: nowrap;
+}
+
 .plant-sort-container select {
     min-width: 140px;
     padding: 6px 10px;

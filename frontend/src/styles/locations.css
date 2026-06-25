@@ -271,7 +271,8 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    flex-wrap: wrap;
+    /* Keep the sort field <select> and its direction-toggle button on one line. */
+    flex-wrap: nowrap;
     flex: 0 0 auto;
 }
 
