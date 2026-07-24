@@ -69,10 +69,11 @@
 | --- | --- |
 | **Catalogue** | Plants with photos, species info, care notes; tags and locations with GPS coordinates and an interactive Leaflet map. |
 | **Tracking** | Watering, fertilizing, image, and care-advice timelines with calendar view and per-activity colour coding. |
+| **Archive** | Plants can be archived with a reason instead of deleted — they drop out of the normal lists and stay reachable under the `#archive` filter, and can be restored at any time. |
 | **Identification** | One-shot PlantNet integration — accepts JPG / PNG / WebP / HEIC; the backend normalises uploads to JPEG before forwarding. |
 | **AI care advice** | Optional integration with OpenAI, Claude, Mistral, HuggingFace, or a local Ollama instance — provider auto-detected from whichever API key is set. |
 | **Auto-watering** | Outdoor plants with `reaches_rain=true` are auto-watered when Open-Meteo reports rainfall above your threshold. Optional OpenWeatherMap key for current-weather display. |
-| **PWA** | Installable on phone or desktop; Workbox runtime caching (CacheFirst for images, StaleWhileRevalidate for API, NetworkFirst for navigation). |
+| **PWA** | Installable on phone or desktop; Workbox runtime caching — CacheFirst for uploaded images, NetworkFirst (with a short network timeout) for plants, locations, profile, and statistics reads. |
 | **Sharing** | Token-based public collection links with a dedicated read-only view. |
 | **Auth modes** | `no` (open), `local` (JWT + Argon2 + Redis sessions with theft detection), or `oidc` (external IdP). |
 | **Audit log** | Every write action and authentication event is recorded to an immutable log, viewable by admins under Manage → Audit with filters for action, entity, user, date, and free-text search. |
@@ -218,7 +219,7 @@ Everything is driven through environment variables — see [.env.example](.env.e
 | Identification | PlantNet (HEIC / WebP / PNG / JPG accepted; normalised to JPEG before forwarding) |
 | AI care helper | OpenAI · Claude · Mistral · HuggingFace · Ollama (factory-pattern, each optional) |
 | Weather | Open-Meteo (rainfall, no key); OpenWeatherMap (optional, current weather display) |
-| PWA | vite-plugin-pwa + Workbox (CacheFirst / StaleWhileRevalidate / NetworkFirst) |
+| PWA | vite-plugin-pwa + Workbox (CacheFirst for images / NetworkFirst for API reads) |
 | Image pipeline | Pillow + pillow_heif → 3 WebP variants per upload (`thumb` 300px, `medium` 800px, `original` 2000px) served via `?size=…` |
 | Deployment | Docker Compose; GHCR images via [GitHub Actions](.github/workflows/build-images.yml) |
 
