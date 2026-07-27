@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [1.0.5] - 2026-07-27
+
+### Added
+
+### Changed
+
+### Fixed
+- Fix plant identification failing on optimized photos
+
 ## [1.0.4] - 2026-07-24
 
 ### Added

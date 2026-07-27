@@ -1,7 +1,6 @@
 import io
 import json
 import logging
-import mimetypes
 import os
 import traceback
 import uuid
@@ -90,6 +89,31 @@ def _generate_image_variants(img: Image.Image, base_path: str) -> None:
         output_path = f"{base_path}_{suffix}.webp"
         variant.save(output_path, format="WEBP", quality=80, method=4)
     logger.debug(f"Generated image variants at {base_path}")
+
+
+def _resolve_image_file(image_path: str) -> Optional[str]:
+    """Resolve a stored image_path to an existing file on disk.
+
+    Images are stored as extensionless base paths (e.g. ``plants/<uuid>``) with
+    WebP variants beside them. Legacy records point straight at a single file.
+    """
+    base_path = os.path.join(settings.UPLOAD_FOLDER, image_path)
+    original_variant = f"{base_path}_original.webp"
+    if os.path.exists(original_variant):
+        return original_variant
+    if os.path.exists(base_path):
+        return base_path
+    return None
+
+
+def _to_jpeg_for_plantnet(source_path: str, base_name: str) -> str:
+    """Normalize any PIL-readable image to a JPEG that Pl@ntNet accepts."""
+    jpeg_path = os.path.join(IDENTIFICATION_FOLDER, f"{base_name}.jpg")
+    with Image.open(source_path) as img:
+        img = ImageOps.exif_transpose(img)
+        img = img.convert("RGB")
+        img.save(jpeg_path, format="JPEG", optimize=True, quality=85)
+    return jpeg_path
 
 
 def _delete_image_files(image_path: str) -> None:
@@ -374,29 +398,28 @@ def identify_species(
 
     # Get latest image (sorted by uploaded_at)
     latest_image = sorted(plant.images, key=lambda img: img.uploaded_at, reverse=True)[0]
-    image_path = os.path.join(settings.UPLOAD_FOLDER, latest_image.image_path)
+    source_path = _resolve_image_file(latest_image.image_path)
 
-    if not os.path.exists(image_path):
+    if not source_path:
         raise HTTPException(status_code=404, detail="Image file not found")
 
-    filename = os.path.basename(image_path)
-    extension = os.path.splitext(filename)[1].lower()
+    logger.info(f"Identifying plant from image: {os.path.basename(source_path)}")
 
-    # Get MIME type dynamically
-    mime_type, _ = mimetypes.guess_type(image_path)
-
-    if not mime_type:
-        raise HTTPException(status_code=400, detail="Unsupported image format. Only JPG and PNG allowed.")
-
-    logger.info(f"Identifying plant from image: {filename}")
-    logger.info(f"Detected MIME type: {mime_type}")
+    # Normalize to JPEG before sending to PlantNet — stored variants are WebP
+    # and legacy records may be any PIL-readable format.
+    jpeg_name = str(uuid.uuid4())
+    try:
+        jpeg_path = _to_jpeg_for_plantnet(source_path, jpeg_name)
+    except Exception as e:
+        logger.error(f"Error processing image: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Error processing image: {str(e)}")
 
     # Send request to Pl@ntNet API
     try:
         result = identify_species_via_plantnet(
-            image_path=image_path,
-            mime_type=mime_type,
-            filename=filename
+            image_path=jpeg_path,
+            mime_type="image/jpeg",
+            filename=f"{jpeg_name}.jpg"
         )
 
         # Sort results by score in descending order and format as needed
@@ -445,6 +468,10 @@ def identify_species(
             "identified_species": [],
             "message": f"{str(e)}"
         }
+
+    finally:
+        if os.path.exists(jpeg_path):
+            os.remove(jpeg_path)
 
     return {"message": "No species found"}
 
