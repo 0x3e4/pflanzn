@@ -109,18 +109,13 @@ def _is_valid_share_token(share_token: str, db: Session) -> bool:
     return True
 
 
-def get_current_user(request: Request, db: Session = Depends(get_db)) -> Optional[User]:
-    """Retrieves the currently authenticated user from Secure Cookie."""
+def _get_share_token(request: Request) -> Optional[str]:
+    """Reads the share token from either the query string or the header."""
+    return request.query_params.get("share_token") or request.headers.get("X-Share-Token")
 
-    # Check if auth is disabled
-    if AUTH_MODE == "no":
-        return None
 
-    # Check for share token (read-only bypass)
-    share_token = request.query_params.get("share_token") or request.headers.get("X-Share-Token")
-    if share_token and _is_valid_share_token(share_token, db):
-        return None
-
+def _authenticate_from_cookie(request: Request, db: Session) -> User:
+    """Resolves the session cookie to a User, or raises 401."""
     token = request.cookies.get("access_token")
     if not token:
         raise HTTPException(status_code=401, detail="Missing access token")
@@ -150,8 +145,45 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> Optiona
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:
+
+def get_current_user(request: Request, db: Session = Depends(get_db)) -> Optional[User]:
+    """Retrieves the currently authenticated user from Secure Cookie."""
+
+    # Check if auth is disabled
+    if AUTH_MODE == "no":
+        return None
+
+    # Check for share token (read-only bypass)
+    share_token = _get_share_token(request)
+    if share_token and _is_valid_share_token(share_token, db):
+        return None
+
+    return _authenticate_from_cookie(request, db)
+
+
+def require_write_access(request: Request, db: Session = Depends(get_db)) -> Optional[User]:
+    """Authorization gate for state-changing endpoints.
+
+    Returns the acting user for attribution, or None when AUTH_MODE=no (the app is
+    open by design in that mode). Share links are read-only and are rejected here —
+    unlike get_current_user, which returns None for them so reads can pass through.
+    """
+    if AUTH_MODE == "no":
+        return None
+
+    # A real session wins over a share token: the frontend attaches X-Share-Token to
+    # every request once it is in sessionStorage, so a logged-in user who opened a
+    # share link in the same tab must still be able to write.
+    if not request.cookies.get("access_token") and _get_share_token(request):
+        raise HTTPException(status_code=403, detail="Share links are read-only")
+
+    return _authenticate_from_cookie(request, db)
+
+
+def get_current_admin_user(current_user: Optional[User] = Depends(get_current_user)) -> User:
     """Ensures the current user is an admin."""
+    if current_user is None:
+        raise HTTPException(status_code=401, detail="Authentication required")
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user

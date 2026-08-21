@@ -6,7 +6,13 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.core.audit import record_audit
-from app.core.security import get_current_admin_user, get_current_user, hash_password, verify_password
+from app.core.security import (
+    get_current_admin_user,
+    get_current_user,
+    hash_password,
+    require_write_access,
+    verify_password,
+)
 from app.database import get_db
 from app.models import User
 from app.schemas import (
@@ -91,8 +97,13 @@ def get_user(user_id: int, db: Session = Depends(get_db), current_user: User = D
     return user
 
 @router.post("/", response_model=UserResponse)
-def create_user(user_data: UserCreate, request: Request, db: Session = Depends(get_db)):
-    """Create a new user with a securely hashed password."""
+def create_user(
+    user_data: UserCreate,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user),
+):
+    """Create a new user with a securely hashed password (Admin-only)."""
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="User with this email already exists")
@@ -112,7 +123,7 @@ def create_user(user_data: UserCreate, request: Request, db: Session = Depends(g
 
     request.state.audit_recorded = True
     record_audit(request, action="user.create", entity_type="user", entity_id=new_user.id,
-                 status_code=200,
+                 user_id=current_user.id, username=current_user.username, status_code=200,
                  details={"username": new_user.username, "email": new_user.email, "role": new_user.role})
     return new_user
 
@@ -122,9 +133,12 @@ def update_user(
     user_data: UserUpdate,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(require_write_access)
 ):
     """Allow users to update their own profile, but only admins can update others."""
+
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
 
     # Fetch the user to be updated
     user = db.query(User).filter(User.id == user_id).first()
@@ -135,8 +149,13 @@ def update_user(
     if current_user.id != user_id and current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Not authorized to update this user")
 
-    # Prevent demoting the last admin
     update_fields = user_data.dict(exclude_unset=True)
+
+    # Only admins may change a role — otherwise any user could promote themselves
+    if "role" in update_fields and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to change role")
+
+    # Prevent demoting the last admin
     if update_fields.get("role") and update_fields["role"] != "admin" and user.role == "admin":
         admin_count = db.query(User).filter(User.role == "admin").count()
         if admin_count <= 1:
@@ -166,9 +185,12 @@ def update_password(
     password_data: UserPasswordUpdate,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(require_write_access)
 ):
     """Allow users to update their own password after verifying the old password."""
+
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
 
     # Ensure the logged-in user is only updating their own password
     if current_user.id != user_id:

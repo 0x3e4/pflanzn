@@ -2,7 +2,7 @@ import io
 import logging
 import os
 import uuid
-from typing import List
+from typing import List, Optional
 
 import pillow_heif
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
@@ -10,8 +10,9 @@ from PIL import Image, ImageOps
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.security import require_write_access
 from app.database import get_db
-from app.models import Location, LocationImage
+from app.models import Location, LocationImage, User
 from app.schemas import (
     LocationCreate,
     LocationImageResponse,
@@ -44,6 +45,7 @@ def create_location(
     location_data: LocationCreate,
     _: None = Depends(ensure_feature_enabled),
     db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     coordinate_source = "manual" if location_data.latitude is not None and location_data.longitude is not None else None
     location = Location(
@@ -88,6 +90,7 @@ def update_location(
     location_data: LocationUpdate,
     _: None = Depends(ensure_feature_enabled),
     db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     location = db.query(Location).filter(Location.id == location_id).first()
     if not location:
@@ -112,6 +115,7 @@ def delete_location(
     location_id: int,
     _: None = Depends(ensure_feature_enabled),
     db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     location = db.query(Location).filter(Location.id == location_id).first()
     if not location:
@@ -133,6 +137,7 @@ def upload_location_image(
     file: UploadFile = File(...),
     _: None = Depends(ensure_feature_enabled),
     db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     location = db.query(Location).filter(Location.id == location_id).first()
     if not location:
@@ -205,6 +210,7 @@ def delete_location_image(
     image_id: int,
     _: None = Depends(ensure_feature_enabled),
     db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     location = db.query(Location).filter(Location.id == location_id).first()
     if not location:
@@ -233,6 +239,7 @@ def generate_location_description(
     location_id: int,
     _: None = Depends(ensure_feature_enabled),
     db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     location = db.query(Location).filter(Location.id == location_id).first()
     if not location:
@@ -264,6 +271,7 @@ def generate_location_description(
 async def identify_location_item(
     file: UploadFile = File(...),
     _: None = Depends(ensure_feature_enabled),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     identification_file_path = ""
 

@@ -16,7 +16,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.security import get_current_user
+from app.core.security import require_write_access
 from app.database import get_db
 from app.models import (
     Plant,
@@ -137,7 +137,7 @@ class PlantTagsUpdate(BaseModel):
 
 
 @router.post("/", response_model=PlantResponse)
-def create_plant(plant_data: PlantCreate, db: Session = Depends(get_db)):
+def create_plant(plant_data: PlantCreate, db: Session = Depends(get_db), current_user: Optional[User] = Depends(require_write_access)):
     new_plant = Plant(
         name=plant_data.name,
         species=plant_data.species if plant_data.species else None,
@@ -200,6 +200,7 @@ def get_identifications(
 def delete_identification(
     identification_id: int,
     db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     target = db.query(PlantIdentification).filter(PlantIdentification.id == identification_id).first()
     if not target:
@@ -285,7 +286,7 @@ def get_plant(plant_id: int, db: Session = Depends(get_db)):
     return plant
 
 @router.put("/{plant_id}", response_model=PlantResponse)
-def update_plant(plant_id: int, plant_data: PlantUpdate, db: Session = Depends(get_db)):
+def update_plant(plant_id: int, plant_data: PlantUpdate, db: Session = Depends(get_db), current_user: Optional[User] = Depends(require_write_access)):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
@@ -300,7 +301,7 @@ def update_plant(plant_id: int, plant_data: PlantUpdate, db: Session = Depends(g
     return plant
 
 @router.delete("/{plant_id}")
-def delete_plant(plant_id: int, db: Session = Depends(get_db)):
+def delete_plant(plant_id: int, db: Session = Depends(get_db), current_user: Optional[User] = Depends(require_write_access)):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
@@ -319,7 +320,7 @@ def upload_plant_image(
     file: UploadFile = File(...),
     uploaded_at: Optional[str] = Form(None),
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
@@ -389,7 +390,8 @@ def get_plant_images(plant_id: int, db: Session = Depends(get_db)):
 @router.post("/{plant_id}/identify")
 def identify_species(
     plant_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
 
@@ -478,7 +480,8 @@ def identify_species(
 @router.post("/identify")
 async def identify_species_from_image(
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     """
     Identify a plant species from an uploaded image using the Pl@ntNet API
@@ -593,7 +596,7 @@ async def identify_species_from_image(
         raise HTTPException(status_code=500, detail=f"Error identifying species: {str(e)}")
 
 @router.delete("/{plant_id}/images/{image_id}")
-def delete_plant_image(plant_id: int, image_id: int, db: Session = Depends(get_db)):
+def delete_plant_image(plant_id: int, image_id: int, db: Session = Depends(get_db), current_user: Optional[User] = Depends(require_write_access)):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
@@ -613,6 +616,7 @@ def delete_plant_image(plant_id: int, image_id: int, db: Session = Depends(get_d
 async def generate_species_description_for_plant(
     plant_id: int,
     db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     """
     Generate and save a species description using a llm provider for a given plant.
@@ -650,7 +654,7 @@ def water_plant(
     plant_id: int,
     watering_data: PlantWateringCreate,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
@@ -671,7 +675,8 @@ def water_plant(
 def delete_watering(
     plant_id: int,
     watering_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
 
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
@@ -757,6 +762,7 @@ def list_all_waterings(
 def bulk_delete_waterings(
     payload: WateringBulkDeleteRequest,
     db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     """Delete multiple waterings by id."""
     deleted = (
@@ -772,7 +778,7 @@ def fertilize_plant(
     plant_id: int,
     fertilizing_data: PlantFertilizingCreate,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
@@ -793,7 +799,8 @@ def fertilize_plant(
 def delete_fertilizing(
     plant_id: int,
     fertilizing_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
@@ -814,7 +821,7 @@ def delete_fertilizing(
 
 # Assign tags to a plant
 @router.post("/{plant_id}/assign", response_model=PlantResponse)
-def assign_tags_to_plant(plant_id: int, tag_names: List[str], db: Session = Depends(get_db)):
+def assign_tags_to_plant(plant_id: int, tag_names: List[str], db: Session = Depends(get_db), current_user: Optional[User] = Depends(require_write_access)):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
@@ -857,7 +864,7 @@ def assign_tags_to_plant(plant_id: int, tag_names: List[str], db: Session = Depe
 
 # Remove a tag from a plant
 @router.delete("/{plant_id}/remove/{tag_id}", response_model=PlantResponse)
-def remove_tag_from_plant(plant_id: int, tag_id: int, db: Session = Depends(get_db)):
+def remove_tag_from_plant(plant_id: int, tag_id: int, db: Session = Depends(get_db), current_user: Optional[User] = Depends(require_write_access)):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
@@ -888,7 +895,7 @@ def remove_tag_from_plant(plant_id: int, tag_id: int, db: Session = Depends(get_
 
 # Set tags for a plant (bulk assign/unassign)
 @router.put("/{plant_id}/tags", response_model=PlantResponse)
-def set_plant_tags(plant_id: int, data: PlantTagsUpdate, db: Session = Depends(get_db)):
+def set_plant_tags(plant_id: int, data: PlantTagsUpdate, db: Session = Depends(get_db), current_user: Optional[User] = Depends(require_write_access)):
     """Replace the tag list for a plant. Tags in the list get associated, others are removed."""
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
@@ -938,7 +945,7 @@ def set_plant_tags(plant_id: int, data: PlantTagsUpdate, db: Session = Depends(g
 
 # Archive or restore from archive
 @router.post("/{plant_id}/archive")
-def archive_plant(plant_id: int, data: ArchiveRequest, db: Session = Depends(get_db)):
+def archive_plant(plant_id: int, data: ArchiveRequest, db: Session = Depends(get_db), current_user: Optional[User] = Depends(require_write_access)):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
@@ -949,7 +956,7 @@ def archive_plant(plant_id: int, data: ArchiveRequest, db: Session = Depends(get
     return {"message": f"Plant {'archived' if data.archive else 'restored'} successfully"}
 
 @router.post("/{plant_id}/care_helper")
-def get_care_helper(plant_id: int, db: Session = Depends(get_db)):
+def get_care_helper(plant_id: int, db: Session = Depends(get_db), current_user: Optional[User] = Depends(require_write_access)):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
@@ -1124,7 +1131,7 @@ def get_care_helper(
     plant_id: int,
     user_message: Optional[str] = Form(None),
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     """
     Generate and store care advice for a plant using LLM.
@@ -1196,7 +1203,8 @@ def get_plant_care_advice(
 def delete_care_advice(
     plant_id: int,
     advice_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     """
     Delete a specific care advice entry.
@@ -1223,7 +1231,7 @@ def create_plant_note(
     plant_id: int,
     note_data: PlantNoteCreate,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     """
     Create a new note for a plant.
@@ -1275,7 +1283,8 @@ def update_plant_note(
     plant_id: int,
     note_id: int,
     note_data: PlantNoteCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     """
     Update a specific plant note.
@@ -1302,7 +1311,8 @@ def update_plant_note(
 def delete_plant_note(
     plant_id: int,
     note_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     """
     Delete a specific plant note.

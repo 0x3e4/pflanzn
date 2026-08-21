@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock
 
 
 def _make_plant(id=1, name="Monstera", species="Monstera deliciosa", is_archived=False):
@@ -23,8 +23,7 @@ class TestGetPlants:
         mock_plant = _make_plant()
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_plant]
 
-        with patch("app.api.routes.plants.get_current_user", return_value=None):
-            response = client.get("/api/plants/")
+        response = client.get("/api/plants/")
 
         assert response.status_code == 200
         data = response.json()
@@ -34,8 +33,7 @@ class TestGetPlants:
         """GET /api/plants/ returns empty list when no plants."""
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
-        with patch("app.api.routes.plants.get_current_user", return_value=None):
-            response = client.get("/api/plants/")
+        response = client.get("/api/plants/")
 
         assert response.status_code == 200
         assert response.json() == []
@@ -49,11 +47,10 @@ class TestCreatePlant:
         mock_db.commit.return_value = None
         mock_db.refresh.side_effect = lambda p: setattr(p, "id", 1)
 
-        with patch("app.api.routes.plants.get_current_user", return_value=None):
-            response = client.post("/api/plants/", json={
-                "name": "Monstera",
-                "species": "Monstera deliciosa"
-            })
+        response = client.post("/api/plants/", json={
+            "name": "Monstera",
+            "species": "Monstera deliciosa"
+        })
 
         assert response.status_code == 200
 
@@ -63,7 +60,6 @@ class TestDeletePlant:
         """DELETE /api/plants/999 returns 404."""
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
-        with patch("app.api.routes.plants.get_current_user", return_value=None):
-            response = client.delete("/api/plants/999")
+        response = client.delete("/api/plants/999")
 
         assert response.status_code == 404

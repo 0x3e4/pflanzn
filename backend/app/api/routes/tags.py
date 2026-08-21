@@ -1,14 +1,15 @@
 
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.core.security import require_write_access
 from app.database import get_db
-from app.models import Plant, PlantWatering, Tag, plant_tag_association
+from app.models import Plant, PlantWatering, Tag, User, plant_tag_association
 from app.schemas import PlantWateringCreate, TagCreate, TagListResponse, TagResponse
 
 
@@ -44,7 +45,7 @@ def get_tags_detailed(db: Session = Depends(get_db)):
 
 # Create a new tag
 @router.post("/", response_model=TagResponse)
-def create_tag(tag_data: TagCreate, db: Session = Depends(get_db)):
+def create_tag(tag_data: TagCreate, db: Session = Depends(get_db), current_user: Optional[User] = Depends(require_write_access)):
     existing_tag = db.query(Tag).filter(Tag.name == tag_data.name).first()
     if existing_tag:
         raise HTTPException(status_code=400, detail="Tag already exists")
@@ -72,7 +73,7 @@ def get_tag(tag_id: int, db: Session = Depends(get_db)):
 
 # Update a tag name
 @router.put("/{tag_id}", response_model=TagResponse)
-def update_tag(tag_id: int, tag_data: TagCreate, db: Session = Depends(get_db)):
+def update_tag(tag_id: int, tag_data: TagCreate, db: Session = Depends(get_db), current_user: Optional[User] = Depends(require_write_access)):
     tag = db.query(Tag).filter(Tag.id == tag_id).first()
     if not tag:
         raise HTTPException(status_code=404, detail="Tag not found")
@@ -85,7 +86,7 @@ def update_tag(tag_id: int, tag_data: TagCreate, db: Session = Depends(get_db)):
 
 # Delete a tag
 @router.delete("/{tag_id}", response_model=dict)
-def delete_tag(tag_id: int, db: Session = Depends(get_db)):
+def delete_tag(tag_id: int, db: Session = Depends(get_db), current_user: Optional[User] = Depends(require_write_access)):
     tag = db.query(Tag).filter(Tag.id == tag_id).first()
     if not tag:
         raise HTTPException(status_code=404, detail="Tag not found")
@@ -101,7 +102,7 @@ def delete_tag(tag_id: int, db: Session = Depends(get_db)):
 
 # Set plants for a tag (bulk assign/unassign)
 @router.put("/{tag_id}/plants")
-def set_tag_plants(tag_id: int, data: TagPlantsUpdate, db: Session = Depends(get_db)):
+def set_tag_plants(tag_id: int, data: TagPlantsUpdate, db: Session = Depends(get_db), current_user: Optional[User] = Depends(require_write_access)):
     """Replace the plant list for a tag. Plants in the list get the tag, others lose it."""
     tag = db.query(Tag).filter(Tag.id == tag_id).first()
     if not tag:
@@ -160,7 +161,8 @@ def set_tag_plants(tag_id: int, data: TagPlantsUpdate, db: Session = Depends(get
 def water_plants_by_tag(
     tag_id: int,
     watering_data: PlantWateringCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     plants = db.query(Plant).join(Plant.tags).filter(Tag.id == tag_id, Plant.is_archived == False).all()
 

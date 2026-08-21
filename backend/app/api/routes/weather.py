@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.security import get_current_user
+from app.core.security import get_current_user, require_write_access
 from app.database import get_db
 from app.models import Plant, PlantWatering, User, WeatherConfig, WeatherLog
 from app.schemas import (
@@ -73,7 +73,7 @@ def get_weather_config(
 def create_weather_config(
     data: WeatherConfigCreate,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     """Create a new weather configuration."""
     # First config created automatically becomes the default so NULL plants stay covered.
@@ -104,7 +104,7 @@ def update_weather_config(
     config_id: int,
     data: WeatherConfigUpdate,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     """Update a weather configuration by ID."""
     config = db.query(WeatherConfig).filter(WeatherConfig.id == config_id).first()
@@ -140,7 +140,7 @@ def update_weather_config(
 def delete_weather_config(
     config_id: int,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     """Delete a weather configuration by ID."""
     config = db.query(WeatherConfig).filter(WeatherConfig.id == config_id).first()
@@ -266,7 +266,7 @@ def get_auto_waterings(
 @router.post("/check")
 def trigger_weather_check(
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: Optional[User] = Depends(require_write_access),
 ):
     """Manually trigger a weather check and auto-watering."""
     watered_count = check_and_auto_water(db)

@@ -35,3 +35,39 @@ def client(mock_db):
             yield c
 
         app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def override_dep(client):
+    """Override a FastAPI dependency for the duration of a test.
+
+    Patching the function in the route module does not work: FastAPI captures the
+    dependency object at import time, so only dependency_overrides has any effect.
+    """
+    from app.main import app
+
+    applied = []
+
+    def _apply(dependency, value):
+        app.dependency_overrides[dependency] = lambda: value
+        applied.append(dependency)
+
+    yield _apply
+
+    for dependency in applied:
+        app.dependency_overrides.pop(dependency, None)
+
+
+@pytest.fixture
+def make_user():
+    """Builds a real User instance.
+
+    Endpoints declare response_model=UserResponse with from_attributes=True, and a
+    MagicMock fails that validation with a confusing 500 — use the real model.
+    """
+    from app.models import User
+
+    def _make(id=2, username="bob", email="bob@example.com", role="user"):
+        return User(id=id, username=username, email=email, role=role, password="x")
+
+    return _make

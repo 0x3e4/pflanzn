@@ -25,7 +25,7 @@ logger.debug("Database initialized.")
 # Initialize FastAPI
 app = FastAPI(
     title="Plant Management API",
-    version="1.0.0",
+    version="1.0.6",
     docs_url="/api/docs"
 )
 
