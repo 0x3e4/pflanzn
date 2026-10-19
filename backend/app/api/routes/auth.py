@@ -61,7 +61,10 @@ derived_secure = parsed_domain.scheme.lower() == "https"
 cookie_secure_override = os.getenv("COOKIE_SECURE")
 COOKIE_SECURE = _is_truthy(cookie_secure_override, default=derived_secure)
 COOKIE_DOMAIN = None
-COOKIE_SAMESITE = (os.getenv("COOKIE_SAMESITE") or ("none" if COOKIE_SECURE else "lax")).lower()
+# Lax: the SPA and the API are served from the same site, so the auth cookies never
+# need to ride along on cross-site requests — and withholding them there is what
+# stops a foreign page from auto-submitting a form as the logged-in user (CSRF).
+COOKIE_SAMESITE = (os.getenv("COOKIE_SAMESITE") or "lax").lower()
 COOKIE_PATH = "/"
 
 # Initialize OAuth for OIDC

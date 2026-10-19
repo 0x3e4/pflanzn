@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- Auth cookies now default to `SameSite=Lax` (previously `None` over HTTPS). Set
+  `COOKIE_SAMESITE` only if the frontend and API are served from different sites.
 
 ### Fixed
 
@@ -20,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   same response time as wrong passwords.
 - Refuse upload paths that only share a name prefix with the upload folder (e.g.
   `uploads_backup`).
+- Block cross-site form submissions from acting as a logged-in user (`SameSite=Lax`).
 
 ## [1.0.6] - 2026-08-21
 

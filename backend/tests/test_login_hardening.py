@@ -124,3 +124,23 @@ class TestUploadContainment:
             response = uploads.serve_upload("plants/abc", size="original")
 
         assert response.path.endswith("abc_original.webp")
+
+
+class TestCookieSameSite:
+    def test_https_deployment_defaults_to_lax(self, monkeypatch):
+        """Regression: over HTTPS the cookies defaulted to SameSite=None, so an
+        auto-submitted cross-site form ran as the logged-in user (CSRF)."""
+        import importlib
+
+        from app.api.routes import auth
+
+        monkeypatch.setattr(auth.settings, "DOMAIN", "https://plants.example.com")
+        monkeypatch.delenv("COOKIE_SECURE", raising=False)
+        monkeypatch.delenv("COOKIE_SAMESITE", raising=False)
+        try:
+            importlib.reload(auth)  # cookie settings are derived at import time
+            assert auth.COOKIE_SECURE is True
+            assert auth.COOKIE_SAMESITE == "lax"
+        finally:
+            monkeypatch.undo()
+            importlib.reload(auth)
