@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+
+## [1.1.1] - 2026-10-19
+
+### Added
+
+### Changed
+
+### Fixed
 - Frontend container build. `pnpm-lock.yaml` still recorded the pre-bump vite range
   in its `overrides` block, which `pnpm install --frozen-lockfile` rejects.
 
