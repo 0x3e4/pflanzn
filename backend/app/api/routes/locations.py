@@ -10,7 +10,12 @@ from PIL import Image, ImageOps
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.security import require_write_access
+from app.core.security import (
+    AUDIENCE_MEMBER,
+    LOCATION_VISIBILITY_BY_AUDIENCE,
+    require_read_access,
+    require_write_access,
+)
 from app.database import get_db
 from app.models import Location, LocationImage, User
 from app.schemas import (
@@ -38,6 +43,23 @@ pillow_heif.register_heif_opener()
 def ensure_feature_enabled():
     if not settings.ENABLE_LOCATIONS:
         raise HTTPException(status_code=404, detail="Locations feature is disabled")
+
+
+def _visible_locations(db: Session, audience: str):
+    """Locations the reader may see: members see all; share-link viewers see shared
+    and public; anonymous readers (SHOW_PROTECTED_VIEW=false) see public only."""
+    query = db.query(Location)
+    if audience != AUDIENCE_MEMBER:
+        query = query.filter(Location.visibility.in_(LOCATION_VISIBILITY_BY_AUDIENCE[audience]))
+    return query
+
+
+def _get_visible_location(db: Session, location_id: int, audience: str) -> Location:
+    # 404 rather than 403 for hidden locations, so their existence isn't revealed.
+    location = _visible_locations(db, audience).filter(Location.id == location_id).first()
+    if not location:
+        raise HTTPException(status_code=404, detail="Location not found")
+    return location
 
 
 @router.post("/", response_model=LocationResponse)
@@ -68,8 +90,9 @@ def create_location(
 def list_locations(
     _: None = Depends(ensure_feature_enabled),
     db: Session = Depends(get_db),
+    audience: str = Depends(require_read_access),
 ):
-    return db.query(Location).order_by(Location.updated_at.desc()).all()
+    return _visible_locations(db, audience).order_by(Location.updated_at.desc()).all()
 
 
 @router.get("/{location_id}", response_model=LocationResponse)
@@ -77,11 +100,9 @@ def get_location(
     location_id: int,
     _: None = Depends(ensure_feature_enabled),
     db: Session = Depends(get_db),
+    audience: str = Depends(require_read_access),
 ):
-    location = db.query(Location).filter(Location.id == location_id).first()
-    if not location:
-        raise HTTPException(status_code=404, detail="Location not found")
-    return location
+    return _get_visible_location(db, location_id, audience)
 
 
 @router.put("/{location_id}", response_model=LocationResponse)
@@ -197,11 +218,9 @@ def list_location_images(
     location_id: int,
     _: None = Depends(ensure_feature_enabled),
     db: Session = Depends(get_db),
+    audience: str = Depends(require_read_access),
 ):
-    location = db.query(Location).filter(Location.id == location_id).first()
-    if not location:
-        raise HTTPException(status_code=404, detail="Location not found")
-    return location.images
+    return _get_visible_location(db, location_id, audience).images
 
 
 @router.delete("/{location_id}/images/{image_id}")

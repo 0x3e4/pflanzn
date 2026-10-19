@@ -33,7 +33,7 @@ import {
     updateLocation,
     uploadLocationImage,
 } from "../services/LocationService";
-import { Location, LocationUpdateInput, SpotType } from "../types/Location";
+import { Location, LocationUpdateInput, SpotType, Visibility } from "../types/Location";
 import "../styles/locationDetails.css";
 
 type LocationIdentifyResult = { species: string; commonName: string; score: string; images: string[] };
@@ -49,6 +49,20 @@ const spotTypeLabels: Record<SpotType, string> = {
     forest: "Forest",
     meadow: "Meadow",
     other: "Other",
+};
+
+const visibilityLabels: Record<Visibility, string> = {
+    private: "Private",
+    shared: "Shared",
+    public: "Public",
+};
+
+const visibilityHint =
+    "Private: logged-in users only · Shared: also share-link viewers · Public: also anonymous visitors when the collection is publicly browsable";
+
+const resolveVisibility = (value: string): Visibility | null => {
+    const normalized = value.trim().toLowerCase();
+    return normalized in visibilityLabels ? (normalized as Visibility) : null;
 };
 
 const normalizeSpotType = (value: string) =>
@@ -402,6 +416,23 @@ export default function LocationDetails() {
 
         if (resolved !== location.spot_type) {
             await patchLocation({ spot_type: resolved });
+        }
+    };
+
+    const handleVisibilityBlur = async (value: string, el: HTMLSpanElement) => {
+        if (!location) {
+            return;
+        }
+
+        const resolved = resolveVisibility(value);
+        if (!resolved) {
+            toast.warning("Invalid visibility. Use Private, Shared, or Public.");
+            el.innerText = visibilityLabels[location.visibility];
+            return;
+        }
+
+        if (resolved !== location.visibility) {
+            await patchLocation({ visibility: resolved });
         }
     };
 
@@ -853,6 +884,25 @@ export default function LocationDetails() {
                                 </span>
                             ) : (
                                 <span className="editable-input-noauth">{spotTypeLabels[location.spot_type]}</span>
+                            )}
+                        </span>
+
+                        <span className="location-information-names plant-information-names" title={visibilityHint}>
+                            <strong>Visibility:</strong>{" "}
+                            {isLoggedIn ? (
+                                <span
+                                    className="editable-input location-inline-editable"
+                                    contentEditable
+                                    suppressContentEditableWarning
+                                    onBlur={(event) =>
+                                        handleVisibilityBlur(event.currentTarget.innerText, event.currentTarget)
+                                    }
+                                    tabIndex={0}
+                                >
+                                    {visibilityLabels[location.visibility]}
+                                </span>
+                            ) : (
+                                <span className="editable-input-noauth">{visibilityLabels[location.visibility]}</span>
                             )}
                         </span>
 

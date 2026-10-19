@@ -110,9 +110,18 @@ def _is_valid_share_token(share_token: str, db: Session) -> bool:
     return True
 
 
+# Set by /api/share/validate and scoped to /api/uploads: <img> tags can't send the
+# X-Share-Token header, so share viewers' image requests carry the token this way.
+SHARE_COOKIE = "share_token"
+
+
 def _get_share_token(request: Request) -> Optional[str]:
-    """Reads the share token from either the query string or the header."""
-    return request.query_params.get("share_token") or request.headers.get("X-Share-Token")
+    """Reads the share token from the query string, the header, or the image cookie."""
+    return (
+        request.query_params.get("share_token")
+        or request.headers.get("X-Share-Token")
+        or request.cookies.get(SHARE_COOKIE)
+    )
 
 
 def _authenticate_from_cookie(request: Request, db: Session) -> User:
@@ -162,16 +171,44 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> Optiona
     return _authenticate_from_cookie(request, db)
 
 
-def require_read_access(request: Request, db: Session = Depends(get_db)) -> Optional[User]:
-    """Authorization gate for the collection data (plants, tags, locations, statistics).
+# Who is reading the collection — decides which locations they may see.
+AUDIENCE_MEMBER = "member"  # logged in, or AUTH_MODE=no (open, no roles)
+AUDIENCE_SHARE = "share"    # holds a valid share link
+AUDIENCE_PUBLIC = "public"  # anonymous, allowed only when SHOW_PROTECTED_VIEW=false
 
-    Reads are public when AUTH_MODE=no or SHOW_PROTECTED_VIEW=false — the documented
-    "browse publicly, log in to edit" mode. Otherwise a session or a valid share link
-    is required, exactly as get_current_user enforces it.
+LOCATION_VISIBILITY_BY_AUDIENCE = {
+    AUDIENCE_MEMBER: ("private", "shared", "public"),
+    AUDIENCE_SHARE: ("shared", "public"),
+    AUDIENCE_PUBLIC: ("public",),
+}
+
+
+def require_read_access(request: Request, db: Session = Depends(get_db)) -> str:
+    """Authorization gate for the collection data (plants, tags, locations, statistics,
+    uploads). Returns the reader's audience; anonymous readers get 401 unless
+    SHOW_PROTECTED_VIEW=false — the documented "browse publicly, log in to edit" mode.
     """
-    if AUTH_MODE == "no" or not SHOW_PROTECTED_VIEW:
-        return None
-    return get_current_user(request, db)
+    if AUTH_MODE == "no":
+        return AUDIENCE_MEMBER
+
+    # A real session wins over a share token, as in require_write_access.
+    session_error = None
+    if request.cookies.get("access_token"):
+        try:
+            _authenticate_from_cookie(request, db)
+            return AUDIENCE_MEMBER
+        except HTTPException as exc:
+            session_error = exc
+
+    share_token = _get_share_token(request)
+    if share_token and _is_valid_share_token(share_token, db):
+        return AUDIENCE_SHARE
+
+    if not SHOW_PROTECTED_VIEW:
+        return AUDIENCE_PUBLIC
+
+    # Re-raise the session failure so the client can tell an expired session from none.
+    raise session_error or HTTPException(status_code=401, detail="Authentication required")
 
 
 def require_write_access(request: Request, db: Session = Depends(get_db)) -> Optional[User]:

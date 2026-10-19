@@ -56,12 +56,12 @@ app.middleware("http")(audit_middleware)
 
 # Include routers
 app.include_router(config_route.router, prefix="/api/config", tags=["Config"])
-app.include_router(uploads.router, prefix="/api/uploads", tags=["Uploads"])
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 # Collection data routers are gated as a whole so a new read route can't ship
 # unauthenticated by forgetting a per-handler dependency. Writes are additionally
 # checked by require_write_access on each handler.
 collection_read_gate = [Depends(require_read_access)]
+app.include_router(uploads.router, prefix="/api/uploads", tags=["Uploads"], dependencies=collection_read_gate)
 app.include_router(plants.router, prefix="/api/plants", tags=["Plants"], dependencies=collection_read_gate)
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(audit.router, prefix="/api/audit", tags=["Audit"])

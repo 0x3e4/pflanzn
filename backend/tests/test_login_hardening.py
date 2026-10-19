@@ -110,7 +110,7 @@ class TestUploadContainment:
 
         with patch.object(uploads.settings, "UPLOAD_FOLDER", str(tmp_path / "uploads")):
             with pytest.raises(HTTPException) as exc:
-                uploads.serve_upload("../uploads_backup/secret.txt", size="original")
+                uploads.serve_upload("../uploads_backup/secret.txt", size="original", db=None, audience="member")
 
         assert exc.value.status_code == 403
 
@@ -121,7 +121,7 @@ class TestUploadContainment:
         (tmp_path / "uploads" / "plants" / "abc_original.webp").write_bytes(b"RIFF")
 
         with patch.object(uploads.settings, "UPLOAD_FOLDER", str(tmp_path / "uploads")):
-            response = uploads.serve_upload("plants/abc", size="original")
+            response = uploads.serve_upload("plants/abc", size="original", db=None, audience="member")
 
         assert response.path.endswith("abc_original.webp")
 

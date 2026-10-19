@@ -57,6 +57,7 @@
 - [Quick start](#quick-start)
 - [Local development](#local-development)
 - [Configuration](#configuration)
+- [Access and visibility](#access-and-visibility)
 - [Tech stack](#tech-stack)
 - [Demo](#demo)
 - [Support](#support)
@@ -203,6 +204,42 @@ Everything is driven through environment variables — see [.env.example](.env.e
 
 > [!NOTE]
 > Legacy `VITE_*` names (`VITE_DOMAIN`, `VITE_AUTH_MODE`, …) still resolve as fallbacks in the backend, but they're misleading — these vars are read by the **backend** at runtime and exposed to the frontend via `/api/config`. Vite itself never sees them, so the prefix carries no meaning. New deployments should use the unprefixed names.
+
+---
+
+## Access and visibility
+
+Who can read the collection depends on `AUTH_MODE` and `SHOW_PROTECTED_VIEW`:
+
+| Reader | `AUTH_MODE=no` | `local` / `oidc`, `SHOW_PROTECTED_VIEW=true` (default) | `local` / `oidc`, `SHOW_PROTECTED_VIEW=false` |
+| --- | --- | --- | --- |
+| Logged-in user | — | Read and edit everything | Read and edit everything |
+| Share-link viewer | — (sharing needs auth) | Read-only | Read-only (existing links work; new ones can't be created in this mode) |
+| Anonymous visitor | Read and edit everything | Login screen, no data | Read-only |
+
+Plants, tags, notes, care advice and statistics have no visibility of their own:
+whoever may read the collection sees all of them. Photos follow the same rules.
+
+**Locations** carry a visibility status, set in the *Visibility* field of a location's
+detail page:
+
+| Status | Visible to |
+| --- | --- |
+| `private` (default) | Logged-in users only |
+| `shared` | Logged-in users and share-link viewers |
+| `public` | Everyone who may read the collection — including anonymous visitors when `SHOW_PROTECTED_VIEW=false` |
+
+A location's photos are hidden along with it. With `AUTH_MODE=no` there are no logins,
+so every location is visible to everyone regardless of its status.
+
+> [!NOTE]
+> Until 1.0.6 the status was only a label and was not enforced, so every location was
+> visible to share-link viewers. Locations created through the app were always
+> `private`, which means they disappear from share links after upgrading until you set
+> them to `shared` or `public`.
+
+The installed PWA keeps viewed photos in its offline cache for up to 30 days, so a
+location made private later may still show on a device that already loaded it.
 
 ---
 

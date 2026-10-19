@@ -45,9 +45,12 @@ def test_write_requires_authentication(client, method, path, payload):
 
 
 @pytest.mark.parametrize("method,path,payload", WRITE_REQUESTS, ids=IDS)
-def test_share_token_cannot_write(client, method, path, payload):
+def test_share_token_cannot_write(client, mock_db, method, path, payload):
     """Share links are read-only view links. get_current_user returns None for them,
     which used to fall straight through the attribution branch into a real write."""
+    # A real, unexpired link: the read gate validates it before the write gate refuses it.
+    mock_db.query.return_value.filter.return_value.first.return_value = MagicMock(expires_at=None)
+
     with patch("app.core.security.AUTH_MODE", "local"):
         response = _send(client, method, path, payload, headers={"X-Share-Token": "tok"})
 

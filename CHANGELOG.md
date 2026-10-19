@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `OIDC_REQUIRE_VERIFIED_EMAIL` (default `true`) controls whether OIDC logins need a
   verified email.
+- *Visibility* field on the location detail page (`private` / `shared` / `public`).
 
 ### Changed
 - **Breaking for OIDC:** sign-in is refused unless the identity provider sends
@@ -18,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cannot change their own email address at the IdP.
 - Auth cookies now default to `SameSite=Lax` (previously `None` over HTTPS). Set
   `COOKIE_SAMESITE` only if the frontend and API are served from different sites.
+- **Location visibility is now enforced** (see README → Access and visibility).
+  `private` locations — the default, and every location created so far — are no
+  longer shown to share-link viewers; set them to `shared` or `public` to keep sharing.
 
 ### Fixed
 
@@ -30,6 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `uploads_backup`).
 - Block cross-site form submissions from acting as a logged-in user (`SameSite=Lax`).
 - Stop linking OIDC logins to existing accounts through unverified email addresses.
+- Require a session or a valid share link to load uploaded photos when
+  `SHOW_PROTECTED_VIEW=true`. `/api/uploads` previously served every file anonymously.
+- Hide `private` locations and their photos from share-link viewers, and everything but
+  `public` locations from anonymous visitors.
 
 ## [1.0.6] - 2026-08-21
 

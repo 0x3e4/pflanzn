@@ -1,10 +1,14 @@
 import logging
 import os
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.security import AUDIENCE_MEMBER, LOCATION_VISIBILITY_BY_AUDIENCE, require_read_access
+from app.database import get_db
+from app.models import Location, LocationImage
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -12,8 +16,26 @@ logger = logging.getLogger(__name__)
 VALID_SIZES = {"thumb", "medium", "original"}
 
 
+def _location_image_visible(db: Session, relative_path: str, audience: str) -> bool:
+    return (
+        db.query(LocationImage.id)
+        .join(Location, LocationImage.location_id == Location.id)
+        .filter(
+            LocationImage.image_path == relative_path,
+            Location.visibility.in_(LOCATION_VISIBILITY_BY_AUDIENCE[audience]),
+        )
+        .first()
+        is not None
+    )
+
+
 @router.get("/{file_path:path}")
-def serve_upload(file_path: str, size: str = Query(default="original")):
+def serve_upload(
+    file_path: str,
+    size: str = Query(default="original"),
+    db: Session = Depends(get_db),
+    audience: str = Depends(require_read_access),
+):
     """
     Serve uploaded files with optional size variants.
 
@@ -35,6 +57,15 @@ def serve_upload(file_path: str, size: str = Query(default="original")):
         contained = False
     if not contained:
         raise HTTPException(status_code=403, detail="Access denied")
+
+    # Location photos follow their location's visibility. Decide on the resolved path,
+    # so "plants/../locations/x.jpg" or "./locations//x.jpg" can't skip the check.
+    if audience != AUDIENCE_MEMBER:
+        relative_path = os.path.relpath(real_path, real_base).replace(os.sep, "/")
+        if relative_path.split("/")[0].lower() == "locations" and not _location_image_visible(
+            db, relative_path, audience
+        ):
+            raise HTTPException(status_code=404, detail="File not found")
 
     # Try new WebP variant format: {base}_{size}.webp
     sized_path = f"{full_path}_{size}.webp"
