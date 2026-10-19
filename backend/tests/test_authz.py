@@ -91,3 +91,42 @@ def test_logged_in_user_with_stale_share_token_can_write(client, mock_db, overri
         response = client.post("/api/tags/", json={"name": "herbs"}, headers={"X-Share-Token": "tok"})
 
     assert response.status_code == 200
+
+
+# Collection reads used to take no dependency at all, so in a protected deployment
+# (AUTH_MODE=local/oidc + SHOW_PROTECTED_VIEW=true, the default) anyone could read
+# every plant, note and location without a session or a share link.
+READ_PATHS = [
+    "/api/plants/",
+    "/api/plants/1",
+    "/api/plants/1/notes",
+    "/api/plants/1/activities",
+    "/api/plants/waterings/all",
+    "/api/plants/identifications",
+    "/api/tags/",
+    "/api/tags/detailed",
+    "/api/statistics/",
+    "/api/locations/",
+]
+
+
+@pytest.mark.parametrize("path", READ_PATHS)
+def test_anonymous_read_rejected_in_protected_view(client, path):
+    with patch("app.core.security.AUTH_MODE", "local"), \
+         patch("app.core.security.SHOW_PROTECTED_VIEW", True):
+        response = client.get(path)
+
+    assert response.status_code == 401
+
+
+@pytest.mark.parametrize("auth_mode,show_protected_view", [("local", False), ("no", True)])
+def test_reads_stay_public_when_view_is_unprotected(client, mock_db, auth_mode, show_protected_view):
+    """SHOW_PROTECTED_VIEW=false ("browse publicly, log in to edit") and AUTH_MODE=no
+    are documented public-read modes; the read gate must not close them."""
+    mock_db.query.return_value.all.return_value = []
+
+    with patch("app.core.security.AUTH_MODE", auth_mode), \
+         patch("app.core.security.SHOW_PROTECTED_VIEW", show_protected_view):
+        response = client.get("/api/tags/")
+
+    assert response.status_code == 200

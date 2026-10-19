@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+### Security
+- Require a session or a valid share link to read plants, tags, locations and
+  statistics when `SHOW_PROTECTED_VIEW=true`. These endpoints were readable anonymously.
+
 ## [1.0.6] - 2026-08-21
 
 ### Added

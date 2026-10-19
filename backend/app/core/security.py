@@ -15,6 +15,7 @@ from app.models import User
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = "HS256"
 AUTH_MODE = settings.AUTH_MODE.lower()  # "no", "local", "oidc"
+SHOW_PROTECTED_VIEW = settings.SHOW_PROTECTED_VIEW  # False = public read, login to edit
 
 # Redis client
 REDIS_URL = settings.REDIS_URL
@@ -159,6 +160,18 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> Optiona
         return None
 
     return _authenticate_from_cookie(request, db)
+
+
+def require_read_access(request: Request, db: Session = Depends(get_db)) -> Optional[User]:
+    """Authorization gate for the collection data (plants, tags, locations, statistics).
+
+    Reads are public when AUTH_MODE=no or SHOW_PROTECTED_VIEW=false — the documented
+    "browse publicly, log in to edit" mode. Otherwise a session or a valid share link
+    is required, exactly as get_current_user enforces it.
+    """
+    if AUTH_MODE == "no" or not SHOW_PROTECTED_VIEW:
+        return None
+    return get_current_user(request, db)
 
 
 def require_write_access(request: Request, db: Session = Depends(get_db)) -> Optional[User]:

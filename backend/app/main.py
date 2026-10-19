@@ -2,13 +2,13 @@ import asyncio
 import logging
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.api.routes import audit, auth, config as config_route, locations, plants, share, statistics, tags, uploads, users, weather
 from app.core.config import settings
-from app.core.security import create_admin_user
+from app.core.security import create_admin_user, require_read_access
 from app.database import SessionLocal, init_db
 
 # Load environment variables
@@ -58,13 +58,17 @@ app.middleware("http")(audit_middleware)
 app.include_router(config_route.router, prefix="/api/config", tags=["Config"])
 app.include_router(uploads.router, prefix="/api/uploads", tags=["Uploads"])
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
-app.include_router(plants.router, prefix="/api/plants", tags=["Plants"])
+# Collection data routers are gated as a whole so a new read route can't ship
+# unauthenticated by forgetting a per-handler dependency. Writes are additionally
+# checked by require_write_access on each handler.
+collection_read_gate = [Depends(require_read_access)]
+app.include_router(plants.router, prefix="/api/plants", tags=["Plants"], dependencies=collection_read_gate)
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(audit.router, prefix="/api/audit", tags=["Audit"])
-app.include_router(statistics.router, prefix="/api/statistics", tags=["Statistics"])
-app.include_router(tags.router, prefix="/api/tags", tags=["Tags"])
+app.include_router(statistics.router, prefix="/api/statistics", tags=["Statistics"], dependencies=collection_read_gate)
+app.include_router(tags.router, prefix="/api/tags", tags=["Tags"], dependencies=collection_read_gate)
 if settings.ENABLE_LOCATIONS:
-    app.include_router(locations.router, prefix="/api/locations", tags=["Locations"])
+    app.include_router(locations.router, prefix="/api/locations", tags=["Locations"], dependencies=collection_read_gate)
 app.include_router(share.router, prefix="/api/share", tags=["Share"])
 app.include_router(weather.router, prefix="/api/weather", tags=["Weather"])
 
