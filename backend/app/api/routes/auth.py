@@ -14,7 +14,13 @@ from sqlalchemy.orm import Session
 
 from app.core.audit import record_audit
 from app.core.config import settings
-from app.core.security import create_access_token, create_refresh_token, decode_token, verify_password
+from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    hash_password,
+    verify_password,
+)
 from app.database import get_db
 from app.models import User
 from app.schemas import LoginRequest
@@ -22,8 +28,14 @@ from app.schemas import LoginRequest
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# Store failed login attempts
-FAILED_LOGIN_ATTEMPTS = {}
+# Failed-login lockout: after LOGIN_MAX_FAILURES failures inside the window the
+# account is refused until the window expires.
+LOGIN_MAX_FAILURES = 10
+LOGIN_LOCKOUT_SECONDS = 15 * 60
+
+# Verified against when the user is missing or has no password, so every failed
+# login pays the same Argon2 cost and response time doesn't reveal which usernames exist.
+_DUMMY_PASSWORD_HASH = hash_password("pflanzn-login-timing-equalizer")
 
 # Load auth mode
 AUTH_MODE = settings.AUTH_MODE
@@ -138,6 +150,26 @@ def _set_auth_cookies(resp, access_token: str, access_expires_at: Optional[int],
             path=COOKIE_PATH,
         )
 
+def _login_failure_key(user: Optional[User], username: str) -> str:
+    # Key existing accounts by id: MariaDB's collation matches "Admin" and "admin "
+    # to the same row, so a per-string counter could be sidestepped by varying case.
+    # Unknown names are counted too, so a lockout doesn't reveal which accounts exist.
+    if user:
+        return f"login_fail:user:{user.id}"
+    return f"login_fail:name:{username.rstrip().lower()}"
+
+
+def _is_locked_out(key: str) -> bool:
+    failures = redis_client.get(key)
+    return failures is not None and int(failures) >= LOGIN_MAX_FAILURES
+
+
+def _record_login_failure(key: str) -> None:
+    # Fixed window: the TTL starts on the first failure and is not extended.
+    if redis_client.incr(key) == 1:
+        redis_client.expire(key, LOGIN_LOCKOUT_SECONDS)
+
+
 # Routes
 @router.post("/login")
 def login(user_data: LoginRequest, request: Request, db: Session = Depends(get_db)):
@@ -145,8 +177,19 @@ def login(user_data: LoginRequest, request: Request, db: Session = Depends(get_d
     logger.debug(f"Login attempt for user: '{user_data.username}'")
 
     user = db.query(User).filter(User.username == user_data.username).first()
+    failure_key = _login_failure_key(user, user_data.username)
 
-    if not user or not verify_password(user_data.password, user.password):
+    if _is_locked_out(failure_key):
+        record_audit(request, action="login_failed", entity_type="auth",
+                     username=user_data.username, status_code=429,
+                     details={"reason": "locked_out"})
+        raise HTTPException(status_code=429, detail="Too many failed login attempts. Try again later.")
+
+    stored_hash = user.password if user and user.password else _DUMMY_PASSWORD_HASH
+    password_ok = verify_password(user_data.password, stored_hash)
+
+    if not user or not user.password or not password_ok:
+        _record_login_failure(failure_key)
         record_audit(request, action="login_failed", entity_type="auth",
                      username=user_data.username, status_code=401,
                      details={"reason": "invalid_credentials"})
@@ -159,12 +202,7 @@ def login(user_data: LoginRequest, request: Request, db: Session = Depends(get_d
                      details={"reason": "wrong_auth_type"})
         raise HTTPException(status_code=401, detail="User must log in via OIDC")
 
-    # Reject login if password is missing
-    if not user.password or not verify_password(user_data.password, user.password):
-        record_audit(request, action="login_failed", entity_type="auth",
-                     username=user_data.username, status_code=401,
-                     details={"reason": "invalid_credentials"})
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+    redis_client.delete(failure_key)
 
     # Generate tokens
     now = int(time.time())
