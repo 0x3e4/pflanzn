@@ -67,6 +67,7 @@ class Settings(BaseSettings):
     OIDC_PROVIDER_URL: str = os.getenv("OIDC_PROVIDER_URL")
     OIDC_CLIENT_ID: str = os.getenv("OIDC_CLIENT_ID")
     OIDC_CLIENT_SECRET: str = os.getenv("OIDC_CLIENT_SECRET")
+    OIDC_REQUIRE_VERIFIED_EMAIL: bool = _truthy(os.getenv("OIDC_REQUIRE_VERIFIED_EMAIL"), default=True)
     REDIS_URL: str = os.getenv("REDIS_URL", "localhost")
     PLANTNET_API_KEY: str = os.getenv("PLANTNET_API_KEY")
     PLANTNET_LANGUAGE: str = os.getenv("PLANTNET_LANGUAGE", "en")

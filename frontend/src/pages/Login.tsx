@@ -1,11 +1,18 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useConfig } from "../context/ConfigContext";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { extractErrorMessage } from "../services/apiClient";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRightToBracket, faSeedling } from "@fortawesome/free-solid-svg-icons";
 import "../styles/login.css";
+
+const OIDC_ERROR_MESSAGES: Record<string, string> = {
+    auth_failed: "Sign-in failed. Please try again.",
+    email_unverified:
+        "Your email address is not verified by your identity provider. Ask an administrator to verify it.",
+};
 
 const Login: React.FC = () => {
     const { login } = useAuth();
@@ -15,6 +22,15 @@ const Login: React.FC = () => {
 
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [searchParams] = useSearchParams();
+
+    // The OIDC callback redirects here with ?error=<code> when sign-in is refused.
+    useEffect(() => {
+        const error = searchParams.get("error");
+        if (!error) return;
+        const message = OIDC_ERROR_MESSAGES[error] ?? OIDC_ERROR_MESSAGES.auth_failed;
+        toast.error(message, { toastId: `login-error-${error}` });
+    }, [searchParams]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -23,7 +39,8 @@ const Login: React.FC = () => {
             toast.success("Login successful!");
             navigate("/plants");
         } catch (error) {
-            toast.error("Invalid credentials or login failed.");
+            // Surfaces the lockout message (429) as well as plain bad credentials.
+            toast.error(extractErrorMessage(error, "Invalid credentials or login failed."));
         }
     };
 

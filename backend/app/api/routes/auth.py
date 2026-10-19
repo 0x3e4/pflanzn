@@ -129,6 +129,15 @@ def _store_idp_tokens(email: str, token: Dict[str, Any]) -> None:
         elif rt_exp_in:
             redis_client.expire(key, int(rt_exp_in))
 
+def _email_is_verified(user_info: Dict[str, Any], token: Dict[str, Any]) -> bool:
+    """Whether the IdP vouches for the email. Accounts are linked by email, so an
+    unverified address would let anyone who can set it log in as its owner."""
+    # Some IdPs only put the claim in the ID token, and a few send it as a string.
+    claim = user_info.get("email_verified")
+    if claim is None:
+        claim = (token.get("userinfo") or {}).get("email_verified")
+    return claim is True or str(claim).lower() == "true"
+
 def _set_auth_cookies(resp, access_token: str, access_expires_at: Optional[int],
                       refresh_token: Optional[str], refresh_expires_at: Optional[int]) -> None:
     resp.set_cookie(
@@ -279,6 +288,17 @@ async def oidc_callback(request: Request, db: Session = Depends(get_db)):
         if not email:
             logger.error(f"No email in user info. Available fields: {list(user_info.keys())}")
             raise HTTPException(status_code=400, detail="Email required from OIDC provider")
+
+        if settings.OIDC_REQUIRE_VERIFIED_EMAIL and not _email_is_verified(user_info, token):
+            logger.warning(
+                f"Rejected OIDC login for {email}: email_verified is not true. Have the IdP "
+                "verify the address, or set OIDC_REQUIRE_VERIFIED_EMAIL=false if users cannot "
+                "change their own email there."
+            )
+            record_audit(request, action="login_failed", entity_type="auth",
+                         username=username, status_code=302,
+                         details={"auth_type": "oidc", "reason": "email_unverified"})
+            return RedirectResponse(url="/login?error=email_unverified", status_code=302)
 
         # 4) Upsert user locally
         user = db.query(User).filter(User.email == email).first()

@@ -8,8 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `OIDC_REQUIRE_VERIFIED_EMAIL` (default `true`) controls whether OIDC logins need a
+  verified email.
 
 ### Changed
+- **Breaking for OIDC:** sign-in is refused unless the identity provider sends
+  `email_verified=true`. authentik 2025.10 and later send `false` by default: map a
+  verified claim in authentik, or set `OIDC_REQUIRE_VERIFIED_EMAIL=false` if your users
+  cannot change their own email address at the IdP.
 - Auth cookies now default to `SameSite=Lax` (previously `None` over HTTPS). Set
   `COOKIE_SAMESITE` only if the frontend and API are served from different sites.
 
@@ -23,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refuse upload paths that only share a name prefix with the upload folder (e.g.
   `uploads_backup`).
 - Block cross-site form submissions from acting as a logged-in user (`SameSite=Lax`).
+- Stop linking OIDC logins to existing accounts through unverified email addresses.
 
 ## [1.0.6] - 2026-08-21
 

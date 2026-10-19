@@ -193,7 +193,7 @@ Everything is driven through environment variables — see [.env.example](.env.e
 | --- | --- |
 | **General** | `SECRET_KEY`, `TZ`, `LOCALE`, `DOMAIN` |
 | **Auth** | `AUTH_MODE` (`no` / `local` / `oidc`), `SHOW_PROTECTED_VIEW`, `ADMIN_USER`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` |
-| **OIDC** | `OIDC_NAME`, `OIDC_PROVIDER_URL`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` |
+| **OIDC** | `OIDC_NAME`, `OIDC_PROVIDER_URL`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_REQUIRE_VERIFIED_EMAIL` (default `true`) |
 | **Database** | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_ROOT_PASSWORD`, `DB_NAME` |
 | **Redis** | `REDIS_URL` |
 | **Features** | `ENABLE_LOCATIONS`, `AUDIT_ENABLED` |
