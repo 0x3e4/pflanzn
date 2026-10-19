@@ -97,3 +97,30 @@ class TestLoginTiming:
             response = client.post("/api/auth/login", json={"username": "admin", "password": "x"})
 
         assert response.status_code == 401
+
+
+class TestUploadContainment:
+    def test_sibling_directory_sharing_the_prefix_is_refused(self, tmp_path):
+        """Regression: startswith() accepted <root>/uploads_backup as inside <root>/uploads."""
+        from app.api.routes import uploads
+
+        (tmp_path / "uploads").mkdir()
+        (tmp_path / "uploads_backup").mkdir()
+        (tmp_path / "uploads_backup" / "secret.txt").write_text("nope")
+
+        with patch.object(uploads.settings, "UPLOAD_FOLDER", str(tmp_path / "uploads")):
+            with pytest.raises(HTTPException) as exc:
+                uploads.serve_upload("../uploads_backup/secret.txt", size="original")
+
+        assert exc.value.status_code == 403
+
+    def test_file_inside_the_upload_folder_is_served(self, tmp_path):
+        from app.api.routes import uploads
+
+        (tmp_path / "uploads" / "plants").mkdir(parents=True)
+        (tmp_path / "uploads" / "plants" / "abc_original.webp").write_bytes(b"RIFF")
+
+        with patch.object(uploads.settings, "UPLOAD_FOLDER", str(tmp_path / "uploads")):
+            response = uploads.serve_upload("plants/abc", size="original")
+
+        assert response.path.endswith("abc_original.webp")

@@ -25,10 +25,15 @@ def serve_upload(file_path: str, size: str = Query(default="original")):
 
     full_path = os.path.join(settings.UPLOAD_FOLDER, file_path)
 
-    # Prevent directory traversal
+    # Prevent directory traversal. A plain startswith() would also accept a sibling
+    # such as "uploads_backup"; commonpath compares whole path components.
     real_base = os.path.realpath(settings.UPLOAD_FOLDER)
     real_path = os.path.realpath(full_path)
-    if not real_path.startswith(real_base):
+    try:
+        contained = os.path.commonpath([real_base, real_path]) == real_base
+    except ValueError:  # different drives on Windows
+        contained = False
+    if not contained:
         raise HTTPException(status_code=403, detail="Access denied")
 
     # Try new WebP variant format: {base}_{size}.webp
