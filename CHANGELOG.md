@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `SHOW_PROTECTED_VIEW=true`. `/api/uploads` previously served every file anonymously.
 - Hide `private` locations and their photos from share-link viewers, and everything but
   `public` locations from anonymous visitors.
+- Pin GitHub Actions to commit SHAs, so a moved or hijacked tag can't change what CI runs.
 
 ## [1.0.6] - 2026-08-21
 
