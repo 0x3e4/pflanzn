@@ -197,7 +197,7 @@ Everything is driven through environment variables — see [.env.example](.env.e
 | **OIDC** | `OIDC_NAME`, `OIDC_PROVIDER_URL`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_REQUIRE_VERIFIED_EMAIL` (default `true`) |
 | **Database** | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_ROOT_PASSWORD`, `DB_NAME` |
 | **Redis** | `REDIS_URL` |
-| **Features** | `ENABLE_LOCATIONS`, `AUDIT_ENABLED` |
+| **Features** | `ENABLE_LOCATIONS`, `AUDIT_ENABLED`, `ENABLE_API_DOCS` (default `false`) |
 | **Identification** | `PLANTNET_API_KEY`, `PLANTNET_LANGUAGE` |
 | **AI providers (optional)** | `LLM_LANGUAGE`, `OPENAI_API_KEY` / `OPENAI_MODEL_NAME`, `CLAUDE_API_KEY` / `CLAUDE_MODEL_NAME`, `MISTRALAI_API_KEY` / `MISTRALAI_API_URL` / `MISTRALAI_MODEL_NAME`, `HUGGINGFACE_API_KEY` / `HUGGINGFACE_MODEL_NAME`, `OLLAMA_URL` / `OLLAMA_MODEL_NAME`. Provider auto-detected from whichever key is set; priority `openai > claude > mistralai > huggingface > ollama`. |
 | **Weather** | `WEATHER_ENABLED`, `WEATHER_CHECK_INTERVAL_HOURS`, `WEATHER_RAINFALL_THRESHOLD_MM`, `OPENWEATHERMAP_API_KEY` (optional) |

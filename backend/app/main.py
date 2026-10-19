@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.api.routes import audit, auth, config as config_route, locations, plants, share, statistics, tags, uploads, users, weather
-from app.core.config import settings
+from app.core.config import APP_VERSION, settings
 from app.core.security import create_admin_user, require_read_access
 from app.database import SessionLocal, init_db
 
@@ -25,8 +25,10 @@ logger.debug("Database initialized.")
 # Initialize FastAPI
 app = FastAPI(
     title="Plant Management API",
-    version="1.0.6",
-    docs_url="/api/docs"
+    version=APP_VERSION,
+    docs_url="/api/docs" if settings.ENABLE_API_DOCS else None,
+    redoc_url="/redoc" if settings.ENABLE_API_DOCS else None,
+    openapi_url="/openapi.json" if settings.ENABLE_API_DOCS else None,
 )
 
 # CORS settings

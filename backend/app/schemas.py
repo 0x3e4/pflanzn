@@ -370,6 +370,7 @@ class AuditLogPage(BaseModel):
 
 
 class AppConfigResponse(BaseModel):
+    version: str
     tz: str
     locale: str
     auth_mode: str

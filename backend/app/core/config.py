@@ -1,6 +1,21 @@
 import os
+import tomllib
+from pathlib import Path
 
 from pydantic_settings import BaseSettings
+
+
+def _read_app_version() -> str:
+    """pyproject.toml is the single source of truth — it's what gets bumped on release.
+    The image installs with --no-root, so package metadata isn't available."""
+    try:
+        with open(Path(__file__).resolve().parents[2] / "pyproject.toml", "rb") as f:
+            return tomllib.load(f)["tool"]["poetry"]["version"]
+    except (OSError, KeyError, tomllib.TOMLDecodeError):
+        return "unknown"
+
+
+APP_VERSION = _read_app_version()
 
 
 def _truthy(value: str | None, default: bool = False) -> bool:
@@ -88,6 +103,8 @@ class Settings(BaseSettings):
     WEATHER_RAINFALL_THRESHOLD_MM: float = float(os.getenv("WEATHER_RAINFALL_THRESHOLD_MM", "1.0"))
     WEATHER_ENABLED: bool = _truthy(os.getenv("WEATHER_ENABLED"), default=True)
     AUDIT_ENABLED: bool = _truthy(os.getenv("AUDIT_ENABLED"), default=True)
+    # Swagger UI, ReDoc and the OpenAPI schema map the whole API surface; off unless asked for.
+    ENABLE_API_DOCS: bool = _truthy(os.getenv("ENABLE_API_DOCS"), default=False)
     BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     UPLOAD_FOLDER: str = os.path.join(BASE_DIR, "uploads")
 

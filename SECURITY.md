@@ -16,7 +16,7 @@ A useful report contains:
 
 - A description of the vulnerability and its potential impact
 - The affected component (backend, frontend) and version (from the GitHub
-  release tag, the deployed image tag, or `GET /openapi.json` → `info.version`)
+  release tag, the deployed image tag, or `GET /api/config` → `version`)
 - Steps to reproduce, ideally a minimal proof-of-concept
 - Your assessment of severity (CVSS vector is welcome but not required)
 - Whether the vulnerability is already public or known to be exploited

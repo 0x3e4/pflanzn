@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.core.config import settings
+from app.core.config import APP_VERSION, settings
 from app.schemas import AppConfigResponse
 
 router = APIRouter()
@@ -13,6 +13,7 @@ def get_app_config():
     Unauthenticated on purpose so the SPA can bootstrap before the user is known.
     """
     return AppConfigResponse(
+        version=APP_VERSION,
         tz=settings.TZ,
         locale=settings.LOCALE,
         auth_mode=settings.AUTH_MODE,

@@ -176,3 +176,14 @@ class TestShareCookie:
         assert response.status_code == 404
         assert response.json() == {"detail": "Invalid share link"}
         assert 'share_token=""' in response.headers["set-cookie"]
+
+
+class TestApiDocs:
+    @pytest.mark.parametrize("path", ["/api/docs", "/redoc", "/openapi.json"])
+    def test_docs_are_off_by_default(self, client, path):
+        assert client.get(path).status_code == 404
+
+    def test_version_is_published_in_config(self, client):
+        from app.core.config import APP_VERSION
+
+        assert client.get("/api/config").json()["version"] == APP_VERSION

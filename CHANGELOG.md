@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `OIDC_REQUIRE_VERIFIED_EMAIL` (default `true`) controls whether OIDC logins need a
   verified email.
 - *Visibility* field on the location detail page (`private` / `shared` / `public`).
+- `GET /api/config` reports the running `version`.
+- `ENABLE_API_DOCS` to turn Swagger UI, ReDoc and `/openapi.json` back on.
 
 ### Changed
 - **Breaking for OIDC:** sign-in is refused unless the identity provider sends
@@ -22,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Location visibility is now enforced** (see README → Access and visibility).
   `private` locations — the default, and every location created so far — are no
   longer shown to share-link viewers; set them to `shared` or `public` to keep sharing.
+- API docs are off by default; set `ENABLE_API_DOCS=true` to enable them.
 
 ### Fixed
 
