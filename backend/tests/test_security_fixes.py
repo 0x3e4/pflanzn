@@ -287,3 +287,24 @@ class TestClientIp:
         with patch.object(mcp_oauth, "redis_client", fake):
             allowed = [mcp_oauth.registration_allowed(f"10.0.{i // 250}.{i % 250}") for i in range(250)]
         assert sum(allowed) == mcp_oauth.REGISTRATION_GLOBAL_LIMIT_PER_HOUR
+
+
+# ==============================================================================
+# Weather zones (exact coordinates) are members-only
+# ==============================================================================
+
+class TestWeatherVisibility:
+    PATHS = ["/api/weather/configs", "/api/weather/config", "/api/weather/current",
+             "/api/weather/logs", "/api/weather/waterings"]
+
+    @pytest.mark.parametrize("path", PATHS)
+    def test_share_viewer_gets_404(self, client, mock_db, path):
+        mock_db.query.return_value.filter.return_value.first.return_value = MagicMock(expires_at=None)
+        with patch("app.core.security.AUTH_MODE", "oidc"):
+            response = client.get(path, headers={"X-Share-Token": "tok"})
+        assert response.status_code == 404
+
+    def test_members_still_read_configs(self, client, mock_db):
+        mock_db.query.return_value.order_by.return_value.all.return_value = []
+        with patch("app.core.security.AUTH_MODE", "no"):
+            assert client.get("/api/weather/configs").status_code == 200

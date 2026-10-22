@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.security import get_current_user, require_write_access
+from app.core.security import AUDIENCE_MEMBER, require_read_access, require_write_access
 from app.database import get_db
 from app.models import Plant, PlantWatering, User, WeatherConfig, WeatherLog
 from app.schemas import (
@@ -22,6 +22,13 @@ from app.services.weather_service import check_and_auto_water, get_current_weath
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def require_member_read(audience: str = Depends(require_read_access)) -> None:
+    """Weather zones hold exact coordinates (often someone's home), so unlike the plant
+    collection they are not shown to share-link viewers or anonymous readers."""
+    if audience != AUDIENCE_MEMBER:
+        raise HTTPException(status_code=404, detail="Not found")
 
 
 def _clear_other_defaults(db: Session, keep_id: Optional[int]) -> None:
@@ -46,7 +53,7 @@ def _ensure_default_exists(db: Session) -> None:
 @router.get("/configs", response_model=List[WeatherConfigResponse])
 def get_weather_configs(
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    _: None = Depends(require_member_read),
 ):
     """Get all weather configurations."""
     return db.query(WeatherConfig).order_by(WeatherConfig.id).all()
@@ -55,7 +62,7 @@ def get_weather_configs(
 @router.get("/config", response_model=WeatherConfigResponse)
 def get_weather_config(
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    _: None = Depends(require_member_read),
 ):
     """Get the default weather configuration."""
     config = (
@@ -159,7 +166,7 @@ def delete_weather_config(
 def get_current_weather_endpoint(
     config_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    _: None = Depends(require_member_read),
 ):
     """Get current weather for a configured location."""
 
@@ -197,7 +204,7 @@ def get_weather_logs(
     limit: int = 10,
     offset: int = 0,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    _: None = Depends(require_member_read),
 ):
     """Get recent weather check logs."""
     total = db.query(WeatherLog).count()
@@ -216,7 +223,7 @@ def get_auto_waterings(
     limit: int = 10,
     offset: int = 0,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    _: None = Depends(require_member_read),
 ):
     """Get recent auto-waterings (weather-triggered, user_id is NULL)."""
     base_query = (
