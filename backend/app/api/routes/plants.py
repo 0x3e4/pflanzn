@@ -16,6 +16,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.features import require_identification, require_llm
 from app.core.security import require_write_access
 from app.database import get_db
 from app.models import (
@@ -143,6 +144,7 @@ def create_plant(plant_data: PlantCreate, db: Session = Depends(get_db), current
         species=plant_data.species if plant_data.species else None,
         is_outdoor=plant_data.is_outdoor or False,
         reaches_rain=plant_data.reaches_rain or False,
+        watering_interval_days=plant_data.watering_interval_days,
     )
     db.add(new_plant)
     db.commit()
@@ -387,7 +389,7 @@ def get_plant_images(plant_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Plant not found")
     return plant.images
 
-@router.post("/{plant_id}/identify")
+@router.post("/{plant_id}/identify", dependencies=[Depends(require_identification)])
 def identify_species(
     plant_id: int,
     db: Session = Depends(get_db),
@@ -477,7 +479,7 @@ def identify_species(
 
     return {"message": "No species found"}
 
-@router.post("/identify")
+@router.post("/identify", dependencies=[Depends(require_identification)])
 async def identify_species_from_image(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
@@ -612,7 +614,7 @@ def delete_plant_image(plant_id: int, image_id: int, db: Session = Depends(get_d
 
     return {"message": "Image deleted successfully"}
 
-@router.post("/{plant_id}/generate_description")
+@router.post("/{plant_id}/generate_description", dependencies=[Depends(require_llm)])
 async def generate_species_description_for_plant(
     plant_id: int,
     db: Session = Depends(get_db),
@@ -860,6 +862,7 @@ def assign_tags_to_plant(plant_id: int, tag_names: List[str], db: Session = Depe
         last_fertilized=max([f.fertilized_at for f in plant.fertilizings], default=None),
         tags=[TagResponse(id=t.id, name=t.name) for t in plant.tags],
         notes=[PlantNoteResponse(id=n.id, note_text=n.note_text, created_at=n.created_at) for n in plant.notes],
+        watering_interval_days=plant.watering_interval_days,
     )
 
 # Remove a tag from a plant
@@ -890,7 +893,8 @@ def remove_tag_from_plant(plant_id: int, tag_id: int, db: Session = Depends(get_
         fertilizings=[PlantFertilizingResponse(id=f.id, fertilized_at=f.fertilized_at) for f in plant.fertilizings],
         last_watered=max([w.watered_at for w in plant.waterings], default=None),
         last_fertilized=max([f.fertilized_at for f in plant.fertilizings], default=None),
-        tags=[TagResponse(id=t.id, name=t.name) for t in plant.tags]
+        tags=[TagResponse(id=t.id, name=t.name) for t in plant.tags],
+        watering_interval_days=plant.watering_interval_days,
     )
 
 # Set tags for a plant (bulk assign/unassign)
@@ -941,6 +945,7 @@ def set_plant_tags(plant_id: int, data: PlantTagsUpdate, db: Session = Depends(g
         last_watered=max([w.watered_at for w in plant.waterings], default=None),
         last_fertilized=max([f.fertilized_at for f in plant.fertilizings], default=None),
         tags=[TagResponse(id=t.id, name=t.name) for t in plant.tags],
+        watering_interval_days=plant.watering_interval_days,
     )
 
 # Archive or restore from archive
@@ -955,7 +960,7 @@ def archive_plant(plant_id: int, data: ArchiveRequest, db: Session = Depends(get
     db.commit()
     return {"message": f"Plant {'archived' if data.archive else 'restored'} successfully"}
 
-@router.post("/{plant_id}/care_helper")
+@router.post("/{plant_id}/care_helper", dependencies=[Depends(require_llm)])
 def get_care_helper(plant_id: int, db: Session = Depends(get_db), current_user: Optional[User] = Depends(require_write_access)):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
@@ -1126,7 +1131,7 @@ def get_plant_activities(
     # Apply pagination
     return activities[offset:offset + limit]
 
-@router.post("/{plant_id}/care_advice", response_model=PlantCareAdviceResponse)
+@router.post("/{plant_id}/care_advice", response_model=PlantCareAdviceResponse, dependencies=[Depends(require_llm)])
 def get_care_helper(
     plant_id: int,
     user_message: Optional[str] = Form(None),

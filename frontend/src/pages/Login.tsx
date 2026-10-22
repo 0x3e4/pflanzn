@@ -4,6 +4,7 @@ import { useConfig } from "../context/ConfigContext";
 import { toast } from "react-toastify";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { extractErrorMessage } from "../services/apiClient";
+import { oidcLoginUrl, safeNextPath } from "../services/authRedirect";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRightToBracket, faSeedling } from "@fortawesome/free-solid-svg-icons";
 import "../styles/login.css";
@@ -23,6 +24,8 @@ const Login: React.FC = () => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [searchParams] = useSearchParams();
+    // Set by pages that need a login first, e.g. the MCP consent page.
+    const next = safeNextPath(searchParams.get("next"));
 
     // The OIDC callback redirects here with ?error=<code> when sign-in is refused.
     useEffect(() => {
@@ -37,7 +40,7 @@ const Login: React.FC = () => {
         try {
             await login(username, password);
             toast.success("Login successful!");
-            navigate("/plants");
+            navigate(next ?? "/plants");
         } catch (error) {
             // Surfaces the lockout message (429) as well as plain bad credentials.
             toast.error(extractErrorMessage(error, "Invalid credentials or login failed."));
@@ -74,7 +77,7 @@ const Login: React.FC = () => {
                     )}
 
                     {authMode === "oidc" && (
-                        <button onClick={() => (window.location.href = "/api/auth/oidc-login")} className="oidc-btn">
+                        <button onClick={() => (window.location.href = oidcLoginUrl(next))} className="oidc-btn">
                             <FontAwesomeIcon icon={faRightToBracket} /> Continue with {oidcName}
                         </button>
                     )}

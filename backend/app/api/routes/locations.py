@@ -10,6 +10,7 @@ from PIL import Image, ImageOps
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.features import require_identification, require_llm
 from app.core.security import (
     AUDIENCE_MEMBER,
     LOCATION_VISIBILITY_BY_AUDIENCE,
@@ -253,7 +254,7 @@ def delete_location_image(
     return {"message": "Image deleted successfully"}
 
 
-@router.post("/{location_id}/generate_description")
+@router.post("/{location_id}/generate_description", dependencies=[Depends(require_llm)])
 def generate_location_description(
     location_id: int,
     _: None = Depends(ensure_feature_enabled),
@@ -286,7 +287,7 @@ def generate_location_description(
         raise HTTPException(status_code=500, detail=f"Failed to generate location description: {exc}")
 
 
-@router.post("/identify")
+@router.post("/identify", dependencies=[Depends(require_identification)])
 async def identify_location_item(
     file: UploadFile = File(...),
     _: None = Depends(ensure_feature_enabled),

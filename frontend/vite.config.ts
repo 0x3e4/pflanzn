@@ -29,7 +29,11 @@ export default defineConfig(() => {
         workbox: {
           globPatterns: ['**/*.{js,css,png,svg,ico}'],
           navigateFallbackDenylist: [
-            /^\/$/
+            /^\/$/,
+            // Full-page navigations to the backend (OIDC login, MCP OAuth authorize,
+            // discovery documents) must never be answered with the SPA shell.
+            /^\/api\//,
+            /^\/\.well-known\//
           ],
           runtimeCaching: [
             {

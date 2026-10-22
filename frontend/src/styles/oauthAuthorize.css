@@ -1,0 +1,130 @@
+.oauth-card {
+    max-width: 440px;
+    text-align: left;
+}
+
+.oauth-card .login-header {
+    text-align: center;
+}
+
+.oauth-message {
+    color: var(--text-color);
+    text-align: center;
+    margin: 0 0 16px;
+}
+
+.oauth-error {
+    color: var(--quinary-color);
+}
+
+.oauth-permissions {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.oauth-permissions li,
+.oauth-write-toggle {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    color: var(--text-color);
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.oauth-permissions svg {
+    color: var(--primary-color);
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+.oauth-write-toggle {
+    cursor: pointer;
+}
+
+.oauth-write-toggle input {
+    margin-top: 3px;
+    accent-color: var(--primary-color);
+    flex-shrink: 0;
+}
+
+.oauth-fineprint {
+    font-size: 13px;
+    color: var(--text-color);
+    opacity: 0.8;
+    margin: 0 0 20px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.oauth-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.oauth-actions .oidc-btn,
+.oauth-deny {
+    flex: 1;
+}
+
+.oauth-deny {
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    transition: background-color 0.3s ease;
+}
+
+.oauth-deny:hover {
+    background-color: var(--background-color);
+}
+
+.oauth-actions button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.mcp-url-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: 8px 0 16px;
+}
+
+.mcp-url-row code {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    overflow-wrap: anywhere;
+}
+
+.mcp-check {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    font-size: 14px;
+    margin: 0 0 16px;
+}
+
+.mcp-check.ok svg {
+    color: var(--primary-color);
+}
+
+.mcp-check.warn svg {
+    color: var(--quinary-color);
+}
+
+.mcp-steps {
+    padding-left: 20px;
+    line-height: 1.6;
+}

@@ -153,6 +153,17 @@ def _ensure_weather_schema():
         )
 
 
+def _ensure_plants_schema():
+    """Idempotent migration for the plants table (watering schedule)."""
+    inspector = inspect(engine)
+    tables = set(inspector.get_table_names())
+    if "plants" not in tables:
+        return  # create_all already handled it
+    plant_columns = {column["name"] for column in inspector.get_columns("plants")}
+    if "watering_interval_days" not in plant_columns:
+        _execute_ddl("ALTER TABLE plants ADD COLUMN watering_interval_days INT NULL")
+
+
 def _ensure_users_schema():
     """Idempotent migration for the users table (preferences column)."""
     inspector = inspect(engine)
@@ -207,6 +218,7 @@ def init_db():
     _ensure_share_links_schema()
     _ensure_fertilizings_schema()
     _ensure_weather_schema()
+    _ensure_plants_schema()
     _ensure_users_schema()
     _ensure_audit_logs_schema()
     logger.debug("Database tables ensured.")

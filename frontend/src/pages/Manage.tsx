@@ -16,6 +16,7 @@ import TagsPanel from "../components/TagsPanel";
 import WateringsPanel from "../components/WateringsPanel";
 import WeatherPanel from "../components/WeatherPanel";
 import SupportPanel from "../components/SupportPanel";
+import McpPanel from "../components/McpPanel";
 import "../styles/manage.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPenToSquare, faUnlock } from "@fortawesome/free-solid-svg-icons";
@@ -39,12 +40,13 @@ type ManageSection =
     | "customize"
     | "weather"
     | "share"
+    | "mcp"
     | "support";
 
 const Manage: React.FC = () => {
     const { user, logout, fetchProfile, isLoggedIn } = useAuth();
     const navigate = useNavigate();
-    const { authMode, showProtectedView } = useConfig();
+    const { authMode, showProtectedView, mcpEnabled } = useConfig();
     const showShare = (authMode === "oidc" || authMode === "local") && showProtectedView;
     const [loading, setLoading] = useState(true);
     const [activeSection, setActiveSection] = useState<ManageSection>("statistics");
@@ -295,6 +297,14 @@ const Manage: React.FC = () => {
                             Share
                         </li>
                     )}
+                    {mcpEnabled && (authMode === "no" || isLoggedIn) && (
+                        <li
+                            className={`sidebar-subsection ${activeSection === "mcp" ? "active" : ""}`}
+                            onClick={() => setActiveSection("mcp")}
+                        >
+                            MCP
+                        </li>
+                    )}
                     <li
                         className={`sidebar-subsection ${activeSection === "support" ? "active" : ""}`}
                         onClick={() => setActiveSection("support")}
@@ -401,6 +411,8 @@ const Manage: React.FC = () => {
                 {activeSection === "share" && showShare && user?.role === "admin" && <SharePanel />}
 
                 {activeSection === "weather" && <WeatherPanel />}
+
+                {activeSection === "mcp" && mcpEnabled && <McpPanel />}
 
                 {activeSection === "support" && <SupportPanel />}
 

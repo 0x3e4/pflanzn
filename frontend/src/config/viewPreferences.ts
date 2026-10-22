@@ -11,17 +11,15 @@ export type PlantsSortOption =
     | "idDesc"
     | "idAsc"
     | "lastImageUploadedDesc"
-    | "lastImageUploadedAsc";
+    | "lastImageUploadedAsc"
+    | "nextWateringAsc"
+    | "nextWateringDesc";
 
 export type PlantsFilterMode = "species" | "name";
 
-export type LocationSortOption =
-    | "updatedDesc"
-    | "updatedAsc"
-    | "createdDesc"
-    | "createdAsc"
-    | "nameAsc"
-    | "nameDesc";
+export type ListViewMode = "grid" | "list";
+
+export type LocationSortOption = "updatedDesc" | "updatedAsc" | "createdDesc" | "createdAsc" | "nameAsc" | "nameDesc";
 
 export interface PlantsViewPreferences {
     // null = #all, -1 = #archive, -2 = #untagged, > 0 = custom tag id
@@ -29,11 +27,15 @@ export interface PlantsViewPreferences {
     sortBy: PlantsSortOption;
     filterMode: PlantsFilterMode;
     selectedFilterValue: string | null;
+    // Combines (AND) with selectedTagId, e.g. #office + #needs_water.
+    needsWaterOnly: boolean;
+    viewMode: ListViewMode;
 }
 
 export interface LocationsViewPreferences {
     selectedSpotType: SpotType | "all";
     sortBy: LocationSortOption;
+    viewMode: ListViewMode;
 }
 
 export interface ViewPreferences {
@@ -50,6 +52,8 @@ const PLANTS_SORT_OPTIONS: PlantsSortOption[] = [
     "idAsc",
     "lastImageUploadedDesc",
     "lastImageUploadedAsc",
+    "nextWateringAsc",
+    "nextWateringDesc",
 ];
 
 const LOCATION_SORT_OPTIONS: LocationSortOption[] = [
@@ -69,12 +73,18 @@ const DEFAULT_VIEW_PREFERENCES: ViewPreferences = {
         sortBy: "idDesc",
         filterMode: "species",
         selectedFilterValue: null,
+        needsWaterOnly: false,
+        viewMode: "grid",
     },
     locations: {
         selectedSpotType: "all",
         sortBy: "updatedDesc",
+        viewMode: "grid",
     },
 };
+
+const normalizeViewMode = (raw: unknown, fallback: ListViewMode): ListViewMode =>
+    raw === "grid" || raw === "list" ? raw : fallback;
 
 const normalizePlants = (raw: Partial<PlantsViewPreferences> | null | undefined): PlantsViewPreferences => {
     const d = DEFAULT_VIEW_PREFERENCES.plants;
@@ -90,9 +100,13 @@ const normalizePlants = (raw: Partial<PlantsViewPreferences> | null | undefined)
 
     return {
         selectedTagId,
-        sortBy: PLANTS_SORT_OPTIONS.includes(raw?.sortBy as PlantsSortOption) ? (raw!.sortBy as PlantsSortOption) : d.sortBy,
+        sortBy: PLANTS_SORT_OPTIONS.includes(raw?.sortBy as PlantsSortOption)
+            ? (raw!.sortBy as PlantsSortOption)
+            : d.sortBy,
         filterMode: raw?.filterMode === "name" || raw?.filterMode === "species" ? raw.filterMode : d.filterMode,
         selectedFilterValue: typeof raw?.selectedFilterValue === "string" ? raw.selectedFilterValue : null,
+        needsWaterOnly: raw?.needsWaterOnly === true,
+        viewMode: normalizeViewMode(raw?.viewMode, d.viewMode),
     };
 };
 
@@ -102,7 +116,10 @@ const normalizeLocations = (raw: Partial<LocationsViewPreferences> | null | unde
         selectedSpotType: SPOT_TYPES.includes(raw?.selectedSpotType as SpotType | "all")
             ? (raw!.selectedSpotType as SpotType | "all")
             : d.selectedSpotType,
-        sortBy: LOCATION_SORT_OPTIONS.includes(raw?.sortBy as LocationSortOption) ? (raw!.sortBy as LocationSortOption) : d.sortBy,
+        sortBy: LOCATION_SORT_OPTIONS.includes(raw?.sortBy as LocationSortOption)
+            ? (raw!.sortBy as LocationSortOption)
+            : d.sortBy,
+        viewMode: normalizeViewMode(raw?.viewMode, d.viewMode),
     };
 };
 

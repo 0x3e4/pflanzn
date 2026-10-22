@@ -24,7 +24,7 @@ export default function BottomNav() {
     const location = useLocation();
     const { isLoggedIn, loading } = useAuth();
     const { isShareAccess } = useShare();
-    const { authMode, enableLocations: showLocations } = useConfig();
+    const { authMode, enableLocations: showLocations, identificationEnabled } = useConfig();
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [loadingIdentification, setLoadingIdentification] = useState(false);
@@ -109,19 +109,23 @@ export default function BottomNav() {
                     <span>Plants</span>
                 </Link>
 
-                <button
-                    className="bottom-nav-item bottom-nav-identify"
-                    onClick={handleIdentifyClick}
-                    disabled={loadingIdentification}
-                    aria-label="Identify a plant from photo"
-                >
-                    <div className="bottom-nav-identify-circle">
-                        <FontAwesomeIcon
-                            icon={loadingIdentification ? faSpinner : faCamera}
-                            spin={loadingIdentification}
-                        />
-                    </div>
-                </button>
+                {identificationEnabled ? (
+                    <button
+                        className="bottom-nav-item bottom-nav-identify"
+                        onClick={handleIdentifyClick}
+                        disabled={loadingIdentification}
+                        aria-label="Identify a plant from photo"
+                    >
+                        <div className="bottom-nav-identify-circle">
+                            <FontAwesomeIcon
+                                icon={loadingIdentification ? faSpinner : faCamera}
+                                spin={loadingIdentification}
+                            />
+                        </div>
+                    </button>
+                ) : (
+                    <div className="bottom-nav-item bottom-nav-spacer" />
+                )}
 
                 {showLocations ? (
                     <Link

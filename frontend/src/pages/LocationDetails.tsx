@@ -145,7 +145,7 @@ export default function LocationDetails() {
 
     const latestImage = sortedImages[0] || null;
 
-    const { locale, tz: timezone, llmProvider } = useConfig();
+    const { locale, tz: timezone, llmProvider, identificationEnabled } = useConfig();
 
     const mapLocations = useMemo(() => {
         const byId = new Map<number, Location>();
@@ -1196,14 +1196,16 @@ export default function LocationDetails() {
                                     <FontAwesomeIcon icon={faUpload} /> Upload Image
                                 </button>
 
-                                <button
-                                    className="identify-location-btn-bottom"
-                                    onClick={handleIdentifyFromLatestImage}
-                                    disabled={identifying}
-                                >
-                                    <FontAwesomeIcon icon={faFingerprint} />{" "}
-                                    {identifying ? "Identifying..." : "Identify Crop/Herb"}
-                                </button>
+                                {identificationEnabled && (
+                                    <button
+                                        className="identify-location-btn-bottom"
+                                        onClick={handleIdentifyFromLatestImage}
+                                        disabled={identifying}
+                                    >
+                                        <FontAwesomeIcon icon={faFingerprint} />{" "}
+                                        {identifying ? "Identifying..." : "Identify Crop/Herb"}
+                                    </button>
+                                )}
 
                                 {llmProvider && (
                                     <button
@@ -1240,12 +1242,14 @@ export default function LocationDetails() {
                                 >
                                     <FontAwesomeIcon icon={faUpload} /> Upload Image
                                 </button>
-                                <button
-                                    className="identify-location-btn-bottom"
-                                    onClick={() => toast.warning("You must be logged in to identify locations.")}
-                                >
-                                    <FontAwesomeIcon icon={faFingerprint} /> Identify Crop/Herb
-                                </button>
+                                {identificationEnabled && (
+                                    <button
+                                        className="identify-location-btn-bottom"
+                                        onClick={() => toast.warning("You must be logged in to identify locations.")}
+                                    >
+                                        <FontAwesomeIcon icon={faFingerprint} /> Identify Crop/Herb
+                                    </button>
+                                )}
 
                                 {llmProvider && (
                                     <button

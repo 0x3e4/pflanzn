@@ -11,8 +11,13 @@ export const fetchPlants = async (): Promise<Plant[]> => {
 };
 
 // Create plant
-export const createPlant = async (name: string, species: string, locationId?: number) => {
-    const body = { name, species, location_id: locationId };
+export const createPlant = async (
+    name: string,
+    species: string,
+    locationId?: number,
+    wateringIntervalDays?: number | null,
+) => {
+    const body = { name, species, location_id: locationId, watering_interval_days: wateringIntervalDays ?? null };
     const response = await apiClient.post(`${API_BASE}/`, body);
     return response.data;
 };

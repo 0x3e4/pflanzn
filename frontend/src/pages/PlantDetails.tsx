@@ -50,6 +50,8 @@ import { useConfig } from "../context/ConfigContext";
 import { setOverlayOpen } from "../services/overlayControl";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import { formatWateringDue, getWateringStatus, wateringBadgeVariant } from "../services/wateringSchedule";
+import "../styles/listView.css";
 
 type ActionLoadingState = {
     title: string;
@@ -59,10 +61,11 @@ type ActionLoadingState = {
 
 export default function PlantDetails() {
     const { isLoggedIn } = useAuth();
-    const { tz: timezone, locale, llmProvider } = useConfig();
+    const { tz: timezone, locale, llmProvider, identificationEnabled } = useConfig();
     const { plantId } = useParams();
     const navigate = useNavigate();
     const [plant, setPlant] = useState<Plant | null>(null);
+    const [intervalDraft, setIntervalDraft] = useState("");
     const [loadingPlant, setLoadingPlant] = useState(true);
     const [weatherConfigs, setWeatherConfigs] = useState<WeatherConfig[]>([]);
     const [availableTags, setAvailableTags] = useState<Tag[]>([]);
@@ -70,9 +73,7 @@ export default function PlantDetails() {
     const [newTag, setNewTag] = useState("");
     const [showTagDropdown, setShowTagDropdown] = useState(false);
     const [selectedDateTime, setSelectedDateTime] = useState<string>(
-        DateTime.now()
-            .setZone(timezone)
-            .toISO({ includeOffset: false }) ?? "",
+        DateTime.now().setZone(timezone).toISO({ includeOffset: false }) ?? "",
     );
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [identifyResults, setIdentifyResults] = useState<
@@ -98,7 +99,9 @@ export default function PlantDetails() {
             loadActivities();
         }
         loadAvailableTags();
-        fetchWeatherConfigs().then(setWeatherConfigs).catch(() => {});
+        fetchWeatherConfigs()
+            .then(setWeatherConfigs)
+            .catch(() => {});
     }, [plantId]);
 
     const loadPlant = async () => {
@@ -602,6 +605,30 @@ export default function PlantDetails() {
     }, [hasBlockingOverlay]);
 
     useEffect(() => {
+        setIntervalDraft(plant?.watering_interval_days ? String(plant.watering_interval_days) : "");
+    }, [plant?.watering_interval_days]);
+
+    const handleSaveWateringInterval = async () => {
+        if (!plant) return;
+        const trimmed = intervalDraft.trim();
+        const value = trimmed === "" ? null : Number(trimmed);
+        if (value !== null && (!Number.isInteger(value) || value < 1 || value > 365)) {
+            toast.error("Watering interval must be a whole number between 1 and 365 days.");
+            setIntervalDraft(plant.watering_interval_days ? String(plant.watering_interval_days) : "");
+            return;
+        }
+        if (value === (plant.watering_interval_days ?? null)) return;
+
+        try {
+            await updatePlant(plant.id, { watering_interval_days: value });
+            setPlant({ ...plant, watering_interval_days: value });
+            toast.success(value ? `Watering every ${value} day${value === 1 ? "" : "s"}` : "Watering schedule removed");
+        } catch (err) {
+            toast.error((err as Error).message);
+        }
+    };
+
+    useEffect(() => {
         return () => {
             setOverlayOpen(false);
         };
@@ -815,6 +842,45 @@ export default function PlantDetails() {
 
                     {!plant.is_archived && (
                         <div className="plant-outdoor-section">
+                            <h4>Watering Schedule</h4>
+                            <label className="plant-interval-row">
+                                <span>Water every</span>
+                                <input
+                                    type="number"
+                                    inputMode="numeric"
+                                    min={1}
+                                    max={365}
+                                    placeholder="–"
+                                    value={intervalDraft}
+                                    onChange={(e) => setIntervalDraft(e.target.value)}
+                                    onBlur={handleSaveWateringInterval}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") e.currentTarget.blur();
+                                    }}
+                                    disabled={!isLoggedIn}
+                                    aria-label="Watering interval in days"
+                                />
+                                <span>days</span>
+                            </label>
+                            {(() => {
+                                const status = getWateringStatus(plant, timezone);
+                                return status ? (
+                                    <span
+                                        className={`watering-badge watering-badge--${wateringBadgeVariant(status)} plant-interval-badge`}
+                                    >
+                                        {formatWateringDue(status)}
+                                    </span>
+                                ) : (
+                                    <small className="plant-interval-hint">
+                                        Set an interval to show this plant under #needs_water when it is due.
+                                    </small>
+                                );
+                            })()}
+                        </div>
+                    )}
+
+                    {!plant.is_archived && (
+                        <div className="plant-outdoor-section">
                             <h4>Environment</h4>
                             <label className="plant-toggle-row">
                                 <input
@@ -829,10 +895,22 @@ export default function PlantDetails() {
                                         if (val) {
                                             tagged = { ...(await assignTagToPlant(plant.id, "outdoor")), ...updates };
                                         } else {
-                                            const outdoorTag = plant.tags.find((t: { name: string }) => t.name === "outdoor");
-                                            if (outdoorTag) tagged = { ...(await removeTagFromPlant(plant.id, outdoorTag.id)), ...updates };
-                                            const rainTag = tagged.tags?.find((t: { name: string }) => t.name === "rain");
-                                            if (rainTag) tagged = { ...(await removeTagFromPlant(plant.id, rainTag.id)), ...updates };
+                                            const outdoorTag = plant.tags.find(
+                                                (t: { name: string }) => t.name === "outdoor",
+                                            );
+                                            if (outdoorTag)
+                                                tagged = {
+                                                    ...(await removeTagFromPlant(plant.id, outdoorTag.id)),
+                                                    ...updates,
+                                                };
+                                            const rainTag = tagged.tags?.find(
+                                                (t: { name: string }) => t.name === "rain",
+                                            );
+                                            if (rainTag)
+                                                tagged = {
+                                                    ...(await removeTagFromPlant(plant.id, rainTag.id)),
+                                                    ...updates,
+                                                };
                                         }
                                         setPlant(tagged);
                                     }}
@@ -852,8 +930,12 @@ export default function PlantDetails() {
                                             if (val) {
                                                 tagged = await assignTagToPlant(plant.id, "rain");
                                             } else {
-                                                const rainTag = plant.tags.find((t: { name: string }) => t.name === "rain");
-                                                tagged = rainTag ? await removeTagFromPlant(plant.id, rainTag.id) : plant;
+                                                const rainTag = plant.tags.find(
+                                                    (t: { name: string }) => t.name === "rain",
+                                                );
+                                                tagged = rainTag
+                                                    ? await removeTagFromPlant(plant.id, rainTag.id)
+                                                    : plant;
                                             }
                                             setPlant({ ...tagged, is_outdoor: plant.is_outdoor, reaches_rain: val });
                                         }}
@@ -881,7 +963,8 @@ export default function PlantDetails() {
                                     >
                                         {weatherConfigs.map((wc) => (
                                             <option key={wc.id} value={wc.id}>
-                                                {wc.city_name || `Location ${wc.id}`}{wc.is_default ? " (default)" : ""}
+                                                {wc.city_name || `Location ${wc.id}`}
+                                                {wc.is_default ? " (default)" : ""}
                                             </option>
                                         ))}
                                     </select>
@@ -1015,9 +1098,7 @@ export default function PlantDetails() {
                                 ) : (
                                     <button
                                         className="fertilize-plant-btn"
-                                        onClick={() =>
-                                            toast.warning("You must be logged in to fertilize plants.")
-                                        }
+                                        onClick={() => toast.warning("You must be logged in to fertilize plants.")}
                                     >
                                         <FontAwesomeIcon icon={faSeedling} /> Fertilize
                                     </button>
@@ -1047,20 +1128,19 @@ export default function PlantDetails() {
                                     </button>
                                 )}
 
-                                {isLoggedIn ? (
-                                    <>
+                                {identificationEnabled &&
+                                    (isLoggedIn ? (
                                         <button className="identify-plant-btn" onClick={handleIdentifyPlant}>
                                             <FontAwesomeIcon icon={faFingerprint} /> Identify Plant
                                         </button>
-                                    </>
-                                ) : (
-                                    <button
-                                        className="identify-plant-btn"
-                                        onClick={() => toast.warning("You must be logged in to identify images.")}
-                                    >
-                                        <FontAwesomeIcon icon={faFingerprint} /> Identify Plant
-                                    </button>
-                                )}
+                                    ) : (
+                                        <button
+                                            className="identify-plant-btn"
+                                            onClick={() => toast.warning("You must be logged in to identify images.")}
+                                        >
+                                            <FontAwesomeIcon icon={faFingerprint} /> Identify Plant
+                                        </button>
+                                    ))}
 
                                 {llmProvider && (
                                     <>

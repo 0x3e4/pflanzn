@@ -21,7 +21,7 @@ export default function Navbar() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const navRef = useRef<HTMLElement | null>(null);
     const { isLoggedIn, loading } = useAuth();
-    const { authMode, enableLocations: showLocations } = useConfig();
+    const { authMode, enableLocations: showLocations, identificationEnabled } = useConfig();
     const [loadingIdentification, setLoading] = useState<boolean>(false);
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
@@ -122,14 +122,19 @@ export default function Navbar() {
                 </button>
 
                 {/* Identify Button - Left of Hamburger */}
-                <button
-                    className="identify-btn"
-                    onClick={handleIdentifyClick}
-                    disabled={loadingIdentification}
-                    aria-label="Identify a plant from photo"
-                >
-                    <FontAwesomeIcon icon={loadingIdentification ? faSpinner : faCamera} spin={loadingIdentification} />
-                </button>
+                {identificationEnabled && (
+                    <button
+                        className="identify-btn"
+                        onClick={handleIdentifyClick}
+                        disabled={loadingIdentification}
+                        aria-label="Identify a plant from photo"
+                    >
+                        <FontAwesomeIcon
+                            icon={loadingIdentification ? faSpinner : faCamera}
+                            spin={loadingIdentification}
+                        />
+                    </button>
+                )}
                 <input
                     type="file"
                     ref={fileInputRef}

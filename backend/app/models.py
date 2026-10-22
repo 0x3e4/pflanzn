@@ -38,6 +38,7 @@ class Plant(Base):
     is_outdoor = Column(Boolean, default=False)
     reaches_rain = Column(Boolean, default=False)
     weather_config_id = Column(Integer, ForeignKey("weather_configs.id", ondelete="SET NULL"), nullable=True)
+    watering_interval_days = Column(Integer, nullable=True)
 
     tags = relationship("Tag", secondary=plant_tag_association, back_populates="plants")
     weather_config = relationship("WeatherConfig", foreign_keys=[weather_config_id])
@@ -263,3 +264,36 @@ class AuditLog(Base):
         Index("idx_audit_logs_action", "action"),
         Index("idx_audit_logs_entity_type", "entity_type"),
     )
+
+
+class OAuthClient(Base):
+    """An OAuth client (e.g. Claude) registered via dynamic client registration
+    to reach the MCP endpoint. Secrets are stored as SHA-256 hashes only."""
+    __tablename__ = "oauth_clients"
+
+    id = Column(Integer, primary_key=True, index=True)
+    client_id = Column(String(64), unique=True, nullable=False, index=True)
+    client_secret_hash = Column(String(64), nullable=True)  # NULL = public client (PKCE only)
+    client_name = Column(String(255), nullable=True)
+    redirect_uris = Column(Text, nullable=False)  # JSON list
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+
+
+class OAuthGrant(Base):
+    """One approved connection between a user and an OAuth client. Holds the
+    hashes of the current access and refresh token; deleting the row revokes both."""
+    __tablename__ = "oauth_grants"
+
+    id = Column(Integer, primary_key=True, index=True)
+    client_id = Column(Integer, ForeignKey("oauth_clients.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    scope = Column(String(255), nullable=False)
+    access_token_hash = Column(String(64), unique=True, nullable=True, index=True)
+    access_expires_at = Column(DateTime, nullable=True)
+    refresh_token_hash = Column(String(64), unique=True, nullable=True, index=True)
+    refresh_expires_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    last_used_at = Column(DateTime, nullable=True)
+
+    client = relationship("OAuthClient")
+    user = relationship("User")
