@@ -1,12 +1,12 @@
 # syntax=docker/dockerfile:1
 ARG NODE_VERSION=24
-ARG NGINX_VERSION=1.30-alpine
+ARG NGINX_VERSION=1.31-alpine
 
 # ---------- Builder ----------
 FROM node:${NODE_VERSION}-slim AS builder
 WORKDIR /build
 
-RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
+RUN corepack enable && corepack prepare pnpm@10.34.7 --activate
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \

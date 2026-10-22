@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+- **Security:** frontend image updated to pnpm 10.34.7 (from 10.33.0) and nginx 1.31
+  (mainline, from 1.30). pnpm 10.33.0 is affected by the advisories fixed in 10.34.x,
+  including path traversal and lockfile integrity bypasses during install.
 
 ## [1.1.1] - 2026-10-19
 
