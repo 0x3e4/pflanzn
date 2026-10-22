@@ -6,7 +6,7 @@
 
 [![Sponsor](https://img.shields.io/badge/sponsor-Ko--fi-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/0x3e4)
 ![Status](https://img.shields.io/badge/status-active-success)
-![Python](https://img.shields.io/badge/python-3.13-3776AB?logo=python&logoColor=white)
+![Python](https://img.shields.io/badge/python-3.14-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)
@@ -97,7 +97,7 @@ flowchart LR
         SPA[PWA SPA]
     end
 
-    subgraph Backend["Backend · FastAPI / Python 3.13 :8000"]
+    subgraph Backend["Backend · FastAPI / Python 3.14 :8000"]
         API[REST API]
         Weather[Weather loop]
         Image[Image pipeline]
@@ -265,7 +265,7 @@ Connected apps can be revoked under Manage → MCP.
 
 | Component | Technology |
 | --- | --- |
-| Backend | Python 3.13, FastAPI, SQLAlchemy ORM, Uvicorn, Poetry |
+| Backend | Python 3.14, FastAPI, SQLAlchemy ORM, Uvicorn, Poetry |
 | Database | MariaDB |
 | Cache | Redis (sessions, OAuth state) |
 | Frontend | React 19, TypeScript 6, Vite 8, React Router v7, pnpm |
@@ -293,6 +293,8 @@ Pflanzn is built and maintained as a labour of love. If it makes your plant-care
 <a href="https://ko-fi.com/0x3e4" target="_blank"><img height="36" src="https://storage.ko-fi.com/cdn/kofi1.png" alt="Buy me a coffee on Ko-fi" /></a>
 
 A star on the [GitHub repo](https://github.com/0x3e4/pflanzn) is just as welcome — bug reports and pull requests too.
+
+Pflanzn is developed with the help of an AI coding assistant ([Claude Code](https://claude.com/claude-code)).
 
 <br>
 

@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sort option. MCP `list_plants` gains a `needs_water` filter.
 
 ### Changed
+- Backend runs on Python 3.14 (image `python:3.14-slim`); dependency versions unchanged.
 - Request bodies over `MAX_UPLOAD_MB` (default 30) are refused before they are parsed.
 - Identification buttons are hidden without a PlantNet key.
 - Login returns to the requested page (`?next=`).
