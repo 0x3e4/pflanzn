@@ -139,6 +139,45 @@ docker compose up -d --build
 
 The app will be reachable at the domain you configured in `DOMAIN`. See [.env.example](.env.example) for all available settings.
 
+### Reverse proxy
+
+> [!IMPORTANT]
+> The frontend container only serves the static app — it does **not** proxy the API. Opening `:4173` directly loads the UI, but every `/api` call gets `index.html` back and no data shows up. Put a reverse proxy in front that routes:
+
+| Path | Target |
+| --- | --- |
+| `/api/*` | backend `:8000` |
+| `/.well-known/oauth-*` | backend `:8000` (only needed for MCP) |
+| everything else | frontend `:4173` |
+
+Caddy:
+
+```caddyfile
+plants.example.com {
+    @backend path /api/* /.well-known/oauth-*
+    reverse_proxy @backend localhost:8000
+    reverse_proxy localhost:4173
+}
+```
+
+nginx:
+
+```nginx
+location ~ ^/(api/|\.well-known/oauth-) {
+    proxy_pass http://localhost:8000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    client_max_body_size 30m;   # match MAX_UPLOAD_MB
+    proxy_read_timeout 120s;    # AI care advice can be slow
+}
+
+location / {
+    proxy_pass http://localhost:4173;
+    proxy_set_header Host $host;
+}
+```
+
 Prebuilt images are published to GHCR on every push to `main` and on every semver tag (`X.Y.Z`) by [build-images.yml](.github/workflows/build-images.yml):
 
 - `ghcr.io/0x3e4/pflanzn-backend`
@@ -256,7 +295,7 @@ Set `MCP_ENABLED=true` and add `{DOMAIN}/api/mcp` as a custom connector in Claud
 normal login, or through an external OAuth/OIDC server when `MCP_OAUTH_ISSUER` is set
 (accounts are matched by email; `MCP_OAUTH_AUDIENCE` must name the client the tokens
 are issued for). To sign in to the built-in server with a different provider than the app —
-any OIDC server or GitHub — set `MCP_LOGIN_PROVIDER`. The reverse proxy must forward `/.well-known/oauth-*` to the backend.
+any OIDC server or GitHub — set `MCP_LOGIN_PROVIDER`. The [reverse proxy](#reverse-proxy) must forward `/.well-known/oauth-*` to the backend.
 Connected apps can be revoked under Manage → MCP.
 
 ---
