@@ -35,9 +35,7 @@ def _share_link_refused(status_code: int, detail: str) -> JSONResponse:
 @router.get("/validate/{token}")
 def validate_share_link(token: str, db: Session = Depends(get_db)):
     """Public endpoint - validates a share token for read-only access."""
-    link = db.query(ShareLink).filter(
-        (ShareLink.token == token) | (ShareLink.alias == token)
-    ).first()
+    link = db.query(ShareLink).filter(ShareLink.token == token).first()
     if not link:
         return _share_link_refused(404, "Invalid share link")
     if link.expires_at and link.expires_at < datetime.utcnow():
@@ -46,7 +44,7 @@ def validate_share_link(token: str, db: Session = Depends(get_db)):
     response = JSONResponse(content={"valid": True, "alias": link.alias})
     response.set_cookie(
         key=SHARE_COOKIE,
-        value=link.token,  # the secret, even when the link was opened by its alias
+        value=link.token,
         httponly=True,
         secure=COOKIE_SECURE,
         samesite=COOKIE_SAMESITE,
