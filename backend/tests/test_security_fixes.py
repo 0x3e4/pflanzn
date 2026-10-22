@@ -161,3 +161,92 @@ class TestShareAlias:
         assert _is_valid_share_token("family", db) is False
         sql = _filter_sql(db)
         assert "share_links.token" in sql and "alias" not in sql
+
+
+# ==============================================================================
+# OIDC refresh tokens are bound to server state and revoked on logout
+# ==============================================================================
+
+class TestOidcRefreshBinding:
+    def _refresh_token(self, sub="alice@example.com"):
+        from datetime import timedelta
+
+        from app.core.security import create_refresh_token
+
+        return create_refresh_token({"sub": sub}, expires_delta=timedelta(days=1))
+
+    def _post_refresh(self, client, token):
+        client.cookies.set("refresh_token", token)
+        try:
+            with patch("app.api.routes.auth.AUTH_MODE", "oidc"):
+                return client.post("/api/auth/refresh")
+        finally:
+            client.cookies.clear()
+
+    def test_validly_signed_but_never_issued_token_is_refused(self, client):
+        from app.api.routes import auth
+
+        auth.redis_client.get.return_value = None  # nothing issued for this subject
+        response = self._post_refresh(client, self._refresh_token())
+        assert response.status_code == 401
+        auth.redis_client.set.assert_not_called()  # never reached the IdP refresh
+
+    def test_superseded_token_is_refused(self, client):
+        from app.api.routes import auth
+
+        auth.redis_client.get.return_value = self._refresh_token(sub="someone-else")
+        assert self._post_refresh(client, self._refresh_token()).status_code == 401
+
+    def test_logout_revokes_matching_server_state(self, client):
+        from app.api.routes import auth
+
+        token = self._refresh_token()
+        auth.redis_client.get.return_value = token
+        auth.redis_client.delete.reset_mock()
+        client.cookies.set("refresh_token", token)
+        try:
+            client.post("/api/auth/logout")
+        finally:
+            client.cookies.clear()
+        deleted = {key for call in auth.redis_client.delete.call_args_list for key in call.args}
+        assert {"refresh:alice@example.com", "idp:refresh:alice@example.com"} <= deleted
+
+    def test_logout_leaves_other_sessions_alone(self, client):
+        from app.api.routes import auth
+
+        auth.redis_client.get.return_value = "a-newer-token"
+        auth.redis_client.delete.reset_mock()
+        client.cookies.set("refresh_token", self._refresh_token())
+        try:
+            client.post("/api/auth/logout")
+        finally:
+            client.cookies.clear()
+        auth.redis_client.delete.assert_not_called()
+
+    def test_bad_signature_is_401_not_500(self, client):
+        assert self._post_refresh(client, "not.a.jwt").status_code == 401
+
+
+class TestSecretKeyCheck:
+    @pytest.mark.parametrize("value", [None, "", "change_me", "CHANGE_ME "])
+    def test_example_key_refused(self, value):
+        from app.core.config import settings
+        from app.main import check_secret_key
+
+        with patch.object(settings, "AUTH_MODE", "oidc"), patch.object(settings, "SECRET_KEY", value):
+            with pytest.raises(RuntimeError):
+                check_secret_key()
+
+    def test_open_mode_needs_no_key(self):
+        from app.core.config import settings
+        from app.main import check_secret_key
+
+        with patch.object(settings, "AUTH_MODE", "no"), patch.object(settings, "SECRET_KEY", None):
+            check_secret_key()
+
+    def test_strong_key_accepted(self):
+        from app.core.config import settings
+        from app.main import check_secret_key
+
+        with patch.object(settings, "AUTH_MODE", "local"), patch.object(settings, "SECRET_KEY", "k" * 48):
+            check_secret_key()

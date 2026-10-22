@@ -32,6 +32,20 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
+def check_secret_key() -> None:
+    """Signed session tokens are only as strong as SECRET_KEY: refuse the example value,
+    warn about short ones. AUTH_MODE=no signs nothing."""
+    if settings.AUTH_MODE.lower() not in ("local", "oidc"):
+        return
+    secret = settings.SECRET_KEY or ""
+    if secret.strip().lower() in ("", "change_me", "changeme", "secret"):
+        raise RuntimeError("SECRET_KEY is unset or the example value. Set a random one: openssl rand -base64 48")
+    if len(secret) < 32:
+        logger.warning("SECRET_KEY is shorter than 32 characters. Use a random one: openssl rand -base64 48")
+
+
+check_secret_key()
+
 # Initialize database
 init_db()
 logger.debug("Database initialized.")
