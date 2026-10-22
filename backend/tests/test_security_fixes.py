@@ -250,3 +250,40 @@ class TestSecretKeyCheck:
 
         with patch.object(settings, "AUTH_MODE", "local"), patch.object(settings, "SECRET_KEY", "k" * 48):
             check_secret_key()
+
+
+# ==============================================================================
+# The client can't choose its own IP (audit log, registration rate limit)
+# ==============================================================================
+
+class TestClientIp:
+    def _request(self, headers, host="10.0.0.2"):
+        request = MagicMock()
+        request.headers = {k.lower(): v for k, v in headers.items()}
+        request.client.host = host
+        return request
+
+    def test_spoofed_left_entries_are_ignored(self):
+        from app.core.audit import client_ip
+
+        # Client sent "1.2.3.4"; nginx appended the address it actually saw.
+        assert client_ip(self._request({"X-Forwarded-For": "1.2.3.4, 203.0.113.9"})) == "203.0.113.9"
+
+    def test_client_supplied_x_real_ip_is_ignored(self):
+        from app.core.audit import client_ip
+
+        assert client_ip(self._request({"X-Real-IP": "1.2.3.4"})) == "10.0.0.2"
+
+    def test_registration_has_a_global_cap(self):
+        from app.services import mcp_oauth
+
+        counts = {}
+
+        def incr(key):
+            counts[key] = counts.get(key, 0) + 1
+            return counts[key]
+
+        fake = MagicMock(incr=incr)
+        with patch.object(mcp_oauth, "redis_client", fake):
+            allowed = [mcp_oauth.registration_allowed(f"10.0.{i // 250}.{i % 250}") for i in range(250)]
+        assert sum(allowed) == mcp_oauth.REGISTRATION_GLOBAL_LIMIT_PER_HOUR

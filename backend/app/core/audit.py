@@ -21,13 +21,15 @@ AUDIT_ENABLED = getattr(settings, "AUDIT_ENABLED", True)
 
 
 def client_ip(request) -> Optional[str]:
-    """Real client IP, honoring the nginx X-Forwarded-For / X-Real-IP hops."""
+    """Client IP as seen by the reverse proxy in front of the backend.
+
+    Uses the right-most X-Forwarded-For entry: that is the one the proxy appended
+    (nginx `proxy_add_x_forwarded_for`). Everything left of it, and X-Real-IP when the
+    proxy doesn't set it, is whatever the client chose to send.
+    """
     xff = request.headers.get("x-forwarded-for")
     if xff:
-        return xff.split(",")[0].strip() or None
-    real = request.headers.get("x-real-ip")
-    if real:
-        return real.strip() or None
+        return xff.split(",")[-1].strip() or None
     return request.client.host if request.client else None
 
 
