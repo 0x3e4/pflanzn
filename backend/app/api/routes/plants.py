@@ -54,6 +54,8 @@ from app.schemas import (
 )
 from app.services.llm_client import LLMClient
 from app.services.plantnet import PlantNetError, identify_species_via_plantnet
+from app.utils.uploads import IMAGE_VARIANTS
+from app.utils.uploads import generate_image_variants as _generate_image_variants
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -70,27 +72,6 @@ pillow_heif.register_heif_opener()
 load_dotenv()
 LOCAL_TZ = settings.TZ
 tz = ZoneInfo(LOCAL_TZ)
-
-# Image variant sizes for responsive serving
-IMAGE_VARIANTS = {
-    "original": 2000,
-    "medium": 800,
-    "thumb": 300,
-}
-
-
-def _generate_image_variants(img: Image.Image, base_path: str) -> None:
-    """Generate thumb, medium, and original WebP variants from a PIL Image."""
-    for suffix, max_width in IMAGE_VARIANTS.items():
-        variant = img.copy()
-        if variant.width > max_width:
-            ratio = max_width / float(variant.width)
-            new_height = int(float(variant.height) * ratio)
-            variant = variant.resize((max_width, new_height), Image.LANCZOS)
-        output_path = f"{base_path}_{suffix}.webp"
-        variant.save(output_path, format="WEBP", quality=80, method=4)
-    logger.debug(f"Generated image variants at {base_path}")
-
 
 def _resolve_image_file(image_path: str) -> Optional[str]:
     """Resolve a stored image_path to an existing file on disk.

@@ -55,7 +55,8 @@ export default defineConfig(() => {
               },
             },
             {
-              urlPattern: /\/api\/uploads\/.+/i,
+              // Floor plans (the inside of someone's home) are never kept in the offline cache.
+              urlPattern: /\/api\/uploads\/(?!floorplans\/).+/i,
               handler: 'CacheFirst',
               options: {
                 cacheName: 'plant-images',

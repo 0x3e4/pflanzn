@@ -117,6 +117,8 @@ class Settings(BaseSettings):
     MCP_LOGIN_CLIENT_ID: str = os.getenv("MCP_LOGIN_CLIENT_ID", "")
     MCP_LOGIN_CLIENT_SECRET: str = os.getenv("MCP_LOGIN_CLIENT_SECRET", "")
     AUDIT_ENABLED: bool = _truthy(os.getenv("AUDIT_ENABLED"), default=True)
+    # Largest accepted request body (uploads), enforced before the body is parsed.
+    MAX_UPLOAD_MB: int = int(os.getenv("MAX_UPLOAD_MB") or 30)
     # Swagger UI, ReDoc and the OpenAPI schema map the whole API surface; off unless asked for.
     ENABLE_API_DOCS: bool = _truthy(os.getenv("ENABLE_API_DOCS"), default=False)
     BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

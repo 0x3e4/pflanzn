@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class UserCreate(BaseModel):
@@ -385,6 +385,7 @@ class AppConfigResponse(BaseModel):
     mcp_enabled: bool
     mcp_auth: str
     mcp_login: str
+    floor_plans_enabled: bool
     domain: str
     oidc_name: str
     admin_user: Optional[str] = None
@@ -420,5 +421,47 @@ class OAuthGrantResponse(BaseModel):
 class McpInfoResponse(BaseModel):
     server_url: str
     auth_required: bool
+
+class AppSettingsResponse(BaseModel):
+    floor_plans_enabled: bool
+
+
+class AppSettingsUpdate(BaseModel):
+    # extra="forbid": only declared settings can be written
+    model_config = ConfigDict(extra="forbid")
+
+    floor_plans_enabled: Optional[bool] = None
+
+
+class FloorPlanPlacement(BaseModel):
+    plant_id: int
+    x: float
+    y: float
+
+
+class FloorPlanResponse(BaseModel):
+    id: int
+    name: str
+    address: Optional[str] = None
+    image_path: str
+    width: int
+    height: int
+    sort_order: int
+    placements: List[FloorPlanPlacement] = []
+
+
+class FloorPlanUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    address: Optional[str] = Field(None, max_length=255)
+    sort_order: Optional[int] = Field(None, ge=0, le=10000)
+
+
+class FloorPlanPlacementUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    x: float = Field(..., ge=0, le=1)
+    y: float = Field(..., ge=0, le=1)
 
 PlantResponse.model_rebuild()

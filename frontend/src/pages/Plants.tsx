@@ -19,6 +19,10 @@ import { toast } from "react-toastify";
 import { DateTime } from "luxon";
 import IdentifyResults from "../components/IdentifyResults";
 import EditableDiv from "../components/EditableDiv";
+import FloorPlanView from "../components/FloorPlanView";
+import { fetchFloorPlans } from "../services/FloorPlanService";
+import { FloorPlan } from "../types/FloorPlan";
+import { useShare } from "../context/ShareContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faUpload,
@@ -36,6 +40,7 @@ import {
     faArrowUpShortWide,
     faGrip,
     faList,
+    faMap,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../context/AuthContext";
 import { useConfig } from "../context/ConfigContext";
@@ -43,7 +48,7 @@ import { setOverlayOpen } from "../services/overlayControl";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { getUiPreferences } from "../config/uiPreferences";
-import { getViewPreferences, ListViewMode, updatePlantsViewPreferences } from "../config/viewPreferences";
+import { getViewPreferences, PlantsViewMode, updatePlantsViewPreferences } from "../config/viewPreferences";
 import {
     formatLastWateredShort,
     formatWateringDue,
@@ -69,7 +74,13 @@ export default function Plants() {
     const [isStretched, setIsStretched] = useState(() => getUiPreferences().defaultWidescreen);
     const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
     const [needsWaterOnly, setNeedsWaterOnly] = useState<boolean>(() => getViewPreferences().plants.needsWaterOnly);
-    const [viewMode, setViewMode] = useState<ListViewMode>(() => getViewPreferences().plants.viewMode);
+    const [viewMode, setViewMode] = useState<PlantsViewMode>(() => getViewPreferences().plants.viewMode);
+    const [floorPlans, setFloorPlans] = useState<FloorPlan[] | null>(null);
+    const [selectedFloorPlanId, setSelectedFloorPlanId] = useState<number | null>(
+        () => getViewPreferences().plants.selectedFloorPlanId,
+    );
+    // Set when arriving from a plant page ("Show on plan" / "Place on plan").
+    const [planIntent, setPlanIntent] = useState<{ plantId: number; place: boolean } | null>(null);
 
     type FilterMode = "species" | "name";
 
@@ -105,7 +116,12 @@ export default function Plants() {
     } | null>(null);
 
     const { isLoggedIn } = useAuth();
-    const { tz: timezone, locale, identificationEnabled } = useConfig();
+    const { isShareAccess } = useShare();
+    const { tz: timezone, locale, identificationEnabled, floorPlansEnabled, authMode } = useConfig();
+    // Floor plans show the inside of someone's home: members only (the API enforces it too).
+    const canSeePlans = floorPlansEnabled && !isShareAccess && (authMode === "no" || isLoggedIn);
+    const canEditPlans = authMode === "no" || isLoggedIn;
+    const effectiveViewMode: PlantsViewMode = viewMode === "plan" && !canSeePlans ? "grid" : viewMode;
 
     const [selectedDateTime, setSelectedDateTime] = useState<string>(
         DateTime.now().setZone(timezone).toISO({ includeOffset: false }) ?? "",
@@ -146,6 +162,28 @@ export default function Plants() {
             navigate(location.pathname + location.search, { replace: true, state: null });
         }
     }, [location.state]);
+
+    useEffect(() => {
+        const intent = (location.state as { floorPlan?: { plantId: number; planId?: number; place?: boolean } } | null)
+            ?.floorPlan;
+        if (intent) {
+            setViewMode("plan");
+            setPlanIntent({ plantId: intent.plantId, place: Boolean(intent.place) });
+            if (intent.planId) setSelectedFloorPlanId(intent.planId);
+            navigate(location.pathname + location.search, { replace: true, state: null });
+        }
+    }, [location.state, location.pathname, location.search, navigate]);
+
+    useEffect(() => {
+        if (!canSeePlans) return;
+        fetchFloorPlans()
+            .then(setFloorPlans)
+            .catch((err) => toast.error(extractErrorMessage(err, "Failed to load floor plans.")));
+    }, [canSeePlans]);
+
+    useEffect(() => {
+        updatePlantsViewPreferences({ selectedFloorPlanId });
+    }, [selectedFloorPlanId]);
 
     useEffect(() => {
         if (plants.length === 0) {
@@ -333,6 +371,20 @@ export default function Plants() {
             toast.error((err as Error).message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Watering from the floor plan (one plant or "water all due" on a plan): now.
+    const handleWaterPlantIds = async (plantIds: number[]) => {
+        const nowUTC = DateTime.now().toUTC().toISO({ includeOffset: false });
+        try {
+            for (const plantId of plantIds) {
+                await waterPlant(plantId, { watered_at: nowUTC });
+            }
+            toast.success(plantIds.length === 1 ? "Watered!" : `Watered ${plantIds.length} plants!`);
+            fetchPlantsFromService();
+        } catch (err) {
+            toast.error(extractErrorMessage(err, "Failed to water plants."));
         }
     };
 
@@ -559,6 +611,18 @@ export default function Plants() {
                         >
                             <FontAwesomeIcon icon={faList} />
                         </button>
+                        {canSeePlans && (
+                            <button
+                                type="button"
+                                className={effectiveViewMode === "plan" ? "active" : ""}
+                                onClick={() => setViewMode("plan")}
+                                title="Floor plan"
+                                aria-label="Floor plan view"
+                                aria-pressed={effectiveViewMode === "plan"}
+                            >
+                                <FontAwesomeIcon icon={faMap} />
+                            </button>
+                        )}
                     </div>
                     {isLoggedIn ? (
                         <button className="add-plant-btn" onClick={() => setModalOpen(true)}>
@@ -729,7 +793,27 @@ export default function Plants() {
                 </div>
             </div>
 
-            {viewMode === "list" ? (
+            {effectiveViewMode === "plan" ? (
+                floorPlans === null ? (
+                    <Skeleton height={320} borderRadius={14} />
+                ) : (
+                    <FloorPlanView
+                        plans={floorPlans}
+                        plants={filteredPlants.filter((p) => !p.is_archived)}
+                        allPlants={plants}
+                        timezone={timezone}
+                        canEdit={canEditPlans}
+                        canManage={canEditPlans}
+                        selectedPlanId={selectedFloorPlanId}
+                        onSelectPlan={setSelectedFloorPlanId}
+                        onPlansChange={setFloorPlans}
+                        onWater={handleWaterPlantIds}
+                        placePlantId={planIntent?.place ? planIntent.plantId : null}
+                        focusPlantId={planIntent && !planIntent.place ? planIntent.plantId : null}
+                        key={planIntent ? `intent-${planIntent.plantId}` : "plan"}
+                    />
+                )
+            ) : viewMode === "list" ? (
                 <div className="list-view">
                     {loading
                         ? [...Array(8)].map((_, index) => (

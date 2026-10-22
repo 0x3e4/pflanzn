@@ -1,13 +1,16 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 from app.core.config import APP_VERSION, settings
+from app.database import get_db
 from app.schemas import AppConfigResponse
+from app.services import app_settings
 
 router = APIRouter()
 
 
 @router.get("", response_model=AppConfigResponse)
-def get_app_config():
+def get_app_config(db: Session = Depends(get_db)):
     """Runtime configuration consumed by the frontend on startup.
 
     Unauthenticated on purpose so the SPA can bootstrap before the user is known.
@@ -26,6 +29,7 @@ def get_app_config():
         mcp_enabled=settings.mcp_available,
         mcp_auth=settings.mcp_auth,
         mcp_login=(settings.MCP_LOGIN_PROVIDER or "").lower() or "app",
+        floor_plans_enabled=app_settings.floor_plans_enabled(db),
         domain=settings.DOMAIN or "",
         oidc_name=settings.OIDC_NAME or "",
         admin_user=settings.ADMIN_USER or None,

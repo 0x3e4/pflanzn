@@ -9,6 +9,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.api.routes import (
     audit,
     auth,
+    floor_plans,
     locations,
     mcp,
     oauth,
@@ -21,6 +22,8 @@ from app.api.routes import (
     weather,
 )
 from app.api.routes import config as config_route
+from app.api.routes import settings as settings_route
+from app.core.body_limit import BodySizeLimitMiddleware
 from app.core.config import APP_VERSION, settings
 from app.core.security import create_admin_user, require_read_access
 from app.database import SessionLocal, init_db
@@ -58,6 +61,9 @@ app = FastAPI(
     redoc_url="/redoc" if settings.ENABLE_API_DOCS else None,
     openapi_url="/openapi.json" if settings.ENABLE_API_DOCS else None,
 )
+
+# Cap request bodies before multipart parsing spools them to disk.
+app.add_middleware(BodySizeLimitMiddleware, max_bytes=settings.MAX_UPLOAD_MB * 1024 * 1024)
 
 # CORS settings
 app.add_middleware(
@@ -101,6 +107,9 @@ if settings.ENABLE_LOCATIONS:
     app.include_router(locations.router, prefix="/api/locations", tags=["Locations"], dependencies=collection_read_gate)
 app.include_router(share.router, prefix="/api/share", tags=["Share"])
 app.include_router(weather.router, prefix="/api/weather", tags=["Weather"])
+# Members-only and switchable at runtime (admin setting), see floor_plans.require_floor_plans.
+app.include_router(floor_plans.router, prefix="/api/floor-plans", tags=["Floor plans"])
+app.include_router(settings_route.router, prefix="/api/settings", tags=["Settings"])
 # MCP for external AI clients, authorized through Pflanzn's own OAuth server. Both
 # answer 404 unless MCP_ENABLED (and AI_ENABLED); OAuth also needs AUTH_MODE != no.
 app.include_router(mcp.router, prefix="/api/mcp", tags=["MCP"])

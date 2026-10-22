@@ -19,6 +19,9 @@ import {
 } from "../services/PlantService";
 import { fetchTags, deleteTag } from "../services/TagService";
 import { fetchWeatherConfigs, WeatherConfig } from "../services/WeatherService";
+import { fetchFloorPlans } from "../services/FloorPlanService";
+import { FloorPlan } from "../types/FloorPlan";
+import { useShare } from "../context/ShareContext";
 import { Plant } from "../types/Plant";
 import { Tag } from "../types/Tag";
 import TimelineImages from "../components/TimelineImages";
@@ -38,6 +41,8 @@ import {
     faStickyNote,
     faSeedling,
     faPlus,
+    faMap,
+    faLocationDot,
 } from "@fortawesome/free-solid-svg-icons";
 import EditableDiv from "../components/EditableDiv";
 import "../styles/plantDetails.css";
@@ -61,7 +66,17 @@ type ActionLoadingState = {
 
 export default function PlantDetails() {
     const { isLoggedIn } = useAuth();
-    const { tz: timezone, locale, llmProvider, identificationEnabled } = useConfig();
+    const { tz: timezone, locale, llmProvider, identificationEnabled, floorPlansEnabled, authMode } = useConfig();
+    const { isShareAccess } = useShare();
+    const canSeePlans = floorPlansEnabled && !isShareAccess && (authMode === "no" || isLoggedIn);
+    const [floorPlans, setFloorPlans] = useState<FloorPlan[]>([]);
+
+    useEffect(() => {
+        if (!canSeePlans) return;
+        fetchFloorPlans()
+            .then(setFloorPlans)
+            .catch(() => setFloorPlans([]));
+    }, [canSeePlans]);
     const { plantId } = useParams();
     const navigate = useNavigate();
     const [plant, setPlant] = useState<Plant | null>(null);
@@ -839,6 +854,36 @@ export default function PlantDetails() {
                             loadActivities();
                         }}
                     />
+
+                    {!plant.is_archived && canSeePlans && floorPlans.length > 0 && (
+                        <div className="plant-outdoor-section">
+                            <h4>Floor Plan</h4>
+                            {(() => {
+                                const plan = floorPlans.find((p) =>
+                                    p.placements.some((pl) => pl.plant_id === plant.id),
+                                );
+                                const openPlan = (place: boolean) =>
+                                    navigate("/plants", {
+                                        state: { floorPlan: { plantId: plant.id, planId: plan?.id, place } },
+                                    });
+                                return (
+                                    <div className="plant-interval-row">
+                                        <span>{plan ? `On ${plan.name}` : "Not placed yet"}</span>
+                                        {plan && (
+                                            <button className="update-btn" onClick={() => openPlan(false)}>
+                                                <FontAwesomeIcon icon={faMap} /> Show
+                                            </button>
+                                        )}
+                                        {(authMode === "no" || isLoggedIn) && (
+                                            <button className="update-btn" onClick={() => openPlan(true)}>
+                                                <FontAwesomeIcon icon={faLocationDot} /> {plan ? "Move" : "Place"}
+                                            </button>
+                                        )}
+                                    </div>
+                                );
+                            })()}
+                        </div>
+                    )}
 
                     {!plant.is_archived && (
                         <div className="plant-outdoor-section">

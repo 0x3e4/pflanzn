@@ -19,6 +19,9 @@ export type PlantsFilterMode = "species" | "name";
 
 export type ListViewMode = "grid" | "list";
 
+// The Plants page additionally offers the floor-plan view.
+export type PlantsViewMode = ListViewMode | "plan";
+
 export type LocationSortOption = "updatedDesc" | "updatedAsc" | "createdDesc" | "createdAsc" | "nameAsc" | "nameDesc";
 
 export interface PlantsViewPreferences {
@@ -29,7 +32,9 @@ export interface PlantsViewPreferences {
     selectedFilterValue: string | null;
     // Combines (AND) with selectedTagId, e.g. #office + #needs_water.
     needsWaterOnly: boolean;
-    viewMode: ListViewMode;
+    viewMode: PlantsViewMode;
+    // Last floor plan shown in the plan view (validated against the loaded plans).
+    selectedFloorPlanId: number | null;
 }
 
 export interface LocationsViewPreferences {
@@ -75,6 +80,7 @@ const DEFAULT_VIEW_PREFERENCES: ViewPreferences = {
         selectedFilterValue: null,
         needsWaterOnly: false,
         viewMode: "grid",
+        selectedFloorPlanId: null,
     },
     locations: {
         selectedSpotType: "all",
@@ -106,7 +112,11 @@ const normalizePlants = (raw: Partial<PlantsViewPreferences> | null | undefined)
         filterMode: raw?.filterMode === "name" || raw?.filterMode === "species" ? raw.filterMode : d.filterMode,
         selectedFilterValue: typeof raw?.selectedFilterValue === "string" ? raw.selectedFilterValue : null,
         needsWaterOnly: raw?.needsWaterOnly === true,
-        viewMode: normalizeViewMode(raw?.viewMode, d.viewMode),
+        viewMode: raw?.viewMode === "plan" ? "plan" : normalizeViewMode(raw?.viewMode, "grid"),
+        selectedFloorPlanId:
+            typeof raw?.selectedFloorPlanId === "number" && Number.isInteger(raw.selectedFloorPlanId)
+                ? raw.selectedFloorPlanId
+                : null,
     };
 };
 
