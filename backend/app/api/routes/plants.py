@@ -53,7 +53,7 @@ from app.schemas import (
     WateringListPaginatedResponse,
 )
 from app.services.llm_client import LLMClient
-from app.services.plantnet import identify_species_via_plantnet
+from app.services.plantnet import PlantNetError, identify_species_via_plantnet
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -466,12 +466,13 @@ def identify_species(
 
             return {"identified_species": species_data}
 
-    except Exception as e:
-        logger.error(f"Error identifying plant: {str(e)}")
-        return {
-            "identified_species": [],
-            "message": f"{str(e)}"
-        }
+        return {"identified_species": [], "message": "No species found"}
+
+    except PlantNetError as e:
+        return {"identified_species": [], "message": str(e)}
+    except Exception:
+        logger.exception("Error identifying plant")
+        return {"identified_species": [], "message": "Identification failed."}
 
     finally:
         if os.path.exists(jpeg_path):

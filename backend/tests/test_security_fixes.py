@@ -64,3 +64,73 @@ class TestSubjectAmbiguity:
         response = client.put("/api/users/5", json={field: "admin@example.com"})
         assert response.status_code == 400
         mock_db.commit.assert_not_called()
+
+
+# ==============================================================================
+# The PlantNet API key (a query parameter) must never reach a response or a log
+# ==============================================================================
+
+class TestPlantNetKeyLeak:
+    KEY = "PLANTNET-SECRET-KEY"
+
+    @pytest.fixture
+    def image(self, tmp_path):
+        path = tmp_path / "x.jpg"
+        path.write_bytes(b"jpeg")
+        return str(path)
+
+    def _response(self, status):
+        import requests
+
+        req = requests.Request("POST", "https://my-api.plantnet.org/v2/identify/all",
+                               params={"api-key": self.KEY}).prepare()
+        response = requests.Response()
+        response.status_code, response.url, response.request = status, req.url, req
+        return response
+
+    @pytest.mark.parametrize("status", [400, 401, 429, 500])
+    def test_http_errors_are_sanitized(self, image, status, caplog):
+        from app.services.plantnet import PlantNetError, identify_species_via_plantnet
+
+        with patch("app.services.plantnet.settings.PLANTNET_API_KEY", self.KEY), \
+             patch("app.services.plantnet.requests.post", return_value=self._response(status)):
+            with pytest.raises(PlantNetError) as exc:
+                identify_species_via_plantnet(image, "image/jpeg", "x.jpg")
+        assert self.KEY not in str(exc.value)
+        # Nothing chained that could carry the keyed URL into a traceback.
+        assert exc.value.__context__ is None or exc.value.__suppress_context__
+        assert self.KEY not in caplog.text
+
+    def test_connection_errors_are_sanitized(self, image, caplog):
+        import requests
+
+        from app.services.plantnet import PlantNetError, identify_species_via_plantnet
+
+        boom = requests.ConnectionError(f"Max retries exceeded with url: /v2/identify/all?api-key={self.KEY}")
+        with patch("app.services.plantnet.requests.post", side_effect=boom):
+            with pytest.raises(PlantNetError) as exc:
+                identify_species_via_plantnet(image, "image/jpeg", "x.jpg")
+        assert self.KEY not in str(exc.value)
+        assert self.KEY not in caplog.text
+
+    def test_no_match_is_an_empty_result(self, image):
+        from app.services.plantnet import identify_species_via_plantnet
+
+        with patch("app.services.plantnet.requests.post", return_value=self._response(404)):
+            assert identify_species_via_plantnet(image, "image/jpeg", "x.jpg") == {"results": []}
+
+    def test_identify_route_never_echoes_exception_text(self, client, mock_db, tmp_path):
+        from app.core.config import settings
+        from app.models import Plant, PlantImage
+
+        plant = Plant(id=1, name="Fern")
+        plant.images = [PlantImage(id=1, plant_id=1, image_path="plants/x")]
+        mock_db.query.return_value.filter.return_value.first.return_value = plant
+        leaky = RuntimeError(f"for url: https://my-api.plantnet.org/?api-key={self.KEY}")
+        with patch("app.core.security.AUTH_MODE", "no"), patch.object(settings, "PLANTNET_API_KEY", self.KEY), \
+             patch("app.api.routes.plants._resolve_image_file", return_value="/tmp/x"), \
+             patch("app.api.routes.plants._to_jpeg_for_plantnet", return_value=str(tmp_path / "j.jpg")), \
+             patch("app.api.routes.plants.identify_species_via_plantnet", side_effect=leaky):
+            response = client.post("/api/plants/1/identify")
+        assert response.status_code == 200
+        assert self.KEY not in response.text
