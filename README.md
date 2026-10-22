@@ -253,8 +253,8 @@ location made private later may still show on a device that already loaded it.
 Set `MCP_ENABLED=true` and add `{DOMAIN}/api/mcp` as a custom connector in Claude
 (or any MCP client). Clients sign in through Pflanzn's built-in OAuth server with your
 normal login, or through an external OAuth/OIDC server when `MCP_OAUTH_ISSUER` is set
-(accounts are matched by email; `MCP_OAUTH_AUDIENCE` optionally restricts the token
-audience). To sign in to the built-in server with a different provider than the app —
+(accounts are matched by email; `MCP_OAUTH_AUDIENCE` must name the client the tokens
+are issued for). To sign in to the built-in server with a different provider than the app —
 any OIDC server or GitHub — set `MCP_LOGIN_PROVIDER`. The reverse proxy must forward `/.well-known/oauth-*` to the backend.
 Connected apps can be revoked under Manage → MCP.
 
