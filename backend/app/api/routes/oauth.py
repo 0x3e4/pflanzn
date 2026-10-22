@@ -131,6 +131,7 @@ async def register_client(request: Request, db: Session = Depends(get_db)):
     client_name = metadata.get("client_name")
     client_name = _CONTROL_CHARS.sub("", client_name).strip()[:255] if isinstance(client_name, str) else ""
 
+    mcp_oauth.prune_unused_clients(db)
     client_id = secrets.token_urlsafe(24)
     client_secret = None if auth_method == "none" else secrets.token_urlsafe(32)
     client = OAuthClient(

@@ -18,6 +18,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 from urllib.parse import urlencode, urlparse
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -36,8 +37,12 @@ REFRESH_TOKEN_TTL = timedelta(days=30)
 CODE_TTL_SECONDS = 300
 REQUEST_TTL_SECONDS = 600
 
-# Dynamic client registration is open (MCP clients self-register), so cap it per IP.
+# Dynamic client registration is open (MCP clients self-register), so cap it per IP
+# and in total — the total holds even if the client IP can't be trusted.
 REGISTRATION_LIMIT_PER_HOUR = 20
+REGISTRATION_GLOBAL_LIMIT_PER_HOUR = 200
+# Clients that never got a grant are abandoned registrations; prune them after this.
+UNUSED_CLIENT_TTL = timedelta(days=1)
 
 MAX_REDIRECT_URIS = 10
 MAX_REDIRECT_URI_LENGTH = 2000
@@ -247,9 +252,24 @@ def consume_authorization_code(code: str) -> Optional[dict]:
     return json.loads(raw) if raw else None
 
 
-def registration_allowed(ip: Optional[str]) -> bool:
-    key = f"oauth:register:{ip or 'unknown'}"
+def _within_hourly_limit(key: str, limit: int) -> bool:
     count = redis_client.incr(key)
     if count == 1:
         redis_client.expire(key, 3600)
-    return int(count) <= REGISTRATION_LIMIT_PER_HOUR
+    return int(count) <= limit
+
+
+def registration_allowed(ip: Optional[str]) -> bool:
+    return (
+        _within_hourly_limit(f"oauth:register:{ip or 'unknown'}", REGISTRATION_LIMIT_PER_HOUR)
+        and _within_hourly_limit("oauth:register:all", REGISTRATION_GLOBAL_LIMIT_PER_HOUR)
+    )
+
+
+def prune_unused_clients(db: Session) -> None:
+    """Deletes registrations older than UNUSED_CLIENT_TTL that never got a grant."""
+    used = select(OAuthGrant.client_id)
+    db.query(OAuthClient).filter(
+        OAuthClient.created_at < datetime.utcnow() - UNUSED_CLIENT_TTL,
+        ~OAuthClient.id.in_(used),
+    ).delete(synchronize_session=False)
