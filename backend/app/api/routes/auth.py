@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 from urllib.parse import urlparse
@@ -20,6 +21,7 @@ from app.core.security import (
     decode_token,
     hash_password,
     verify_password,
+    identifier_in_use,
 )
 from app.database import get_db
 from app.models import User
@@ -326,6 +328,10 @@ async def oidc_callback(request: Request, db: Session = Depends(get_db)):
             if not username:
                 username = email.split("@")[0]
             role = "admin" if db.query(User).count() == 0 else "user"
+            # The IdP controls preferred_username; never let it collide with an existing
+            # account's username or email (that would lock that account out).
+            if identifier_in_use(db, username):
+                username = f"{email.split('@')[0]}-{secrets.token_hex(3)}"
             user = User(username=username, email=email, role=role, auth_type="oidc")
             db.add(user)
             db.commit()

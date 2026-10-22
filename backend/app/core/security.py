@@ -124,6 +124,25 @@ def _get_share_token(request: Request) -> Optional[str]:
     )
 
 
+def find_user_by_subject(db: Session, identifier: str) -> Optional[User]:
+    """Token subjects are a username (local) or an email (OIDC). If one string matches
+    two accounts — e.g. someone renamed themselves to another user's email — refuse
+    rather than guess, so a rename can never resolve to someone else's account."""
+    matches = db.query(User).filter(
+        (User.username == identifier) | (User.email == identifier)
+    ).limit(2).all()
+    return matches[0] if len(matches) == 1 else None
+
+
+def identifier_in_use(db: Session, value: str, exclude_user_id: Optional[int] = None) -> bool:
+    """Whether `value` is already some other account's username or email. Usernames and
+    emails share one namespace because both act as token subjects."""
+    query = db.query(User.id).filter((User.username == value) | (User.email == value))
+    if exclude_user_id is not None:
+        query = query.filter(User.id != exclude_user_id)
+    return query.first() is not None
+
+
 def _authenticate_from_cookie(request: Request, db: Session) -> User:
     """Resolves the session cookie to a User, or raises 401."""
     token = request.cookies.get("access_token")
@@ -140,10 +159,7 @@ def _authenticate_from_cookie(request: Request, db: Session) -> User:
         # Validate session using Redis before returning the user
         validate_session(identifier, token, request)
 
-        # Try to find user by both username and email
-        user = db.query(User).filter(
-            (User.username == identifier) | (User.email == identifier)
-        ).first()
+        user = find_user_by_subject(db, identifier)
 
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
