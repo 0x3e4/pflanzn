@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useConfig } from "../context/ConfigContext";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { updateUser, updateUserPassword } from "../services/UserService";
 import StatisticsPanel from "../components/StatisticsPanel";
 import UsersPanel from "../components/UsersPanel";
@@ -17,6 +17,7 @@ import WateringsPanel from "../components/WateringsPanel";
 import WeatherPanel from "../components/WeatherPanel";
 import SupportPanel from "../components/SupportPanel";
 import McpPanel from "../components/McpPanel";
+import FloorPlansPanel from "../components/FloorPlansPanel";
 import "../styles/manage.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPenToSquare, faUnlock } from "@fortawesome/free-solid-svg-icons";
@@ -41,15 +42,24 @@ type ManageSection =
     | "weather"
     | "share"
     | "mcp"
+    | "floorplans"
     | "support";
+
+// Sections that may be opened directly via /manage?section=…
+const LINKABLE_SECTIONS: ManageSection[] = ["floorplans", "weather", "mcp", "customize"];
 
 const Manage: React.FC = () => {
     const { user, logout, fetchProfile, isLoggedIn } = useAuth();
     const navigate = useNavigate();
-    const { authMode, showProtectedView, mcpEnabled } = useConfig();
+    const { authMode, showProtectedView, mcpEnabled, floorPlansEnabled } = useConfig();
+    const [searchParams] = useSearchParams();
+    const showFloorPlans = authMode === "no" || user?.role === "admin" || (floorPlansEnabled && isLoggedIn);
     const showShare = (authMode === "oidc" || authMode === "local") && showProtectedView;
     const [loading, setLoading] = useState(true);
-    const [activeSection, setActiveSection] = useState<ManageSection>("statistics");
+    const [activeSection, setActiveSection] = useState<ManageSection>(() => {
+        const requested = searchParams.get("section") as ManageSection | null;
+        return requested && LINKABLE_SECTIONS.includes(requested) ? requested : "statistics";
+    });
     const [editedUser, setEditedUser] = useState<Partial<User>>({
         username: user?.username || "",
         email: user?.email || "",
@@ -297,6 +307,14 @@ const Manage: React.FC = () => {
                             Share
                         </li>
                     )}
+                    {showFloorPlans && (
+                        <li
+                            className={`sidebar-subsection ${activeSection === "floorplans" ? "active" : ""}`}
+                            onClick={() => setActiveSection("floorplans")}
+                        >
+                            Floor plans
+                        </li>
+                    )}
                     {mcpEnabled && (authMode === "no" || isLoggedIn) && (
                         <li
                             className={`sidebar-subsection ${activeSection === "mcp" ? "active" : ""}`}
@@ -413,6 +431,8 @@ const Manage: React.FC = () => {
                 {activeSection === "weather" && <WeatherPanel />}
 
                 {activeSection === "mcp" && mcpEnabled && <McpPanel />}
+
+                {activeSection === "floorplans" && showFloorPlans && <FloorPlansPanel />}
 
                 {activeSection === "support" && <SupportPanel />}
 

@@ -39,6 +39,10 @@ class Plant(Base):
     reaches_rain = Column(Boolean, default=False)
     weather_config_id = Column(Integer, ForeignKey("weather_configs.id", ondelete="SET NULL"), nullable=True)
     watering_interval_days = Column(Integer, nullable=True)
+    # Spot on a floor plan, as fractions (0..1) of the plan image's width/height.
+    floor_plan_id = Column(Integer, ForeignKey("floor_plans.id", ondelete="SET NULL"), nullable=True, index=True)
+    plan_x = Column(Float, nullable=True)
+    plan_y = Column(Float, nullable=True)
 
     tags = relationship("Tag", secondary=plant_tag_association, back_populates="plants")
     weather_config = relationship("WeatherConfig", foreign_keys=[weather_config_id])
@@ -297,3 +301,28 @@ class OAuthGrant(Base):
 
     client = relationship("OAuthClient")
     user = relationship("User")
+
+
+class FloorPlan(Base):
+    """An uploaded floor plan (apartment, house floor, balcony) that plants are placed on.
+    Members-only: plans show the inside of someone's home."""
+    __tablename__ = "floor_plans"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    address = Column(String(255), nullable=True)
+    image_path = Column(String(512), nullable=False)
+    width = Column(Integer, nullable=False)  # of the "original" variant, for the aspect ratio
+    height = Column(Integer, nullable=False)
+    sort_order = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class AppSetting(Base):
+    """Instance-wide settings changed from the UI (by admins). Values are JSON;
+    only keys listed in services/app_settings.py are ever read or written."""
+    __tablename__ = "app_settings"
+
+    key = Column(String(64), primary_key=True)
+    value = Column(Text, nullable=False)

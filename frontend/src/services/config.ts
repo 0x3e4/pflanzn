@@ -10,6 +10,7 @@ export interface AppConfig {
     mcpEnabled: boolean;
     mcpAuth: "builtin" | "external" | "none";
     mcpLogin: string;
+    floorPlansEnabled: boolean;
     domain: string;
     oidcName: string;
     adminUser: string | null;
@@ -33,6 +34,7 @@ const DEFAULT_CONFIG: AppConfig = {
     mcpEnabled: false,
     mcpAuth: "builtin",
     mcpLogin: "app",
+    floorPlansEnabled: false,
     domain: "",
     oidcName: "",
     adminUser: null,
@@ -57,6 +59,7 @@ export async function loadConfig(): Promise<AppConfig> {
         mcpEnabled: !!data.mcp_enabled,
         mcpAuth: data.mcp_auth || "builtin",
         mcpLogin: data.mcp_login || "app",
+        floorPlansEnabled: !!data.floor_plans_enabled,
         domain: data.domain || "",
         oidcName: data.oidc_name || "",
         adminUser: data.admin_user || null,

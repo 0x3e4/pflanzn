@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - MCP endpoint (`MCP_ENABLED`) with built-in OAuth or an external OAuth server (`MCP_OAUTH_ISSUER`).
 - Separate MCP sign-in via any OIDC provider or GitHub (`MCP_LOGIN_PROVIDER`).
+- Floor plans: upload plans of your home, place plants on them and see which need water
+  (third view on the Plants page). Admins switch it on under Manage → Floor plans; plans
+  and their addresses are visible to signed-in members only.
 - `AI_ENABLED` and `LLM_ENABLED` switches.
 - List view for the Plants and Locations pages (grid/list toggle, remembered per device),
   built for phones: compact rows with thumbnail and quick water/upload buttons.
@@ -37,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sort option. MCP `list_plants` gains a `needs_water` filter.
 
 ### Changed
+- Request bodies over `MAX_UPLOAD_MB` (default 30) are refused before they are parsed.
 - Identification buttons are hidden without a PlantNet key.
 - Login returns to the requested page (`?next=`).
 

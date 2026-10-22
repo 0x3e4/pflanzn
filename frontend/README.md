@@ -53,6 +53,7 @@ src/
 │   ├── LocationsPanel.tsx, PlantsPanel.tsx, UsersPanel.tsx, AuditPanel.tsx
 │   ├── TagsPanel.tsx, SharePanel.tsx, IdentificationsPanel.tsx, WateringsPanel.tsx
 │   ├── McpPanel.tsx
+│   ├── FloorPlanView.tsx, FloorPlansPanel.tsx
 │   ├── ErrorBoundary.tsx, OfflineBanner.tsx, LoadingOverlay.tsx
 │   └── ...
 ├── context/            # React Context providers
@@ -71,6 +72,7 @@ src/
 │   ├── StatisticService.ts
 │   ├── AuditService.ts
 │   ├── McpService.ts
+│   ├── FloorPlanService.ts
 │   ├── authRedirect.ts
 │   └── wateringSchedule.ts   # Due/overdue calculation for the per-plant watering interval
 ├── hooks/              # Custom React hooks

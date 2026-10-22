@@ -58,13 +58,15 @@ def serve_upload(
     if not contained:
         raise HTTPException(status_code=403, detail="Access denied")
 
-    # Location photos follow their location's visibility. Decide on the resolved path,
-    # so "plants/../locations/x.jpg" or "./locations//x.jpg" can't skip the check.
+    # Location photos follow their location's visibility; floor plans (the inside of
+    # someone's home) are members-only. Decide on the resolved path, so
+    # "plants/../locations/x.jpg" or "./floorplans//x" can't skip the check.
     if audience != AUDIENCE_MEMBER:
         relative_path = os.path.relpath(real_path, real_base).replace(os.sep, "/")
-        if relative_path.split("/")[0].lower() == "locations" and not _location_image_visible(
-            db, relative_path, audience
-        ):
+        top_folder = relative_path.split("/")[0].lower()
+        if top_folder == "floorplans":
+            raise HTTPException(status_code=404, detail="File not found")
+        if top_folder == "locations" and not _location_image_visible(db, relative_path, audience):
             raise HTTPException(status_code=404, detail="File not found")
 
     # Try new WebP variant format: {base}_{size}.webp

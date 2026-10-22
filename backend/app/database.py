@@ -162,6 +162,21 @@ def _ensure_plants_schema():
     plant_columns = {column["name"] for column in inspector.get_columns("plants")}
     if "watering_interval_days" not in plant_columns:
         _execute_ddl("ALTER TABLE plants ADD COLUMN watering_interval_days INT NULL")
+    if "floor_plan_id" not in plant_columns:
+        _execute_ddl("ALTER TABLE plants ADD COLUMN floor_plan_id INT NULL")
+        _execute_ddl("CREATE INDEX ix_plants_floor_plan_id ON plants (floor_plan_id)")
+        # floor_plans exists by now: create_all runs before the migrations
+        try:
+            _execute_ddl(
+                "ALTER TABLE plants ADD CONSTRAINT fk_plants_floor_plan "
+                "FOREIGN KEY (floor_plan_id) REFERENCES floor_plans(id) ON DELETE SET NULL"
+            )
+        except Exception:
+            pass  # FK may already exist
+    if "plan_x" not in plant_columns:
+        _execute_ddl("ALTER TABLE plants ADD COLUMN plan_x DOUBLE NULL")
+    if "plan_y" not in plant_columns:
+        _execute_ddl("ALTER TABLE plants ADD COLUMN plan_y DOUBLE NULL")
 
 
 def _ensure_users_schema():

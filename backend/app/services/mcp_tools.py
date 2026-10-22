@@ -235,7 +235,18 @@ def _last_dates(db: Session, column, plant_column) -> dict[int, datetime]:
     return dict(db.query(plant_column, func.max(column)).group_by(plant_column).all())
 
 
-def _plant_summary(plant: Plant, last_watered: dict, last_fertilized: dict) -> dict:
+def _floor_plan_names(db: Session) -> dict[int, str]:
+    """Plan names for `floor_plan` fields; empty while the feature is switched off."""
+    from app.models import FloorPlan
+    from app.services import app_settings
+
+    if not app_settings.floor_plans_enabled(db):
+        return {}
+    return dict(db.query(FloorPlan.id, FloorPlan.name).all())
+
+
+def _plant_summary(plant: Plant, last_watered: dict, last_fertilized: dict,
+                   plan_names: Optional[dict] = None) -> dict:
     watered = last_watered.get(plant.id)
     days_until_due, needs_water = _watering_due(plant.watering_interval_days, watered)
     return {
@@ -252,6 +263,7 @@ def _plant_summary(plant: Plant, last_watered: dict, last_fertilized: dict) -> d
         "days_until_watering_due": days_until_due,
         "needs_water": needs_water,
         "last_fertilized": _iso(last_fertilized.get(plant.id)),
+        **({"floor_plan": plan_names.get(plant.floor_plan_id)} if plan_names else {}),
     }
 
 
@@ -280,7 +292,8 @@ def list_plants(ctx: ToolContext, args: dict) -> dict:
     plants = q.order_by(Plant.name).all()
     last_watered = _last_dates(ctx.db, PlantWatering.watered_at, PlantWatering.plant_id)
     last_fertilized = _last_dates(ctx.db, PlantFertilizing.fertilized_at, PlantFertilizing.plant_id)
-    summaries = [_plant_summary(p, last_watered, last_fertilized) for p in plants]
+    plan_names = _floor_plan_names(ctx.db)
+    summaries = [_plant_summary(p, last_watered, last_fertilized, plan_names) for p in plants]
     if needs_water is not None:
         summaries = [p for p in summaries if p["needs_water"] == needs_water]
     return {
@@ -316,6 +329,7 @@ def get_plant(ctx: ToolContext, args: dict) -> dict:
         "archive_reason": plant.archive_reason,
         "outdoor": bool(plant.is_outdoor),
         "reaches_rain": bool(plant.reaches_rain),
+        "floor_plan": _floor_plan_names(db).get(plant.floor_plan_id),
         "watering_interval_days": plant.watering_interval_days,
         "weather_zone": plant.weather_config.city_name if plant.weather_config else None,
         "url": _plant_url(plant.id),

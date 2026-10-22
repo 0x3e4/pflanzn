@@ -246,6 +246,14 @@ def require_write_access(request: Request, db: Session = Depends(get_db)) -> Opt
     return _authenticate_from_cookie(request, db)
 
 
+def require_admin_write(user: Optional[User] = Depends(require_write_access)) -> Optional[User]:
+    """Admin-only state changes. Open in AUTH_MODE=no, where there are no roles (the
+    whole app is open by design there); share links are refused like any write."""
+    if AUTH_MODE != "no" and user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
+
 def get_current_admin_user(current_user: Optional[User] = Depends(get_current_user)) -> User:
     """Ensures the current user is an admin."""
     if current_user is None:
