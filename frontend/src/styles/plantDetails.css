@@ -725,6 +725,33 @@ h3 {
     margin-top: 4px;
 }
 
+.plant-interval-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+.plant-interval-row input {
+    width: 72px;
+    padding: 6px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--secondary-background-color);
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+.plant-interval-badge {
+    align-self: flex-start;
+}
+
+.plant-interval-hint {
+    color: var(--muted-text-color);
+    font-size: 0.8rem;
+}
+
 .plant-weather-zone label {
     display: block;
     font-size: 0.8rem;

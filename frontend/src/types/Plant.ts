@@ -18,6 +18,7 @@ export interface Plant {
     is_outdoor: boolean;
     reaches_rain: boolean;
     weather_config_id: number | null;
+    watering_interval_days: number | null;
 }
 
 export interface PlantImage {

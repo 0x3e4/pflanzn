@@ -8,6 +8,7 @@ import LocationDetails from "./pages/LocationDetails";
 import PlantDetails from "./pages/PlantDetails";
 import Login from "./pages/Login";
 import Manage from "./pages/Manage";
+import OAuthAuthorize from "./pages/OAuthAuthorize";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ScrollToTopButton from "./components/ScrollToTopButton";
@@ -34,7 +35,9 @@ function AppLayout() {
     const ref = useRef<HTMLDivElement>(null);
     const isAuthEnabled = authMode === "oidc" || authMode === "local";
     const isManageRoute = location.pathname.startsWith("/manage");
-    const protectCurrentRoute = (showProtectedView || isManageRoute) && location.pathname !== "/login";
+    // The MCP consent page handles a missing login itself (it offers the sign-in).
+    const isSelfGuardedRoute = location.pathname === "/login" || location.pathname === "/oauth/authorize";
+    const protectCurrentRoute = (showProtectedView || isManageRoute) && !isSelfGuardedRoute;
     const shouldShowProtectedSplash =
         isAuthEnabled && protectCurrentRoute && !isShareAccess && (loading || shareLoading || !isLoggedIn);
 
@@ -128,6 +131,9 @@ function AppLayout() {
                                 }
                             />
                             {authMode !== "no" && <Route path="/login" element={<Login />} />}
+                            {config.mcpEnabled && config.mcpAuth === "builtin" && (
+                                <Route path="/oauth/authorize" element={<OAuthAuthorize />} />
+                            )}
                             <Route
                                 path="/manage"
                                 element={

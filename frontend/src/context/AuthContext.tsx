@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from "
 import apiClient from "../services/apiClient";
 import { useConfig } from "./ConfigContext";
 import { syncUiPreferencesFromBackend } from "../config/uiPreferences";
+import { currentPath, oidcLoginUrl } from "../services/authRedirect";
 
 type User = {
     id: number;
@@ -26,7 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
 
-    const { authMode, showProtectedView } = useConfig();
+    const { authMode, showProtectedView, mcpLogin } = useConfig();
     const isAuthDisabled = authMode === "no";
 
     useEffect(() => {
@@ -44,8 +45,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     const hasShareToken =
                         new URLSearchParams(window.location.search).has("share") ||
                         !!sessionStorage.getItem("share_token");
-                    if (authMode === "oidc" && showProtectedView && !hasShareToken) {
-                        window.location.href = "/api/auth/oidc-login";
+                    // The consent page signs in itself when MCP has its own login provider.
+                    const isOAuthConsent =
+                        window.location.pathname.startsWith("/oauth/authorize") && mcpLogin === "app";
+                    const skipAutoLogin = window.location.pathname.startsWith("/oauth/authorize") && mcpLogin !== "app";
+                    if (
+                        authMode === "oidc" &&
+                        (showProtectedView || isOAuthConsent) &&
+                        !hasShareToken &&
+                        !skipAutoLogin
+                    ) {
+                        // Come back to the page that needed the login (e.g. the MCP consent page).
+                        const path = window.location.pathname === "/" ? null : currentPath();
+                        window.location.href = oidcLoginUrl(path);
                     }
                 }
             } else {

@@ -6,7 +6,21 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from app.api.routes import audit, auth, config as config_route, locations, plants, share, statistics, tags, uploads, users, weather
+from app.api.routes import (
+    audit,
+    auth,
+    locations,
+    mcp,
+    oauth,
+    plants,
+    share,
+    statistics,
+    tags,
+    uploads,
+    users,
+    weather,
+)
+from app.api.routes import config as config_route
 from app.core.config import APP_VERSION, settings
 from app.core.security import create_admin_user, require_read_access
 from app.database import SessionLocal, init_db
@@ -73,6 +87,11 @@ if settings.ENABLE_LOCATIONS:
     app.include_router(locations.router, prefix="/api/locations", tags=["Locations"], dependencies=collection_read_gate)
 app.include_router(share.router, prefix="/api/share", tags=["Share"])
 app.include_router(weather.router, prefix="/api/weather", tags=["Weather"])
+# MCP for external AI clients, authorized through Pflanzn's own OAuth server. Both
+# answer 404 unless MCP_ENABLED (and AI_ENABLED); OAuth also needs AUTH_MODE != no.
+app.include_router(mcp.router, prefix="/api/mcp", tags=["MCP"])
+app.include_router(oauth.router, prefix="/api/oauth", tags=["OAuth"])
+app.include_router(oauth.well_known_router, tags=["OAuth"])
 
 @app.get("/")
 def root():

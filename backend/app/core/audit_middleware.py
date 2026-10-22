@@ -30,10 +30,14 @@ _SEMANTIC_SKIP = [
 ]
 
 # Never audit: reads of the audit log itself, token-refresh noise, API docs.
+# MCP and OAuth POST on every call (reads included); their handlers record semantic
+# rows (mcp.<tool>, oauth.authorize, oauth.revoke) for the actions that matter.
 _NEVER = [
     re.compile(r"^/api/audit"),
     re.compile(r"^/api/auth/refresh/?$"),
     re.compile(r"^/api/docs"),
+    re.compile(r"^/api/mcp"),
+    re.compile(r"^/api/oauth"),
 ]
 
 

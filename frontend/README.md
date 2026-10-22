@@ -41,6 +41,7 @@ src/
 │   ├── Locations.tsx
 │   ├── LocationDetails.tsx
 │   ├── Login.tsx
+│   ├── OAuthAuthorize.tsx    # MCP consent page
 │   ├── Manage.tsx
 │   └── About.tsx
 ├── components/         # Reusable UI components
@@ -51,6 +52,7 @@ src/
 │   ├── WeatherPanel.tsx, StatisticsPanel.tsx
 │   ├── LocationsPanel.tsx, PlantsPanel.tsx, UsersPanel.tsx, AuditPanel.tsx
 │   ├── TagsPanel.tsx, SharePanel.tsx, IdentificationsPanel.tsx, WateringsPanel.tsx
+│   ├── McpPanel.tsx
 │   ├── ErrorBoundary.tsx, OfflineBanner.tsx, LoadingOverlay.tsx
 │   └── ...
 ├── context/            # React Context providers
@@ -67,7 +69,10 @@ src/
 │   ├── TagService.ts
 │   ├── ShareService.ts
 │   ├── StatisticService.ts
-│   └── AuditService.ts
+│   ├── AuditService.ts
+│   ├── McpService.ts
+│   ├── authRedirect.ts
+│   └── wateringSchedule.ts   # Due/overdue calculation for the per-plant watering interval
 ├── hooks/              # Custom React hooks
 │   ├── useModalA11y.ts       # Modal keyboard accessibility
 │   ├── useOnlineStatus.ts    # Online/offline detection
@@ -88,5 +93,5 @@ src/
 - State management via React Context API (no Redux)
 - CSS variables for theming (dark/light mode), 768px responsive breakpoint
 - All modals use `useModalA11y` hook for keyboard accessibility
-- Two tiers of preferences: `uiPreferences.ts` for account settings that sync to the backend, `viewPreferences.ts` for per-device list state (selected tag, sort order, filter mode) that persists to localStorage only. Both normalise unknown/stale stored values back to defaults on read
-- Configuration is fetched from the backend at startup via `GET /api/config` and read through `useConfig()` (`AUTH_MODE`, `ENABLE_LOCATIONS`, `SHOW_PROTECTED_VIEW`, `DOMAIN`, …); `import.meta.env` is not used. Legacy `VITE_*` env names still resolve as backend fallbacks but are deprecated.
+- Two tiers of preferences: `uiPreferences.ts` for account settings that sync to the backend, `viewPreferences.ts` for per-device list state (selected tag, `#needs_water` toggle, sort order, filter mode, grid/list view mode) that persists to localStorage only. Both normalise unknown/stale stored values back to defaults on read
+- Configuration is fetched from the backend at startup via `GET /api/config` and read through `useConfig()` (`AUTH_MODE`, `ENABLE_LOCATIONS`, `SHOW_PROTECTED_VIEW`, `DOMAIN`, `mcpEnabled`, …); `import.meta.env` is not used. Legacy `VITE_*` env names still resolve as backend fallbacks but are deprecated.

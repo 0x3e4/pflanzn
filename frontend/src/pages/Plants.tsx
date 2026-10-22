@@ -33,6 +33,8 @@ import {
     faCompress,
     faArrowDownWideShort,
     faArrowUpShortWide,
+    faGrip,
+    faList,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../context/AuthContext";
 import { useConfig } from "../context/ConfigContext";
@@ -40,13 +42,21 @@ import { setOverlayOpen } from "../services/overlayControl";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { getUiPreferences } from "../config/uiPreferences";
-import { getViewPreferences, updatePlantsViewPreferences } from "../config/viewPreferences";
+import { getViewPreferences, ListViewMode, updatePlantsViewPreferences } from "../config/viewPreferences";
+import {
+    formatLastWateredShort,
+    formatWateringDue,
+    getWateringStatus,
+    wateringBadgeVariant,
+} from "../services/wateringSchedule";
+import "../styles/listView.css";
 
 export default function Plants() {
     const [plants, setPlants] = useState<Plant[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [newPlant, setNewPlant] = useState({ name: "", species: "" });
+    const [newPlantInterval, setNewPlantInterval] = useState("");
     const [file, setFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [modalOpen, setModalOpen] = useState(false);
@@ -57,6 +67,8 @@ export default function Plants() {
     const [selectedPlantToUnarchive, setSelectedPlantToUnarchive] = useState<number | null>(null);
     const [isStretched, setIsStretched] = useState(() => getUiPreferences().defaultWidescreen);
     const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
+    const [needsWaterOnly, setNeedsWaterOnly] = useState<boolean>(() => getViewPreferences().plants.needsWaterOnly);
+    const [viewMode, setViewMode] = useState<ListViewMode>(() => getViewPreferences().plants.viewMode);
 
     type FilterMode = "species" | "name";
 
@@ -71,7 +83,9 @@ export default function Plants() {
         | "idDesc"
         | "idAsc"
         | "lastImageUploadedDesc"
-        | "lastImageUploadedAsc";
+        | "lastImageUploadedAsc"
+        | "nextWateringAsc"
+        | "nextWateringDesc";
 
     const [sortBy, setSortBy] = useState<SortOption>(() => getViewPreferences().plants.sortBy);
 
@@ -90,12 +104,10 @@ export default function Plants() {
     } | null>(null);
 
     const { isLoggedIn } = useAuth();
-    const { tz: timezone, locale } = useConfig();
+    const { tz: timezone, locale, identificationEnabled } = useConfig();
 
     const [selectedDateTime, setSelectedDateTime] = useState<string>(
-        DateTime.now()
-            .setZone(timezone)
-            .toISO({ includeOffset: false }) ?? "",
+        DateTime.now().setZone(timezone).toISO({ includeOffset: false }) ?? "",
     );
 
     const [searchTerm, setSearchTerm] = useState<string>("");
@@ -158,6 +170,14 @@ export default function Plants() {
         updatePlantsViewPreferences({ selectedFilterValue });
     }, [selectedFilterValue]);
 
+    useEffect(() => {
+        updatePlantsViewPreferences({ needsWaterOnly });
+    }, [needsWaterOnly]);
+
+    useEffect(() => {
+        updatePlantsViewPreferences({ viewMode });
+    }, [viewMode]);
+
     const handleImageLoad = (plantId: number) => {
         setLoadedImages((prev) => new Set(prev).add(plantId));
     };
@@ -195,6 +215,7 @@ export default function Plants() {
 
     const resetModal = () => {
         setNewPlant({ name: "", species: "" });
+        setNewPlantInterval("");
         setFile(null);
         setModalIdentifyResults(null);
         setModalOpen(false);
@@ -213,7 +234,13 @@ export default function Plants() {
         }
 
         try {
-            const createdPlant = await createPlant(newPlant.name, newPlant.species);
+            const interval = parseInt(newPlantInterval, 10);
+            const createdPlant = await createPlant(
+                newPlant.name,
+                newPlant.species,
+                undefined,
+                interval >= 1 && interval <= 365 ? interval : null,
+            );
             toast.success("Plant created!");
 
             if (file) {
@@ -392,6 +419,20 @@ export default function Plants() {
 
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
+    const wateringStatuses = new Map(plants.map((p) => [p.id, getWateringStatus(p, timezone)]));
+    const plantsNeedingWater = plants.filter((p) => !p.is_archived && wateringStatuses.get(p.id)?.needsWater).length;
+    const hasWateringSchedules = plants.some((p) => !p.is_archived && p.watering_interval_days);
+
+    // Plants without a schedule sort last in both directions.
+    const compareDue = (a: Plant, b: Plant, dir: 1 | -1) => {
+        const da = wateringStatuses.get(a.id)?.daysUntilDue;
+        const db = wateringStatuses.get(b.id)?.daysUntilDue;
+        if (da === undefined && db === undefined) return 0;
+        if (da === undefined) return 1;
+        if (db === undefined) return -1;
+        return (da - db) * dir;
+    };
+
     const filteredPlants = plants
         .filter((p) => {
             const matchesTag =
@@ -411,7 +452,11 @@ export default function Plants() {
                 p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 p.species?.toLowerCase().includes(searchTerm.toLowerCase());
 
-            return matchesTag && matchesFilterValue && matchesSearch;
+            // #needs_water is an automatic tag that combines with the selected one.
+            const matchesNeedsWater =
+                !needsWaterOnly || selectedTagId === -1 || Boolean(wateringStatuses.get(p.id)?.needsWater);
+
+            return matchesTag && matchesFilterValue && matchesSearch && matchesNeedsWater;
         })
         .sort((a, b) => {
             switch (sortBy) {
@@ -442,6 +487,10 @@ export default function Plants() {
                             ).uploaded_at,
                         ).getTime()
                     );
+                case "nextWateringAsc":
+                    return compareDue(a, b, 1);
+                case "nextWateringDesc":
+                    return compareDue(a, b, -1);
                 case "lastImageUploadedAsc":
                     return (
                         new Date(
@@ -487,18 +536,42 @@ export default function Plants() {
                 >
                     <FontAwesomeIcon icon={isStretched ? faCompress : faExpand} />
                 </button>
-                {isLoggedIn ? (
-                    <button className="add-plant-btn" onClick={() => setModalOpen(true)}>
-                        <FontAwesomeIcon icon={faPlus} />
-                    </button>
-                ) : (
-                    <button
-                        className="add-plant-btn"
-                        onClick={() => toast.warning("You must be logged in to add plants.")}
-                    >
-                        <FontAwesomeIcon icon={faPlus} />
-                    </button>
-                )}
+                <div className="list-view-header-actions">
+                    <div className="view-mode-toggle" role="group" aria-label="View mode">
+                        <button
+                            type="button"
+                            className={viewMode === "grid" ? "active" : ""}
+                            onClick={() => setViewMode("grid")}
+                            title="Grid view"
+                            aria-label="Grid view"
+                            aria-pressed={viewMode === "grid"}
+                        >
+                            <FontAwesomeIcon icon={faGrip} />
+                        </button>
+                        <button
+                            type="button"
+                            className={viewMode === "list" ? "active" : ""}
+                            onClick={() => setViewMode("list")}
+                            title="List view"
+                            aria-label="List view"
+                            aria-pressed={viewMode === "list"}
+                        >
+                            <FontAwesomeIcon icon={faList} />
+                        </button>
+                    </div>
+                    {isLoggedIn ? (
+                        <button className="add-plant-btn" onClick={() => setModalOpen(true)}>
+                            <FontAwesomeIcon icon={faPlus} />
+                        </button>
+                    ) : (
+                        <button
+                            className="add-plant-btn"
+                            onClick={() => toast.warning("You must be logged in to add plants.")}
+                        >
+                            <FontAwesomeIcon icon={faPlus} />
+                        </button>
+                    )}
+                </div>
             </div>
 
             <div className="plant-filter-sort-bar">
@@ -530,6 +603,23 @@ export default function Plants() {
                                     onClick={() => setSelectedTagId(-2)}
                                 >
                                     #untagged
+                                </span>
+                            )}
+                            {(hasWateringSchedules || needsWaterOnly) && (
+                                <span
+                                    className={`hashtag hashtag-needs-water ${needsWaterOnly && selectedTagId !== -1 ? "active" : ""}`}
+                                    onClick={() => {
+                                        if (selectedTagId === -1) {
+                                            setSelectedTagId(null);
+                                            setNeedsWaterOnly(true);
+                                        } else {
+                                            setNeedsWaterOnly(!needsWaterOnly);
+                                        }
+                                    }}
+                                    title="Plants whose watering schedule is due — combine with another tag"
+                                >
+                                    #needs_water
+                                    <span className="hashtag-count">{plantsNeedingWater}</span>
                                 </span>
                             )}
                             <span
@@ -614,10 +704,14 @@ export default function Plants() {
                     <select
                         id="sort-select"
                         value={sortField}
-                        onChange={(e) => setSortBy(composeSort(e.target.value, sortDir))}
+                        onChange={(e) =>
+                            // "Due" reads naturally soonest-first, so start it ascending.
+                            setSortBy(composeSort(e.target.value, e.target.value === "nextWatering" ? "asc" : sortDir))
+                        }
                     >
                         <option value="id">Added</option>
                         <option value="lastWatered">Watered</option>
+                        <option value="nextWatering">Due</option>
                         <option value="lastImageUploaded">Photo</option>
                     </select>
                     <button
@@ -625,67 +719,37 @@ export default function Plants() {
                         className="sort-direction-toggle"
                         onClick={() => setSortBy(composeSort(sortField, sortDir === "desc" ? "asc" : "desc"))}
                         title={sortDir === "desc" ? "Newest first" : "Oldest first"}
-                        aria-label={sortDir === "desc" ? "Sort descending, newest first" : "Sort ascending, oldest first"}
+                        aria-label={
+                            sortDir === "desc" ? "Sort descending, newest first" : "Sort ascending, oldest first"
+                        }
                     >
                         <FontAwesomeIcon icon={sortDir === "desc" ? faArrowDownWideShort : faArrowUpShortWide} />
                     </button>
                 </div>
             </div>
 
-            <div className="plants-list">
-                {loading
-                    ? [...Array(8)].map((_, index) => (
-                          <div key={`plant-card-skeleton-${index}`} className="plant-card">
-                              <div className="plant-image-container all-plants">
-                                  <Skeleton height="100%" width="100%" className="plant-image-skeleton" />
+            {viewMode === "list" ? (
+                <div className="list-view">
+                    {loading
+                        ? [...Array(8)].map((_, index) => (
+                              <div key={`plant-row-skeleton-${index}`} className="list-row">
+                                  <Skeleton width={56} height={56} borderRadius={10} />
+                                  <div className="list-row-main">
+                                      <Skeleton width="60%" />
+                                      <Skeleton width="40%" />
+                                  </div>
                               </div>
-                              <div className="plant-card-text">
-                                  <h3>
-                                      <Skeleton width="70%" />
-                                  </h3>
-                                  <small>
-                                      <Skeleton width={40} />
-                                  </small>
-                                  <p>
-                                      <Skeleton width="80%" />
-                                  </p>
-                                  <p>
-                                      <Skeleton width="90%" />
-                                  </p>
-                              </div>
-                          </div>
-                      ))
-                    : filteredPlants.map((plant) => {
-                          const sortedImages = [...(plant.images || [])].sort(
-                              (a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime(),
-                          );
-                          const latestImage = sortedImages[0] || null;
-                          const imageLoaded = loadedImages.has(plant.id);
-
-                          const lastWateredText = plant.last_watered
-                              ? new Date(plant.last_watered).toLocaleString(locale, {
-                                    timeZone: timezone,
-                                    weekday: "long",
-                                    year: "numeric",
-                                    month: "long",
-                                    day: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                })
-                              : "Not watered yet";
-                          return (
-                              <div key={plant.id} className={`plant-card ${plant.is_archived ? "archived" : ""}`}>
-                                  <Link to={`/plant/${plant.id}`}>
-                                      <div className="plant-image-container all-plants">
-                                          {!imageLoaded && (
-                                              <Skeleton
-                                                  height="100%"
-                                                  width="100%"
-                                                  baseColor="#444"
-                                                  highlightColor="#666"
-                                                  className="plant-image-skeleton"
-                                              />
-                                          )}
+                          ))
+                        : filteredPlants.map((plant) => {
+                              const latestImage = [...(plant.images || [])].sort(
+                                  (a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime(),
+                              )[0];
+                              const status = plant.is_archived ? null : wateringStatuses.get(plant.id);
+                              const requireLogin = (action: string) =>
+                                  toast.warning(`You must be logged in to ${action}.`);
+                              return (
+                                  <div key={plant.id} className={`list-row${plant.is_archived ? " archived" : ""}`}>
+                                      <Link to={`/plant/${plant.id}`} className="list-row-link">
                                           <img
                                               src={
                                                   latestImage
@@ -693,86 +757,37 @@ export default function Plants() {
                                                       : "/placeholder-plant.webp"
                                               }
                                               alt={plant.name}
-                                              className="plant-image"
+                                              className="list-row-thumb"
                                               loading="lazy"
-                                              style={{ visibility: imageLoaded ? "visible" : "hidden", opacity: imageLoaded ? 1 : 0 }}
-                                              onLoad={() => handleImageLoad(plant.id)}
-                                              onError={() => handleImageError(plant.id)}
                                           />
-                                      </div>
-                                      <div className="plant-card-text">
-                                          <h3>{plant.name || "Unknown"}</h3>
-                                          <small>#{plant.id}</small>
-                                          <p>
-                                              <strong>Species:</strong> {plant.species || "Unknown"}
-                                          </p>
-                                          <p>
-                                              <strong>Last Watered:</strong> {lastWateredText}
-                                          </p>
-                                      </div>
-                                  </Link>
-                                  {!plant.is_archived ? (
-                                      <div className="plant-buttons">
-                                          {isLoggedIn ? (
-                                              <>
-                                                  <button
-                                                      className="water-plant-btn"
-                                                      onClick={() => handleWaterPlant(plant.id)}
-                                                  >
+                                          <div className="list-row-main">
+                                              <p className="list-row-title">
+                                                  {plant.name || "Unknown"}
+                                                  <small>#{plant.id}</small>
+                                              </p>
+                                              {plant.species && <p className="list-row-subtitle">{plant.species}</p>}
+                                              <div className="list-row-meta">
+                                                  <span>
                                                       <FontAwesomeIcon icon={faDroplet} />
-                                                  </button>
-                                                  <input
-                                                      type="file"
-                                                      id={`file-upload-${plant.id}`}
-                                                      className="file-input"
-                                                      onChange={(e) => handleUploadImageForPlant(plant.id, e)}
-                                                  />
-                                                  <button
-                                                      className="file-input-plant-btn"
-                                                      onClick={() =>
-                                                          document.getElementById(`file-upload-${plant.id}`)?.click()
-                                                      }
-                                                  >
-                                                      <FontAwesomeIcon icon={faUpload} />
-                                                  </button>
-                                                  <button onClick={() => handleIdentifyExistingPlant(plant.id)}>
-                                                      <FontAwesomeIcon icon={faFingerprint} />
-                                                  </button>
-                                              </>
-                                          ) : (
-                                              <>
-                                                  <button
-                                                      className="water-plant-btn"
-                                                      onClick={() =>
-                                                          toast.warning("You must be logged in to water plants.")
-                                                      }
-                                                  >
-                                                      <FontAwesomeIcon icon={faDroplet} />
-                                                  </button>
-                                                  <button
-                                                      className="file-input-plant-btn"
-                                                      onClick={() =>
-                                                          toast.warning("You must be logged in to upload images.")
-                                                      }
-                                                  >
-                                                      <FontAwesomeIcon icon={faUpload} />
-                                                  </button>
-                                                  <button
-                                                      onClick={() =>
-                                                          toast.warning("You must be logged in to identify plants.")
-                                                      }
-                                                  >
-                                                      <FontAwesomeIcon icon={faFingerprint} />
-                                                  </button>
-                                              </>
-                                          )}
-                                      </div>
-                                  ) : (
-                                      <div className="plant-buttons">
-                                          {isLoggedIn ? (
+                                                      {formatLastWateredShort(plant.last_watered, timezone)}
+                                                  </span>
+                                                  {status && (
+                                                      <span
+                                                          className={`watering-badge watering-badge--${wateringBadgeVariant(status)}`}
+                                                      >
+                                                          {formatWateringDue(status)}
+                                                      </span>
+                                                  )}
+                                              </div>
+                                          </div>
+                                      </Link>
+                                      <div className="list-row-actions">
+                                          {plant.is_archived ? (
                                               <button
-                                                  className="archive-plant-btn"
+                                                  className="list-row-btn list-row-btn--restore"
+                                                  aria-label={`Restore ${plant.name}`}
                                                   onClick={() => {
+                                                      if (!isLoggedIn) return requireLogin("restore plants");
                                                       setSelectedPlantToUnarchive(plant.id);
                                                       setArchiveModalOpen(true);
                                                   }}
@@ -780,21 +795,235 @@ export default function Plants() {
                                                   <FontAwesomeIcon icon={faTrashCanArrowUp} />
                                               </button>
                                           ) : (
-                                              <button
-                                                  className="archive-plant-btn"
-                                                  onClick={() =>
-                                                      toast.warning("You must be logged in to restore plants.")
-                                                  }
-                                              >
-                                                  <FontAwesomeIcon icon={faTrashCanArrowUp} />
-                                              </button>
+                                              <>
+                                                  {isLoggedIn ? (
+                                                      <label
+                                                          className="list-row-btn list-row-btn--upload"
+                                                          aria-label={`Upload image for ${plant.name}`}
+                                                      >
+                                                          <FontAwesomeIcon icon={faUpload} />
+                                                          <input
+                                                              type="file"
+                                                              accept="image/*"
+                                                              onChange={(e) => {
+                                                                  handleUploadImageForPlant(plant.id, e);
+                                                                  e.currentTarget.value = "";
+                                                              }}
+                                                          />
+                                                      </label>
+                                                  ) : (
+                                                      <button
+                                                          className="list-row-btn list-row-btn--upload"
+                                                          aria-label={`Upload image for ${plant.name}`}
+                                                          onClick={() => requireLogin("upload images")}
+                                                      >
+                                                          <FontAwesomeIcon icon={faUpload} />
+                                                      </button>
+                                                  )}
+                                                  <button
+                                                      className="list-row-btn list-row-btn--water"
+                                                      aria-label={`Water ${plant.name}`}
+                                                      onClick={() =>
+                                                          isLoggedIn
+                                                              ? handleWaterPlant(plant.id)
+                                                              : requireLogin("water plants")
+                                                      }
+                                                  >
+                                                      <FontAwesomeIcon icon={faDroplet} />
+                                                  </button>
+                                              </>
                                           )}
                                       </div>
-                                  )}
+                                  </div>
+                              );
+                          })}
+                </div>
+            ) : (
+                <div className="plants-list">
+                    {loading
+                        ? [...Array(8)].map((_, index) => (
+                              <div key={`plant-card-skeleton-${index}`} className="plant-card">
+                                  <div className="plant-image-container all-plants">
+                                      <Skeleton height="100%" width="100%" className="plant-image-skeleton" />
+                                  </div>
+                                  <div className="plant-card-text">
+                                      <h3>
+                                          <Skeleton width="70%" />
+                                      </h3>
+                                      <small>
+                                          <Skeleton width={40} />
+                                      </small>
+                                      <p>
+                                          <Skeleton width="80%" />
+                                      </p>
+                                      <p>
+                                          <Skeleton width="90%" />
+                                      </p>
+                                  </div>
                               </div>
-                          );
-                      })}
-            </div>
+                          ))
+                        : filteredPlants.map((plant) => {
+                              const sortedImages = [...(plant.images || [])].sort(
+                                  (a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime(),
+                              );
+                              const latestImage = sortedImages[0] || null;
+                              const imageLoaded = loadedImages.has(plant.id);
+
+                              const lastWateredText = plant.last_watered
+                                  ? new Date(plant.last_watered).toLocaleString(locale, {
+                                        timeZone: timezone,
+                                        weekday: "long",
+                                        year: "numeric",
+                                        month: "long",
+                                        day: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                    })
+                                  : "Not watered yet";
+                              const status = plant.is_archived ? null : wateringStatuses.get(plant.id);
+                              return (
+                                  <div key={plant.id} className={`plant-card ${plant.is_archived ? "archived" : ""}`}>
+                                      <Link to={`/plant/${plant.id}`}>
+                                          <div className="plant-image-container all-plants">
+                                              {!imageLoaded && (
+                                                  <Skeleton
+                                                      height="100%"
+                                                      width="100%"
+                                                      baseColor="#444"
+                                                      highlightColor="#666"
+                                                      className="plant-image-skeleton"
+                                                  />
+                                              )}
+                                              <img
+                                                  src={
+                                                      latestImage
+                                                          ? `/api/uploads/${latestImage.image_path}?size=thumb`
+                                                          : "/placeholder-plant.webp"
+                                                  }
+                                                  alt={plant.name}
+                                                  className="plant-image"
+                                                  loading="lazy"
+                                                  style={{
+                                                      visibility: imageLoaded ? "visible" : "hidden",
+                                                      opacity: imageLoaded ? 1 : 0,
+                                                  }}
+                                                  onLoad={() => handleImageLoad(plant.id)}
+                                                  onError={() => handleImageError(plant.id)}
+                                              />
+                                          </div>
+                                          <div className="plant-card-text">
+                                              <h3>{plant.name || "Unknown"}</h3>
+                                              <small>#{plant.id}</small>
+                                              <p>
+                                                  <strong>Species:</strong> {plant.species || "Unknown"}
+                                              </p>
+                                              <p>
+                                                  <strong>Last Watered:</strong> {lastWateredText}
+                                              </p>
+                                              {status && (
+                                                  <p>
+                                                      <span
+                                                          className={`watering-badge watering-badge--${wateringBadgeVariant(status)}`}
+                                                      >
+                                                          {formatWateringDue(status)}
+                                                      </span>
+                                                  </p>
+                                              )}
+                                          </div>
+                                      </Link>
+                                      {!plant.is_archived ? (
+                                          <div className="plant-buttons">
+                                              {isLoggedIn ? (
+                                                  <>
+                                                      <button
+                                                          className="water-plant-btn"
+                                                          onClick={() => handleWaterPlant(plant.id)}
+                                                      >
+                                                          <FontAwesomeIcon icon={faDroplet} />
+                                                      </button>
+                                                      <input
+                                                          type="file"
+                                                          id={`file-upload-${plant.id}`}
+                                                          className="file-input"
+                                                          onChange={(e) => handleUploadImageForPlant(plant.id, e)}
+                                                      />
+                                                      <button
+                                                          className="file-input-plant-btn"
+                                                          onClick={() =>
+                                                              document
+                                                                  .getElementById(`file-upload-${plant.id}`)
+                                                                  ?.click()
+                                                          }
+                                                      >
+                                                          <FontAwesomeIcon icon={faUpload} />
+                                                      </button>
+                                                      {identificationEnabled && (
+                                                          <button onClick={() => handleIdentifyExistingPlant(plant.id)}>
+                                                              <FontAwesomeIcon icon={faFingerprint} />
+                                                          </button>
+                                                      )}
+                                                  </>
+                                              ) : (
+                                                  <>
+                                                      <button
+                                                          className="water-plant-btn"
+                                                          onClick={() =>
+                                                              toast.warning("You must be logged in to water plants.")
+                                                          }
+                                                      >
+                                                          <FontAwesomeIcon icon={faDroplet} />
+                                                      </button>
+                                                      <button
+                                                          className="file-input-plant-btn"
+                                                          onClick={() =>
+                                                              toast.warning("You must be logged in to upload images.")
+                                                          }
+                                                      >
+                                                          <FontAwesomeIcon icon={faUpload} />
+                                                      </button>
+                                                      {identificationEnabled && (
+                                                          <button
+                                                              onClick={() =>
+                                                                  toast.warning(
+                                                                      "You must be logged in to identify plants.",
+                                                                  )
+                                                              }
+                                                          >
+                                                              <FontAwesomeIcon icon={faFingerprint} />
+                                                          </button>
+                                                      )}
+                                                  </>
+                                              )}
+                                          </div>
+                                      ) : (
+                                          <div className="plant-buttons">
+                                              {isLoggedIn ? (
+                                                  <button
+                                                      className="archive-plant-btn"
+                                                      onClick={() => {
+                                                          setSelectedPlantToUnarchive(plant.id);
+                                                          setArchiveModalOpen(true);
+                                                      }}
+                                                  >
+                                                      <FontAwesomeIcon icon={faTrashCanArrowUp} />
+                                                  </button>
+                                              ) : (
+                                                  <button
+                                                      className="archive-plant-btn"
+                                                      onClick={() =>
+                                                          toast.warning("You must be logged in to restore plants.")
+                                                      }
+                                                  >
+                                                      <FontAwesomeIcon icon={faTrashCanArrowUp} />
+                                                  </button>
+                                              )}
+                                          </div>
+                                      )}
+                                  </div>
+                              );
+                          })}
+                </div>
+            )}
 
             {modalOpen && (
                 <div className="add-plant-modal" onClick={resetModal}>
@@ -814,6 +1043,16 @@ export default function Plants() {
                             placeholder="Species"
                             value={newPlant.species}
                             onChange={(e) => setNewPlant({ ...newPlant, species: e.target.value })}
+                        />
+                        <input
+                            type="number"
+                            inputMode="numeric"
+                            min={1}
+                            max={365}
+                            placeholder="Water every … days (optional)"
+                            aria-label="Watering interval in days"
+                            value={newPlantInterval}
+                            onChange={(e) => setNewPlantInterval(e.target.value)}
                         />
                         <div
                             className="file-input-row"
@@ -838,7 +1077,7 @@ export default function Plants() {
                                 style={{ display: "none" }}
                             />
                         </div>
-                        {file && (
+                        {file && identificationEnabled && (
                             <button className="modal-identify-button" onClick={handleIdentifyPlant}>
                                 <FontAwesomeIcon icon={faFingerprint} /> Identify Plant
                             </button>

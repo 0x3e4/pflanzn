@@ -62,6 +62,7 @@ class PlantCreate(BaseModel):
     is_outdoor: Optional[bool] = False
     reaches_rain: Optional[bool] = False
     weather_config_id: Optional[int] = None
+    watering_interval_days: Optional[int] = Field(None, ge=1, le=365)
 
 class PlantUpdate(BaseModel):
     name: Optional[str] = None
@@ -71,6 +72,7 @@ class PlantUpdate(BaseModel):
     is_outdoor: Optional[bool] = None
     reaches_rain: Optional[bool] = None
     weather_config_id: Optional[int] = None
+    watering_interval_days: Optional[int] = Field(None, ge=1, le=365)
 
 class PlantImageResponse(BaseModel):
     id: int
@@ -183,6 +185,7 @@ class PlantResponse(BaseModel):
     is_outdoor: Optional[bool] = False
     reaches_rain: Optional[bool] = False
     weather_config_id: Optional[int] = None
+    watering_interval_days: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -377,8 +380,45 @@ class AppConfigResponse(BaseModel):
     show_protected_view: bool
     enable_locations: bool
     llm_provider: str
+    ai_enabled: bool
+    identification_enabled: bool
+    mcp_enabled: bool
+    mcp_auth: str
+    mcp_login: str
     domain: str
     oidc_name: str
     admin_user: Optional[str] = None
+
+
+class OAuthRequestInfo(BaseModel):
+    """What the consent page shows about a pending MCP authorization."""
+    client_name: str
+    redirect_host: str
+    scopes: List[str]
+    login: str  # "app" or the MCP_LOGIN_PROVIDER ("oidc" / "github")
+    login_name: Optional[str] = None
+    username: Optional[str] = None  # set once signed in via the MCP login provider
+
+
+class OAuthDecision(BaseModel):
+    allow_write: bool = True
+
+
+class OAuthRedirect(BaseModel):
+    redirect_url: str
+
+
+class OAuthGrantResponse(BaseModel):
+    id: int
+    client_name: str
+    username: Optional[str] = None
+    scopes: List[str]
+    created_at: datetime
+    last_used_at: Optional[datetime] = None
+
+
+class McpInfoResponse(BaseModel):
+    server_url: str
+    auth_required: bool
 
 PlantResponse.model_rebuild()

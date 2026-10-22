@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { Link } from "react-router-dom";
+import { useConfig } from "../context/ConfigContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faCamera,
@@ -33,6 +34,12 @@ type HomeOverview = {
 };
 
 export default function Home() {
+    const { llmProvider, identificationEnabled } = useConfig();
+    const aiFeatures = [
+        identificationEnabled && "species identification",
+        llmProvider && "AI-powered care guidance",
+    ].filter(Boolean);
+    const aiTagline = aiFeatures.length ? `, ${aiFeatures.join(" and ")}` : "";
     const [plants, setPlants] = useState<Plant[]>([]);
     const [loadingPlants, setLoadingPlants] = useState(true);
     const [speciesCounts, setSpeciesCounts] = useState<Record<string, number>>({});
@@ -83,10 +90,7 @@ export default function Home() {
 
     const loadPlants = async () => {
         try {
-            const [data, stats] = await Promise.all([
-                fetchPlants(),
-                fetchStatistics().catch(() => null),
-            ]);
+            const [data, stats] = await Promise.all([fetchPlants(), fetchStatistics().catch(() => null)]);
             const nonArchivedPlants = data.filter((plant) => !plant.is_archived);
 
             const speciesCountMap = nonArchivedPlants.reduce(
@@ -167,7 +171,7 @@ export default function Home() {
                             <Skeleton width="88%" />
                         </>
                     ) : (
-                        "Keep your plants healthy with watering logs, image timelines, species identification and AI-powered care guidance."
+                        `Keep your plants healthy with watering logs, image timelines${aiTagline}.`
                     )}
                 </p>
                 <div className="home-cta-row">
@@ -204,10 +208,12 @@ export default function Home() {
                                 <FontAwesomeIcon icon={faCamera} />
                                 Photo timelines
                             </div>
-                            <div className="feature-pill">
-                                <FontAwesomeIcon icon={faWandMagicSparkles} />
-                                AI care helper
-                            </div>
+                            {llmProvider && (
+                                <div className="feature-pill">
+                                    <FontAwesomeIcon icon={faWandMagicSparkles} />
+                                    AI care helper
+                                </div>
+                            )}
                         </>
                     )}
                 </div>
@@ -344,9 +350,7 @@ export default function Home() {
                 </div>
                 <div className="species-bar-list">
                     {loadingPlants ? (
-                        [...Array(6)].map((_, index) => (
-                            <Skeleton key={index} height={36} borderRadius={8} />
-                        ))
+                        [...Array(6)].map((_, index) => <Skeleton key={index} height={36} borderRadius={8} />)
                     ) : sortedSpecies.length > 0 ? (
                         sortedSpecies.map(([species, count]) => {
                             const pct = (count / maxCount) * 100;

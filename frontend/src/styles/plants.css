@@ -22,9 +22,9 @@
 
 /* Add Plant (+) Button */
 .add-plant-btn {
-    font-size: 28px;
-    width: 42px;
-    height: 42px;
+    font-size: 18px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     border: none;
     background: var(--primary-color);
@@ -154,7 +154,9 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s ease, opacity 0.3s ease;
+    transition:
+        transform 0.3s ease,
+        opacity 0.3s ease;
 }
 
 .plant-image-container {

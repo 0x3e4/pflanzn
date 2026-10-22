@@ -12,6 +12,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+
+## [1.2.0] - 2026-10-22
+
+### Added
+- MCP endpoint (`MCP_ENABLED`) with built-in OAuth or an external OAuth server (`MCP_OAUTH_ISSUER`).
+- Separate MCP sign-in via any OIDC provider or GitHub (`MCP_LOGIN_PROVIDER`).
+- `AI_ENABLED` and `LLM_ENABLED` switches.
+- List view for the Plants and Locations pages (grid/list toggle, remembered per device),
+  built for phones: compact rows with thumbnail and quick water/upload buttons.
+- Per-plant watering schedule ("water every N days") on the plant detail page and in the
+  Add Plant dialog. Due plants show a badge and appear under the automatic `#needs_water`
+  filter, which combines with a regular tag (e.g. `#office` + `#needs_water`). New "Due"
+  sort option. MCP `list_plants` gains a `needs_water` filter.
+
+### Changed
+- Identification buttons are hidden without a PlantNet key.
+- Login returns to the requested page (`?next=`).
+
+### Fixed
+- LLM endpoints returned 500 when no provider was configured; now 404.
 - **Security:** frontend image updated to pnpm 10.34.7 (from 10.33.0) and nginx 1.31
   (mainline, from 1.30). pnpm 10.33.0 is affected by the advisories fixed in 10.34.x,
   including path traversal and lockfile integrity bypasses during install.

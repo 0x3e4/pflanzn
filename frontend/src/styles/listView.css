@@ -1,0 +1,263 @@
+/* Compact list view shared by the Plants and Locations pages. Designed for
+   phones first: one row per item, a small thumbnail, truncating text and
+   44px round touch targets for the quick actions. */
+
+.list-view-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Grid / list segmented toggle in the page header */
+.view-mode-toggle {
+    display: inline-flex;
+    box-sizing: border-box;
+    height: 38px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.view-mode-toggle button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 100%;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+.view-mode-toggle button:hover {
+    background-color: var(--card-background);
+}
+
+.view-mode-toggle button.active {
+    background-color: var(--secondary-color);
+    color: #ffffff;
+}
+
+.list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.list-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 72px;
+    padding: 8px 10px 8px 8px;
+    box-sizing: border-box;
+    background: var(--secondary-background-color);
+    /* Faint outline so rows stay separated on dark backgrounds where the shadow barely shows */
+    border: 1px solid rgba(128, 128, 128, 0.2);
+    border: 1px solid color-mix(in srgb, var(--border-color) 35%, transparent);
+    border-radius: 12px;
+    /* Same elevation as the grid cards (.plant-card / .location-card) */
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+    text-align: left;
+    transition: box-shadow 0.3s ease;
+}
+
+.list-row:hover {
+    box-shadow: 0px 12px 20px rgba(0, 0, 0, 0.15);
+}
+
+.list-row.archived {
+    opacity: 0.8;
+}
+
+/* Thumbnail + text are one link so the whole left part is a tap target */
+.list-row-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+    color: inherit;
+    font-weight: normal;
+}
+
+.list-row-link:hover {
+    color: inherit;
+}
+
+.list-row-thumb {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+    object-fit: cover;
+    background: var(--background-color);
+}
+
+.list-row-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.list-row-title,
+.list-row-subtitle {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.list-row-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.list-row-title small {
+    margin-left: 6px;
+    font-weight: 400;
+    color: var(--muted-text-color);
+}
+
+.list-row-subtitle {
+    font-size: 0.85rem;
+    font-style: italic;
+    color: var(--muted-text-color);
+}
+
+.list-row-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    margin-top: 2px;
+    font-size: 0.75rem;
+    color: var(--muted-text-color);
+}
+
+.list-row-meta svg {
+    margin-right: 3px;
+}
+
+.list-row-actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 6px;
+}
+
+.list-row-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    color: #ffffff;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.list-row-btn--water {
+    background-color: var(--octal-color);
+}
+
+.list-row-btn--water:hover {
+    background-color: var(--nonal-color);
+}
+
+.list-row-btn--upload {
+    background-color: var(--quinary-color);
+}
+
+.list-row-btn--upload:hover {
+    background-color: var(--senary-color);
+}
+
+.list-row-btn--upload input {
+    display: none;
+}
+
+.list-row-btn--restore {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+
+.list-row-btn--restore:hover {
+    background-color: var(--card-background);
+}
+
+/* Watering schedule badge (list rows + grid cards) */
+.watering-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.watering-badge--due {
+    background-color: var(--octal-color);
+    color: #ffffff;
+}
+
+.watering-badge--soon {
+    border: 1px solid var(--octal-color);
+    color: var(--text-color);
+}
+
+.watering-badge--ok {
+    background-color: var(--background-color);
+    color: var(--muted-text-color);
+}
+
+/* Automatic #needs_water filter chip — combines with the regular tag chips */
+.hashtag.hashtag-needs-water {
+    border: 1px solid var(--octal-color);
+}
+
+.hashtag.hashtag-needs-water:hover {
+    background-color: var(--nonal-color);
+    color: #ffffff;
+}
+
+.hashtag.hashtag-needs-water.active {
+    background-color: var(--octal-color);
+    color: #ffffff;
+}
+
+.hashtag-count {
+    margin-left: 4px;
+    font-weight: 400;
+    opacity: 0.85;
+}
+
+@media (max-width: 768px) {
+    .list-view {
+        gap: 6px;
+    }
+
+    .list-row {
+        gap: 8px;
+        padding: 6px 8px 6px 6px;
+    }
+
+    .list-row-link {
+        gap: 10px;
+    }
+
+    .list-row-actions {
+        gap: 4px;
+    }
+}

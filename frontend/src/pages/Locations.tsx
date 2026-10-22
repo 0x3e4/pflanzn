@@ -10,6 +10,9 @@ import {
     faUpload,
     faArrowDownWideShort,
     faArrowUpShortWide,
+    faGrip,
+    faList,
+    faLocationDot,
 } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import {
@@ -26,7 +29,8 @@ import { useAuth } from "../context/AuthContext";
 import "../styles/identifyResults.css";
 import "../styles/locations.css";
 import { getUiPreferences } from "../config/uiPreferences";
-import { getViewPreferences, updateLocationsViewPreferences } from "../config/viewPreferences";
+import { getViewPreferences, ListViewMode, updateLocationsViewPreferences } from "../config/viewPreferences";
+import "../styles/listView.css";
 
 const spotTypeLabels: Record<SpotType, string> = {
     field: "Field",
@@ -49,6 +53,7 @@ export default function Locations() {
     const [searchTerm, setSearchTerm] = useState("");
     const [sortBy, setSortBy] = useState<LocationSortOption>(() => getViewPreferences().locations.sortBy);
     const [isStretched, setIsStretched] = useState(() => getUiPreferences().defaultWidescreen);
+    const [viewMode, setViewMode] = useState<ListViewMode>(() => getViewPreferences().locations.viewMode);
     const [selectedSpotType, setSelectedSpotType] = useState<SpotType | "all">(
         () => getViewPreferences().locations.selectedSpotType,
     );
@@ -155,6 +160,10 @@ export default function Locations() {
     useEffect(() => {
         updateLocationsViewPreferences({ sortBy });
     }, [sortBy]);
+
+    useEffect(() => {
+        updateLocationsViewPreferences({ viewMode });
+    }, [viewMode]);
 
     const resetModal = () => {
         setNewLocation({
@@ -367,18 +376,42 @@ export default function Locations() {
                 >
                     <FontAwesomeIcon icon={isStretched ? faCompress : faExpand} />
                 </button>
-                {isLoggedIn ? (
-                    <button className="add-location-btn" onClick={() => setModalOpen(true)}>
-                        <FontAwesomeIcon icon={faPlus} />
-                    </button>
-                ) : (
-                    <button
-                        className="add-location-btn"
-                        onClick={() => toast.warning("You must be logged in to add locations.")}
-                    >
-                        <FontAwesomeIcon icon={faPlus} />
-                    </button>
-                )}
+                <div className="list-view-header-actions">
+                    <div className="view-mode-toggle" role="group" aria-label="View mode">
+                        <button
+                            type="button"
+                            className={viewMode === "grid" ? "active" : ""}
+                            onClick={() => setViewMode("grid")}
+                            title="Grid view"
+                            aria-label="Grid view"
+                            aria-pressed={viewMode === "grid"}
+                        >
+                            <FontAwesomeIcon icon={faGrip} />
+                        </button>
+                        <button
+                            type="button"
+                            className={viewMode === "list" ? "active" : ""}
+                            onClick={() => setViewMode("list")}
+                            title="List view"
+                            aria-label="List view"
+                            aria-pressed={viewMode === "list"}
+                        >
+                            <FontAwesomeIcon icon={faList} />
+                        </button>
+                    </div>
+                    {isLoggedIn ? (
+                        <button className="add-location-btn" onClick={() => setModalOpen(true)}>
+                            <FontAwesomeIcon icon={faPlus} />
+                        </button>
+                    ) : (
+                        <button
+                            className="add-location-btn"
+                            onClick={() => toast.warning("You must be logged in to add locations.")}
+                        >
+                            <FontAwesomeIcon icon={faPlus} />
+                        </button>
+                    )}
+                </div>
             </div>
 
             {modalOpen && (
@@ -470,9 +503,7 @@ export default function Locations() {
                                     type="text"
                                     placeholder="Latitude (optional)"
                                     value={newLocation.latitude}
-                                    onChange={(e) =>
-                                        setNewLocation((prev) => ({ ...prev, latitude: e.target.value }))
-                                    }
+                                    onChange={(e) => setNewLocation((prev) => ({ ...prev, latitude: e.target.value }))}
                                 />
                             </div>
                             <div className="location-coord-input-row">
@@ -480,9 +511,7 @@ export default function Locations() {
                                     type="text"
                                     placeholder="Longitude (optional)"
                                     value={newLocation.longitude}
-                                    onChange={(e) =>
-                                        setNewLocation((prev) => ({ ...prev, longitude: e.target.value }))
-                                    }
+                                    onChange={(e) => setNewLocation((prev) => ({ ...prev, longitude: e.target.value }))}
                                 />
                                 <button
                                     type="button"
@@ -541,7 +570,15 @@ export default function Locations() {
                         type="button"
                         className="sort-direction-toggle"
                         onClick={() => setSortBy(composeSort(sortField, sortDir === "desc" ? "asc" : "desc"))}
-                        title={sortField === "name" ? (sortDir === "desc" ? "Z to A" : "A to Z") : sortDir === "desc" ? "Newest first" : "Oldest first"}
+                        title={
+                            sortField === "name"
+                                ? sortDir === "desc"
+                                    ? "Z to A"
+                                    : "A to Z"
+                                : sortDir === "desc"
+                                  ? "Newest first"
+                                  : "Oldest first"
+                        }
                         aria-label="Toggle sort direction"
                     >
                         <FontAwesomeIcon icon={sortDir === "desc" ? faArrowDownWideShort : faArrowUpShortWide} />
@@ -556,6 +593,76 @@ export default function Locations() {
                     {locations.length === 0
                         ? "No locations yet. Add your first one with the + button."
                         : "No locations match the current filters."}
+                </div>
+            ) : viewMode === "list" ? (
+                <div className="list-view">
+                    {filteredLocations.map((location) => {
+                        const hasCoordinates = location.latitude !== null && location.longitude !== null;
+                        const latestImage = getLatestImage(location);
+                        return (
+                            <div className="list-row" key={location.id}>
+                                <Link to={`/location/${location.id}`} className="list-row-link">
+                                    <img
+                                        src={
+                                            latestImage
+                                                ? `/api/uploads/${latestImage.image_path}?size=thumb`
+                                                : "/placeholder-plant.webp"
+                                        }
+                                        alt={location.name}
+                                        className="list-row-thumb"
+                                        loading="lazy"
+                                    />
+                                    <div className="list-row-main">
+                                        <p className="list-row-title">
+                                            {location.name}
+                                            <small>#{location.id}</small>
+                                        </p>
+                                        {location.item_name && (
+                                            <p className="list-row-subtitle">{location.item_name}</p>
+                                        )}
+                                        <div className="list-row-meta">
+                                            <span>{spotTypeLabels[location.spot_type]}</span>
+                                            {hasCoordinates && (
+                                                <span title="Has GPS coordinates">
+                                                    <FontAwesomeIcon icon={faLocationDot} />
+                                                    GPS
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </Link>
+                                <div className="list-row-actions">
+                                    {isLoggedIn ? (
+                                        <label
+                                            className="list-row-btn list-row-btn--upload"
+                                            aria-label={`Upload image for ${location.name}`}
+                                        >
+                                            <FontAwesomeIcon icon={faUpload} />
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => {
+                                                    const selected = e.target.files?.[0];
+                                                    if (selected) {
+                                                        handleUploadImage(location.id, selected);
+                                                    }
+                                                    e.currentTarget.value = "";
+                                                }}
+                                            />
+                                        </label>
+                                    ) : (
+                                        <button
+                                            className="list-row-btn list-row-btn--upload"
+                                            aria-label={`Upload image for ${location.name}`}
+                                            onClick={() => toast.warning("You must be logged in to upload images.")}
+                                        >
+                                            <FontAwesomeIcon icon={faUpload} />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             ) : (
                 <div className="locations-list">

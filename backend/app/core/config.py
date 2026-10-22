@@ -102,11 +102,50 @@ class Settings(BaseSettings):
     WEATHER_CHECK_INTERVAL_HOURS: int = int(os.getenv("WEATHER_CHECK_INTERVAL_HOURS", "1"))
     WEATHER_RAINFALL_THRESHOLD_MM: float = float(os.getenv("WEATHER_RAINFALL_THRESHOLD_MM", "1.0"))
     WEATHER_ENABLED: bool = _truthy(os.getenv("WEATHER_ENABLED"), default=True)
+    # AI master switch: off disables LLM text generation, PlantNet identification and MCP.
+    AI_ENABLED: bool = _truthy(os.getenv("AI_ENABLED"), default=True)
+    LLM_ENABLED: bool = _truthy(os.getenv("LLM_ENABLED"), default=True)
+    # MCP exposes the collection to external AI clients (Claude etc.); opt-in.
+    MCP_ENABLED: bool = _truthy(os.getenv("MCP_ENABLED"), default=False)
+    # Optional external OAuth server for MCP (e.g. authentik); empty = Pflanzn's built-in one.
+    MCP_OAUTH_ISSUER: str = os.getenv("MCP_OAUTH_ISSUER", "")
+    MCP_OAUTH_AUDIENCE: str = os.getenv("MCP_OAUTH_AUDIENCE", "")
+    # Optional separate sign-in for the built-in MCP OAuth server: "oidc" or "github".
+    MCP_LOGIN_PROVIDER: str = os.getenv("MCP_LOGIN_PROVIDER", "")
+    MCP_LOGIN_NAME: str = os.getenv("MCP_LOGIN_NAME", "")
+    MCP_LOGIN_OIDC_URL: str = os.getenv("MCP_LOGIN_OIDC_URL", "")
+    MCP_LOGIN_CLIENT_ID: str = os.getenv("MCP_LOGIN_CLIENT_ID", "")
+    MCP_LOGIN_CLIENT_SECRET: str = os.getenv("MCP_LOGIN_CLIENT_SECRET", "")
     AUDIT_ENABLED: bool = _truthy(os.getenv("AUDIT_ENABLED"), default=True)
     # Swagger UI, ReDoc and the OpenAPI schema map the whole API surface; off unless asked for.
     ENABLE_API_DOCS: bool = _truthy(os.getenv("ENABLE_API_DOCS"), default=False)
     BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     UPLOAD_FOLDER: str = os.path.join(BASE_DIR, "uploads")
+
+    @property
+    def llm_available(self) -> bool:
+        """LLM text generation is on and a provider is configured."""
+        return self.AI_ENABLED and self.LLM_ENABLED and bool(self.LLM_PROVIDER)
+
+    @property
+    def identification_available(self) -> bool:
+        """PlantNet species identification is on and has an API key."""
+        return self.AI_ENABLED and bool(self.PLANTNET_API_KEY)
+
+    @property
+    def mcp_available(self) -> bool:
+        return self.AI_ENABLED and self.MCP_ENABLED
+
+    @property
+    def mcp_auth(self) -> str:
+        """How MCP clients authenticate: "external", "builtin", or "none" (AUTH_MODE=no)."""
+        if self.MCP_OAUTH_ISSUER:
+            return "external"
+        return "none" if self.AUTH_MODE.lower() == "no" else "builtin"
+
+    @property
+    def public_base_url(self) -> str:
+        return (self.DOMAIN or "").rstrip("/")
 
     class Config:
         env_file = ".env"

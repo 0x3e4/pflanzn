@@ -5,6 +5,11 @@ export interface AppConfig {
     showProtectedView: boolean;
     enableLocations: boolean;
     llmProvider: string;
+    aiEnabled: boolean;
+    identificationEnabled: boolean;
+    mcpEnabled: boolean;
+    mcpAuth: "builtin" | "external" | "none";
+    mcpLogin: string;
     domain: string;
     oidcName: string;
     adminUser: string | null;
@@ -23,6 +28,11 @@ const DEFAULT_CONFIG: AppConfig = {
     showProtectedView: true,
     enableLocations: false,
     llmProvider: "",
+    aiEnabled: true,
+    identificationEnabled: true,
+    mcpEnabled: false,
+    mcpAuth: "builtin",
+    mcpLogin: "app",
     domain: "",
     oidcName: "",
     adminUser: null,
@@ -41,6 +51,12 @@ export async function loadConfig(): Promise<AppConfig> {
         showProtectedView: !!data.show_protected_view,
         enableLocations: !!data.enable_locations,
         llmProvider: data.llm_provider || "",
+        // Older backends don't send these; keep their behaviour (AI + identification on, MCP off).
+        aiEnabled: data.ai_enabled ?? true,
+        identificationEnabled: data.identification_enabled ?? true,
+        mcpEnabled: !!data.mcp_enabled,
+        mcpAuth: data.mcp_auth || "builtin",
+        mcpLogin: data.mcp_login || "app",
         domain: data.domain || "",
         oidcName: data.oidc_name || "",
         adminUser: data.admin_user || null,

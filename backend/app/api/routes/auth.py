@@ -234,10 +234,29 @@ def login(user_data: LoginRequest, request: Request, db: Session = Depends(get_d
                  user_id=user.id, username=user.username, status_code=200)
     return response
 
+def _safe_next(path: Optional[str]) -> Optional[str]:
+    """Same-origin relative path to return to after login, or None. Rejects
+    scheme-relative (//host) and backslash tricks so this can't become an open redirect."""
+    if not path or not path.startswith("/") or path.startswith("//") or "\\" in path:
+        return None
+    if any(ord(c) < 0x20 for c in path) or urlparse(path).netloc:
+        return None
+    return path
+
+
 @router.get("/oidc-login")
-async def oidc_login(request: Request):
+async def oidc_login(request: Request, next: Optional[str] = None):
     if AUTH_MODE != "oidc":
         raise HTTPException(status_code=400, detail="OIDC auth not enabled.")
+    # Remembered across the IdP round trip in the same session authlib keeps its state in,
+    # so e.g. an MCP consent page can send the user to authentik and get them back.
+    session = request.scope.get("session")
+    if session is not None:
+        safe_next = _safe_next(next)
+        if safe_next:
+            session["post_login_next"] = safe_next
+        else:
+            session.pop("post_login_next", None)
     return await oauth.oidc.authorize_redirect(
         request,
         redirect_uri=OIDC_REDIRECT_URI,
@@ -344,7 +363,8 @@ async def oidc_callback(request: Request, db: Session = Depends(get_db)):
         app_refresh = create_refresh_token({"sub": user.email}, expires_delta=timedelta(seconds=refresh_delta_seconds))
 
         # 7) Set APP cookies (access mirrors IdP; refresh uses app lifetime)
-        response = RedirectResponse(url="/", status_code=302)
+        next_url = _safe_next((request.scope.get("session") or {}).pop("post_login_next", None)) or "/"
+        response = RedirectResponse(url=next_url, status_code=302)
         _set_auth_cookies(
             resp=response,
             access_token=app_access,

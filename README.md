@@ -58,6 +58,7 @@
 - [Local development](#local-development)
 - [Configuration](#configuration)
 - [Access and visibility](#access-and-visibility)
+- [MCP (Claude connector)](#mcp-claude-connector)
 - [Tech stack](#tech-stack)
 - [Demo](#demo)
 - [Support](#support)
@@ -70,9 +71,12 @@
 | --- | --- |
 | **Catalogue** | Plants with photos, species info, care notes; tags and locations with GPS coordinates and an interactive Leaflet map. |
 | **Tracking** | Watering, fertilizing, image, and care-advice timelines with calendar view and per-activity colour coding. |
+| **Watering schedule** | Optional "water every N days" per plant. Due plants get a badge and show up under the automatic `#needs_water` filter, which combines with any tag (e.g. `#office` + `#needs_water`) — then *Water Plants* waters exactly those. |
+| **Mobile list view** | Plants and Locations switch between a photo grid and a compact list with one-tap water/upload buttons; the choice is remembered per device. |
 | **Archive** | Plants can be archived with a reason instead of deleted — they drop out of the normal lists and stay reachable under the `#archive` filter, and can be restored at any time. |
 | **Identification** | One-shot PlantNet integration — accepts JPG / PNG / WebP / HEIC; the backend normalises uploads to JPEG before forwarding. |
 | **AI care advice** | Optional integration with OpenAI, Claude, Mistral, HuggingFace, or a local Ollama instance — provider auto-detected from whichever API key is set. |
+| **MCP** | Optional [MCP](https://modelcontextprotocol.io) endpoint for Claude and other AI clients, secured with OAuth. |
 | **Auto-watering** | Outdoor plants with `reaches_rain=true` are auto-watered when Open-Meteo reports rainfall above your threshold. Optional OpenWeatherMap key for current-weather display. |
 | **PWA** | Installable on phone or desktop; Workbox runtime caching — CacheFirst for uploaded images, NetworkFirst (with a short network timeout) for plants, locations, profile, and statistics reads. |
 | **Sharing** | Token-based public collection links with a dedicated read-only view. |
@@ -198,6 +202,7 @@ Everything is driven through environment variables — see [.env.example](.env.e
 | **Database** | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_ROOT_PASSWORD`, `DB_NAME` |
 | **Redis** | `REDIS_URL` |
 | **Features** | `ENABLE_LOCATIONS`, `AUDIT_ENABLED`, `ENABLE_API_DOCS` (default `false`) |
+| **AI** | `AI_ENABLED`, `LLM_ENABLED`, `MCP_ENABLED`, `MCP_OAUTH_ISSUER`, `MCP_OAUTH_AUDIENCE`, `MCP_LOGIN_*` |
 | **Identification** | `PLANTNET_API_KEY`, `PLANTNET_LANGUAGE` |
 | **AI providers (optional)** | `LLM_LANGUAGE`, `OPENAI_API_KEY` / `OPENAI_MODEL_NAME`, `CLAUDE_API_KEY` / `CLAUDE_MODEL_NAME`, `MISTRALAI_API_KEY` / `MISTRALAI_API_URL` / `MISTRALAI_MODEL_NAME`, `HUGGINGFACE_API_KEY` / `HUGGINGFACE_MODEL_NAME`, `OLLAMA_URL` / `OLLAMA_MODEL_NAME`. Provider auto-detected from whichever key is set; priority `openai > claude > mistralai > huggingface > ollama`. |
 | **Weather** | `WEATHER_ENABLED`, `WEATHER_CHECK_INTERVAL_HOURS`, `WEATHER_RAINFALL_THRESHOLD_MM`, `OPENWEATHERMAP_API_KEY` (optional) |
@@ -240,6 +245,18 @@ so every location is visible to everyone regardless of its status.
 
 The installed PWA keeps viewed photos in its offline cache for up to 30 days, so a
 location made private later may still show on a device that already loaded it.
+
+---
+
+## MCP (Claude connector)
+
+Set `MCP_ENABLED=true` and add `{DOMAIN}/api/mcp` as a custom connector in Claude
+(or any MCP client). Clients sign in through Pflanzn's built-in OAuth server with your
+normal login, or through an external OAuth/OIDC server when `MCP_OAUTH_ISSUER` is set
+(accounts are matched by email; `MCP_OAUTH_AUDIENCE` optionally restricts the token
+audience). To sign in to the built-in server with a different provider than the app —
+any OIDC server or GitHub — set `MCP_LOGIN_PROVIDER`. The reverse proxy must forward `/.well-known/oauth-*` to the backend.
+Connected apps can be revoked under Manage → MCP.
 
 ---
 
