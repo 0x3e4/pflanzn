@@ -1,7 +1,8 @@
+import hmac
 import logging
 import os
-import time
 import secrets
+import time
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 from urllib.parse import urlparse
@@ -20,8 +21,8 @@ from app.core.security import (
     create_refresh_token,
     decode_token,
     hash_password,
-    verify_password,
     identifier_in_use,
+    verify_password,
 )
 from app.database import get_db
 from app.models import User
@@ -327,11 +328,11 @@ async def oidc_callback(request: Request, db: Session = Depends(get_db)):
         if not user:
             if not username:
                 username = email.split("@")[0]
-            role = "admin" if db.query(User).count() == 0 else "user"
             # The IdP controls preferred_username; never let it collide with an existing
             # account's username or email (that would lock that account out).
             if identifier_in_use(db, username):
                 username = f"{email.split('@')[0]}-{secrets.token_hex(3)}"
+            role = "admin" if db.query(User).count() == 0 else "user"
             user = User(username=username, email=email, role=role, auth_type="oidc")
             db.add(user)
             db.commit()
@@ -367,6 +368,8 @@ async def oidc_callback(request: Request, db: Session = Depends(get_db)):
 
         app_access = create_access_token({"sub": user.email}, expires_delta=timedelta(seconds=access_delta_seconds))
         app_refresh = create_refresh_token({"sub": user.email}, expires_delta=timedelta(seconds=refresh_delta_seconds))
+        # Server-side copy: /refresh only honours the refresh token it issued last.
+        redis_client.setex(f"refresh:{user.email}", refresh_delta_seconds, app_refresh)
 
         # 7) Set APP cookies (access mirrors IdP; refresh uses app lifetime)
         next_url = _safe_next((request.scope.get("session") or {}).pop("post_login_next", None)) or "/"
@@ -396,9 +399,37 @@ async def oidc_callback(request: Request, db: Session = Depends(get_db)):
                      status_code=302, details={"auth_type": "oidc"})
         return RedirectResponse(url="/login?error=auth_failed", status_code=302)
 
+def _revoke_server_session(request: Request) -> None:
+    """Drops the caller's server-side session state so the tokens in their cookies stop
+    working everywhere, not just in this browser. Only state that matches the presented
+    cookies is removed, so nobody can log out someone else."""
+    for cookie, key_prefix in (("refresh_token", "refresh"), ("access_token", "session")):
+        token = request.cookies.get(cookie)
+        if not token:
+            continue
+        try:
+            subject = decode_token(token).get("sub")
+        except HTTPException:
+            continue
+        if not subject:
+            continue
+        stored = redis_client.get(f"{key_prefix}:{subject}")
+        if stored and hmac.compare_digest(stored, token):
+            keys = [f"{key_prefix}:{subject}"]
+            if key_prefix == "refresh":
+                keys += [f"idp:refresh:{subject}", f"idp:access:{subject}"]
+            else:
+                keys.append(f"session_fingerprint:{subject}")
+            redis_client.delete(*keys)
+
+
 @router.post("/logout")
 def logout(request: Request):
-    """Clears the authentication cookie."""
+    """Clears the authentication cookies and revokes the session server-side."""
+    try:
+        _revoke_server_session(request)
+    except redis.RedisError as exc:
+        logger.warning(f"Logout could not revoke the server-side session: {exc}")
     response = JSONResponse(content={"message": "Logout successful"})
     response.delete_cookie("access_token", domain=COOKIE_DOMAIN, path=COOKIE_PATH)
     response.delete_cookie("refresh_token", domain=COOKIE_DOMAIN, path=COOKIE_PATH)
@@ -445,6 +476,12 @@ async def refresh_token(request: Request, db: Session = Depends(get_db)):
     if AUTH_MODE != "oidc":
         raise HTTPException(status_code=400, detail="Refresh not supported for current auth mode")
 
+    # A valid signature is not enough: it must be the refresh token we issued last,
+    # so stolen/forged tokens and tokens from before a logout are refused.
+    stored_refresh = redis_client.get(f"refresh:{subject}")
+    if not stored_refresh or not hmac.compare_digest(stored_refresh, app_rtok):
+        raise HTTPException(status_code=401, detail="Refresh failed")
+
     # 2) Lock by user/email to avoid races
     lock_key = f"rt-lock:{subject}"
     if not redis_client.set(lock_key, "1", nx=True, ex=5):
@@ -489,6 +526,7 @@ async def refresh_token(request: Request, db: Session = Depends(get_db)):
 
         app_access = create_access_token({"sub": subject}, expires_delta=access_delta)
         app_refresh = create_refresh_token({"sub": subject}, expires_delta=refresh_delta)
+        redis_client.setex(f"refresh:{subject}", refresh_delta_seconds, app_refresh)
 
         # 7) Set cookies (access mirrors IdP; refresh uses app lifetime)
         response = JSONResponse(content={"message": "Access token refreshed"})
