@@ -100,9 +100,9 @@ def _is_valid_share_token(share_token: str, db: Session) -> bool:
     from datetime import datetime
 
     from app.models import ShareLink
-    link = db.query(ShareLink).filter(
-        (ShareLink.token == share_token) | (ShareLink.alias == share_token)
-    ).first()
+    # Only the random token is a credential; the alias is an admin-chosen label
+    # ("family", …) and would be trivially guessable.
+    link = db.query(ShareLink).filter(ShareLink.token == share_token).first()
     if not link:
         return False
     if link.expires_at and link.expires_at < datetime.utcnow():

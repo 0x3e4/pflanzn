@@ -134,3 +134,30 @@ class TestPlantNetKeyLeak:
             response = client.post("/api/plants/1/identify")
         assert response.status_code == 200
         assert self.KEY not in response.text
+
+
+# ==============================================================================
+# Share links: only the random token is a credential, never the alias
+# ==============================================================================
+
+def _filter_sql(mock_db) -> str:
+    clause = mock_db.query.return_value.filter.call_args.args[0]
+    return str(clause.compile(compile_kwargs={"literal_binds": True}))
+
+
+class TestShareAlias:
+    def test_validate_matches_token_only(self, client, mock_db):
+        mock_db.query.return_value.filter.return_value.first.return_value = None
+        response = client.get("/api/share/validate/family")
+        assert response.status_code == 404
+        sql = _filter_sql(mock_db)
+        assert "share_links.token" in sql and "alias" not in sql
+
+    def test_request_gate_matches_token_only(self):
+        from app.core.security import _is_valid_share_token
+
+        db = MagicMock()
+        db.query.return_value.filter.return_value.first.return_value = None
+        assert _is_valid_share_token("family", db) is False
+        sql = _filter_sql(db)
+        assert "share_links.token" in sql and "alias" not in sql
