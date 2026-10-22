@@ -18,6 +18,7 @@ import "../styles/plants.css";
 import { toast } from "react-toastify";
 import { DateTime } from "luxon";
 import IdentifyResults from "../components/IdentifyResults";
+import EditableDiv from "../components/EditableDiv";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faUpload,
@@ -1160,19 +1161,12 @@ export default function Plants() {
                     <div className="archive-plant-modal">
                         <p>Are you sure you want to restore this plant?</p>
 
-                        <div
+                        <EditableDiv
+                            value={unarchiveReason}
+                            onSave={setUnarchiveReason}
+                            onChange={setUnarchiveReason}
+                            placeholder="e.g. Reason for restoration (optional)"
                             className="editable-div"
-                            contentEditable
-                            suppressContentEditableWarning
-                            onInput={(e) => setUnarchiveReason((e.target as HTMLDivElement).innerText)}
-                            dangerouslySetInnerHTML={{
-                                __html: unarchiveReason || "e.g. Reason for restoration (optional)",
-                            }}
-                            onFocus={(e) => {
-                                if (e.currentTarget.innerText === "e.g. Reason for restoration (optional)") {
-                                    e.currentTarget.innerText = "";
-                                }
-                            }}
                         />
 
                         <div className="archive-plant-modal-buttons">

@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+### Security
+- A user could take over another account (including admin) by renaming themselves to its email.
+- The PlantNet API key could appear in identify error messages and logs. **Rotate `PLANTNET_API_KEY`.**
+- Share-link aliases no longer grant access; only the random token does.
+- OIDC refresh tokens are now bound to the server and revoked on logout (one re-login for OIDC users).
+- Startup refuses an unset or example `SECRET_KEY` when auth is enabled.
+- Client IPs are no longer taken from client-supplied headers; client registration is capped.
+- External MCP tokens require `MCP_OAUTH_AUDIENCE` and an asymmetric JWT signature.
+- Weather zones are no longer visible to share-link viewers.
+
 ### Fixed
 
 ## [1.2.0] - 2026-10-22
