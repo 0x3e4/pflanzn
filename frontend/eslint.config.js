@@ -23,6 +23,14 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
+      // Raw HTML injection is the XSS sink React otherwise protects against.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "JSXAttribute[name.name='dangerouslySetInnerHTML']",
+          message: 'Render text instead; dangerouslySetInnerHTML bypasses React escaping.',
+        },
+      ],
     },
   },
 )
