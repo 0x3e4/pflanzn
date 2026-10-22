@@ -633,51 +633,107 @@ class TestExternalOAuth:
 
 
 class TestExternalJwt:
-    KEY = {"kty": "oct", "k": base64.urlsafe_b64encode(b"k" * 32).rstrip(b"=").decode(), "alg": "HS256"}
     META = {"issuer": ISSUER, "jwks_uri": "https://id.example/jwks", "userinfo_endpoint": "https://id.example/ui"}
+    AUDIENCE = "pflanzn-mcp"
+
+    @pytest.fixture(scope="class")
+    def keys(self):
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric import rsa
+        from jose import jwk
+
+        private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        private_pem = private.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8,
+                                            serialization.NoEncryption())
+        public_pem = private.public_key().public_bytes(serialization.Encoding.PEM,
+                                                       serialization.PublicFormat.SubjectPublicKeyInfo)
+        public_jwk = {**jwk.construct(public_pem, "RS256").to_dict(), "kid": "k1"}
+        return private_pem, public_pem, public_jwk
 
     @pytest.fixture(autouse=True)
-    def _cache(self):
+    def _cache(self, keys):
         from app.services import mcp_external_auth
 
-        with patch.dict(mcp_external_auth._cache, {"metadata": self.META, "jwks": {"keys": [self.KEY]},
+        with patch.dict(mcp_external_auth._cache, {"metadata": self.META, "jwks": {"keys": [keys[2]]},
                                                    "fetched_at": 9e18}), \
-             patch.object(settings, "MCP_OAUTH_ISSUER", ISSUER):
+             patch.object(settings, "MCP_OAUTH_ISSUER", ISSUER), \
+             patch.object(settings, "MCP_OAUTH_AUDIENCE", self.AUDIENCE):
             yield
 
-    def _token(self, **claims):
+    def _claims(self, **overrides):
+        return {"iss": ISSUER, "aud": self.AUDIENCE, "sub": "u1", "exp": int(time.time()) + 60,
+                "email": "a@example.com", **overrides}
+
+    def _token(self, keys, **claims):
         from jose import jwt
 
-        payload = {"iss": ISSUER, "aud": "claude", "exp": int(time.time()) + 60,
-                   "email": "a@example.com", **claims}
-        return jwt.encode(payload, b"k" * 32, algorithm="HS256")
+        return jwt.encode(self._claims(**claims), keys[0], algorithm="RS256", headers={"kid": "k1"})
 
-    def test_valid_jwt(self):
+    def _unsigned(self, header, claims, secret=None):
+        import hashlib
+        import hmac
+
+        enc = lambda raw: base64.urlsafe_b64encode(raw).rstrip(b"=").decode()  # noqa: E731
+        signing_input = f"{enc(json.dumps(header).encode())}.{enc(json.dumps(claims).encode())}"
+        signature = enc(hmac.new(secret, signing_input.encode(), hashlib.sha256).digest()) if secret else ""
+        return f"{signing_input}.{signature}"
+
+    def test_valid_jwt(self, keys):
         from app.services.mcp_external_auth import verify_token
 
-        assert verify_token(self._token())["email"] == "a@example.com"
+        assert verify_token(self._token(keys))["email"] == "a@example.com"
 
-    def test_wrong_issuer(self):
+    def test_wrong_issuer(self, keys):
         from app.services.mcp_external_auth import verify_token
 
-        assert verify_token(self._token(iss="https://other.example/")) is None
+        assert verify_token(self._token(keys, iss="https://other.example/")) is None
 
-    def test_audience_enforced_when_configured(self):
+    def test_token_for_another_app_is_refused(self, keys):
         from app.services.mcp_external_auth import verify_token
 
-        with patch.object(settings, "MCP_OAUTH_AUDIENCE", "pflanzn-mcp"):
-            assert verify_token(self._token()) is None
-            assert verify_token(self._token(aud="pflanzn-mcp")) is not None
+        assert verify_token(self._token(keys, aud="some-other-client")) is None
 
-    def test_forged_jwt_never_falls_back_to_userinfo(self):
-        from jose import jwt
-
+    def test_no_audience_configured_refuses_everything(self, keys):
         from app.services.mcp_external_auth import verify_token
 
-        forged = jwt.encode({"iss": ISSUER, "email": "a@example.com"}, b"x" * 32, algorithm="HS256")
+        with patch.object(settings, "MCP_OAUTH_AUDIENCE", ""):
+            assert verify_token(self._token(keys)) is None
+
+    def test_opaque_tokens_are_refused(self):
+        from app.services.mcp_external_auth import verify_token
+
         with patch("app.services.mcp_external_auth._userinfo") as userinfo:
-            assert verify_token(forged) is None
+            assert verify_token("gho_opaque-token") is None
         userinfo.assert_not_called()
+
+    @pytest.mark.parametrize("secret", ["pem", "jwk", "n"])
+    def test_hmac_with_public_key_is_refused(self, keys, secret):
+        """Algorithm confusion: HS256 'signed' with the issuer's public key."""
+        from app.services.mcp_external_auth import verify_token
+
+        material = {"pem": keys[1], "jwk": json.dumps(keys[2]).encode(), "n": keys[2]["n"].encode()}[secret]
+        forged = self._unsigned({"alg": "HS256", "kid": "k1"}, self._claims(), material)
+        assert verify_token(forged) is None  # and no exception (used to surface as a 500)
+
+    def test_alg_none_is_refused(self):
+        from app.services.mcp_external_auth import verify_token
+
+        assert verify_token(self._unsigned({"alg": "none"}, self._claims())) is None
+
+    def test_userinfo_must_belong_to_the_same_subject(self, keys):
+        from app.services.mcp_external_auth import verify_token
+
+        token = self._token(keys, email=None)
+        with patch("app.services.mcp_external_auth._userinfo", return_value={"sub": "u2", "email": "b@x"}):
+            assert verify_token(token) is None
+        with patch("app.services.mcp_external_auth._userinfo", return_value={"sub": "u1", "email": "a@x"}):
+            assert verify_token(token)["email"] == "a@x"
+
+    def test_mcp_endpoint_returns_401_for_forged_token(self, client, keys):
+        forged = self._unsigned({"alg": "HS256", "kid": "k1"}, self._claims(), keys[1])
+        with patch("app.core.security.AUTH_MODE", "oidc"):
+            response = client.post("/api/mcp", json=_rpc("ping"), headers={"Authorization": f"Bearer {forged}"})
+        assert response.status_code == 401
 
 
 # ==============================================================================
