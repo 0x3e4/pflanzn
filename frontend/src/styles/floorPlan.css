@@ -473,13 +473,55 @@
     gap: 6px;
 }
 
-.floor-plans-panel .floor-plan-toggle {
+.floor-plans-panel .manage-setting-row {
+    margin: 4px 0 18px;
+}
+
+.floor-plans-panel .floor-plan-new h3 {
+    margin: 0 0 4px;
+}
+
+.floor-plans-panel .floor-plan-new-actions {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin: 8px 0 18px;
-    font-weight: 600;
+}
+
+.floor-plans-panel .floor-plan-file-button {
+    flex: 1;
+    min-width: 0;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 1px solid var(--input-border);
+    background: var(--input-background);
+    color: var(--text-color);
+    font-size: 0.95rem;
+    text-align: left;
     cursor: pointer;
+}
+
+.floor-plans-panel .floor-plan-file-button span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.floor-plans-panel .floor-plan-file-button .is-empty {
+    color: var(--muted-text-color);
+}
+
+.floor-plans-panel .floor-plan-new-actions .add-btn {
+    flex-shrink: 0;
+}
+
+.floor-plans-panel .floor-plan-new-actions .add-btn:disabled {
+    opacity: 0.6;
+    cursor: wait;
+    transform: none;
 }
 
 .floor-plans-panel .floor-plan-new {
