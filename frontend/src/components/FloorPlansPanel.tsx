@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowDown, faArrowUp, faImage, faPlus, faTrash, faUpload } from "@fortawesome/free-solid-svg-icons";
+import { faArrowDown, faArrowUp, faImage, faPlus, faSpinner, faTrash } from "@fortawesome/free-solid-svg-icons";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { useAuth } from "../context/AuthContext";
-import { useConfig } from "../context/ConfigContext";
+import { useConfig, useUpdateConfig } from "../context/ConfigContext";
 import { extractErrorMessage } from "../services/apiClient";
 import {
     createFloorPlan,
@@ -22,6 +22,7 @@ const ACCEPTED = "image/png,image/jpeg,image/webp,image/heic,image/heif";
 
 export default function FloorPlansPanel() {
     const { floorPlansEnabled, authMode } = useConfig();
+    const updateConfig = useUpdateConfig();
     const { user } = useAuth();
     const isAdmin = authMode === "no" || user?.role === "admin";
 
@@ -47,13 +48,14 @@ export default function FloorPlansPanel() {
     const handleToggle = async (enabled: boolean) => {
         setToggling(true);
         try {
-            await updateAppSettings({ floor_plans_enabled: enabled });
-            toast.success(`Floor plans ${enabled ? "enabled" : "disabled"}.`);
-            // Runtime config is read once at startup.
-            window.location.reload();
+            const saved = await updateAppSettings({ floor_plans_enabled: enabled });
+            if (saved.floor_plans_enabled) setLoading(true);
+            updateConfig({ floorPlansEnabled: saved.floor_plans_enabled });
+            toast.success(`Floor plans ${saved.floor_plans_enabled ? "enabled" : "disabled"}.`);
         } catch (error) {
-            setToggling(false);
             toast.error(extractErrorMessage(error, "Failed to change the setting."));
+        } finally {
+            setToggling(false);
         }
     };
 
@@ -142,14 +144,14 @@ export default function FloorPlansPanel() {
             <p>Upload a plan of your home and place your plants on it. Only signed-in members can see plans.</p>
 
             {isAdmin && (
-                <label className="floor-plan-toggle">
+                <label className="manage-setting-row">
                     <input
                         type="checkbox"
                         checked={floorPlansEnabled}
                         disabled={toggling}
                         onChange={(e) => handleToggle(e.target.checked)}
                     />
-                    Enable floor plans for everyone
+                    <span>Enable floor plans for everyone</span>
                 </label>
             )}
 
@@ -173,19 +175,35 @@ export default function FloorPlansPanel() {
                             value={newAddress}
                             onChange={(e) => setNewAddress(e.target.value)}
                         />
-                        <input
-                            ref={newFileRef}
-                            type="file"
-                            accept={ACCEPTED}
-                            style={{ display: "none" }}
-                            onChange={(e) => setNewFile(e.target.files?.[0] ?? null)}
-                        />
-                        <button type="button" className="update-btn" onClick={() => newFileRef.current?.click()}>
-                            <FontAwesomeIcon icon={faImage} /> {newFile ? newFile.name : "Choose image…"}
-                        </button>
-                        <button type="button" className="add-btn" onClick={handleCreate} disabled={uploading}>
-                            <FontAwesomeIcon icon={uploading ? faUpload : faPlus} /> {uploading ? "Uploading…" : "Add"}
-                        </button>
+                        <div className="floor-plan-new-actions">
+                            <input
+                                ref={newFileRef}
+                                type="file"
+                                accept={ACCEPTED}
+                                style={{ display: "none" }}
+                                onChange={(e) => setNewFile(e.target.files?.[0] ?? null)}
+                            />
+                            <button
+                                type="button"
+                                className="floor-plan-file-button"
+                                onClick={() => newFileRef.current?.click()}
+                            >
+                                <FontAwesomeIcon icon={faImage} />
+                                <span className={newFile ? "" : "is-empty"}>
+                                    {newFile ? newFile.name : "Choose image…"}
+                                </span>
+                            </button>
+                            <button
+                                type="button"
+                                className="add-btn"
+                                onClick={handleCreate}
+                                disabled={uploading}
+                                aria-label="Add floor plan"
+                                title="Add floor plan"
+                            >
+                                <FontAwesomeIcon icon={uploading ? faSpinner : faPlus} spin={uploading} />
+                            </button>
+                        </div>
                     </div>
 
                     <input
