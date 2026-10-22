@@ -11,9 +11,9 @@ import logging
 from typing import Optional, Tuple
 
 from app.core.config import settings
-from app.core.security import AUTH_MODE, decode_token
+from app.core.security import AUTH_MODE, decode_token, find_user_by_subject
 from app.database import SessionLocal
-from app.models import AuditLog, User
+from app.models import AuditLog
 
 logger = logging.getLogger(__name__)
 
@@ -48,9 +48,7 @@ def resolve_actor(request, db) -> Tuple[Optional[int], Optional[str]]:
         identifier = payload.get("sub")
         if not identifier:
             return None, None
-        user = db.query(User).filter(
-            (User.username == identifier) | (User.email == identifier)
-        ).first()
+        user = find_user_by_subject(db, identifier)
         if user:
             return user.id, user.username
         return None, identifier  # token valid but user gone -> keep snapshot

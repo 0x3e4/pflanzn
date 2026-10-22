@@ -87,6 +87,8 @@ class TestUpdateUserRole:
         """Self-service username/email edits must not be collateral damage."""
         target = make_user(id=2, username="bob", role="user")
         mock_db.query.return_value.filter.return_value.first.return_value = target
+        # No other account uses "bobby" as username or email.
+        mock_db.query.return_value.filter.return_value.filter.return_value.first.return_value = None
         override_dep(require_write_access, make_user(id=2, username="bob", role="user"))
 
         response = client.put("/api/users/2", json={"username": "bobby"})

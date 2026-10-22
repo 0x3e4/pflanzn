@@ -10,6 +10,7 @@ from app.core.security import (
     get_current_admin_user,
     get_current_user,
     hash_password,
+    identifier_in_use,
     require_write_access,
     verify_password,
 )
@@ -104,9 +105,9 @@ def create_user(
     current_user: User = Depends(get_current_admin_user),
 ):
     """Create a new user with a securely hashed password (Admin-only)."""
-    existing_user = db.query(User).filter(User.email == user_data.email).first()
-    if existing_user:
-        raise HTTPException(status_code=400, detail="User with this email already exists")
+    for value in (user_data.username, user_data.email):
+        if identifier_in_use(db, value):
+            raise HTTPException(status_code=400, detail=f"'{value}' is already used as a username or email")
 
     hashed_password = hash_password(user_data.password)
 
@@ -150,6 +151,12 @@ def update_user(
         raise HTTPException(status_code=403, detail="Not authorized to update this user")
 
     update_fields = user_data.dict(exclude_unset=True)
+
+    # Usernames and emails both identify sessions, so neither may match another account's
+    for key in ("username", "email"):
+        value = update_fields.get(key)
+        if value and identifier_in_use(db, value, exclude_user_id=user.id):
+            raise HTTPException(status_code=400, detail=f"'{value}' is already used as a username or email")
 
     # Only admins may change a role — otherwise any user could promote themselves
     if "role" in update_fields and current_user.role != "admin":
