@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Pl@ntNet link next to a plant's species, in `PLANTNET_LANGUAGE`.
 - The AI care helper looks at the three latest photos and the plant's notes, fertilizing, location, watering plan and last advice, and uses facts from the species' Pl@ntNet page. Answers come in four sections: diagnosis, likely causes, what to do now, what to watch for.
-- With Claude, the care helper can also search the web and read pages (`CARE_WEB_SEARCH`, on by default).
+- With Claude or OpenAI, the care helper can also search the web; Claude also reads pages (`CARE_WEB_SEARCH`, on by default). OpenAI care advice now uses the Responses API.
 
 ### Changed
 

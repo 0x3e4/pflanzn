@@ -280,3 +280,56 @@ class TestPlantNetEndpoint:
         with patch("app.core.security.AUTH_MODE", "no"), \
              patch("app.api.routes.plants.plant_reference.lookup", return_value=None):
             assert client.get("/api/plants/1/plantnet").json() == {"name": None, "url": None}
+
+
+class TestOpenAICareHelper:
+    @pytest.fixture
+    def create(self, plant_db):
+        with patch("app.services.openai._client") as client, patch.object(settings, "CARE_WEB_SEARCH", True):
+            yield client.return_value.responses.create
+
+    def test_request_shape(self, create, plant_db):
+        from app.services.openai import OpenAIClient
+
+        create.return_value = SimpleNamespace(output_text="Diagnose: ok")
+        assert OpenAIClient().care_helper(plant_db, 1) == "Diagnose: ok"
+
+        request = create.call_args.kwargs
+        assert request["tools"] == [{"type": "web_search"}]
+        assert request["max_tool_calls"] == 3
+        content = request["input"][0]["content"]
+        assert [part["type"] for part in content] == ["input_text", "input_image", "input_image", "input_image"]
+        assert content[1]["image_url"].startswith("data:image/webp;base64,")
+
+    def test_citations_are_removed(self, create, plant_db):
+        from app.services.openai import OpenAIClient
+
+        create.return_value = SimpleNamespace(
+            output_text="Weniger gießen ([gardening.org](https://gardening.org/x)). Siehe [Ficus](https://en.wikipedia.org/wiki/Ficus).")
+        assert OpenAIClient().care_helper(plant_db, 1) == "Weniger gießen. Siehe Ficus."
+
+    def test_web_search_off(self, create, plant_db):
+        from app.services.openai import OpenAIClient
+
+        create.return_value = SimpleNamespace(output_text="ok")
+        with patch.object(settings, "CARE_WEB_SEARCH", False):
+            OpenAIClient().care_helper(plant_db, 1)
+        assert "tools" not in create.call_args.kwargs
+
+    def test_rejected_web_search_falls_back(self, create, plant_db):
+        from openai import BadRequestError
+
+        from app.services.openai import OpenAIClient
+
+        error = BadRequestError("web_search not supported", response=httpx.Response(
+            400, request=httpx.Request("POST", "https://api.openai.com/v1/responses")), body=None)
+        create.side_effect = [error, SimpleNamespace(output_text="ok")]
+        assert OpenAIClient().care_helper(plant_db, 1) == "ok"
+        assert "tools" not in create.call_args.kwargs
+
+    def test_empty_answer_is_an_error(self, create, plant_db):
+        from app.services.openai import OpenAIClient
+
+        create.return_value = SimpleNamespace(output_text="")
+        with pytest.raises(RuntimeError):
+            OpenAIClient().care_helper(plant_db, 1)

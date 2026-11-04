@@ -105,7 +105,7 @@ class Settings(BaseSettings):
     # AI master switch: off disables LLM text generation, PlantNet identification and MCP.
     AI_ENABLED: bool = _truthy(os.getenv("AI_ENABLED"), default=True)
     LLM_ENABLED: bool = _truthy(os.getenv("LLM_ENABLED"), default=True)
-    # Claude only: the care helper may search the web and read pages (costs extra per request).
+    # Claude and OpenAI: the care helper may search the web (Claude also reads pages); costs extra.
     CARE_WEB_SEARCH: bool = _truthy(os.getenv("CARE_WEB_SEARCH"), default=True)
     # MCP exposes the collection to external AI clients (Claude etc.); opt-in.
     MCP_ENABLED: bool = _truthy(os.getenv("MCP_ENABLED"), default=False)
