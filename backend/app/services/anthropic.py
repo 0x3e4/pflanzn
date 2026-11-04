@@ -15,6 +15,11 @@ logger = logging.getLogger(__name__)
 
 anthropic_client = Anthropic(api_key=settings.CLAUDE_API_KEY)
 
+
+def _response_text(response) -> str:
+    # Newer models can put a thinking block first, so content[0] isn't always text.
+    return "".join(block.text for block in response.content if block.type == "text")
+
 class ClaudeClient:
     def generate_species_description(self, common_name: str, species_name: str) -> str:
         """
@@ -28,14 +33,13 @@ class ClaudeClient:
             response = anthropic_client.messages.create(
                 model=settings.CLAUDE_MODEL_NAME,
                 max_tokens=PromptConfig.MAX_TOKENS_DESCRIPTION,
-                temperature=PromptConfig.TEMPERATURE_CREATIVE,
                 system=PromptConfig.get_system_message(),
                 messages=[
                     {"role": "user", "content": prompt}
                 ]
             )
 
-            generated_text = response.content[0].text
+            generated_text = _response_text(response)
             cleaned_description = clean_generated_text(generated_text)
 
             logger.info("Received response from Claude (Messages API)")
@@ -69,12 +73,11 @@ class ClaudeClient:
             response = anthropic_client.messages.create(
                 model=settings.CLAUDE_MODEL_NAME,
                 max_tokens=PromptConfig.MAX_TOKENS_LOCATION_DESCRIPTION,
-                temperature=PromptConfig.TEMPERATURE_CREATIVE,
                 system=PromptConfig.get_system_message(),
                 messages=[{"role": "user", "content": prompt}],
             )
 
-            generated_text = response.content[0].text
+            generated_text = _response_text(response)
             cleaned_description = clean_generated_text(generated_text)
 
             logger.info("Received location description response from Claude")
@@ -119,7 +122,6 @@ class ClaudeClient:
             response = anthropic_client.messages.create(
                 model=settings.CLAUDE_MODEL_NAME,
                 max_tokens=PromptConfig.MAX_TOKENS_CARE_ADVICE,
-                temperature=PromptConfig.TEMPERATURE_PRECISE,
                 system=PromptConfig.get_system_message(),
                 messages=[
                     {
@@ -139,7 +141,7 @@ class ClaudeClient:
                 ],
             )
 
-            generated_text = response.content[0].text
+            generated_text = _response_text(response)
             cleaned = clean_generated_text(generated_text)
             return cleaned
 
