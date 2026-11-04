@@ -1,4 +1,5 @@
 import apiClient from "./apiClient";
+import { withBusy } from "./busyOverlay";
 import { Location, LocationCreateInput, LocationUpdateInput, LocationImage } from "../types/Location";
 
 const API_BASE = "/locations";
@@ -38,7 +39,10 @@ export const uploadLocationImage = async (
 }> => {
     const formData = new FormData();
     formData.append("file", file);
-    const response = await apiClient.post(`${API_BASE}/${locationId}/upload_image`, formData);
+    const response = await withBusy(
+        { title: "Uploading photo", message: "Saving the photo and making its smaller sizes." },
+        () => apiClient.post(`${API_BASE}/${locationId}/upload_image`, formData),
+    );
     return response.data;
 };
 
@@ -65,9 +69,13 @@ export const identifyLocationFromImage = async (
 }> => {
     const formData = new FormData();
     formData.append("file", file);
-    const response = await apiClient.post(`${API_BASE}/identify`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-    });
+    const response = await withBusy(
+        { title: "Identifying crop", message: "Sending the photo to Pl@ntNet." },
+        () =>
+            apiClient.post(`${API_BASE}/identify`, formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            }),
+    );
     return response.data;
 };
 

@@ -1,4 +1,5 @@
 import apiClient from "./apiClient";
+import { withBusy } from "./busyOverlay";
 import { Plant } from "../types/Plant";
 import { PlantIdentification } from "../types/Identification";
 
@@ -29,13 +30,19 @@ export const uploadPlantImage = async (plantId: number, file: File, uploadedAt?:
     if (uploadedAt) {
         formData.append("uploaded_at", uploadedAt);
     }
-    const response = await apiClient.post(`${API_BASE}/${plantId}/upload_image`, formData);
+    const response = await withBusy(
+        { title: "Uploading photo", message: "Saving the photo and making its smaller sizes." },
+        () => apiClient.post(`${API_BASE}/${plantId}/upload_image`, formData),
+    );
     return response.data;
 };
 
 // Identify species
 export const identifyPlant = async (plantId: number) => {
-    const response = await apiClient.post(`${API_BASE}/${plantId}/identify`);
+    const response = await withBusy(
+        { title: "Identifying species", message: "Sending the latest photo to Pl@ntNet." },
+        () => apiClient.post(`${API_BASE}/${plantId}/identify`),
+    );
     return response.data;
 };
 
@@ -44,9 +51,13 @@ export const identifyPlantFromImage = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await apiClient.post(`${API_BASE}/identify`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-    });
+    const response = await withBusy(
+        { title: "Identifying species", message: "Sending the photo to Pl@ntNet." },
+        () =>
+            apiClient.post(`${API_BASE}/identify`, formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            }),
+    );
 
     return response.data;
 };

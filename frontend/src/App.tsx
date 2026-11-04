@@ -12,6 +12,8 @@ import OAuthAuthorize from "./pages/OAuthAuthorize";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ScrollToTopButton from "./components/ScrollToTopButton";
+import LoadingOverlay from "./components/LoadingOverlay";
+import { useBusyOverlay } from "./services/busyOverlay";
 import BottomNav from "./components/BottomNav";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -59,6 +61,8 @@ function AppLayout() {
             mainContent.focus({ preventScroll: true });
         }
     }, [location.pathname]);
+
+    const busy = useBusyOverlay();
 
     if (shouldShowProtectedSplash) {
         return <AuthSplash />;
@@ -160,6 +164,7 @@ function AppLayout() {
             </div>
             <ScrollToTopButton />
             <BottomNav />
+            {busy && <LoadingOverlay title={busy.title} message={busy.message} />}
         </>
     );
 }
