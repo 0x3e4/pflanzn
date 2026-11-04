@@ -76,7 +76,8 @@ export const deletePlantImage = async (plantId: number, imageId: number) => {
 
 // Generate description
 export const generatePlantDescription = async (plantId: number): Promise<{ description: string }> => {
-    const response = await apiClient.post(`${API_BASE}/${plantId}/generate_description`);
+    // Models that think before answering can take a while.
+    const response = await apiClient.post(`${API_BASE}/${plantId}/generate_description`, undefined, { timeout: 180000 });
     return response.data;
 };
 

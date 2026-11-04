@@ -333,3 +333,27 @@ class TestOpenAICareHelper:
         create.return_value = SimpleNamespace(output_text="")
         with pytest.raises(RuntimeError):
             OpenAIClient().care_helper(plant_db, 1)
+
+
+class TestClaudeDescriptions:
+    @pytest.fixture
+    def create(self):
+        with patch("app.services.anthropic.anthropic_client") as client:
+            yield client.messages.create
+
+    def test_room_for_thinking_before_the_text(self, create):
+        from app.services.anthropic import ClaudeClient
+
+        create.return_value = _response(_block("thinking", thinking=""), _block("text", text="Ein robuster Bogenhanf."))
+        assert ClaudeClient().generate_species_description("Bogenhanf", "Sansevieria") == "Ein robuster Bogenhanf."
+        assert create.call_args.kwargs["max_tokens"] == 16000
+
+    def test_no_text_is_an_error_not_an_empty_description(self, create):
+        """Regression: thinking used up an 800-token limit; the empty text was saved with HTTP 200."""
+        from app.services.anthropic import ClaudeClient
+
+        create.return_value = _response(_block("thinking", thinking=""), stop_reason="max_tokens")
+        with pytest.raises(RuntimeError, match="max_tokens"):
+            ClaudeClient().generate_species_description("Bogenhanf", "Sansevieria")
+        with pytest.raises(RuntimeError, match="max_tokens"):
+            ClaudeClient().generate_location_description("Beet", "Basilikum", "bed")

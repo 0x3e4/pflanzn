@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Care help and AI descriptions with Claude failed since the anthropic SDK 1.x bump (`temperature` is no longer accepted).
 - The OpenAI provider failed on every request since the openai SDK 1.x bump (`openai.ChatCompletion` was removed).
 - Long care advice was cut off; the answer limit is higher now.
+- Generating a description with a newer Claude model saved an empty text: thinking used up the answer limit. The limit is higher now, and an empty answer is reported as an error.
 - After editing a plant, its page showed "Water today" until reloaded (the update didn't return the last watering).
 
 ## [1.2.0] - 2026-10-22

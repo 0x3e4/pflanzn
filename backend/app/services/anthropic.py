@@ -16,7 +16,9 @@ logger = logging.getLogger(__name__)
 anthropic_client = Anthropic(api_key=settings.CLAUDE_API_KEY)
 
 
-# Thinking and web tool use count toward max_tokens, so the care helper needs room.
+# Thinking (always on in newer models) and web tool use count toward max_tokens, so
+# the short texts' limits from PromptConfig would leave no room for the answer.
+MAX_TOKENS_TEXT = 16000
 MAX_TOKENS_CARE_ADVICE = 16000
 # A server-side tool loop can pause the turn; it's resumed this many times at most.
 MAX_CONTINUATIONS = 3
@@ -73,7 +75,7 @@ class ClaudeClient:
 
             response = anthropic_client.messages.create(
                 model=settings.CLAUDE_MODEL_NAME,
-                max_tokens=PromptConfig.MAX_TOKENS_DESCRIPTION,
+                max_tokens=MAX_TOKENS_TEXT,
                 system=PromptConfig.get_system_message(),
                 messages=[
                     {"role": "user", "content": prompt}
@@ -81,6 +83,8 @@ class ClaudeClient:
             )
 
             generated_text = _response_text(response)
+            if not generated_text:
+                raise RuntimeError(f"Claude returned no text (stop reason: {response.stop_reason})")
             cleaned_description = clean_generated_text(generated_text)
 
             logger.info("Received response from Claude (Messages API)")
@@ -113,12 +117,14 @@ class ClaudeClient:
 
             response = anthropic_client.messages.create(
                 model=settings.CLAUDE_MODEL_NAME,
-                max_tokens=PromptConfig.MAX_TOKENS_LOCATION_DESCRIPTION,
+                max_tokens=MAX_TOKENS_TEXT,
                 system=PromptConfig.get_system_message(),
                 messages=[{"role": "user", "content": prompt}],
             )
 
             generated_text = _response_text(response)
+            if not generated_text:
+                raise RuntimeError(f"Claude returned no text (stop reason: {response.stop_reason})")
             cleaned_description = clean_generated_text(generated_text)
 
             logger.info("Received location description response from Claude")

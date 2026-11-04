@@ -868,9 +868,10 @@ export default function PlantDetails() {
                                     href={plantNetUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    title="Open this species on Pl@ntNet"
+                                    title="Open on Pl@ntNet"
+                                    aria-label={`Open ${plant.species} on Pl@ntNet (new tab)`}
                                 >
-                                    <FontAwesomeIcon icon={faArrowUpRightFromSquare} /> Pl@ntNet
+                                    <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
                                 </a>
                             )}
                         </span>
