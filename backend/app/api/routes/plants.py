@@ -52,6 +52,7 @@ from app.schemas import (
     WateringListItemResponse,
     WateringListPaginatedResponse,
 )
+from app.services import plant_reference
 from app.services.llm_client import LLMClient
 from app.services.plantnet import PlantNetError, identify_species_via_plantnet
 from app.utils.uploads import IMAGE_VARIANTS
@@ -415,6 +416,7 @@ def identify_species(
             species_data = []
             for res in sorted_results:
                 scientific_name = res["species"].get("scientificNameWithoutAuthor", "Unknown")
+                scientific_name_full = res["species"].get("scientificName")
                 common_names = res["species"].get("commonNames", [])
                 common_name = common_names[0] if common_names else "Unknown"
 
@@ -422,6 +424,7 @@ def identify_species(
 
                 species_data.append({
                     "scientific_name": scientific_name,
+                    "scientific_name_full": scientific_name_full,
                     "common_name": common_name,
                     "score": f"{res['score'] * 100:.2f}",
                     "images": images
@@ -436,6 +439,7 @@ def identify_species(
                     user_id=None,
                     image_path=relative_path,
                     scientific_name=species["scientific_name"],
+                    scientific_name_full=species["scientific_name_full"],
                     common_name=species["common_name"],
                     confidence_score=species["score"],
                     result_images=json.dumps(species["images"]),
@@ -536,6 +540,7 @@ async def identify_species_from_image(
             species_data = []
             for res in sorted_results:
                 scientific_name = res["species"].get("scientificNameWithoutAuthor", "Unknown")
+                scientific_name_full = res["species"].get("scientificName")
                 common_names = res["species"].get("commonNames", [])
                 common_name = common_names[0] if common_names else "Unknown"
 
@@ -543,6 +548,7 @@ async def identify_species_from_image(
 
                 species_data.append({
                     "scientific_name": scientific_name,
+                    "scientific_name_full": scientific_name_full,
                     "common_name": common_name,
                     "score": f"{res['score'] * 100:.2f}",
                     "images": images
@@ -558,6 +564,7 @@ async def identify_species_from_image(
                     user_id=None,
                     image_path=relative_path,
                     scientific_name=species["scientific_name"],
+                    scientific_name_full=species["scientific_name_full"],
                     common_name=species["common_name"],
                     confidence_score=species["score"],
                     result_images=json.dumps(species["images"]),
@@ -941,6 +948,15 @@ def archive_plant(plant_id: int, data: ArchiveRequest, db: Session = Depends(get
     plant.archive_reason = data.reason
     db.commit()
     return {"message": f"Plant {'archived' if data.archive else 'restored'} successfully"}
+
+@router.get("/{plant_id}/plantnet")
+def get_plantnet_reference(plant_id: int, db: Session = Depends(get_db)):
+    """Pl@ntNet species page for the plant's species; url is null when none matches."""
+    plant = db.query(Plant).filter(Plant.id == plant_id).first()
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+    reference = plant_reference.lookup(db, plant.species)
+    return {"name": reference.name, "url": reference.url} if reference else {"name": None, "url": None}
 
 @router.post("/{plant_id}/care_helper", dependencies=[Depends(require_llm)])
 def get_care_helper(plant_id: int, db: Session = Depends(get_db), current_user: Optional[User] = Depends(require_write_access)):

@@ -1,12 +1,12 @@
-import base64
 import logging
+import re
 from typing import Optional
 
-from anthropic import Anthropic
+from anthropic import Anthropic, BadRequestError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models import Plant
+from app.services.care_context import build_care_context
 from app.services.prompt_config import PromptConfig
 from app.utils.llm_text_cleaner import clean_generated_text
 
@@ -16,9 +16,50 @@ logger = logging.getLogger(__name__)
 anthropic_client = Anthropic(api_key=settings.CLAUDE_API_KEY)
 
 
+# Thinking and web tool use count toward max_tokens, so the care helper needs room.
+MAX_TOKENS_CARE_ADVICE = 16000
+# A server-side tool loop can pause the turn; it's resumed this many times at most.
+MAX_CONTINUATIONS = 3
+# Newer models take the dynamic-filtering web tools, older ones the basic variants.
+_DYNAMIC_WEB_TOOLS = re.compile(r"^claude-(opus-(4-[6-9]|5)|sonnet-(4-6|5))")
+
+
 def _response_text(response) -> str:
-    # Newer models can put a thinking block first, so content[0] isn't always text.
-    return "".join(block.text for block in response.content if block.type == "text")
+    """The answer: text after the last tool block. Newer models can put a thinking
+    block first, and text before a web search is preamble ("Let me look that up")."""
+    blocks = list(response.content)
+    last_tool = max(
+        (i for i, block in enumerate(blocks) if block.type not in ("text", "thinking", "redacted_thinking")),
+        default=-1,
+    )
+    return "".join(block.text for block in blocks[last_tool + 1:] if block.type == "text")
+
+
+def _web_tools(model: str) -> list[dict]:
+    dynamic = _DYNAMIC_WEB_TOOLS.match(model or "")
+    return [
+        {"type": "web_search_20260209" if dynamic else "web_search_20250305", "name": "web_search", "max_uses": 3},
+        {"type": "web_fetch_20260209" if dynamic else "web_fetch_20250910", "name": "web_fetch", "max_uses": 3,
+         "max_content_tokens": 20000},
+    ]
+
+
+def _care_request(content: list[dict], tools: Optional[list[dict]]):
+    messages = [{"role": "user", "content": content}]
+    request = {
+        "model": settings.CLAUDE_MODEL_NAME,
+        "max_tokens": MAX_TOKENS_CARE_ADVICE,
+        "system": PromptConfig.get_system_message(),
+        "messages": messages,
+    }
+    if tools:
+        request["tools"] = tools
+    for _ in range(MAX_CONTINUATIONS):
+        response = anthropic_client.messages.create(**request)
+        if response.stop_reason != "pause_turn":
+            break
+        messages.append({"role": "assistant", "content": response.content})
+    return response
 
 class ClaudeClient:
     def generate_species_description(self, common_name: str, species_name: str) -> str:
@@ -89,61 +130,34 @@ class ClaudeClient:
 
     def care_helper(self, db: Session, plant_id: int, user_message: str = None) -> str:
         """
-        Generate care advice for a plant using Claude's vision capabilities.
+        Generate care advice for a plant from its latest photos, history and Pl@ntNet
+        facts. With CARE_WEB_SEARCH, Claude may also search the web and read pages.
         Optionally includes user's observation for more targeted advice.
         """
-        from app.utils.uploads import resolve_upload_path
-
-        plant = db.query(Plant).filter(Plant.id == plant_id).first()
-        if not plant:
-            raise ValueError("Plant not found")
-
-        species = plant.species or "Unknown species"
-
-        # Watering history
-        last_waterings = sorted(plant.waterings, key=lambda w: w.watered_at, reverse=True)[:10]
-        watering_dates = [w.watered_at.strftime('%Y-%m-%d') for w in last_waterings]
-
-        # Use latest image
-        latest_images = sorted(plant.images, key=lambda img: img.uploaded_at, reverse=True)[:5]
-        if not latest_images:
-            raise ValueError("No images found for this plant")
-
-        image_path, media_type = resolve_upload_path(latest_images[0].image_path)
-
-        with open(image_path, "rb") as f:
-            base64_image = base64.b64encode(f.read()).decode("utf-8")
-
-        prompt = PromptConfig.get_care_helper_prompt(species, watering_dates, user_message)
+        context = build_care_context(db, plant_id, user_message)
+        content = [
+            {"type": "image", "source": {"type": "base64", "media_type": image.media_type, "data": image.data}}
+            for image in context.images
+        ]
+        content.append({"type": "text", "text": context.prompt})
+        tools = _web_tools(settings.CLAUDE_MODEL_NAME) if settings.CARE_WEB_SEARCH else None
 
         try:
-            logger.info(f"Requesting Claude vision-based care guidance for plant ID {plant_id}")
-
-            response = anthropic_client.messages.create(
-                model=settings.CLAUDE_MODEL_NAME,
-                max_tokens=PromptConfig.MAX_TOKENS_CARE_ADVICE,
-                system=PromptConfig.get_system_message(),
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": prompt},
-                            {
-                                "type": "image",
-                                "source": {
-                                    "type": "base64",
-                                    "media_type": media_type,
-                                    "data": base64_image,
-                                },
-                            },
-                        ],
-                    }
-                ],
-            )
+            logger.info(f"Requesting Claude care guidance for plant ID {plant_id} "
+                        f"({len(context.images)} photos, web tools {'on' if tools else 'off'})")
+            try:
+                response = _care_request(content, tools)
+            except BadRequestError as e:
+                if not tools:
+                    raise
+                # Web tools disabled for the organization, or not offered for this model.
+                logger.warning(f"Claude rejected the web tools, retrying without them: {e}")
+                response = _care_request(content, None)
 
             generated_text = _response_text(response)
-            cleaned = clean_generated_text(generated_text)
-            return cleaned
+            if not generated_text:
+                raise RuntimeError(f"Claude returned no care advice (stop reason: {response.stop_reason})")
+            return clean_generated_text(generated_text)
 
         except Exception as e:
             logger.exception(f"Error while generating care helper response: {e}")

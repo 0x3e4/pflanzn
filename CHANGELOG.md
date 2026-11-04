@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Pl@ntNet link next to a plant's species, in `PLANTNET_LANGUAGE`.
+- The AI care helper looks at the three latest photos and the plant's notes, fertilizing, location, watering plan and last advice, and uses facts from the species' Pl@ntNet page. Answers come in four sections: diagnosis, likely causes, what to do now, what to watch for.
+- With Claude, the care helper can also search the web and read pages (`CARE_WEB_SEARCH`, on by default).
 
 ### Changed
 
@@ -25,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Care help and AI descriptions with Claude failed since the anthropic SDK 1.x bump (`temperature` is no longer accepted).
+- The OpenAI provider failed on every request since the openai SDK 1.x bump (`openai.ChatCompletion` was removed).
+- Long care advice was cut off; the answer limit is higher now.
 
 ## [1.2.0] - 2026-10-22
 

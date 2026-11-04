@@ -93,7 +93,16 @@ export const generateCareAdvice = async (
     if (userMessage) {
         formData.append("user_message", userMessage);
     }
-    const response = await apiClient.post(`${API_BASE}/${plantId}/care_advice`, formData);
+    // Photos, thinking and web search can take a few minutes.
+    const response = await apiClient.post(`${API_BASE}/${plantId}/care_advice`, formData, { timeout: 300000 });
+    return response.data;
+};
+
+// Pl@ntNet species page for the plant's species (url is null when none matches)
+export const fetchPlantNetReference = async (
+    plantId: number,
+): Promise<{ name: string | null; url: string | null }> => {
+    const response = await apiClient.get(`${API_BASE}/${plantId}/plantnet`);
     return response.data;
 };
 

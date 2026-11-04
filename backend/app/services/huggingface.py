@@ -4,6 +4,7 @@ from typing import Optional
 from huggingface_hub import InferenceClient
 
 from app.core.config import settings
+from app.services.care_context import build_care_context
 from app.services.prompt_config import PromptConfig
 from app.utils.llm_text_cleaner import clean_generated_text
 
@@ -86,25 +87,8 @@ class HuggingFaceClient:
         Generate care advice for a plant using Hugging Face.
         Note: Vision support depends on the specific model being used.
         """
-        import os
-
-        from app.models import Plant
-
-        BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-        UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
-
-        plant = db.query(Plant).filter(Plant.id == plant_id).first()
-        if not plant:
-            raise ValueError("Plant not found")
-
-        species = plant.species or "Unknown species"
-
-        # Watering history
-        last_waterings = sorted(plant.waterings, key=lambda w: w.watered_at, reverse=True)[:10]
-        watering_dates = [w.watered_at.strftime('%Y-%m-%d') for w in last_waterings]
-
         system_msg = PromptConfig.get_system_message()
-        prompt = PromptConfig.get_care_helper_prompt(species, watering_dates, user_message)
+        prompt = build_care_context(db, plant_id, user_message, max_images=0).prompt
         full_prompt = f"{system_msg}\n\n{prompt}"
 
         try:

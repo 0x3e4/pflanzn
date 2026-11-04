@@ -13,6 +13,7 @@ import {
     removeTagFromPlant,
     archivePlant,
     generateCareAdvice,
+    fetchPlantNetReference,
     fetchPlantActivities,
     createPlantNote,
     fetchPlantNotes,
@@ -43,6 +44,7 @@ import {
     faPlus,
     faMap,
     faLocationDot,
+    faArrowUpRightFromSquare,
 } from "@fortawesome/free-solid-svg-icons";
 import EditableDiv from "../components/EditableDiv";
 import "../styles/plantDetails.css";
@@ -106,6 +108,7 @@ export default function PlantDetails() {
     const [careAdviceModalOpen, setCareAdviceModalOpen] = useState(false);
     const [careAdviceMessage, setCareAdviceMessage] = useState("");
     const [actionLoading, setActionLoading] = useState<ActionLoadingState>(null);
+    const [plantNet, setPlantNet] = useState<{ species: string; url: string | null } | null>(null);
 
     // Fetch plant and activites data on load
     useEffect(() => {
@@ -118,6 +121,22 @@ export default function PlantDetails() {
             .then(setWeatherConfigs)
             .catch(() => {});
     }, [plantId]);
+
+    // Link to the species on Pl@ntNet; looked up again when the species changes
+    const species = plant?.species;
+    useEffect(() => {
+        if (!plantId || !species) return;
+        let cancelled = false;
+        fetchPlantNetReference(Number(plantId))
+            .then((reference) => {
+                if (!cancelled) setPlantNet({ species, url: reference.url });
+            })
+            .catch(() => {});
+        return () => {
+            cancelled = true;
+        };
+    }, [plantId, species]);
+    const plantNetUrl = plantNet && plantNet.species === species ? plantNet.url : null;
 
     const loadPlant = async () => {
         try {
@@ -823,6 +842,17 @@ export default function PlantDetails() {
                                         {plant.species || "Unknown"}
                                     </span>
                                 </>
+                            )}
+                            {plantNetUrl && (
+                                <a
+                                    className="plantnet-link"
+                                    href={plantNetUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title="Open this species on Pl@ntNet"
+                                >
+                                    <FontAwesomeIcon icon={faArrowUpRightFromSquare} /> Pl@ntNet
+                                </a>
                             )}
                         </span>
                         <span className="plant-information-names">

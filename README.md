@@ -169,7 +169,7 @@ location ~ ^/(api/|\.well-known/oauth-) {
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
     client_max_body_size 30m;   # match MAX_UPLOAD_MB
-    proxy_read_timeout 120s;    # AI care advice can be slow
+    proxy_read_timeout 300s;    # AI care advice with web search can take minutes
 }
 
 location / {
@@ -242,7 +242,7 @@ Everything is driven through environment variables — see [.env.example](.env.e
 | **Database** | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_ROOT_PASSWORD`, `DB_NAME` |
 | **Redis** | `REDIS_URL` |
 | **Features** | `ENABLE_LOCATIONS`, `AUDIT_ENABLED`, `ENABLE_API_DOCS` (default `false`), `MAX_UPLOAD_MB` (default `30`) |
-| **AI** | `AI_ENABLED`, `LLM_ENABLED`, `MCP_ENABLED`, `MCP_OAUTH_ISSUER`, `MCP_OAUTH_AUDIENCE`, `MCP_LOGIN_*` |
+| **AI** | `AI_ENABLED`, `LLM_ENABLED`, `CARE_WEB_SEARCH` (Claude only, default `true`), `MCP_ENABLED`, `MCP_OAUTH_ISSUER`, `MCP_OAUTH_AUDIENCE`, `MCP_LOGIN_*` |
 | **Identification** | `PLANTNET_API_KEY`, `PLANTNET_LANGUAGE` |
 | **AI providers (optional)** | `LLM_LANGUAGE`, `OPENAI_API_KEY` / `OPENAI_MODEL_NAME`, `CLAUDE_API_KEY` / `CLAUDE_MODEL_NAME`, `MISTRALAI_API_KEY` / `MISTRALAI_API_URL` / `MISTRALAI_MODEL_NAME`, `HUGGINGFACE_API_KEY` / `HUGGINGFACE_MODEL_NAME`, `OLLAMA_URL` / `OLLAMA_MODEL_NAME`. Provider auto-detected from whichever key is set; priority `openai > claude > mistralai > huggingface > ollama`. |
 | **Weather** | `WEATHER_ENABLED`, `WEATHER_CHECK_INTERVAL_HOURS`, `WEATHER_RAINFALL_THRESHOLD_MM`, `OPENWEATHERMAP_API_KEY` (optional) |

@@ -116,6 +116,12 @@
     margin: 3px 0;
 }
 
+.plantnet-link {
+    margin-left: 8px;
+    font-size: 0.85em;
+    white-space: nowrap;
+}
+
 .plant-details-container {
     background-color: var(--secondary-background-color);
     position: relative;

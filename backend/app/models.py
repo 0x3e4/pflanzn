@@ -110,6 +110,8 @@ class PlantIdentification(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     image_path = Column(String(512), nullable=True)
     scientific_name = Column(String(255), nullable=False)
+    # With author ("Ficus elastica Roxb. ex Hornem."); Pl@ntNet's species pages need it.
+    scientific_name_full = Column(String(255), nullable=True)
     common_name = Column(String(255), nullable=True)
     confidence_score = Column(String(10), nullable=True)
     result_images = Column(Text, nullable=True)

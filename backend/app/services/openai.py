@@ -1,16 +1,22 @@
 import logging
 from typing import Optional
 
-import openai
+from openai import OpenAI
 
 from app.core.config import settings
+from app.services.care_context import build_care_context
 from app.services.prompt_config import PromptConfig
 from app.utils.llm_text_cleaner import clean_generated_text
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-openai.api_key = settings.OPENAI_API_KEY
+
+
+def _client() -> OpenAI:
+    # Built per call: the constructor raises without an API key, and this module is
+    # imported whichever provider is configured.
+    return OpenAI(api_key=settings.OPENAI_API_KEY)
 
 class OpenAIClient:
     def generate_species_description(self, common_name: str, species_name: str) -> str:
@@ -22,7 +28,7 @@ class OpenAIClient:
         try:
             logger.info(f"Requesting OpenAI to generate description for: {species_name}")
 
-            response = openai.ChatCompletion.create(
+            response = _client().chat.completions.create(
                 model=settings.OPENAI_MODEL_NAME,
                 messages=[
                     {"role": "system", "content": PromptConfig.get_system_message()},
@@ -32,7 +38,7 @@ class OpenAIClient:
                 temperature=PromptConfig.TEMPERATURE_CREATIVE
             )
 
-            generated_text = response['choices'][0]['message']['content']
+            generated_text = response.choices[0].message.content
             cleaned_description = clean_generated_text(generated_text)
 
             logger.info("Received response from OpenAI")
@@ -63,7 +69,7 @@ class OpenAIClient:
         try:
             logger.info(f"Requesting OpenAI to generate location description for: {location_name}")
 
-            response = openai.ChatCompletion.create(
+            response = _client().chat.completions.create(
                 model=settings.OPENAI_MODEL_NAME,
                 messages=[
                     {"role": "system", "content": PromptConfig.get_system_message()},
@@ -73,7 +79,7 @@ class OpenAIClient:
                 temperature=PromptConfig.TEMPERATURE_CREATIVE,
             )
 
-            generated_text = response["choices"][0]["message"]["content"]
+            generated_text = response.choices[0].message.content
             cleaned_description = clean_generated_text(generated_text)
 
             logger.info("Received location description response from OpenAI")
@@ -87,58 +93,27 @@ class OpenAIClient:
         Generate care advice for a plant using OpenAI's GPT models with vision capabilities.
         Optionally includes user's observation for more targeted advice.
         """
-        import base64
-
-        from app.models import Plant
-        from app.utils.uploads import resolve_upload_path
-
-        plant = db.query(Plant).filter(Plant.id == plant_id).first()
-        if not plant:
-            raise ValueError("Plant not found")
-
-        species = plant.species or "Unknown species"
-
-        # Watering history
-        last_waterings = sorted(plant.waterings, key=lambda w: w.watered_at, reverse=True)[:10]
-        watering_dates = [w.watered_at.strftime('%Y-%m-%d') for w in last_waterings]
-
-        # Use latest image
-        latest_images = sorted(plant.images, key=lambda img: img.uploaded_at, reverse=True)[:5]
-        if not latest_images:
-            raise ValueError("No images found for this plant")
-
-        image_path, media_type = resolve_upload_path(latest_images[0].image_path)
-
-        with open(image_path, "rb") as f:
-            base64_image = base64.b64encode(f.read()).decode("utf-8")
-
-        prompt = PromptConfig.get_care_helper_prompt(species, watering_dates, user_message)
+        context = build_care_context(db, plant_id, user_message)
+        content = [{"type": "text", "text": context.prompt}]
+        content += [
+            {"type": "image_url", "image_url": {"url": f"data:{image.media_type};base64,{image.data}"}}
+            for image in context.images
+        ]
 
         try:
             logger.info(f"Requesting OpenAI vision-based care guidance for plant ID {plant_id}")
 
-            response = openai.ChatCompletion.create(
+            response = _client().chat.completions.create(
                 model="gpt-4o",  # Use vision-capable model
                 messages=[
                     {"role": "system", "content": PromptConfig.get_system_message()},
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": prompt},
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:{media_type};base64,{base64_image}"
-                                }
-                            }
-                        ]
-                    }
+                    {"role": "user", "content": content},
                 ],
                 max_tokens=PromptConfig.MAX_TOKENS_CARE_ADVICE,
                 temperature=PromptConfig.TEMPERATURE_PRECISE
             )
 
-            generated_text = response['choices'][0]['message']['content']
+            generated_text = response.choices[0].message.content
             cleaned = clean_generated_text(generated_text)
             return cleaned
 

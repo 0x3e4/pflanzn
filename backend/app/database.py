@@ -190,6 +190,16 @@ def _ensure_users_schema():
         _execute_ddl("ALTER TABLE users ADD COLUMN preferences TEXT NOT NULL DEFAULT ('{}')")
 
 
+def _ensure_identifications_schema():
+    """Idempotent migration for plant_identifications (full scientific name)."""
+    inspector = inspect(engine)
+    if "plant_identifications" not in set(inspector.get_table_names()):
+        return  # create_all already handled it
+    columns = {column["name"] for column in inspector.get_columns("plant_identifications")}
+    if "scientific_name_full" not in columns:
+        _execute_ddl("ALTER TABLE plant_identifications ADD COLUMN scientific_name_full VARCHAR(255) NULL AFTER scientific_name")
+
+
 def _ensure_audit_logs_schema():
     """Idempotent migration for the audit_logs table (indexes)."""
     inspector = inspect(engine)
@@ -236,4 +246,5 @@ def init_db():
     _ensure_plants_schema()
     _ensure_users_schema()
     _ensure_audit_logs_schema()
+    _ensure_identifications_schema()
     logger.debug("Database tables ensured.")
