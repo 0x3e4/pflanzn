@@ -459,16 +459,16 @@ export default function FloorPlanView({
 
             <ul className="floor-plan-legend" aria-label="Legend">
                 <li>
-                    <span className="dot dot--due" /> Needs water
+                    <span className="legend-ring legend-ring--due" aria-hidden="true" /> Needs water
                 </li>
                 <li>
-                    <span className="dot dot--soon" /> Tomorrow
+                    <span className="legend-ring legend-ring--soon" aria-hidden="true" /> Tomorrow
                 </li>
                 <li>
-                    <span className="dot dot--ok" /> OK
+                    <span className="legend-ring legend-ring--ok" aria-hidden="true" /> OK
                 </li>
                 <li>
-                    <span className="dot dot--none" /> No schedule
+                    <span className="legend-ring legend-ring--none" aria-hidden="true" /> No schedule
                 </li>
             </ul>
 

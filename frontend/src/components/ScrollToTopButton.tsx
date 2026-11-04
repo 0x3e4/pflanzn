@@ -19,9 +19,12 @@ export default function ScrollToTopButton() {
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
+    // Rendered only once the page has scrolled: never an invisible control in the tab order.
+    if (!visible) return null;
+
     return (
         <button
-            className={`scroll-to-top-btn ${visible ? "visible" : "hidden"}`}
+            className="scroll-to-top-btn"
             onClick={scrollToTop}
             title="Scroll back to top"
             aria-label="Scroll back to top"

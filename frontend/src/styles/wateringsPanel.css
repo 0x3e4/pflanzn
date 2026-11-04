@@ -11,8 +11,8 @@
 }
 
 .waterings-delete-btn {
-    background: var(--quinary-color, #c0392b);
-    color: #fff;
+    background: var(--quinary-color);
+    color: var(--text-on-fill);
     border: none;
     border-radius: 6px;
     padding: 8px 14px;
@@ -80,8 +80,7 @@
 .waterings-table th {
     font-weight: 600;
     color: var(--muted-text-color);
-    text-transform: uppercase;
-    font-size: 0.75rem;
+    font-size: 0.85rem;
 }
 
 .waterings-table tr.waterings-row {
@@ -95,6 +94,7 @@
 
 .waterings-table tr.selected {
     background: var(--senary-color);
+    color: var(--text-on-fill);
 }
 
 .waterings-table tr.waterings-row:focus-visible {

@@ -5,7 +5,7 @@
     right: 0;
     z-index: 10001;
     background-color: var(--tertiary-color);
-    color: white;
+    color: var(--text-on-fill);
     text-align: center;
     padding: 6px 16px;
     font-size: 13px;

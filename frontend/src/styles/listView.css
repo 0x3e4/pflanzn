@@ -37,7 +37,7 @@
 
 .view-mode-toggle button.active {
     background-color: var(--secondary-color);
-    color: #ffffff;
+    color: var(--text-on-fill);
 }
 
 .list-view {
@@ -56,17 +56,17 @@
     box-sizing: border-box;
     background: var(--secondary-background-color);
     /* Faint outline so rows stay separated on dark backgrounds where the shadow barely shows */
-    border: 1px solid rgba(128, 128, 128, 0.2);
+    border: 1px solid rgb(var(--neutral-rgb) / 0.2);
     border: 1px solid color-mix(in srgb, var(--border-color) 35%, transparent);
     border-radius: 12px;
     /* Same elevation as the grid cards (.plant-card / .location-card) */
-    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0px 8px 15px rgb(var(--shadow-rgb) / 0.1);
     text-align: left;
     transition: box-shadow 0.3s ease;
 }
 
 .list-row:hover {
-    box-shadow: 0px 12px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0px 12px 20px rgb(var(--shadow-rgb) / 0.15);
 }
 
 .list-row.archived {
@@ -160,13 +160,14 @@
     padding: 0;
     border: none;
     border-radius: 50%;
-    color: #ffffff;
+    color: var(--text-on-fill);
     font-size: 1rem;
     cursor: pointer;
 }
 
 .list-row-btn--water {
     background-color: var(--octal-color);
+    color: var(--text-on-fill);
 }
 
 .list-row-btn--water:hover {
@@ -175,6 +176,7 @@
 
 .list-row-btn--upload {
     background-color: var(--quinary-color);
+    color: var(--text-on-fill);
 }
 
 .list-row-btn--upload:hover {
@@ -207,19 +209,21 @@
     white-space: nowrap;
 }
 
+/* One status language: red means water now, amber means soon, neutral means fine
+   (the floor plan markers use the same three). */
 .watering-badge--due {
-    background-color: var(--octal-color);
-    color: #ffffff;
+    background-color: var(--status-due-bg);
+    color: var(--status-due-ink);
 }
 
 .watering-badge--soon {
-    border: 1px solid var(--octal-color);
-    color: var(--text-color);
+    background-color: var(--status-soon-bg);
+    color: var(--status-soon-ink);
 }
 
 .watering-badge--ok {
-    background-color: var(--background-color);
-    color: var(--muted-text-color);
+    background-color: var(--status-ok-bg);
+    color: var(--status-ok-ink);
 }
 
 /* Automatic #needs_water filter chip — combines with the regular tag chips */
@@ -229,12 +233,12 @@
 
 .hashtag.hashtag-needs-water:hover {
     background-color: var(--nonal-color);
-    color: #ffffff;
+    color: var(--text-on-fill);
 }
 
 .hashtag.hashtag-needs-water.active {
     background-color: var(--octal-color);
-    color: #ffffff;
+    color: var(--text-on-fill);
 }
 
 .hashtag-count {

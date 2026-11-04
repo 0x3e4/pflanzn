@@ -12,7 +12,7 @@
 .login-card {
     background-color: var(--secondary-background-color);
     border-radius: 16px;
-    box-shadow: 0px 12px 40px rgba(0, 0, 0, 0.4);
+    box-shadow: 0px 12px 40px rgb(var(--shadow-rgb) / 0.4);
     padding: 40px 36px;
     width: 100%;
     max-width: 380px;
@@ -67,16 +67,18 @@
 }
 
 .login-form input:focus {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb, 76, 175, 80), 0.15);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 15%, transparent);
 }
 
 /* Login Button */
 .login-form button {
     width: 100%;
     padding: 14px;
-    background-color: var(--primary-color);
-    color: white;
+    background-color: var(--button-primary-bg);
+    color: var(--button-primary-ink);
     border: none;
     border-radius: 10px;
     font-size: 16px;
@@ -113,8 +115,8 @@
     transition:
         background-color 0.3s ease,
         transform 0.15s ease;
-    background-color: var(--primary-color);
-    color: white;
+    background-color: var(--button-primary-bg);
+    color: var(--button-primary-ink);
     display: flex;
     align-items: center;
     justify-content: center;

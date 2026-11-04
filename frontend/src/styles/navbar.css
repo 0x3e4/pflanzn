@@ -9,9 +9,9 @@
     align-items: center;
     justify-content: space-between;
     color: var(--text-color);
-    transition: all 0.3s ease-in-out;
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out, border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
     z-index: 1000;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0px 4px 10px rgb(var(--shadow-rgb) / 0.2);
 }
 
 .nav-container {
@@ -31,7 +31,7 @@
     font-weight: bold;
     text-decoration: none;
     color: var(--text-color);
-    transition: all 0.3s ease-in-out;
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out, border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
 }
 
 .nav-logo:hover {
@@ -47,7 +47,7 @@
 .nav-links {
     display: flex;
     gap: 20px;
-    transition: all 0.3s ease-in-out;
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out, border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
 }
 
 .nav-links a {
@@ -68,6 +68,7 @@
     border: none;
     cursor: pointer;
     padding: 10px;
+    color: var(--text-color);
 }
 
 .nav-toggle:hover {
@@ -80,7 +81,7 @@
     height: 3px;
     background: var(--text-color);
     position: relative;
-    transition: all 0.3s ease-in-out;
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out, border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
 }
 
 .hamburger::before,
@@ -114,9 +115,10 @@
         border-radius: 5px;
         align-items: flex-start;
         width: 200px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 6px rgb(var(--shadow-rgb) / 0.1);
         border: 1px solid var(--text-color);
-    }
+    color: var(--text-color);
+}
 
     .nav-links a {
         width: 100%;
@@ -134,7 +136,8 @@
 
     .nav-toggle.active .hamburger {
         background: transparent;
-    }
+    color: var(--text-color);
+}
 
     .nav-toggle.active .hamburger::before {
         transform: translateY(8px) rotate(45deg);

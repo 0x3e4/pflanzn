@@ -8,7 +8,7 @@ export default function OfflineBanner() {
 
     return (
         <div className="offline-banner" role="alert">
-            You're offline — viewing cached data
+            You’re offline: showing cached data
         </div>
     );
 }

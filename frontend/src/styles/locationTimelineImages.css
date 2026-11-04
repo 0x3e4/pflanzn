@@ -34,8 +34,8 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(200, 200, 200, 0.9);
-    color: var(--text-color);
+    background: rgb(var(--ink-rgb) / 0.82);
+    color: var(--text-on-fill);
     text-align: center;
     padding: 5px 8px;
     font-size: 0.8rem;
@@ -67,7 +67,7 @@
 
 .location-view-fullsize-btn {
     background-color: var(--quinary-color);
-    color: #fff;
+    color: var(--text-on-fill);
     border: none;
     border-radius: 6px;
     padding: 7px;
@@ -80,7 +80,7 @@
 
 .location-image-delete-btn {
     background-color: var(--tertiary-color);
-    color: #fff;
+    color: var(--text-on-fill);
     border: none;
     border-radius: 6px;
     padding: 7px;
@@ -100,8 +100,8 @@
     border-radius: 50%;
     width: 36px;
     height: 36px;
-    background: rgba(0, 0, 0, 0.45);
-    color: #fff;
+    background: rgb(var(--shadow-rgb) / 0.45);
+    color: var(--text-on-fill);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -117,13 +117,13 @@
 }
 
 .location-carousel-nav-btn:hover {
-    background: rgba(0, 0, 0, 0.75);
+    background: rgb(var(--shadow-rgb) / 0.75);
 }
 
 .location-fullsize-modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgb(var(--shadow-rgb) / 0.8);
     z-index: 10000;
     display: flex;
     align-items: center;

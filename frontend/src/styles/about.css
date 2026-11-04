@@ -1,3 +1,4 @@
+/* Hallmark · checked: 2026-11-04 · stamp and records in ../global.css · built: the project · redesign: full */
 .about-container {
     text-align: left;
     background-color: var(--secondary-background-color);
@@ -16,7 +17,8 @@
 
 .about-content p {
     margin-bottom: 20px;
-    text-align: justify;
+    max-width: 65ch;
+    text-align: left;
 }
 
 hr {
@@ -61,7 +63,7 @@ hr {
     background-color: var(--secondary-background-color);
     padding: 1.5rem;
     border-radius: 10px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0px 4px 10px rgb(var(--shadow-rgb) / 0.2);
     transition: transform 0.2s ease-in-out;
 }
 

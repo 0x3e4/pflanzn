@@ -1,9 +1,10 @@
 .scroll-to-top-btn {
     position: fixed;
     right: 20px;
-    background-color: var(--quinary-color);
-    color: white;
-    border: none;
+    bottom: 20px;
+    background-color: var(--secondary-background-color);
+    color: var(--text-color);
+    border: 1px solid var(--card-border);
     width: 40px;
     height: 40px;
     border-radius: 90%;
@@ -11,32 +12,25 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 5px rgb(var(--shadow-rgb) / 0.3);
     z-index: 1000;
-    opacity: 0;
-    transform: translateY(100%);
     transition:
-        transform 0.5s ease,
-        opacity 0.5s ease;
-    bottom: -60px;
+        transform 0.3s ease,
+        opacity 0.3s ease;
 }
 
-.scroll-to-top-btn.visible {
-    opacity: 1;
-    transform: translateY(0);
-    bottom: 20px;
-}
-
-@media (max-width: 768px) {
-    .scroll-to-top-btn.visible {
-        bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+/* Slides in when it appears; the reduced-motion rule in global.css stills it. */
+@starting-style {
+    .scroll-to-top-btn {
+        opacity: 0;
+        transform: translateY(100%);
     }
 }
 
-.scroll-to-top-btn.hidden {
-    opacity: 0;
-    transform: translateY(100%);
-    bottom: -60px;
+@media (max-width: 768px) {
+    .scroll-to-top-btn {
+        bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+    }
 }
 
 .scroll-to-top-btn:hover {

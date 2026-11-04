@@ -26,9 +26,8 @@ export default function About() {
                     caring for plants.
                 </p>
                 <p>
-                    With Pflanzn, you can effortlessly track your plants' needs, monitor their growth and ensure they
-                    thrive in your care. Whether you're a seasoned gardener or just starting your plant journey, Pflanzn
-                    is here to help you cultivate your green thumb!
+                    With Pflanzn, you track your plants’ needs, follow their growth and keep them thriving in your care,
+                    whether you have gardened for years or bought your first plant last week.
                 </p>
             </div>
 

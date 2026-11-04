@@ -10,7 +10,7 @@
 .profile-sidebar {
     background-color: var(--background-color);
     padding: 20px;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 2px 0 8px rgb(var(--shadow-rgb) / 0.3);
     z-index: 10;
 }
 .profile-sidebar h3 {
@@ -34,8 +34,8 @@
 }
 .profile-sidebar li:hover,
 .profile-sidebar li.active {
-    background-color: var(--primary-color);
-    color: white;
+    background-color: var(--button-primary-bg);
+    color: var(--button-primary-ink);
 }
 
 /* Sidebar Management Section */
@@ -46,8 +46,6 @@
     margin-bottom: 5px;
     padding: 8px 15px;
     font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
     cursor: default;
     background: none !important;
 }
@@ -77,8 +75,8 @@
 }
 
 .sidebar-subsection.active {
-    background-color: var(--primary-color);
-    color: white;
+    background-color: var(--button-primary-bg);
+    color: var(--button-primary-ink);
 }
 
 .sidebar-info-item {
@@ -98,7 +96,7 @@
 }
 .logout-link:hover {
     background-color: var(--quaternary-color) !important;
-    color: white;
+    color: var(--text-on-fill);
 }
 /* Main content */
 .profile-main-content {
@@ -169,8 +167,8 @@
     height: 40px;
     border-radius: 50%;
     border: none;
-    background: var(--primary-color);
-    color: white;
+    background: var(--button-primary-bg);
+    color: var(--button-primary-ink);
     cursor: pointer;
     display: flex;
     justify-content: center;
@@ -181,7 +179,7 @@
 }
 
 .add-btn:hover {
-    background-color: var(--secondary-color);
+    background-color: var(--button-primary-hover);
     transform: scale(1.1);
 }
 
@@ -190,7 +188,7 @@
     width: 100%;
     background: var(--secondary-background-color);
     border-radius: 8px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0px 4px 8px rgb(var(--shadow-rgb) / 0.1);
 }
 
 .table-scroll-wrapper {
@@ -287,7 +285,7 @@
     cursor: pointer;
     border-radius: 4px;
     padding: 8px 12px;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
     font-size: 14px;
     min-width: 36px;
     height: 36px;
@@ -298,12 +296,12 @@
 }
 
 .archive-btn {
-    background: #c8901f;
-    color: white;
+    background: var(--season-color);
+    color: var(--season-ink);
 }
 
 .archive-btn:hover {
-    background: #a8780f;
+    background: var(--season-color-hover);
 }
 
 .view-btn {
@@ -316,17 +314,17 @@
 }
 
 .update-btn {
-    background: var(--primary-color);
-    color: white;
+    background: var(--button-primary-bg);
+    color: var(--button-primary-ink);
 }
 
 .update-btn:hover {
-    background: var(--secondary-color);
+    background: var(--button-primary-hover);
 }
 
 .delete-btn {
     background: var(--tertiary-color);
-    color: white;
+    color: var(--text-on-fill);
 }
 
 .delete-btn:hover {
@@ -347,8 +345,8 @@
 }
 
 .pagination button {
-    background: var(--primary-color);
-    color: white;
+    background: var(--button-primary-bg);
+    color: var(--button-primary-ink);
     border: none;
     padding: 10px 15px;
     cursor: pointer;
@@ -369,6 +367,7 @@
     cursor: not-allowed;
     background: var(--senary-color);
     opacity: 0.6;
+    color: var(--text-on-fill);
 }
 
 .pagination span {
@@ -385,7 +384,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgb(var(--shadow-rgb) / 0.7);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -399,7 +398,7 @@
     text-align: center;
     width: 90%;
     max-width: 600px;
-    box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.3);
+    box-shadow: 0px 8px 25px rgb(var(--shadow-rgb) / 0.3);
     position: relative;
 }
 
@@ -461,8 +460,8 @@
 
 /* Modal Button */
 .modal-content button {
-    background-color: var(--primary-color);
-    color: white;
+    background-color: var(--button-primary-bg);
+    color: var(--button-primary-ink);
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -482,8 +481,8 @@
     position: relative;
 }
 .profile-update-btn {
-    background-color: var(--primary-color);
-    color: white;
+    background-color: var(--button-primary-bg);
+    color: var(--button-primary-ink);
     border: none;
     padding: 10px 15px;
     margin-top: 10px;
@@ -492,7 +491,7 @@
     transition: background 0.3s ease;
 }
 .profile-update-btn:hover {
-    background-color: var(--secondary-color);
+    background-color: var(--button-primary-hover);
 }
 .profile-editable-input {
     width: 100%;
@@ -503,9 +502,9 @@
     background: var(--background-color);
     display: inline-block;
     color: var(--text-color);
-    transition: all 0.2s ease-in-out;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
     cursor: pointer;
-    font-family: Inter, sans-serif;
+    font-family: var(--font-body);
     font-size: 16px;
 }
 .profile-editable-input:focus {
@@ -819,18 +818,18 @@
 }
 
 .audit-badge.status-2xx {
-    background: var(--primary-color);
-    color: #fff;
+    background: var(--button-primary-bg);
+    color: var(--button-primary-ink);
 }
 
 .audit-badge.status-4xx {
     background: var(--tertiary-color);
-    color: #fff;
+    color: var(--text-on-fill);
 }
 
 .audit-badge.status-5xx {
     background: var(--quaternary-color);
-    color: #fff;
+    color: var(--text-on-fill);
 }
 
 .audit-empty {

@@ -1,30 +1,22 @@
 import { useEffect, useState } from "react";
-import SliderModule from "react-slick";
-const Slider = (SliderModule as { default?: typeof SliderModule }).default || SliderModule;
+import { DateTime } from "luxon";
 import { Plant } from "../types/Plant";
-import { fetchPlants } from "../services/PlantService";
+import { fetchPlants, waterPlant } from "../services/PlantService";
 import { fetchStatistics } from "../services/StatisticService";
+import { extractErrorMessage } from "../services/apiClient";
+import { formatWateringDue, getWateringStatus, wateringBadgeVariant, WateringStatus } from "../services/wateringSchedule";
 import "../styles/home.css";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
 import { toast } from "react-toastify";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { Link } from "react-router-dom";
 import { useConfig } from "../context/ConfigContext";
+import { useAuth } from "../context/AuthContext";
+import { useShare } from "../context/ShareContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-    faCamera,
-    faDroplet,
-    faFlask,
-    faImage,
-    faMagnifyingGlass,
-    faSeedling,
-    faWandMagicSparkles,
-} from "@fortawesome/free-solid-svg-icons";
+import { faDroplet } from "@fortawesome/free-solid-svg-icons";
 
 type HomeOverview = {
-    total: number;
     active: number;
     identified: number;
     species: number;
@@ -33,21 +25,27 @@ type HomeOverview = {
     totalPhotos: number;
 };
 
+type ScheduledPlant = { plant: Plant; status: WateringStatus };
+
+const RECENT_PHOTOS = 4;
+const COMING_UP = 4;
+
+const thumb = (plant: Plant, size: "thumb" | "medium") => {
+    const latest = [...(plant.images || [])].sort(
+        (a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime(),
+    )[0];
+    return latest ? `/api/uploads/${latest.image_path}?size=${size}` : null;
+};
+
 export default function Home() {
-    const { llmProvider, identificationEnabled } = useConfig();
-    const aiFeatures = [
-        identificationEnabled && "species identification",
-        llmProvider && "AI-powered care guidance",
-    ].filter(Boolean);
-    const aiTagline = aiFeatures.length ? `, ${aiFeatures.join(" and ")}` : "";
+    const { tz: timezone, locale, authMode } = useConfig();
+    const { isLoggedIn } = useAuth();
+    const { isShareAccess } = useShare();
+    const canWater = !isShareAccess && (authMode === "no" || isLoggedIn);
     const [plants, setPlants] = useState<Plant[]>([]);
     const [loadingPlants, setLoadingPlants] = useState(true);
-    const [speciesCounts, setSpeciesCounts] = useState<Record<string, number>>({});
-    const [allImagesLoaded, setAllImagesLoaded] = useState(false);
-    const [loadedImagesCount, setLoadedImagesCount] = useState(0);
-    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+    const [watering, setWatering] = useState<Set<number>>(() => new Set());
     const [overview, setOverview] = useState<HomeOverview>({
-        total: 0,
         active: 0,
         identified: 0,
         species: 0,
@@ -57,324 +55,210 @@ export default function Home() {
     });
 
     useEffect(() => {
-        const handleResize = () => setWindowWidth(window.innerWidth);
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
+        let cancelled = false;
+        Promise.all([fetchPlants(), fetchStatistics().catch(() => null)])
+            .then(([data, stats]) => {
+                if (cancelled) return;
+                const active = data.filter((plant) => !plant.is_archived);
+                setPlants(active);
+                setOverview({
+                    active: active.length,
+                    identified: stats?.identificationsCount ?? 0,
+                    species: new Set(active.map((plant) => plant.species ?? "Unknown")).size,
+                    totalWaterings: data.reduce((sum, plant) => sum + (plant.waterings?.length ?? 0), 0),
+                    totalFertilizings: data.reduce((sum, plant) => sum + (plant.fertilizings?.length ?? 0), 0),
+                    totalPhotos: data.reduce((sum, plant) => sum + (plant.images?.length ?? 0), 0),
+                });
+            })
+            .catch(() => !cancelled && toast.error("Failed to fetch plants."))
+            .finally(() => !cancelled && setLoadingPlants(false));
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
-    // Determine number of skeleton slides based on screen size
-    const getSkeletonCount = () => {
-        if (windowWidth <= 600) return 1; // Mobile
-        if (windowWidth <= 1024) return 2; // Tablet
-        return 3; // Desktop
-    };
+    const scheduled: ScheduledPlant[] = plants
+        .map((plant) => ({ plant, status: getWateringStatus(plant, timezone) }))
+        .filter((entry): entry is ScheduledPlant => entry.status !== null)
+        .sort((a, b) => a.status.daysUntilDue - b.status.daysUntilDue);
+    const due = scheduled.filter((entry) => entry.status.needsWater);
+    const comingUp = scheduled.filter((entry) => !entry.status.needsWater).slice(0, COMING_UP);
+    const recent = plants
+        .filter((plant) => plant.images?.length)
+        .map((plant) => ({ plant, at: Math.max(...plant.images.map((img) => new Date(img.uploaded_at).getTime())) }))
+        .sort((a, b) => b.at - a.at)
+        .slice(0, RECENT_PHOTOS);
 
-    useEffect(() => {
-        loadPlants();
-    }, []);
-
-    // Reset image loading state when plants change
-    useEffect(() => {
-        if (plants.length > 0) {
-            setLoadedImagesCount(0);
-            setAllImagesLoaded(false);
-        }
-    }, [plants]);
-
-    // Check if all images are loaded
-    useEffect(() => {
-        if (plants.length > 0 && loadedImagesCount >= plants.length) {
-            setAllImagesLoaded(true);
-        }
-    }, [loadedImagesCount, plants.length]);
-
-    const loadPlants = async () => {
+    // The row leaves the list once watered: that is the confirmation, no toast.
+    const handleWater = async (plantIds: number[]) => {
+        const nowUTC = DateTime.now().toUTC().toISO({ includeOffset: false });
+        const nowLocal = DateTime.now().setZone(timezone).toISO({ includeOffset: false });
+        setWatering((current) => new Set([...current, ...plantIds]));
         try {
-            const [data, stats] = await Promise.all([fetchPlants(), fetchStatistics().catch(() => null)]);
-            const nonArchivedPlants = data.filter((plant) => !plant.is_archived);
-
-            const speciesCountMap = nonArchivedPlants.reduce(
-                (acc, plant) => {
-                    const species = plant.species ?? "Unknown";
-                    acc[species] = (acc[species] || 0) + 1;
-                    return acc;
-                },
-                {} as Record<string, number>,
-            );
-            setSpeciesCounts(speciesCountMap);
-
-            setOverview({
-                total: data.length,
-                active: nonArchivedPlants.length,
-                identified: stats?.identificationsCount ?? 0,
-                species: Object.keys(speciesCountMap).length,
-                totalWaterings: data.reduce(
-                    (sum, plant) => sum + (Array.isArray(plant.waterings) ? plant.waterings.length : 0),
-                    0,
-                ),
-                totalFertilizings: data.reduce(
-                    (sum, plant) => sum + (Array.isArray(plant.fertilizings) ? plant.fertilizings.length : 0),
-                    0,
-                ),
-                totalPhotos: data.reduce(
-                    (sum, plant) => sum + (Array.isArray(plant.images) ? plant.images.length : 0),
-                    0,
-                ),
-            });
-
-            // Only show 5 plants with images
-            const plantsWithImages = nonArchivedPlants.filter((plant) => plant.images?.length);
-            const selectedPlants = shuffleArray(plantsWithImages).slice(0, 5);
-            setPlants(selectedPlants);
-        } catch (error) {
-            toast.error("Failed to fetch plants.");
+            for (const plantId of plantIds) {
+                await waterPlant(plantId, { watered_at: nowUTC ?? undefined });
+                setPlants((current) =>
+                    current.map((plant) => (plant.id === plantId ? { ...plant, last_watered: nowLocal as unknown as Date } : plant)),
+                );
+            }
+            setOverview((current) => ({ ...current, totalWaterings: current.totalWaterings + plantIds.length }));
+        } catch (err) {
+            toast.error(extractErrorMessage(err, "Failed to water plants."));
         } finally {
-            setLoadingPlants(false);
+            setWatering((current) => new Set([...current].filter((id) => !plantIds.includes(id))));
         }
     };
 
-    const shuffleArray = <T,>(array: T[]): T[] => [...array].sort(() => Math.random() - 0.5);
+    const today = DateTime.now().setZone(timezone).setLocale(locale || "en").toLocaleString({
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+    });
+    const heading =
+        due.length > 0
+            ? `${due.length} ${due.length === 1 ? "plant needs" : "plants need"} water`
+            : scheduled.length > 0
+              ? "Every plant is watered"
+              : "Your plants";
 
-    const sortedSpecies = Object.entries(speciesCounts)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 12);
-    const maxCount = Math.max(1, ...Object.values(speciesCounts));
-
-    const handleImageLoad = () => {
-        setLoadedImagesCount((count) => count + 1);
-    };
-
-    const sliderSettings = {
-        arrows: false,
-        dots: false,
-        infinite: true,
-        speed: 500,
-        slidesToShow: 3,
-        slidesToScroll: 1,
-        autoplay: true,
-        autoplaySpeed: 5000,
-        responsive: [
-            { breakpoint: 1024, settings: { slidesToShow: 2 } },
-            { breakpoint: 600, settings: { slidesToShow: 1 } },
-        ],
-    };
+    const figures: [number, string][] = [
+        [overview.active, "plants"],
+        [overview.species, "species"],
+        [overview.identified, "identified"],
+        [overview.totalWaterings, "waterings"],
+        [overview.totalFertilizings, "fertilizings"],
+        [overview.totalPhotos, "photos"],
+    ];
 
     return (
         <div className="container home-container">
-            <section className="home-hero">
-                <p className="home-kicker">{loadingPlants ? <Skeleton width={140} /> : "Plant Care Cockpit"}</p>
-                <h1>{loadingPlants ? <Skeleton width={220} /> : "Pflanzn"}</h1>
-                <p className="home-subtitle">
-                    {loadingPlants ? (
-                        <>
-                            <Skeleton />
-                            <Skeleton width="88%" />
-                        </>
-                    ) : (
-                        `Keep your plants healthy with watering logs, image timelines${aiTagline}.`
-                    )}
-                </p>
-                <div className="home-cta-row">
-                    {loadingPlants ? (
-                        <>
-                            <Skeleton height={40} width={150} borderRadius={10} />
-                            <Skeleton height={40} width={220} borderRadius={10} />
-                        </>
-                    ) : (
-                        <>
-                            <Link to="/plants" className="home-cta primary">
-                                Open My Plants
-                            </Link>
-                            <Link to="/about" className="home-cta secondary">
-                                Learn more about Pflanzn
-                            </Link>
-                        </>
-                    )}
-                </div>
-                <div className="home-feature-pills">
-                    {loadingPlants ? (
-                        <>
-                            <Skeleton height={30} width={140} borderRadius={999} />
-                            <Skeleton height={30} width={140} borderRadius={999} />
-                            <Skeleton height={30} width={140} borderRadius={999} />
-                        </>
-                    ) : (
-                        <>
-                            <div className="feature-pill">
-                                <FontAwesomeIcon icon={faDroplet} />
-                                Watering history
-                            </div>
-                            <div className="feature-pill">
-                                <FontAwesomeIcon icon={faCamera} />
-                                Photo timelines
-                            </div>
-                            {llmProvider && (
-                                <div className="feature-pill">
-                                    <FontAwesomeIcon icon={faWandMagicSparkles} />
-                                    AI care helper
-                                </div>
-                            )}
-                        </>
-                    )}
-                </div>
-            </section>
-
-            <section className="home-stats-grid">
-                <article className="home-stat-card">
-                    <FontAwesomeIcon icon={faSeedling} className="home-stat-icon" />
-                    <span className="home-stat-value">{loadingPlants ? <Skeleton width={56} /> : overview.active}</span>
-                    <span className="home-stat-label">Active Plants</span>
-                </article>
-                <article className="home-stat-card">
-                    <FontAwesomeIcon icon={faMagnifyingGlass} className="home-stat-icon" />
-                    <span className="home-stat-value">
-                        {loadingPlants ? <Skeleton width={56} /> : overview.identified}
-                    </span>
-                    <span className="home-stat-label">Identified Plants</span>
-                </article>
-                <article className="home-stat-card">
-                    <FontAwesomeIcon icon={faDroplet} className="home-stat-icon" />
-                    <span className="home-stat-value">
-                        {loadingPlants ? <Skeleton width={72} /> : overview.totalWaterings}
-                    </span>
-                    <span className="home-stat-label">Total Waterings</span>
-                </article>
-                <article className="home-stat-card">
-                    <FontAwesomeIcon icon={faFlask} className="home-stat-icon" />
-                    <span className="home-stat-value">
-                        {loadingPlants ? <Skeleton width={56} /> : overview.totalFertilizings}
-                    </span>
-                    <span className="home-stat-label">Total Fertilizings</span>
-                </article>
-                <article className="home-stat-card">
-                    <FontAwesomeIcon icon={faImage} className="home-stat-icon" />
-                    <span className="home-stat-value">
-                        {loadingPlants ? <Skeleton width={56} /> : overview.totalPhotos}
-                    </span>
-                    <span className="home-stat-label">Photos Captured</span>
-                </article>
-                <article className="home-stat-card">
-                    <FontAwesomeIcon icon={faWandMagicSparkles} className="home-stat-icon" />
-                    <span className="home-stat-value">
-                        {loadingPlants ? <Skeleton width={56} /> : overview.species}
-                    </span>
-                    <span className="home-stat-label">Species Tracked</span>
-                </article>
-            </section>
-
-            {(loadingPlants || plants.length > 0) && (
-                <section className="home-carousel-section">
-                    <div className="home-section-heading">
-                        <h2>Recently Captured</h2>
+            <section className="home-today" aria-labelledby="home-heading">
+                <div className="home-today-head">
+                    <div>
+                        <p className="home-date">{loadingPlants ? <Skeleton width={160} /> : today}</p>
+                        <h1 id="home-heading">{loadingPlants ? <Skeleton width={320} /> : heading}</h1>
                     </div>
+                    {!loadingPlants &&
+                        (canWater && due.length > 1 ? (
+                            <button
+                                type="button"
+                                className="home-water-all"
+                                onClick={() => handleWater(due.map((entry) => entry.plant.id))}
+                                disabled={watering.size > 0}
+                            >
+                                <FontAwesomeIcon icon={faDroplet} /> Water all {due.length}
+                            </button>
+                        ) : (
+                            <Link to="/plants" className="home-cta primary">
+                                Open my plants
+                            </Link>
+                        ))}
+                </div>
 
-                    {/* Show skeleton while images are loading */}
-                    {(loadingPlants || !allImagesLoaded) && (
-                        <div className="carousel-skeleton carousel-container">
-                            <div style={{ display: "flex", gap: "20px", justifyContent: "center" }}>
-                                {[...Array(getSkeletonCount())].map((_, i) => (
-                                    <div key={i} className="skeleton-slide">
-                                        <Skeleton
-                                            height="100%"
-                                            width="100%"
-                                            borderRadius={12}
-                                            baseColor="#444"
-                                            highlightColor="#666"
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Hidden images for preloading */}
-                    {!loadingPlants && (
-                        <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
-                            {plants.map((plant) => {
-                                const latestImage = plant.images?.[plant.images.length - 1];
-                                const imageUrl = latestImage
-                                    ? `/api/uploads/${latestImage.image_path}?size=thumb`
-                                    : "/placeholder-plant.webp";
-
-                                return (
-                                    <img
-                                        key={`preload-${plant.id}`}
-                                        src={imageUrl}
-                                        alt=""
-                                        onLoad={handleImageLoad}
-                                        onError={handleImageLoad}
-                                        style={{ width: "1px", height: "1px" }}
-                                    />
-                                );
-                            })}
-                        </div>
-                    )}
-
-                    {/* Actual carousel - shown when images are loaded */}
-                    {!loadingPlants && allImagesLoaded && (
-                        <div className="carousel-container">
-                            <Slider {...sliderSettings}>
-                                {plants.map((plant) => {
-                                    const latestImage = plant.images?.[plant.images.length - 1];
-                                    const imageUrl = latestImage
-                                        ? `/api/uploads/${latestImage.image_path}?size=medium`
-                                        : "/placeholder-plant.webp";
-
+                <div className="home-today-grid">
+                    <div className="home-due">
+                        {loadingPlants ? (
+                            [...Array(3)].map((_, i) => <Skeleton key={i} height={64} borderRadius={10} />)
+                        ) : due.length > 0 ? (
+                            <ul className="home-due-list">
+                                {due.map(({ plant, status }) => {
+                                    const src = thumb(plant, "thumb");
                                     return (
-                                        <div key={plant.id} className="plant-slide">
-                                            <Link
-                                                to={`/plant/${plant.id}`}
-                                                className="home-carousel-link"
-                                                title={`Open ${plant.name || "plant"}`}
-                                            >
-                                                <img
-                                                    src={imageUrl}
-                                                    alt={plant.name}
-                                                    className="home-plant-image"
-                                                    loading="lazy"
-                                                />
+                                        <li key={plant.id} className="home-due-row">
+                                            <Link to={`/plant/${plant.id}`} className="home-due-plant">
+                                                {src ? (
+                                                    <img src={src} alt="" className="home-due-thumb" />
+                                                ) : (
+                                                    <span className="home-due-thumb home-due-initial" aria-hidden="true">
+                                                        {plant.name.charAt(0)}
+                                                    </span>
+                                                )}
+                                                <span className="home-due-names">
+                                                    <span className="home-due-name">{plant.name}</span>
+                                                    {plant.species && <span className="home-due-species">{plant.species}</span>}
+                                                </span>
                                             </Link>
-                                        </div>
+                                            <span className={`watering-badge watering-badge--${wateringBadgeVariant(status)}`}>
+                                                {formatWateringDue(status)}
+                                            </span>
+                                            {canWater && (
+                                                <button
+                                                    type="button"
+                                                    className="home-due-water"
+                                                    onClick={() => handleWater([plant.id])}
+                                                    disabled={watering.has(plant.id)}
+                                                    aria-label={`Water ${plant.name}`}
+                                                >
+                                                    <FontAwesomeIcon icon={faDroplet} /> Water
+                                                </button>
+                                            )}
+                                        </li>
                                     );
                                 })}
-                            </Slider>
-                        </div>
-                    )}
+                            </ul>
+                        ) : (
+                            <div className="home-due-empty">
+                                <p>
+                                    {scheduled.length > 0
+                                        ? "Nothing to water today."
+                                        : "Set a watering interval on a plant and it shows up here when it is due."}
+                                </p>
+                                <Link to="/plants">Open my plants</Link>
+                            </div>
+                        )}
+                    </div>
+
+                    <aside className="home-side">
+                        {comingUp.length > 0 && (
+                            <section className="home-coming-up" aria-labelledby="home-coming-up">
+                                <h2 id="home-coming-up">Coming up</h2>
+                                <ul>
+                                    {comingUp.map(({ plant, status }) => (
+                                        <li key={plant.id}>
+                                            <Link to={`/plant/${plant.id}`}>{plant.name}</Link>
+                                            <span className={`home-when home-when--${wateringBadgeVariant(status)}`}>
+                                                {formatWateringDue(status)}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </section>
+                        )}
+                        <dl className="home-figures">
+                            {figures.map(([value, label]) => (
+                                <div key={label}>
+                                    <dt>{label}</dt>
+                                    <dd>{loadingPlants ? <Skeleton width={40} /> : value}</dd>
+                                </div>
+                            ))}
+                        </dl>
+                    </aside>
+                </div>
+            </section>
+
+            {(loadingPlants || recent.length > 0) && (
+                <section className="home-recent" aria-labelledby="home-recent">
+                    <h2 id="home-recent">Recently photographed</h2>
+                    <div className="home-recent-grid">
+                        {loadingPlants
+                            ? [...Array(RECENT_PHOTOS)].map((_, i) => <Skeleton key={i} height={180} borderRadius={12} />)
+                            : recent.map(({ plant, at }) => (
+                                  <Link key={plant.id} to={`/plant/${plant.id}`} className="home-recent-item">
+                                      <img src={thumb(plant, "medium") ?? ""} alt={plant.name} className="home-plant-image" />
+                                      <span>
+                                          {plant.name},{" "}
+                                          {DateTime.fromMillis(at).setZone(timezone).toRelativeCalendar()}
+                                      </span>
+                                  </Link>
+                              ))}
+                    </div>
                 </section>
             )}
 
-            <section className="species-wordcloud">
-                <div className="home-section-heading">
-                    <h2>Species Snapshot</h2>
-                    <span>Top species in your collection</span>
-                </div>
-                <div className="species-bar-list">
-                    {loadingPlants ? (
-                        [...Array(6)].map((_, index) => <Skeleton key={index} height={36} borderRadius={8} />)
-                    ) : sortedSpecies.length > 0 ? (
-                        sortedSpecies.map(([species, count]) => {
-                            const pct = (count / maxCount) * 100;
-                            return (
-                                <Link
-                                    key={species}
-                                    to={`/plants?species=${encodeURIComponent(species)}`}
-                                    className="species-bar-row"
-                                >
-                                    <div className="species-bar-fill" style={{ width: `${pct}%` }} />
-                                    <span className="species-bar-name">{species}</span>
-                                    <span className="species-bar-count">{count}</span>
-                                </Link>
-                            );
-                        })
-                    ) : (
-                        <p className="home-wordcloud-empty">No species data yet.</p>
-                    )}
-                </div>
-            </section>
-            {plants.length === 0 && !loadingPlants && (
+            {recent.length === 0 && !loadingPlants && (
                 <section className="home-empty-state">
                     <h2>No plant photos yet</h2>
-                    <p>Add your first plant image to unlock carousel highlights.</p>
+                    <p>Add a photo to a plant and it shows up here.</p>
                     <Link to="/plants" className="home-cta primary">
                         Go to Plants
                     </Link>

@@ -52,7 +52,7 @@
 }
 
 .support-card-icon--kofi {
-    color: #ff5e5b;
+    color: var(--kofi-red);
 }
 
 .support-card p {
@@ -92,12 +92,12 @@ a.support-card-btn--github:hover {
 }
 
 a.support-card-btn--kofi {
-    color: #29abe0;
-    border-color: rgba(41, 171, 224, 0.4);
+    color: var(--kofi-blue);
+    border-color: color-mix(in srgb, var(--kofi-blue) 40%, transparent);
 }
 
 a.support-card-btn--kofi:hover {
-    background: rgba(41, 171, 224, 0.12);
-    border-color: #29abe0;
-    color: #29abe0;
+    background: color-mix(in srgb, var(--kofi-blue) 12%, transparent);
+    border-color: var(--kofi-blue);
+    color: var(--kofi-blue);
 }

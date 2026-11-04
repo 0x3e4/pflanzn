@@ -34,6 +34,7 @@ import {
     faTrashCanArrowUp,
     faLeaf,
     faFont,
+    faSliders,
     faExpand,
     faCompress,
     faArrowDownWideShort,
@@ -116,8 +117,9 @@ export default function Plants() {
     } | null>(null);
 
     const { isLoggedIn } = useAuth();
+    const [filtersOpen, setFiltersOpen] = useState(false);
     const { isShareAccess } = useShare();
-    const { tz: timezone, locale, identificationEnabled, floorPlansEnabled, authMode } = useConfig();
+    const { tz: timezone, identificationEnabled, floorPlansEnabled, authMode } = useConfig();
     // Floor plans show the inside of someone's home: members only (the API enforces it too).
     const canSeePlans = floorPlansEnabled && !isShareAccess && (authMode === "no" || isLoggedIn);
     const canEditPlans = authMode === "no" || isLoggedIn;
@@ -639,7 +641,7 @@ export default function Plants() {
                 </div>
             </div>
 
-            <div className="plant-filter-sort-bar">
+            <div className={`plant-filter-sort-bar${filtersOpen ? " filters-open" : ""}`}>
                 <div className="plant-tag-filter">
                     {loading ? (
                         [...Array(6)].map((_, index) => (
@@ -701,7 +703,7 @@ export default function Plants() {
                     {isLoggedIn ? (
                         <>
                             <button className="water-plant-btn" onClick={handleWaterVisiblePlants}>
-                                <FontAwesomeIcon icon={faDroplet} /> Water Plants
+                                <FontAwesomeIcon icon={faDroplet} /> Water shown plants
                             </button>
                         </>
                     ) : (
@@ -709,7 +711,7 @@ export default function Plants() {
                             className="water-plant-btn"
                             onClick={() => toast.warning("You must be logged in to water plants.")}
                         >
-                            <FontAwesomeIcon icon={faDroplet} /> Water Plants
+                            <FontAwesomeIcon icon={faDroplet} /> Water shown plants
                         </button>
                     )}
                     <div className="water-plant-datetime">
@@ -724,11 +726,21 @@ export default function Plants() {
                 <div className="plant-search-container">
                     <input
                         type="text"
-                        placeholder="Search plants..."
+                        placeholder="Search plants…"
+                        aria-label="Search plants"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="plant-search-input"
                     />
+                    <button
+                        type="button"
+                        className="plant-filter-button"
+                        aria-expanded={filtersOpen}
+                        aria-label="Filter and sort"
+                        onClick={() => setFiltersOpen((open) => !open)}
+                    >
+                        <FontAwesomeIcon icon={faSliders} />
+                    </button>
                 </div>
 
                 <div className="filter-specie-name-container">
@@ -746,7 +758,7 @@ export default function Plants() {
                             value={selectedFilterValue || ""}
                             onChange={(e) => setSelectedFilterValue(e.target.value || null)}
                         >
-                            <option value="">All {filterMode === "species" ? "Species" : "Names"}</option>
+                            <option value="">All {filterMode === "species" ? "species" : "names"}</option>
                             {[
                                 ...new Set(
                                     plants
@@ -955,15 +967,7 @@ export default function Plants() {
                               const imageLoaded = loadedImages.has(plant.id);
 
                               const lastWateredText = plant.last_watered
-                                  ? new Date(plant.last_watered).toLocaleString(locale, {
-                                        timeZone: timezone,
-                                        weekday: "long",
-                                        year: "numeric",
-                                        month: "long",
-                                        day: "numeric",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                    })
+                                  ? `Watered ${formatLastWateredShort(plant.last_watered, timezone)}`
                                   : "Not watered yet";
                               const status = plant.is_archived ? null : wateringStatuses.get(plant.id);
                               return (
@@ -998,13 +1002,8 @@ export default function Plants() {
                                           </div>
                                           <div className="plant-card-text">
                                               <h3>{plant.name || "Unknown"}</h3>
-                                              <small>#{plant.id}</small>
-                                              <p>
-                                                  <strong>Species:</strong> {plant.species || "Unknown"}
-                                              </p>
-                                              <p>
-                                                  <strong>Last Watered:</strong> {lastWateredText}
-                                              </p>
+                                              <p className="plant-card-species">{plant.species || "Unknown species"}</p>
+                                              <p className="plant-card-watered">{lastWateredText}</p>
                                               {status && (
                                                   <p>
                                                       <span
@@ -1022,6 +1021,7 @@ export default function Plants() {
                                                   <>
                                                       <button
                                                           className="water-plant-btn"
+                                                          aria-label={`Water ${plant.name}`}
                                                           onClick={() => handleWaterPlant(plant.id)}
                                                       >
                                                           <FontAwesomeIcon icon={faDroplet} />
@@ -1034,6 +1034,7 @@ export default function Plants() {
                                                       />
                                                       <button
                                                           className="file-input-plant-btn"
+                                                          aria-label={`Add a photo of ${plant.name}`}
                                                           onClick={() =>
                                                               document
                                                                   .getElementById(`file-upload-${plant.id}`)
@@ -1043,7 +1044,10 @@ export default function Plants() {
                                                           <FontAwesomeIcon icon={faUpload} />
                                                       </button>
                                                       {identificationEnabled && (
-                                                          <button onClick={() => handleIdentifyExistingPlant(plant.id)}>
+                                                          <button
+                                                              aria-label={`Identify ${plant.name}`}
+                                                              onClick={() => handleIdentifyExistingPlant(plant.id)}
+                                                          >
                                                               <FontAwesomeIcon icon={faFingerprint} />
                                                           </button>
                                                       )}
@@ -1052,6 +1056,7 @@ export default function Plants() {
                                                   <>
                                                       <button
                                                           className="water-plant-btn"
+                                                          aria-label={`Water ${plant.name}`}
                                                           onClick={() =>
                                                               toast.warning("You must be logged in to water plants.")
                                                           }
@@ -1060,6 +1065,7 @@ export default function Plants() {
                                                       </button>
                                                       <button
                                                           className="file-input-plant-btn"
+                                                          aria-label={`Add a photo of ${plant.name}`}
                                                           onClick={() =>
                                                               toast.warning("You must be logged in to upload images.")
                                                           }
@@ -1068,6 +1074,7 @@ export default function Plants() {
                                                       </button>
                                                       {identificationEnabled && (
                                                           <button
+                                                              aria-label={`Identify ${plant.name}`}
                                                               onClick={() =>
                                                                   toast.warning(
                                                                       "You must be logged in to identify plants.",

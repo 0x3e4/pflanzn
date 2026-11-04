@@ -14,7 +14,7 @@
     background: var(--background-color);
     padding: 1rem;
     border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 0 10px rgb(var(--shadow-rgb) / 0.25);
     flex-wrap: wrap;
     transition: background 0.2s ease-in-out;
     position: relative;
@@ -22,7 +22,7 @@
 }
 
 .identification-entry:hover {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgb(var(--light-rgb) / 0.02);
 }
 
 /* Meta text section */
@@ -46,7 +46,7 @@
 .identification-delete-btn {
     border: none;
     background: var(--tertiary-color);
-    color: #fff;
+    color: var(--text-on-fill);
     border-radius: 6px;
     width: 34px;
     height: 34px;
@@ -81,7 +81,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.72);
+    background: rgb(var(--shadow-rgb) / 0.72);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -119,7 +119,7 @@
     justify-content: center;
     gap: 8px;
     cursor: pointer;
-    color: #fff;
+    color: var(--text-on-fill);
 }
 
 .identification-delete-confirm {
@@ -152,7 +152,7 @@
     border-radius: 6px;
     overflow: hidden;
     flex-shrink: 0;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 6px rgb(var(--shadow-rgb) / 0.3);
     background-color: var(--secondary-background-color);
 }
 
@@ -199,14 +199,14 @@
     border-radius: 5px;
     cursor: pointer;
     font-size: 0.9rem;
-    transition: all 0.2s ease-in-out;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
     height: 33px;
 }
 
 .sort-button.active,
 .sort-button:hover {
-    background-color: var(--primary-color);
-    color: white;
+    background-color: var(--button-primary-bg);
+    color: var(--button-primary-ink);
     border-color: var(--primary-color);
 }
 

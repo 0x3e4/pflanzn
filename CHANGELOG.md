@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Care advice in the activity feed shows its sections as headings and the steps as a numbered list; it opens on the diagnosis, the rest is one tap away.
 - Floor plan: markers that would overlap are shown as one, with a count, led by the plant that needs water most; tap it to zoom in. Markers get smaller on phone-sized plans, and the zoom buttons (now with a reset) sit top right, clear of the bottom navigation.
+- Home shows what needs water today: the due plants with a Water button each and "Water all", what comes up next, the collection's figures and the latest photos. The species bar list and the autoplaying carousel are gone.
+- Plant page: "Water now" is the one primary action, right under the name (under the photo on a phone), with Fertilize, Add photo and a More menu (identify, AI care advice, AI description, archive, delete) beside it. Watering at another time opens from "Watered earlier? Set the time". The header shows the watering status, the latest care advice has its own block, and the activity feed no longer scrolls inside a box.
+- Plants list: square cards with the water, photo and identify buttons on the photo; two columns on a phone, with species and sort behind a Filter button.
+- One watering-status colour everywhere: red means water now, amber means soon, neutral means fine (it was blue for overdue).
+- Primary buttons use dark text on the green (white on green was 2.8:1, below the 4.5:1 minimum); light mode uses a deeper green with white. Keyboard focus shows a light ring on every control. Labels use sentence case instead of spaced capitals, and the footer is a quiet line instead of a green band.
 
 ### Security
 - A user could take over another account (including admin) by renaming themselves to its email.

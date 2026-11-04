@@ -14,6 +14,7 @@
 }
 
 .locations-header h1 {
+    flex: 0 0 auto;
     color: var(--text-color);
     margin: 0;
 }
@@ -30,8 +31,8 @@
     height: 38px;
     border-radius: 50%;
     border: none;
-    background: var(--primary-color);
-    color: white;
+    background: var(--button-primary-bg);
+    color: var(--button-primary-ink);
     cursor: pointer;
     display: flex;
     justify-content: center;
@@ -42,7 +43,7 @@
 }
 
 .add-location-btn:hover {
-    background-color: var(--secondary-color);
+    background-color: var(--button-primary-hover);
     transform: scale(1.1);
 }
 
@@ -52,7 +53,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgb(var(--shadow-rgb) / 0.7);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -64,7 +65,7 @@
     padding: 20px;
     border-radius: 8px;
     text-align: center;
-    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.3);
+    box-shadow: 0px 8px 15px rgb(var(--shadow-rgb) / 0.3);
     position: relative;
     max-height: 80vh;
     overflow-y: auto;
@@ -99,8 +100,8 @@
 }
 
 .add-location-modal-content button:not(.gps-btn) {
-    background-color: var(--primary-color);
-    color: white;
+    background-color: var(--button-primary-bg);
+    color: var(--button-primary-ink);
     border: none;
     border-radius: 6px;
     cursor: pointer;
@@ -110,12 +111,13 @@
 }
 
 .add-location-modal-content button:not(.gps-btn):hover {
-    background-color: var(--secondary-color);
+    background-color: var(--button-primary-hover);
 }
 
 .location-identify-button {
     margin-top: 0;
     background-color: var(--quinary-color) !important;
+    color: var(--text-on-fill);
 }
 
 .location-identify-button:hover {
@@ -174,8 +176,8 @@
 }
 
 .gps-btn {
-    background-color: var(--primary-color);
-    color: #fff;
+    background-color: var(--button-primary-bg);
+    color: var(--button-primary-ink);
     border: none;
     border-radius: 6px;
     padding: 8px 12px;
@@ -189,15 +191,18 @@
 }
 
 .gps-btn:hover {
-    background-color: var(--secondary-color);
+    background-color: var(--button-primary-hover);
 }
 
 .gps-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+    background: var(--status-ok-bg);
+    color: var(--status-ok-ink);
 }
 
 .gps-btn-inline {
+    min-height: 32px;
     margin-top: 4px;
     font-size: 0.85rem;
     padding: 6px 10px;
@@ -243,6 +248,7 @@
 
 .hashtag.active {
     background-color: var(--secondary-color);
+    color: var(--text-on-fill);
 }
 
 .location-search-container {
@@ -295,7 +301,7 @@
 .location-card {
     background: var(--secondary-background-color);
     border-radius: 12px;
-    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0px 8px 15px rgb(var(--shadow-rgb) / 0.1);
     text-align: left !important;
     transition: box-shadow 0.3s ease;
     overflow: hidden;
@@ -305,7 +311,7 @@
 }
 
 .location-card:hover {
-    box-shadow: 0px 12px 20px rgba(0, 0, 0, 0.7);
+    box-shadow: 0px 12px 20px rgb(var(--shadow-rgb) / 0.7);
 }
 
 .location-card-main-link {
@@ -390,7 +396,7 @@
 .location-buttons button,
 .upload-location-btn {
     flex: 1;
-    color: white;
+    color: var(--text-on-fill);
     border: none;
     cursor: pointer;
     font-size: 16px;
@@ -405,6 +411,7 @@
 .upload-location-btn {
     background-color: var(--quinary-color);
     border-radius: 0;
+    color: var(--text-on-fill);
 }
 
 .upload-location-btn input {
@@ -416,17 +423,20 @@
 }
 
 .identify-location-btn {
-    background-color: var(--primary-color);
+    background-color: var(--button-primary-bg);
     border-radius: 0;
+    color: var(--button-primary-ink);
 }
 
 .identify-location-btn:hover {
-    background-color: var(--secondary-color);
+    background-color: var(--button-primary-hover);
 }
 
 .identify-location-btn:disabled {
     opacity: 0.75;
-    cursor: wait;
+    cursor: not-allowed;
+    background: var(--status-ok-bg);
+    color: var(--status-ok-ink);
 }
 
 .locations-container--stretched {

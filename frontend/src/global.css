@@ -1,3 +1,10 @@
+/* Hallmark · checked: 2026-11-04 · genre: editorial (inferred) · shape: app screen
+ * floor: 0 FAIL (was 296) · reflex: 248 off-scale spacing (24b) left open, 1 prose measure · recomposed: home, plant page, plants list
+ * built: the project · redesign: full · v2.0.0 */
+/* Hallmark · dropped /plants?species=, onerror={handleimageload}, onload={handleimageload} · the user approved a home built around what needs water today: Species Snapshot and the autoplaying carousel (no pause control) and its preloader went */
+/* Hallmark · reworded "Recently Captured" to "Recently photographed" · the section now shows each plant's latest photo by date instead of a random carousel */
+/* Hallmark · dropped species snapshot, 2026, 05:02, 08:03 · Species Snapshot went with the user's approval; the long last-watered dates on the cards became the short form (yesterday, 3 days ago) */
+/* Hallmark · dropped onclick={handlewaterplant}, onclick={handlefertilizeplant}, onclick={handlegeneratedescription}, onclick={handleopencareadvicemodal}, setisarchiving(!plant.is_archived), onclick={() => document.getelementbyid(`file-upload-${plant.id}`)?.click()}, generate a description with ai., logged in to delete plants.")}, logged in to fertilize plants.")}, logged in to identify images.")} · the plant page's bottom bar moved into the actions block beside the name; every action calls the same function with the same login warning, through one handler instead of a logged-in and a guest copy */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap");
 
 /* Root Variables */
@@ -25,6 +32,35 @@
     --overlay-background: rgba(22, 22, 22, 0.82);
     --input-background: #222;
     --input-border: #555;
+
+    --font-body: "Inter", system-ui, sans-serif;
+    --focus-ring: #f4f7f4;
+    /* Ink on coloured fills (blue, purple, red); white, a breath toward the green. */
+    --text-on-fill: #fbfdfb;
+    /* Channels for translucent shades: rgb(var(--shadow-rgb) / 0.3). */
+    --shadow-rgb: 6 12 7;
+    --light-rgb: 251 253 251;
+    --pale-rgb: 200 200 200;
+    --neutral-rgb: 128 128 128;
+    --ink-rgb: 22 22 22;
+    /* The one primary action: white on #4caf50 is 2.8:1, this ink is 5.9:1. */
+    --button-primary-bg: #4caf50;
+    --button-primary-ink: #0d2410;
+    --button-primary-hover: #66bb6a;
+    /* Watering status, the same everywhere: due (water now), soon, ok. */
+    --status-due-bg: #af4c4c;
+    --status-due-ink: #fbfdfb;
+    --status-soon-bg: #e0b24f;
+    --status-soon-ink: #241a04;
+    --status-ok-bg: #3a3a3a;
+    --status-ok-ink: #c9c9c9;
+    /* Harvest and season markers on the calendar and locations. */
+    --season-color: #b8892d;
+    --season-color-hover: #a8780f;
+    --season-ink: #241a04;
+    /* Ko-fi's brand colours on the support panel. */
+    --kofi-red: #ff5e5b;
+    --kofi-blue: #29abe0;
 }
 
 /* Light theme overrides */
@@ -43,15 +79,25 @@
     --duodecimal-color: #ad1457;
     --tridecimal-color: #880e4f;
     --background-color: #fafafa;
-    --secondary-background-color: #ffffff;
+    --secondary-background-color: var(--text-on-fill);
     --text-color: #212121;
     --muted-text-color: #666666;
     --border-color: #e0e0e0;
-    --card-background: rgba(0, 0, 0, 0.04);
-    --card-border: rgba(0, 0, 0, 0.1);
-    --overlay-background: rgba(255, 255, 255, 0.92);
+    --card-background: rgb(var(--shadow-rgb) / 0.04);
+    --card-border: rgb(var(--shadow-rgb) / 0.1);
+    --overlay-background: rgb(var(--light-rgb) / 0.92);
     --input-background: #f5f5f5;
     --input-border: #ccc;
+
+    --focus-ring: #1b2a1c;
+    /* #388e3c fails 4.5:1 with both inks; the button takes a deeper green. */
+    --button-primary-bg: #2e7d32;
+    --button-primary-ink: #fbfdfb;
+    --button-primary-hover: #1b5e20;
+    --status-due-bg: #c62828;
+    --status-soon-bg: #f0c05a;
+    --status-ok-bg: #ececec;
+    --status-ok-ink: #444444;
 }
 
 ::selection {
@@ -71,11 +117,31 @@ body {
     height: 100%;
     margin: 0;
     padding: 0;
-    font-family: "Inter", sans-serif;
+    font-family: var(--font-body);
     background-color: var(--background-color);
     color: var(--text-color);
     display: flex;
     flex-direction: column;
+    overflow-x: clip;
+}
+
+h1,
+h2,
+h3 {
+    text-wrap: balance;
+    overflow-wrap: break-word;
+    min-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }
 
 #root {
@@ -117,25 +183,42 @@ a:hover {
 
 /* Buttons */
 button {
-    background-color: var(--primary-color);
-    color: white;
+    background-color: var(--button-primary-bg);
+    color: var(--button-primary-ink);
     padding: 10px 15px;
     border: none;
     cursor: pointer;
     font-size: 1rem;
-    transition: background-color 0.2s ease-in-out;
+    transition:
+        background-color 0.2s ease-in-out,
+        filter 0.2s ease-in-out;
 }
 
+/* A ring in the text colour reads on every fill, the green ones included; never faded in. */
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
-a:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
+textarea:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
 }
 
-button:hover {
-    background-color: var(--secondary-color);
+/* Lighten whatever fill the button has, so coloured buttons keep their own colour. */
+button:hover:not(:disabled) {
+    filter: brightness(1.12);
+}
+
+button:active:not(:disabled) {
+    filter: brightness(0.94);
+}
+
+button:disabled,
+button[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.55;
+    filter: saturate(0.4);
 }
 
 /* Sort direction toggle — shared by the Plants and Locations sort controls.
@@ -158,7 +241,7 @@ button:hover {
 
 .sort-direction-toggle:hover {
     background-color: var(--secondary-color);
-    color: #ffffff;
+    color: var(--text-on-fill);
 }
 
 /* Containers */
@@ -167,7 +250,7 @@ button:hover {
     margin: 0 auto;
     padding: 30px;
     width: 100%;
-    box-shadow: 0px 0px 0px 1px rgba(46, 106, 49, 0.3);
+    box-shadow: 0px 0px 0px 1px color-mix(in srgb, var(--secondary-color) 30%, transparent);
     padding-bottom: 4rem;
 }
 
@@ -184,9 +267,9 @@ button:hover {
     border: none;
     background: transparent;
     color: var(--text-color);
-    transition: all 0.2s ease-in-out;
+    transition: background-color 0.2s ease-in-out;
     cursor: pointer;
-    font-family: Inter, sans-serif;
+    font-family: var(--font-body);
     font-size: 16px;
 }
 
@@ -209,10 +292,9 @@ button:hover {
     white-space: pre-wrap;
     min-height: 100px;
     cursor: pointer;
-    transition: all 0.2s ease-in-out;
+    transition: background-color 0.2s ease-in-out;
     outline: none;
-    text-align: justify;
-    hyphens: auto;
+    text-align: left;
 }
 
 .editable-input-noauth,
@@ -230,7 +312,7 @@ button:hover {
 }
 
 img:focus-visible {
-    outline: 2px solid var(--primary-color);
+    outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
     border-radius: 4px;
 }
@@ -351,8 +433,8 @@ input[type="date"] {
     top: -100%;
     left: 50%;
     transform: translateX(-50%);
-    background: var(--primary-color);
-    color: white;
+    background: var(--button-primary-bg);
+    color: var(--button-primary-ink);
     padding: 8px 16px;
     border-radius: 0 0 6px 6px;
     z-index: 10000;
@@ -363,5 +445,5 @@ input[type="date"] {
 
 .skip-to-content:focus {
     top: 0;
-    color: white;
+    color: var(--button-primary-ink);
 }

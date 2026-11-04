@@ -60,6 +60,7 @@
 
 .file-input-plant-btn {
     background-color: var(--quinary-color);
+    color: var(--text-on-fill);
 }
 
 .file-input-plant-btn:hover {
@@ -68,6 +69,7 @@
 
 .delete-plant-btn {
     background-color: var(--tertiary-color);
+    color: var(--text-on-fill);
 }
 
 .delete-plant-btn:hover {
@@ -89,6 +91,7 @@
 .generate-description-btn,
 .ai-care-helper-btn {
     background-color: var(--decimal-color);
+    color: var(--text-on-fill);
 }
 
 .generate-description-btn:hover,
@@ -98,6 +101,7 @@
 
 .water-plant-btn {
     background-color: var(--octal-color);
+    color: var(--text-on-fill);
 }
 
 .water-plant-btn:hover {
@@ -106,6 +110,7 @@
 
 .fertilize-plant-btn {
     background-color: var(--duodecimal-color);
+    color: var(--text-on-fill);
 }
 
 .fertilize-plant-btn:hover {
@@ -156,7 +161,7 @@
 
 .plant-left-column {
     flex: 1;
-    max-width: 300px;
+    max-width: 360px;
     position: relative;
 }
 
@@ -216,15 +221,11 @@ h3 {
     color: var(--text-color);
 }
 
+/* The page scrolls, the feed does not: the latest entries, then "Show older". */
 .activity-log-list {
-    max-height: 400px;
-    overflow-y: auto;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
     background: var(--background-color);
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-    touch-action: pan-y;
 }
 
 .activity-item {
@@ -257,27 +258,27 @@ h3 {
 
 .activity-icon.watering {
     background-color: var(--octal-color);
-    color: white;
+    color: var(--text-on-fill);
 }
 
 .activity-icon.care_advice {
     background-color: var(--decimal-color);
-    color: white;
+    color: var(--text-on-fill);
 }
 
 .activity-icon.image_upload {
     background-color: var(--quinary-color);
-    color: white;
+    color: var(--text-on-fill);
 }
 
 .activity-icon.note {
     background-color: var(--primary-color);
-    color: white;
+    color: var(--text-on-fill);
 }
 
 .activity-icon.fertilizing {
     background-color: var(--duodecimal-color);
-    color: white;
+    color: var(--text-on-fill);
 }
 
 .activity-content {
@@ -390,8 +391,8 @@ h3 {
 }
 
 .add-note-btn {
-    background: var(--primary-color);
-    color: white;
+    background: var(--button-primary-bg);
+    color: var(--button-primary-ink);
     border: none;
     padding: 8px 16px;
     border-radius: 6px;
@@ -493,6 +494,11 @@ h3 {
     outline: none;
 }
 
+.water-plant-datetime input:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
 .water-plant-datetime svg {
     color: var(--text-color);
 }
@@ -506,7 +512,7 @@ h3 {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: rgb(var(--shadow-rgb) / 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -522,7 +528,7 @@ h3 {
     background: var(--secondary-background-color);
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 15px rgb(var(--shadow-rgb) / 0.3);
     color: var(--text-color);
     text-align: center;
     width: 90%;
@@ -555,25 +561,25 @@ h3 {
 }
 
 .save-note-btn {
-    background-color: var(--primary-color);
-    color: white;
+    background-color: var(--button-primary-bg);
+    color: var(--button-primary-ink);
 }
 
 .save-note-btn:hover {
-    background-color: var(--secondary-color);
+    background-color: var(--button-primary-hover);
 }
 
 .delete-plant-confirm,
 .archive-plant-confirm {
     background-color: var(--tertiary-color);
-    color: white;
+    color: var(--text-on-fill);
 }
 
 .delete-plant-cancel,
 .archive-plant-cancel,
 .notes-modal-close {
     background-color: var(--quinary-color);
-    color: white;
+    color: var(--text-on-fill);
 }
 
 .delete-plant-confirm:hover,
@@ -640,6 +646,7 @@ h3 {
 
 /* Input for new tags */
 .tag-input {
+    min-height: 32px;
     border: 1px solid var(--border-color);
     padding: 4px 10px;
     border-radius: 15px;
@@ -731,10 +738,9 @@ h3 {
 
 .plant-outdoor-section h4 {
     margin: 0 0 2px 0;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--muted-text-color);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-color);
 }
 
 .plant-toggle-row {
@@ -807,10 +813,10 @@ h3 {
     white-space: pre-wrap;
     font-size: 1rem;
     line-height: 1.55;
-    background-color: var(--background-color, #fff);
-    color: var(--text-color, #000);
-    width: min(860px, calc(100vw - 2rem));
-    max-width: min(860px, calc(100vw - 2rem));
+    background-color: var(--background-color);
+    color: var(--text-color);
+    width: min(860px, calc(100% - 2rem));
+    max-width: min(860px, calc(100% - 2rem));
     margin: 0 auto;
     border-radius: 12px;
     padding: 1.5rem;
@@ -822,7 +828,7 @@ h3 {
 .toast-blur-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.1);
+    background: rgb(var(--shadow-rgb) / 0.1);
     backdrop-filter: blur(4px);
     z-index: 8000;
 }
@@ -832,11 +838,11 @@ h3 {
 }
 
 .Toastify__close-button button svg {
-    color: white;
+    color: var(--text-on-fill);
 }
 
 body.modal-open {
-    overflow: hidden;
+    overflow: clip;
 }
 
 @media (max-width: 768px) {
@@ -854,5 +860,309 @@ body.modal-open {
     .notes-modal-close {
         width: 100%;
         touch-action: manipulation;
+    }
+}
+
+/* Plant actions: one primary (water), three neutral, the rest behind "More". */
+.plant-status-line {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.plant-status-line .watering-badge {
+    font-size: 0.8rem;
+    padding: 3px 10px;
+}
+
+.plant-last-watered {
+    color: var(--muted-text-color);
+    font-size: 0.95rem;
+}
+
+.plant-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 16px 0 20px;
+}
+
+.plant-actions .plant-action-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 48px;
+    border-radius: 10px;
+    background-color: var(--button-primary-bg);
+    color: var(--button-primary-ink);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.plant-water-earlier summary {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    list-style: none;
+    cursor: pointer;
+    color: var(--muted-text-color);
+    font-size: 0.9rem;
+    white-space: nowrap;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.plant-water-earlier summary::-webkit-details-marker {
+    display: none;
+}
+
+.plant-water-earlier summary:hover,
+.plant-water-earlier[open] summary {
+    color: var(--text-color);
+}
+
+.plant-water-earlier summary:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+.plant-water-time {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 4px;
+    font-size: 0.9rem;
+    color: var(--muted-text-color);
+    text-align: left;
+}
+
+.plant-water-time input {
+    min-height: 40px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1px solid var(--input-border);
+    background: var(--input-background);
+    color: var(--text-color);
+    font: inherit;
+}
+
+.plant-actions-secondary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.plant-actions .plant-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    min-height: 40px;
+    padding: 0 8px;
+    border-radius: 10px;
+    border: 1px solid var(--card-border);
+    background-color: var(--secondary-background-color);
+    color: var(--text-color);
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.plant-actions .plant-action--danger {
+    color: var(--status-due-bg);
+}
+
+.plant-more {
+    position: relative;
+}
+
+.plant-more-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 20;
+    width: max-content;
+    min-width: 230px;
+    padding: 6px;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    background: var(--secondary-background-color);
+    box-shadow: 0 6px 16px rgb(var(--shadow-rgb) / 0.35);
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.plant-more-menu [role="menuitem"] {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+    padding: 0 12px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-color);
+    font-size: 0.95rem;
+    font-weight: 400;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.plant-more-menu [role="menuitem"]:hover {
+    background-color: var(--card-background);
+    filter: none;
+}
+
+.plant-more-menu .plant-more-danger {
+    color: var(--status-due-bg);
+}
+
+.plant-more-separator {
+    height: 1px;
+    margin: 6px 4px;
+    background: var(--card-border);
+}
+
+.description-generate,
+.plant-feed-more {
+    margin-top: 12px;
+    min-height: 36px;
+    padding: 0 14px;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    background: transparent;
+    color: var(--text-color);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.plant-latest-advice {
+    margin-top: 2rem;
+}
+
+.plant-latest-advice-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.plant-latest-advice-head h3 {
+    margin: 0 0 8px !important;
+}
+
+.plant-latest-advice-head span {
+    font-size: 0.9rem;
+    color: var(--muted-text-color);
+}
+
+/* On a phone the photo comes first, then the actions within thumb reach. */
+@media (max-width: 992px) {
+    .plant-left-column {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .plant-left-column > * {
+        order: 3;
+    }
+
+    .plant-left-column > .plant-information {
+        order: 0;
+    }
+
+    .plant-left-column > .plant-carousel-container {
+        order: 1;
+    }
+
+    .plant-left-column > .plant-actions {
+        order: 2;
+    }
+
+    .plant-actions .plant-action-primary {
+        min-height: 52px;
+    }
+
+    .plant-actions .plant-action {
+        min-height: 44px;
+    }
+}
+
+.plant-outdoor-section {
+    text-align: left;
+}
+
+.plant-outdoor-section .update-btn {
+    background-color: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    min-height: 36px;
+}
+
+.plant-outdoor-section .update-btn:hover {
+    background-color: var(--card-background);
+    color: var(--text-color);
+}
+
+.description-container--empty .editable-div,
+.description-container--empty .editable-div-noauth {
+    min-height: 0;
+    color: var(--muted-text-color);
+}
+
+/* 2. The icon in Show and Move keeps its gap from the label. */
+.plant-outdoor-section .update-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* 7. On a phone: name, photo, actions, then the advice and the history; settings last. */
+@media (max-width: 992px) {
+    .plant-columns > .plant-left-column,
+    .plant-columns > .plant-right-column {
+        display: contents;
+    }
+
+    .plant-columns > .plant-left-column > *,
+    .plant-columns > .plant-right-column > * {
+        order: 20;
+    }
+
+    .plant-columns .plant-information {
+        order: 0;
+    }
+
+    .plant-columns .plant-carousel-container {
+        order: 1;
+    }
+
+    .plant-columns .plant-actions {
+        order: 2;
+    }
+
+    .plant-columns .plant-latest-advice {
+        order: 3;
+        margin-top: 0;
+    }
+
+    .plant-columns .activity-log-container {
+        order: 4;
+        margin-top: 1.5rem;
+    }
+
+    .plant-columns .description-container {
+        order: 5;
+    }
+
+    .plant-columns .tags-container {
+        order: 6;
+        margin-top: 1.5rem;
     }
 }

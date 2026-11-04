@@ -254,6 +254,8 @@ const WateringChart = ({ data }: { data: DailyWateringData[] }) => {
         >
             <canvas
                 ref={canvasRef}
+                role="img"
+                aria-label="Daily waterings chart"
                 style={{
                     position: "absolute",
                     top: 0,
@@ -304,8 +306,8 @@ export default function StatisticsPanel() {
             {error && (
                 <div
                     style={{
-                        background: "#ffebee",
-                        color: "#c62828",
+                        background: "color-mix(in srgb, var(--status-due-bg) 16%, transparent)",
+                        color: "var(--text-color)",
                         padding: "10px",
                         borderRadius: "4px",
                         margin: "10px 0",

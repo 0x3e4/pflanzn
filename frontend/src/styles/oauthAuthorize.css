@@ -89,7 +89,9 @@
 
 .oauth-actions button:disabled {
     opacity: 0.6;
-    cursor: wait;
+    cursor: not-allowed;
+    background: var(--status-ok-bg);
+    color: var(--status-ok-ink);
 }
 
 .mcp-url-row {

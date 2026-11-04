@@ -7,9 +7,11 @@ import EditableDiv from "../components/EditableDiv";
 interface Props {
     plant: Plant;
     onDescriptionUpdated: (updatedPlant: Plant) => void;
+    // Offered in the empty state when the AI can write one.
+    onGenerate?: () => void;
 }
 
-export default function Description({ plant, onDescriptionUpdated }: Props) {
+export default function Description({ plant, onDescriptionUpdated, onGenerate }: Props) {
     const { isLoggedIn } = useAuth();
 
     const handleUpdate = async (updatedFields: Partial<Plant>) => {
@@ -35,14 +37,19 @@ export default function Description({ plant, onDescriptionUpdated }: Props) {
     };
 
     return (
-        <div className="description-container">
+        <div className={`description-container${plant.description ? "" : " description-container--empty"}`}>
             <h3>Description</h3>
             <EditableDiv
                 value={plant.description || ""}
                 onSave={(newValue) => handleUpdate({ description: newValue })}
                 editable={isLoggedIn}
-                placeholder="No description found."
+                placeholder="No description yet."
             />
+            {!plant.description && onGenerate && (
+                <button type="button" className="description-generate" onClick={onGenerate}>
+                    Write with AI
+                </button>
+            )}
         </div>
     );
 }

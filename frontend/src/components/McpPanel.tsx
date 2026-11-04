@@ -78,7 +78,7 @@ export default function McpPanel() {
                 <p className="mcp-check warn">
                     <FontAwesomeIcon icon={faTriangleExclamation} />
                     <span>
-                        <code>/.well-known/oauth-protected-resource</code> doesn't reach the backend — check your
+                        <code>/.well-known/oauth-protected-resource</code> doesn’t reach the backend. Check your
                         reverse proxy.
                     </span>
                 </p>

@@ -15,6 +15,12 @@
     width: auto;
 }
 
+/* Tiles and arrows are buttons: they take the calendar's ink, not the global button's.
+   :where keeps this below every tile rule that sets its own colour. */
+.react-calendar :where(button) {
+    color: inherit;
+}
+
 .react-calendar button,
 .react-calendar button:hover,
 .react-calendar button:active {
@@ -32,7 +38,8 @@
 
 .react-calendar__tile--active:enabled:hover,
 .react-calendar__tile--active:enabled:focus {
-    background: var(--primary-color);
+    background: var(--button-primary-bg);
+    color: var(--button-primary-ink);
 }
 
 .react-calendar__tile:enabled:hover,
@@ -63,7 +70,7 @@
 
 .react-calendar__tile.watered-day {
     background-color: var(--octal-color);
-    color: white;
+    color: var(--text-on-fill);
     font-weight: bold;
     border-radius: 8px;
 }
@@ -79,7 +86,7 @@
 
 .react-calendar__tile.image-day {
     background-color: var(--quinary-color);
-    color: white;
+    color: var(--text-on-fill);
     font-weight: bold;
     border-radius: 8px;
 }
@@ -95,7 +102,7 @@
 
 .react-calendar__tile.advice-day {
     background-color: var(--decimal-color);
-    color: white;
+    color: var(--text-on-fill);
     font-weight: bold;
     border-radius: 8px;
 }
@@ -113,7 +120,7 @@
 .react-calendar__tile.multi-day {
     position: relative;
     font-weight: bold;
-    color: white;
+    color: var(--text-on-fill);
 }
 
 .multi-day-indicator {
@@ -126,7 +133,7 @@
 /* Fertilized days */
 .react-calendar__tile.fertilized-day {
     background-color: var(--duodecimal-color);
-    color: white;
+    color: var(--text-on-fill);
     font-weight: bold;
     border-radius: 8px;
 }
@@ -139,8 +146,8 @@
 
 /* Notes days */
 .react-calendar__tile.note-day {
-    background-color: var(--primary-color);
-    color: white;
+    background-color: var(--button-primary-bg);
+    color: var(--button-primary-ink);
     font-weight: bold;
     border-radius: 8px;
 }
@@ -149,12 +156,12 @@
 .react-calendar__tile.note-day:enabled:hover,
 .react-calendar__tile.note-day:enabled:focus {
     background-color: var(--secondary-color);
-    color: white;
+    color: var(--text-on-fill);
 }
 
 .react-calendar__tile.season-day {
-    background-color: #b8892d;
-    color: #fff;
+    background-color: var(--season-color);
+    color: var(--season-ink);
     font-weight: bold;
     border-radius: 8px;
 }
@@ -162,12 +169,12 @@
 .react-calendar__tile.season-day:hover,
 .react-calendar__tile.season-day:enabled:hover,
 .react-calendar__tile.season-day:enabled:focus {
-    background-color: #8f6a1f;
-    color: #fff;
+    background-color: var(--season-color-hover);
+    color: var(--season-ink);
 }
 
 .react-calendar__tile.location-triple-day::after {
-    box-shadow: 0 0 0 2px rgba(184, 137, 45, 0.8);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--season-color) 80%, transparent);
 }
 
 .watering-tooltip-content {
@@ -187,7 +194,7 @@ li {
 
 .react-calendar__tile--active {
     background: var(--background-color);
-    color: white;
+    color: var(--text-on-fill);
 }
 
 .watering-tooltip-overlay {
@@ -195,7 +202,7 @@ li {
     color: var(--text-color);
     padding: 8px;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 2px 8px rgb(var(--shadow-rgb) / 0.5);
     border: 1px solid var(--border-color);
 }
 
@@ -232,7 +239,7 @@ li {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: rgb(var(--shadow-rgb) / 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -243,7 +250,7 @@ li {
     background: var(--secondary-background-color);
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 15px rgb(var(--shadow-rgb) / 0.3);
     color: var(--text-color);
     text-align: center;
     width: 90%;
@@ -267,12 +274,12 @@ li {
 
 .watering-delete-confirm {
     background-color: var(--tertiary-color);
-    color: white;
+    color: var(--text-on-fill);
 }
 
 .watering-delete-cancel {
     background-color: var(--quinary-color);
-    color: white;
+    color: var(--text-on-fill);
 }
 
 .watering-delete-confirm:hover {
@@ -281,4 +288,9 @@ li {
 
 .watering-delete-cancel:hover {
     background-color: var(--senary-color);
+}
+
+.react-calendar__navigation__label {
+    white-space: nowrap;
+    min-width: 0;
 }

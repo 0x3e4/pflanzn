@@ -30,7 +30,7 @@
     background: var(--background-color);
     padding: 1.5rem;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 4px rgb(var(--shadow-rgb) / 0.3);
     text-align: center;
     transition:
         transform 0.2s ease,
@@ -40,7 +40,7 @@
 
 .stats-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 8px rgb(var(--shadow-rgb) / 0.4);
 }
 
 .stats-icon {
@@ -110,7 +110,7 @@
     padding: 1.5rem;
     background-color: var(--background-color);
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 4px rgb(var(--shadow-rgb) / 0.3);
     border: 1px solid var(--border-color);
 }
 

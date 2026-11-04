@@ -1,6 +1,6 @@
 .floor-plan {
-    --plan-due: var(--tertiary-color);
-    --plan-soon: #b8892d;
+    --plan-due: var(--status-due-bg);
+    --plan-soon: var(--status-soon-bg);
     --plan-ok: var(--primary-color);
     --plan-none: var(--quinary-color);
     display: flex;
@@ -40,9 +40,9 @@
 
 .floor-plan-tabs button.active,
 .floor-plan-actions .floor-plan-edit.active {
-    background: var(--primary-color);
+    background: var(--button-primary-bg);
     border-color: var(--primary-color);
-    color: #ffffff;
+    color: var(--button-primary-ink);
 }
 
 .floor-plan-actions {
@@ -54,7 +54,7 @@
 .floor-plan-actions .floor-plan-water-due {
     background: var(--octal-color);
     border-color: var(--octal-color);
-    color: #ffffff;
+    color: var(--text-on-fill);
 }
 
 .floor-plan-address {
@@ -107,7 +107,7 @@
     border-radius: 50%;
     border: 3px solid var(--plan-none);
     background: var(--secondary-background-color);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 2px 6px rgb(var(--shadow-rgb) / 0.35);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -149,7 +149,7 @@
     border-radius: 50%;
     border: 2px solid var(--secondary-background-color);
     background: var(--plan-due);
-    color: #ffffff;
+    color: var(--text-on-fill);
     font-size: 9px;
     display: flex;
     align-items: center;
@@ -162,7 +162,7 @@
     box-shadow:
         0 0 0 3px var(--secondary-background-color),
         0 0 0 5px var(--card-border),
-        0 2px 6px rgba(0, 0, 0, 0.35);
+        0 2px 6px rgb(var(--shadow-rgb) / 0.35);
 }
 
 .plan-cluster-count {
@@ -190,7 +190,7 @@
 }
 
 .plan-marker.dragging {
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 8px 18px rgb(var(--shadow-rgb) / 0.5);
     z-index: 2;
 }
 
@@ -203,7 +203,7 @@
     padding: 1px 6px;
     border-radius: 6px;
     background: var(--overlay-background);
-    color: #ffffff;
+    color: var(--text-on-fill);
     font-size: 11px;
     white-space: nowrap;
     overflow: hidden;
@@ -231,7 +231,7 @@
     background: var(--overlay-background);
     color: var(--text-color);
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 6px rgb(var(--shadow-rgb) / 0.3);
 }
 
 .floor-plan-zoom button:hover:not(:disabled) {
@@ -240,7 +240,9 @@
 
 .floor-plan-zoom button:disabled {
     opacity: 0.4;
-    cursor: default;
+    cursor: not-allowed;
+    background: var(--status-ok-bg);
+    color: var(--status-ok-ink);
 }
 
 .floor-plan-legend {
@@ -255,25 +257,25 @@
     color: var(--muted-text-color);
 }
 
-.floor-plan-legend .dot {
+/* The key to the markers: the same ring, in each status colour. */
+.floor-plan-legend .legend-ring {
     display: inline-block;
-    width: 10px;
-    height: 10px;
-    margin-right: 4px;
+    width: 14px;
+    height: 14px;
+    margin-right: 6px;
     border-radius: 50%;
+    border: 3px solid var(--plan-none);
+    background: var(--secondary-background-color);
     vertical-align: middle;
 }
-.dot--due {
-    background: var(--plan-due);
+.legend-ring--due {
+    border-color: var(--plan-due);
 }
-.dot--soon {
-    background: var(--plan-soon);
+.legend-ring--soon {
+    border-color: var(--plan-soon);
 }
-.dot--ok {
-    background: var(--plan-ok);
-}
-.dot--none {
-    background: var(--plan-none);
+.legend-ring--ok {
+    border-color: var(--plan-ok);
 }
 
 .floor-plan-tray {
@@ -372,7 +374,7 @@
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.35);
+    background: rgb(var(--shadow-rgb) / 0.35);
 }
 
 .plan-sheet {
@@ -383,7 +385,7 @@
     border-radius: 18px 18px 0 0;
     background: var(--secondary-background-color);
     color: var(--text-color);
-    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 -8px 24px rgb(var(--shadow-rgb) / 0.35);
     animation: plan-sheet-in 0.18s ease-out;
 }
 
@@ -432,7 +434,7 @@
     color: var(--plan-due, var(--tertiary-color));
 }
 .plan-sheet-status--soon {
-    color: #b8892d;
+    color: var(--season-color);
 }
 
 .plan-sheet-actions {
@@ -461,7 +463,7 @@
 .plan-sheet-actions .plan-sheet-water {
     background: var(--octal-color);
     border-color: var(--octal-color);
-    color: #ffffff;
+    color: var(--text-on-fill);
 }
 
 .plan-sheet-actions .plan-sheet-remove {
@@ -563,8 +565,10 @@
 
 .floor-plans-panel .floor-plan-new-actions .add-btn:disabled {
     opacity: 0.6;
-    cursor: wait;
+    cursor: not-allowed;
     transform: none;
+    background: var(--status-ok-bg);
+    color: var(--status-ok-ink);
 }
 
 .floor-plans-panel .floor-plan-new {
