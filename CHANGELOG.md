@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Client IPs are no longer taken from client-supplied headers; client registration is capped.
 - External MCP tokens require `MCP_OAUTH_AUDIENCE` and an asymmetric JWT signature.
 - Weather zones are no longer visible to share-link viewers.
+- Replaced python-jose with PyJWT (CVE-2024-33663, CVE-2026-85394); this also drops ecdsa (CVE-2024-23342, CVE-2026-33936).
+- Bumped certifi to 2026.10.23 (GHSA-6q48-6c7w-9gw2) and vitest to 4.1.12 (@vitest/mocker).
 
 ### Fixed
 

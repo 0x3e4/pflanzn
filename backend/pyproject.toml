@@ -15,7 +15,7 @@ passlib = {version = "*", extras = ["argon2"]}
 python-dotenv = "*"
 redis = "*"
 mariadb = "*"
-python-jose = "*"
+pyjwt = {version = "*", extras = ["crypto"]}
 python-multipart = "*"
 requests = "*"
 pillow = "*"

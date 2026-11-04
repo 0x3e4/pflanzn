@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
+import jwt
 import redis
 from fastapi import Depends, HTTPException, Request
-from jose import jwt
 from passlib.hash import argon2
 from sqlalchemy.orm import Session
 
@@ -65,7 +65,7 @@ def decode_token(token: str) -> dict:
         return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_aud": False})
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.JWTError:
+    except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
 def validate_session(identifier: str, token: str, request: Request):

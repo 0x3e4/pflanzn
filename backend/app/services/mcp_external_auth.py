@@ -13,8 +13,7 @@ import time
 from typing import Optional
 
 import httpx
-from jose import jwt
-from jose.exceptions import JOSEError
+import jwt
 
 from app.core.config import settings
 from app.core.security import redis_client
@@ -65,16 +64,22 @@ def _verify_jwt(token: str, metadata: dict) -> Optional[dict]:
     if not _cache["jwks"]:
         return None
     try:
-        return jwt.decode(
-            token,
-            _cache["jwks"],
-            algorithms=ALLOWED_ALGORITHMS,
-            issuer=metadata["issuer"],
-            audience=settings.MCP_OAUTH_AUDIENCE,
-            options={"verify_aud": True, "verify_at_hash": False},
-        )
-    except JOSEError:  # bad signature/claims, but also key/alg mismatches (JWKError)
+        kid = jwt.get_unverified_header(token).get("kid")
+        keys = [k for k in jwt.PyJWKSet.from_dict(_cache["jwks"]).keys if kid is None or k.key_id == kid]
+    except jwt.PyJWTError:
         return None
+    for key in keys:
+        try:
+            return jwt.decode(
+                token,
+                key.key,
+                algorithms=ALLOWED_ALGORITHMS,
+                issuer=metadata["issuer"],
+                audience=settings.MCP_OAUTH_AUDIENCE,
+            )
+        except (jwt.PyJWTError, TypeError, ValueError):  # bad signature/claims, but also key/alg mismatches
+            continue
+    return None
 
 
 def _userinfo(token: str, metadata: dict) -> Optional[dict]:
