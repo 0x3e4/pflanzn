@@ -350,8 +350,6 @@ export default function Plants() {
             return;
         }
 
-        setLoading(true);
-
         try {
             const result = await identifyPlant(plantId);
 
@@ -371,8 +369,6 @@ export default function Plants() {
             });
         } catch (err) {
             toast.error((err as Error).message);
-        } finally {
-            setLoading(false);
         }
     };
 

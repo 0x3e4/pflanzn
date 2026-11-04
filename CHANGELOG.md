@@ -40,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bumped certifi to 2026.10.23 (GHSA-6q48-6c7w-9gw2) and vitest to 4.1.12 (@vitest/mocker).
 
 ### Fixed
+- The plant page's photo was forced square and stretched, with mismatched corners under its date caption (a card style leaked onto it).
+- Identifying from a plant card no longer blanks the whole list while it runs; the identification dialog's close button no longer overlaps its title and is a real button.
 - Uploading a photo or identifying a plant or crop showed no progress outside the plant page's AI actions; the loading overlay now appears for every upload and identification (cards, plant and location pages, the header camera).
 - Signed-out visitors saw a plant's species as the page title instead of its name.
 - "Due tomorrow" in amber was hard to read on the light theme.

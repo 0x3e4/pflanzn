@@ -36,10 +36,10 @@ export default function IdentifyResults({ plantId, results, onSelectSpecies, onC
     return (
         <div className="identify-modal-overlay" onClick={onClose}>
             <div className="identify-modal" ref={resultsModalRef} role="dialog" aria-modal="true" aria-label="Species identification results" onClick={(e) => e.stopPropagation()}>
-                <span className="close" onClick={onClose}>
+                <button type="button" className="close" onClick={onClose} aria-label="Close">
                     &times;
-                </span>
-                <h2>{onAddPlant ? "Add a plant from this identification" : "Select Identified Species"}</h2>
+                </button>
+                <h2>{onAddPlant ? "Add a plant from this identification" : "Pick the species"}</h2>
                 {onAddPlant && <p className="identify-modal-hint">Click a species to start adding a plant pre-filled with its details.</p>}
                 <ul>
                     {results.length > 0 ? (

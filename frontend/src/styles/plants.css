@@ -159,8 +159,8 @@
         opacity 0.3s ease;
 }
 
-/* Square photos: a phone shows two plants per row and several rows per screen. */
-.plant-image-container {
+/* Square photos on the cards only: a phone shows two plants per row and several rows per screen. */
+.plant-image-container.all-plants {
     width: 100%;
     aspect-ratio: 1 / 1;
     overflow: hidden;
