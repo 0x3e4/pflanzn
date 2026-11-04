@@ -1,7 +1,5 @@
 import { useEffect, useState, useRef } from "react";
 import { fetchStatistics, fetchDailyWaterings } from "../services/StatisticService";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSeedling, faList, faDroplet, faClock, faArchive, faImage } from "@fortawesome/free-solid-svg-icons";
 import { Plant } from "../types/Plant";
 import "../styles/statisticsPanel.css";
 import { toast } from "react-toastify";
@@ -301,7 +299,6 @@ export default function StatisticsPanel() {
     return (
         <div className="statistics-panel">
             <h2>Statistics</h2>
-            <p>Here you can monitor plant statistics.</p>
 
             {error && (
                 <div
@@ -317,88 +314,72 @@ export default function StatisticsPanel() {
                 </div>
             )}
 
-            {/* Top Row - Statistics Cards */}
-            <div className="stats-row">
-                <div className="stats-card">
-                    <FontAwesomeIcon icon={faSeedling} className="stats-icon" />
-                    <h3>{loading ? <Skeleton width={80} /> : (stats?.totalPlants ?? 0)}</h3>
-                    <p>Active Plants</p>
+            <dl className="stats-figures">
+                <div>
+                    <dt>active plants</dt>
+                    <dd>{loading ? <Skeleton width={56} /> : (stats?.totalPlants ?? 0)}</dd>
                 </div>
-                <div className="stats-card">
-                    <FontAwesomeIcon icon={faArchive} className="stats-icon" />
-                    <h3>{loading ? <Skeleton width={80} /> : (stats?.archivedPlants ?? 0)}</h3>
-                    <p>Archived Plants</p>
+                <div>
+                    <dt>archived</dt>
+                    <dd>{loading ? <Skeleton width={56} /> : (stats?.archivedPlants ?? 0)}</dd>
                 </div>
-                <div className="stats-card">
-                    <FontAwesomeIcon icon={faList} className="stats-icon" />
-                    <h3>Top 5 Species</h3>
-                    <ul>
+                <div>
+                    <dt>waterings logged</dt>
+                    <dd>{loading ? <Skeleton width={56} /> : (stats?.totalWaterings ?? 0)}</dd>
+                </div>
+                <div>
+                    <dt>images uploaded</dt>
+                    <dd>{loading ? <Skeleton width={56} /> : (stats?.totalImages ?? 0)}</dd>
+                </div>
+                <div className="stats-figure-text">
+                    <dt>last watered</dt>
+                    <dd title={stats?.lastWateredPlant?.name || undefined}>
+                        {loading ? <Skeleton width={120} /> : stats?.lastWateredPlant?.name || "N/A"}
+                    </dd>
+                </div>
+            </dl>
+
+            <div className="stats-grid">
+                <section className="chart-section" aria-labelledby="stats-daily-heading">
+                    <h3 id="stats-daily-heading">Daily waterings</h3>
+                    <div className="chart-container">
                         {loading ? (
-                            [...Array(3)].map((_, index) => (
-                                <li key={index}>
-                                    <Skeleton />
-                                </li>
-                            ))
-                        ) : stats?.topSpecies?.length ? (
-                            stats.topSpecies.map((species, index) => (
-                                <li key={index}>
-                                    {species.name} ({species.count})
-                                </li>
-                            ))
+                            <Skeleton height="100%" />
+                        ) : dailyWaterings.length > 0 ? (
+                            <WateringChart data={dailyWaterings} />
                         ) : (
-                            <li>No data</li>
+                            <div className="chart-loading">
+                                <p>No waterings logged in this period.</p>
+                            </div>
                         )}
-                    </ul>
-                </div>
-                <div className="stats-card">
-                    <FontAwesomeIcon icon={faDroplet} className="stats-icon" />
-                    <h3>{loading ? <Skeleton width={80} /> : (stats?.totalWaterings ?? 0)}</h3>
-                    <p>Total Waterings Logged</p>
-                </div>
-                <div className="stats-card">
-                    <FontAwesomeIcon icon={faImage} className="stats-icon" />
-                    <h3>{loading ? <Skeleton width={80} /> : (stats?.totalImages ?? 0)}</h3>
-                    <p>Total Images Uploaded</p>
-                </div>
-                <div className="stats-card">
-                    <FontAwesomeIcon icon={faClock} className="stats-icon" />
-                    {loading ? (
-                        <h3>
-                            <Skeleton width={120} />
-                        </h3>
-                    ) : (
-                        (() => {
-                            const name = stats?.lastWateredPlant?.name || "N/A";
-                            const sizeClass = name.length > 16 ? "stats-card-text--xs" : name.length > 10 ? "stats-card-text--sm" : "";
-                            return (
-                                <h3 className={`stats-card-text ${sizeClass}`.trim()} title={name}>
-                                    {name}
-                                </h3>
-                            );
-                        })()
-                    )}
-                    <p>Last Watered Plant</p>
-                </div>
-            </div>
+                    </div>
+                </section>
 
-            {/* Daily Waterings Chart */}
-            <div className="chart-section">
-                <h3>
-                    <FontAwesomeIcon icon={faDroplet} style={{ marginRight: "0.5rem" }} />
-                    Daily Waterings
-                </h3>
-
-                <div className="chart-container">
+                <section className="stats-species" aria-labelledby="stats-species-heading">
+                    <h3 id="stats-species-heading">Top species</h3>
                     {loading ? (
-                        <Skeleton height="100%" />
-                    ) : dailyWaterings.length > 0 ? (
-                        <WateringChart data={dailyWaterings} />
+                        [...Array(5)].map((_, index) => <Skeleton key={index} height={28} />)
+                    ) : stats?.topSpecies?.length ? (
+                        <table className="stats-species-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Species</th>
+                                    <th scope="col">Plants</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {stats.topSpecies.map((species, index) => (
+                                    <tr key={index}>
+                                        <td>{species.name}</td>
+                                        <td>{species.count}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     ) : (
-                        <div className="chart-loading">
-                            <p>No watering data available or still loading...</p>
-                        </div>
+                        <p className="stats-empty">No species recorded yet.</p>
                     )}
-                </div>
+                </section>
             </div>
         </div>
     );

@@ -14,7 +14,7 @@
 
 .location-left-column {
     flex: 1;
-    max-width: 300px;
+    max-width: 360px;
     position: relative;
 }
 
@@ -617,4 +617,67 @@
         width: 100%;
         justify-content: center;
     }
+}
+
+/* Add photo is the location's primary action: the green one. */
+.plant-actions.location-actions .location-action-primary {
+    background-color: var(--button-primary-bg);
+    color: var(--button-primary-ink);
+    border: none;
+}
+
+.location-actions .season-event-input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.plant-actions .location-actions-secondary {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+}
+
+.plant-water-earlier {
+    text-align: left;
+}
+
+/* On a phone: name, photo, actions, then the history; the rest after. */
+@media (max-width: 992px) {
+    .location-columns {
+        flex-direction: column;
+    }
+
+    .location-columns > .location-left-column,
+    .location-columns > .location-right-column {
+        display: contents;
+    }
+
+    .location-columns > .location-left-column > *,
+    .location-columns > .location-right-column > * {
+        order: 20;
+    }
+
+    .location-columns .location-information {
+        order: 0;
+    }
+
+    .location-columns .location-carousel-container {
+        order: 1;
+    }
+
+    .location-columns .location-actions {
+        order: 2;
+    }
+
+    .location-columns .location-activity-log-container {
+        order: 3;
+    }
+}
+
+.location-description-container--empty .editable-div,
+.location-description-container--empty .editable-div-noauth {
+    min-height: 0;
+    color: var(--muted-text-color);
 }

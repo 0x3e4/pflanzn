@@ -243,7 +243,7 @@
 
 /* Amber as text needs the deeper tone to read on the dark surface. */
 .home-when--soon {
-    color: var(--status-soon-bg);
+    color: var(--status-soon-text);
 }
 
 .home-figures {

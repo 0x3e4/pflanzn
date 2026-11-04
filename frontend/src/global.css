@@ -2,6 +2,10 @@
  * floor: 0 FAIL (was 296) · reflex: 248 off-scale spacing (24b) left open, 1 prose measure · recomposed: home, plant page, plants list
  * built: the project · redesign: full · v2.0.0 */
 /* Hallmark · dropped /plants?species=, onerror={handleimageload}, onload={handleimageload} · the user approved a home built around what needs water today: Species Snapshot and the autoplaying carousel (no pause control) and its preloader went */
+/* Hallmark · reworded "Top 5 Species" to "Top species", "Daily Waterings" to "Daily waterings", "Here you can monitor plant statistics." to "" · 19 names the filler line; the species list became a table beside the chart */
+/* Hallmark · dropped here you can monitor plant statistics., no watering data available or still loading... · filler and a message that said two things at once; the empty chart now says what is missing */
+/* Hallmark · dropped onclick={handlegeneratelocationdescription}, onclick={handleidentifyfromlatestimage}, getelementbyid(`file-upload-location-${location.id}`)?.click() }, archive for locations is not wired to backend yet.")}, logged in to add season events.")}, logged in to archive locations.")}, logged in to delete locations.")}, logged in to generate an ai description.") }, logged in to identify locations.")} · the location page's bottom bar moved into the actions block under the name, the plant page's pattern: each action calls the same function with the same login warning, through one handler instead of a logged-in and a guest copy */
+/* Hallmark · dropped 14, 52, 22, rosmarin · the statistics values moved from h3 headings into a figure list (dt and dd); every value is still shown, unchanged */
 /* Hallmark · waive 11 · the photo is the one hover signal on a card (the card itself keeps still) · the owner asked for the photos on the plant, location and home cards to zoom on hover again */
 /* Hallmark · reworded "Recently Captured" to "Recently photographed" · the section now shows each plant's latest photo by date instead of a random carousel */
 /* Hallmark · dropped species snapshot, 2026, 05:02, 08:03 · Species Snapshot went with the user's approval; the long last-watered dates on the cards became the short form (yesterday, 3 days ago) */
@@ -57,6 +61,8 @@
     --status-due-ink: #fbfdfb;
     --status-soon-bg: #e0b24f;
     --status-soon-ink: #241a04;
+    /* Amber as text on the page surface (the fill is too light on paper). */
+    --status-soon-text: #e0b24f;
     --status-ok-bg: #3a3a3a;
     --status-ok-ink: #c9c9c9;
     /* Harvest and season markers on the calendar and locations. */
@@ -101,6 +107,7 @@
     --button-primary-hover: #1b5e20;
     --status-due-bg: #c62828;
     --status-soon-bg: #f0c05a;
+    --status-soon-text: #8a5d00;
     --status-ok-bg: #ececec;
     --status-ok-ink: #444444;
 }

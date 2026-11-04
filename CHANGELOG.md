@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Home shows what needs water today: the due plants with a Water button each and "Water all", what comes up next, the collection's figures and the latest photos. The species bar list and the autoplaying carousel are gone.
 - Plant page: "Water now" is the one primary action, right under the name (under the photo on a phone), with Fertilize, Add photo and a More menu (identify, AI care advice, AI description, archive, delete) beside it. Watering at another time opens from "Watered earlier? Set the time". The header shows the watering status, the latest care advice has its own block, and the activity feed no longer scrolls inside a box.
 - Plants list: square cards with the water, photo and identify buttons on the photo; two columns on a phone, with species and sort behind a Filter button.
+- Location page: "Add photo" is the one primary action under the name, with "Add a harvest time" behind a disclosure, Identify crop and a More menu (AI description, archive, delete); the bottom button bar is gone. "Use my location" is a quiet button.
+- Navigation: the links and the theme and camera icons sit together on the right, instead of the icons floating mid-bar.
+- Manage, Statistics: a row of figures instead of icon tiles, and the top species as a table beside the chart.
 - Locations list: the same square cards, with the photo and identify buttons on the photo and two columns on a phone.
 - Manage, Plants: restoring an archived plant looks different from archiving (an outline and its own icon), archived rows are muted, and the table buttons have names for screen readers.
 - One watering-status colour everywhere: red means water now, amber means soon, neutral means fine (it was blue for overdue).
@@ -37,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bumped certifi to 2026.10.23 (GHSA-6q48-6c7w-9gw2) and vitest to 4.1.12 (@vitest/mocker).
 
 ### Fixed
+- Signed-out visitors saw a plant's species as the page title instead of its name.
+- "Due tomorrow" in amber was hard to read on the light theme.
 - Care help and AI descriptions with Claude failed since the anthropic SDK 1.x bump (`temperature` is no longer accepted).
 - The OpenAI provider failed on every request since the openai SDK 1.x bump (`openai.ChatCompletion` was removed).
 - Long care advice was cut off; the answer limit is higher now.

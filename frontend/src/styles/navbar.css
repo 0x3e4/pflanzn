@@ -203,3 +203,44 @@
     color: var(--primary-color);
     background: none;
 }
+
+/* Logo on the left; the links, then the theme and camera icons, together on the right.
+   space-between spread all five apart, so the icons floated mid-bar. */
+.nav-container {
+    justify-content: flex-start;
+    gap: 8px;
+}
+
+.nav-logo {
+    margin-right: auto;
+}
+
+.nav-links {
+    order: 1;
+}
+
+.theme-toggle-btn,
+.identify-btn {
+    order: 2;
+}
+
+.nav-toggle {
+    order: 3;
+}
+
+.nav-container .theme-toggle-btn,
+.nav-container .identify-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 8px;
+}
+
+.nav-container .theme-toggle-btn:hover,
+.nav-container .identify-btn:hover:not(:disabled) {
+    transform: none;
+    background-color: var(--card-background);
+}

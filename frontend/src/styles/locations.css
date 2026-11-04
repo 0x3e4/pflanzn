@@ -547,3 +547,16 @@
         font-size: 13px;
     }
 }
+
+.location-information .gps-btn.gps-btn-inline {
+    align-self: flex-start;
+    background-color: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    margin-top: 6px;
+}
+
+.location-information .gps-btn.gps-btn-inline:hover:not(:disabled) {
+    background-color: var(--card-background);
+}

@@ -864,7 +864,7 @@ export default function PlantDetails() {
                                         onClick={() => toast.warning("You must be logged in to update plants.")}
                                         tabIndex={0}
                                     >
-                                        {plant.species || "Unknown"}
+                                        {plant.name || "Unnamed Plant"}
                                     </span>
                                 </>
                             )}
