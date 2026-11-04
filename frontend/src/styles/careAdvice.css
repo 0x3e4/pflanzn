@@ -1,0 +1,82 @@
+.care-advice {
+    border-left: 2px solid var(--decimal-color);
+    padding-left: 12px;
+    margin-top: 6px;
+    color: var(--text-color);
+    font-size: 14px;
+    line-height: 1.55;
+    max-width: 68ch;
+}
+
+.care-advice-section + .care-advice-section {
+    margin-top: 12px;
+}
+
+.care-advice-label {
+    margin: 0 0 2px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.care-advice-text {
+    margin: 0;
+    color: var(--muted-text-color);
+    overflow-wrap: break-word;
+}
+
+.care-advice-steps {
+    margin: 4px 0 0;
+    padding-left: 1.4em;
+    color: var(--muted-text-color);
+}
+
+.care-advice-steps li + li {
+    margin-top: 6px;
+}
+
+.care-advice-steps li::marker {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.care-advice-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    margin-top: 10px;
+}
+
+.care-advice-toggle {
+    background: none;
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    min-height: 36px;
+    color: var(--text-color);
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.care-advice-toggle:hover {
+    background-color: var(--card-background);
+    border-color: var(--decimal-color);
+}
+
+.care-advice-toggle:active {
+    background-color: var(--card-border);
+}
+
+.care-advice-author {
+    font-size: 12px;
+    color: var(--muted-text-color);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .care-advice-toggle {
+        transition: none;
+    }
+}

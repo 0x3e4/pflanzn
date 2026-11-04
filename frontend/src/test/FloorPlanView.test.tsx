@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { DateTime } from "luxon";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import FloorPlanView from "../components/FloorPlanView";
 import { FloorPlan } from "../types/FloorPlan";
 import { Plant } from "../types/Plant";
@@ -111,6 +111,57 @@ describe("FloorPlanView", () => {
         expect(mockPlacePlant).toHaveBeenCalledWith(10, 4, 0.25, 0.25);
         const updated = onPlansChange.mock.calls[0][0] as FloorPlan[];
         expect(updated[0].placements).toContainEqual({ plant_id: 4, x: 0.25, y: 0.25 });
+    });
+
+    describe("on a small screen", () => {
+        // jsdom has no ResizeObserver; this one reports a phone-sized plan right away.
+        beforeEach(() => {
+            vi.stubGlobal(
+                "ResizeObserver",
+                class {
+                    constructor(private callback: ResizeObserverCallback) {}
+                    observe() {
+                        this.callback(
+                            [{ contentRect: { width: 360, height: 180 } } as ResizeObserverEntry],
+                            this as unknown as ResizeObserver,
+                        );
+                    }
+                    disconnect() {}
+                },
+            );
+        });
+        afterEach(() => vi.unstubAllGlobals());
+
+        const crowded: FloorPlan = {
+            ...plan,
+            placements: [
+                { plant_id: 1, x: 0.5, y: 0.5 },
+                { plant_id: 2, x: 0.52, y: 0.5 },
+                { plant_id: 3, x: 0.9, y: 0.9 },
+            ],
+        };
+
+        it("groups overlapping markers, led by the thirsty plant", () => {
+            renderView({ plans: [crowded] });
+            const group = screen.getByRole("button", { name: /^2 plants, 1 need water: Fern, Monstera\. Zoom in$/ });
+            expect(group).toHaveClass("plan-cluster", "plan-marker--due");
+            expect(group).toHaveTextContent("2");
+            expect(screen.getByRole("button", { name: /^Cactus:/ })).toBeInTheDocument();
+            expect(screen.queryByRole("button", { name: /^Fern:/ })).not.toBeInTheDocument();
+        });
+
+        it("shows every marker while editing so each can be dragged", () => {
+            renderView({ plans: [crowded] });
+            fireEvent.click(screen.getByRole("button", { name: /Edit/ }));
+            expect(screen.getByRole("button", { name: /^Fern:/ })).toBeInTheDocument();
+            expect(screen.getByRole("button", { name: /^Monstera:/ })).toBeInTheDocument();
+        });
+
+        it("keeps the plant opened from its page out of any group", () => {
+            renderView({ plans: [crowded], focusPlantId: 2 });
+            expect(screen.getByRole("button", { name: /^Monstera:/ })).toHaveClass("focused");
+            expect(screen.getByRole("button", { name: /^Fern:/ })).toBeInTheDocument();
+        });
     });
 
     it("shows the empty state without plans", () => {

@@ -52,6 +52,7 @@ import { DateTime } from "luxon";
 import { toast } from "react-toastify";
 import LoadingOverlay from "../components/LoadingOverlay";
 import IdentifyResults from "../components/IdentifyResults";
+import CareAdviceText from "../components/CareAdviceText";
 import { useAuth } from "../context/AuthContext";
 import { useConfig } from "../context/ConfigContext";
 import { setOverlayOpen } from "../services/overlayControl";
@@ -109,6 +110,8 @@ export default function PlantDetails() {
     const [careAdviceMessage, setCareAdviceMessage] = useState("");
     const [actionLoading, setActionLoading] = useState<ActionLoadingState>(null);
     const [plantNet, setPlantNet] = useState<{ species: string; url: string | null } | null>(null);
+    // Care advice entries opened in the activity feed (held here: the feed is re-created each render)
+    const [expandedAdvice, setExpandedAdvice] = useState<Set<string>>(() => new Set());
 
     // Fetch plant and activites data on load
     useEffect(() => {
@@ -723,7 +726,23 @@ export default function PlantDetails() {
                                         })}
                                     </p>
                                 </div>
-                                <p className="activity-description">{getActivityDescription(activity)}</p>
+                                {activity.activity_type === "care_advice" && activity.activity_data?.advice ? (
+                                    <CareAdviceText
+                                        text={activity.activity_data.advice}
+                                        author={activity.activity_data?.user_name}
+                                        expanded={expandedAdvice.has(activity.id)}
+                                        onToggle={() =>
+                                            setExpandedAdvice((open) => {
+                                                const next = new Set(open);
+                                                if (next.has(activity.id)) next.delete(activity.id);
+                                                else next.add(activity.id);
+                                                return next;
+                                            })
+                                        }
+                                    />
+                                ) : (
+                                    <p className="activity-description">{getActivityDescription(activity)}</p>
+                                )}
                             </div>
                         </div>
                     ))

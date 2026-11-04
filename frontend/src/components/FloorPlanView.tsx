@@ -9,6 +9,7 @@ import {
     faMagnifyingGlassMinus,
     faMagnifyingGlassPlus,
     faPen,
+    faRotateLeft,
     faTrash,
     faXmark,
 } from "@fortawesome/free-solid-svg-icons";
@@ -18,6 +19,7 @@ import { usePanZoom } from "../hooks/usePanZoom";
 import { useModalA11y } from "../hooks/useModalA11y";
 import { placePlant, unplacePlant } from "../services/FloorPlanService";
 import { extractErrorMessage } from "../services/apiClient";
+import { clusterPoints } from "../services/floorPlanClusters";
 import {
     formatLastWateredShort,
     formatWateringDue,
@@ -30,6 +32,8 @@ type MarkerStatus = "due" | "soon" | "ok" | "none";
 
 const LONG_PRESS_MS = 350;
 const DRAG_SLOP_PX = 8;
+const MAX_SCALE = 5;
+const MARKER_RANK: Record<MarkerStatus, number> = { due: 0, soon: 1, ok: 2, none: 3 };
 
 interface FloorPlanViewProps {
     plans: FloorPlan[];
@@ -73,7 +77,11 @@ export default function FloorPlanView({
     const plan = plans.find((p) => p.id === selectedPlanId) ?? plans[0] ?? null;
     const viewportRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
-    const { state: view, zoomBy, reset, wasGesture, releasePointer, handlers } = usePanZoom(viewportRef);
+    const { state: view, zoomAt, zoomBy, reset, wasGesture, releasePointer, handlers } = usePanZoom(
+        viewportRef,
+        MAX_SCALE,
+    );
+    const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
 
     const [editMode, setEditMode] = useState(Boolean(placePlantId) && canEdit);
     const [placingPlantId, setPlacingPlantId] = useState<number | null>(canEdit ? placePlantId : null);
@@ -87,6 +95,16 @@ export default function FloorPlanView({
     const { modalRef } = useModalA11y({ isOpen: sheetPlantId !== null, onClose: closeSheet });
 
     useEffect(() => reset(), [plan?.id, reset]);
+
+    useEffect(() => {
+        const el = viewportRef.current;
+        if (!el || typeof ResizeObserver === "undefined") return;
+        const observer = new ResizeObserver(([entry]) =>
+            setViewportSize({ width: entry.contentRect.width, height: entry.contentRect.height }),
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [plan?.id]);
 
     const plantsById = useMemo(() => new Map(allPlants.map((p) => [p.id, p])), [allPlants]);
     const visibleIds = useMemo(() => new Set(plants.map((p) => p.id)), [plants]);
@@ -108,6 +126,40 @@ export default function FloorPlanView({
     );
 
     const dueOnPlan = markers.filter((m) => m.status?.needsWater).map((m) => m.plant.id);
+
+    // Markers keep their screen size while zooming; on a phone-sized plan they shrink.
+    const markerSize = viewportSize.width
+        ? Math.round(Math.min(44, Math.max(28, viewportSize.width * 0.085)))
+        : 44;
+    // Markers that would overlap on screen are shown as one group; tapping it zooms in.
+    // Not while editing (every marker must be draggable) or at full zoom.
+    const clustering = !editMode && !drag && viewportSize.width > 0 && view.scale < MAX_SCALE;
+    const markersById = new Map(markers.map((m) => [m.plant.id, m]));
+    const groups = clustering
+        ? clusterPoints(
+              markers
+                  .filter((m) => m.plant.id !== focusPlantId)
+                  .map((m) => ({
+                      id: m.plant.id,
+                      x: m.placement.x * viewportSize.width * view.scale + view.x,
+                      y: m.placement.y * viewportSize.height * view.scale + view.y,
+                      rank: MARKER_RANK[m.variant],
+                  })),
+              markerSize * 0.9,
+          )
+              .map((ids) => ids.map((id) => markersById.get(id)!))
+              .concat(markers.filter((m) => m.plant.id === focusPlantId).map((m) => [m]))
+        : markers.map((m) => [m]);
+
+    const zoomToward = (x: number, y: number) => {
+        const rect = viewportRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        zoomAt(
+            rect.left + x * viewportSize.width * view.scale + view.x,
+            rect.top + y * viewportSize.height * view.scale + view.y,
+            view.scale * 2.5,
+        );
+    };
     const trayPlants = allPlants.filter(
         (p) =>
             !p.is_archived &&
@@ -284,10 +336,13 @@ export default function FloorPlanView({
             <div
                 ref={viewportRef}
                 className={`floor-plan-viewport${placingPlant ? " placing" : ""}`}
-                style={{
-                    aspectRatio: `${plan.width} / ${plan.height}`,
-                    width: `min(100%, calc((100dvh - 260px) * ${ratio}))`,
-                }}
+                style={
+                    {
+                        aspectRatio: `${plan.width} / ${plan.height}`,
+                        width: `min(100%, calc((100dvh - 260px) * ${ratio}))`,
+                        "--marker-size": `${markerSize}px`,
+                    } as React.CSSProperties
+                }
                 {...handlers}
             >
                 <div
@@ -301,7 +356,48 @@ export default function FloorPlanView({
                         alt={`Floor plan: ${plan.name}`}
                         draggable={false}
                     />
-                    {markers.map(({ placement, plant, status, variant }) => {
+                    {groups.map((group) => {
+                        if (group.length > 1) {
+                            const lead = group[0];
+                            const x = group.reduce((sum, m) => sum + m.placement.x, 0) / group.length;
+                            const y = group.reduce((sum, m) => sum + m.placement.y, 0) / group.length;
+                            const thumb = latestThumb(lead.plant);
+                            const due = group.filter((m) => m.status?.needsWater).length;
+                            return (
+                                <button
+                                    key={`group-${lead.plant.id}`}
+                                    type="button"
+                                    className={`plan-marker plan-cluster plan-marker--${lead.variant}`}
+                                    style={{
+                                        left: `${x * 100}%`,
+                                        top: `${y * 100}%`,
+                                        transform: `translate(-50%, -50%) scale(${1 / view.scale})`,
+                                    }}
+                                    aria-label={`${group.length} plants${due ? `, ${due} need water` : ""}: ${group
+                                        .map((m) => m.plant.name)
+                                        .join(", ")}. Zoom in`}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (!wasGesture()) zoomToward(x, y);
+                                    }}
+                                >
+                                    {thumb ? (
+                                        <img src={thumb} alt="" draggable={false} />
+                                    ) : (
+                                        <span>{lead.plant.name.charAt(0)}</span>
+                                    )}
+                                    <span className="plan-cluster-count" aria-hidden="true">
+                                        {group.length}
+                                    </span>
+                                    {due > 0 && (
+                                        <span className="plan-marker-due" aria-hidden="true">
+                                            <FontAwesomeIcon icon={faDroplet} />
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        }
+                        const { placement, plant, status, variant } = group[0];
                         const position = drag?.plantId === plant.id ? drag : placement;
                         const thumb = latestThumb(plant);
                         return (
@@ -331,6 +427,11 @@ export default function FloorPlanView({
                                 ) : (
                                     <span>{plant.name.charAt(0)}</span>
                                 )}
+                                {variant === "due" && (
+                                    <span className="plan-marker-due" aria-hidden="true">
+                                        <FontAwesomeIcon icon={faDroplet} />
+                                    </span>
+                                )}
                                 {showLabels && <span className="plan-marker-label">{plant.name}</span>}
                             </button>
                         );
@@ -348,6 +449,11 @@ export default function FloorPlanView({
                     >
                         <FontAwesomeIcon icon={faMagnifyingGlassMinus} />
                     </button>
+                    {view.scale > 1 && (
+                        <button type="button" onClick={reset} aria-label="Reset zoom">
+                            <FontAwesomeIcon icon={faRotateLeft} />
+                        </button>
+                    )}
                 </div>
             </div>
 

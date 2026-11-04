@@ -85,6 +85,32 @@ class TestWateringInterval:
         assert client.put("/api/plants/1", json={"watering_interval_days": 0}).status_code == 422
         assert client.put("/api/plants/1", json={"watering_interval_days": 366}).status_code == 422
 
+    def test_update_keeps_last_watered_in_the_response(self, client, mock_db):
+        """Regression: PUT returned last_watered=None, so the page showed "Water today"
+        after any edit until it was reloaded."""
+        from datetime import datetime
+
+        from app.models import Plant, PlantFertilizing, PlantWatering
+
+        plant = Plant(id=1, name="Curio", species="Curio citriformis", watering_interval_days=7)
+        watering = PlantWatering(id=1, plant_id=1, watered_at=datetime(2026, 11, 1, 9, 0))
+        plant.waterings = [watering]
+
+        def query(model, *args):
+            chain = MagicMock()
+            chain.filter.return_value = chain
+            chain.order_by.return_value = chain
+            chain.first.return_value = {Plant: plant, PlantWatering: watering}.get(model)
+            return chain
+        mock_db.query.side_effect = query
+
+        response = client.put("/api/plants/1", json={"watering_interval_days": 24})
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["watering_interval_days"] == 24
+        assert body["last_watered"].startswith("2026-11-01")
+
 
 class TestWateringDue:
     def test_no_interval_is_never_due(self):

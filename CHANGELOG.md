@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - With Claude or OpenAI, the care helper can also search the web; Claude also reads pages (`CARE_WEB_SEARCH`, on by default). OpenAI care advice now uses the Responses API.
 
 ### Changed
+- Care advice in the activity feed shows its sections as headings and the steps as a numbered list; it opens on the diagnosis, the rest is one tap away.
+- Floor plan: markers that would overlap are shown as one, with a count, led by the plant that needs water most; tap it to zoom in. Markers get smaller on phone-sized plans, and the zoom buttons (now with a reset) sit top right, clear of the bottom navigation.
 
 ### Security
 - A user could take over another account (including admin) by renaming themselves to its email.
@@ -30,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Care help and AI descriptions with Claude failed since the anthropic SDK 1.x bump (`temperature` is no longer accepted).
 - The OpenAI provider failed on every request since the openai SDK 1.x bump (`openai.ChatCompletion` was removed).
 - Long care advice was cut off; the answer limit is higher now.
+- After editing a plant, its page showed "Water today" until reloaded (the update didn't return the last watering).
 
 ## [1.2.0] - 2026-10-22
 

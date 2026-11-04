@@ -282,7 +282,8 @@ def update_plant(plant_id: int, plant_data: PlantUpdate, db: Session = Depends(g
     db.commit()
     db.refresh(plant)
 
-    return plant
+    # Same shape as GET (last_watered etc.): the frontend replaces its copy with this.
+    return get_plant(plant_id, db)
 
 @router.delete("/{plant_id}")
 def delete_plant(plant_id: int, db: Session = Depends(get_db), current_user: Optional[User] = Depends(require_write_access)):

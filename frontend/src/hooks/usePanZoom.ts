@@ -163,6 +163,7 @@ export function usePanZoom(viewportRef: RefObject<HTMLElement | null>, maxScale 
 
     return {
         state,
+        zoomAt,
         zoomBy,
         reset,
         wasGesture,

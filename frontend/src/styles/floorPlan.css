@@ -101,11 +101,11 @@
 
 .plan-marker {
     position: absolute;
-    width: 44px;
-    height: 44px;
+    width: var(--marker-size, 44px);
+    height: var(--marker-size, 44px);
     padding: 0;
     border-radius: 50%;
-    border: 4px solid var(--plan-none);
+    border: 3px solid var(--plan-none);
     background: var(--secondary-background-color);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
     display: flex;
@@ -140,13 +140,47 @@
 }
 
 /* Not colour alone: thirsty plants also carry a drop badge. */
-.plan-marker--due::after {
-    content: "💧";
+.plan-marker-due {
     position: absolute;
-    top: -10px;
-    right: -10px;
-    font-size: 14px;
-    line-height: 1;
+    top: -6px;
+    right: -6px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--secondary-background-color);
+    background: var(--plan-due);
+    color: #ffffff;
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+/* Overlapping markers, shown as one: the most urgent plant's photo and a count. */
+.plan-cluster {
+    box-shadow:
+        0 0 0 3px var(--secondary-background-color),
+        0 0 0 5px var(--card-border),
+        0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.plan-cluster-count {
+    position: absolute;
+    bottom: -6px;
+    right: -8px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 10px;
+    border: 2px solid var(--secondary-background-color);
+    background: var(--text-color);
+    color: var(--background-color);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+    pointer-events: none;
 }
 
 .plan-marker.focused {
@@ -177,27 +211,36 @@
     pointer-events: none;
 }
 
+/* Top right: on phones the bottom navigation covers the plan's lower edge. */
 .floor-plan-zoom {
     position: absolute;
+    top: 8px;
     right: 8px;
-    bottom: 8px;
     display: flex;
     flex-direction: column;
     gap: 6px;
+    z-index: 3;
 }
 
 .floor-plan-zoom button {
     width: 40px;
     height: 40px;
+    padding: 0;
     border-radius: 50%;
-    border: none;
+    border: 1px solid var(--card-border);
     background: var(--overlay-background);
-    color: #ffffff;
+    color: var(--text-color);
     cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.floor-plan-zoom button:hover:not(:disabled) {
+    background: var(--secondary-background-color);
 }
 
 .floor-plan-zoom button:disabled {
     opacity: 0.4;
+    cursor: default;
 }
 
 .floor-plan-legend {
