@@ -96,6 +96,8 @@ class Settings(BaseSettings):
     OPENAI_MODEL_NAME: str = os.getenv("OPENAI_MODEL_NAME", "gpt-4-turbo")
     CLAUDE_API_KEY: str = os.getenv("CLAUDE_API_KEY")
     CLAUDE_MODEL_NAME: str = os.getenv("CLAUDE_MODEL_NAME", "claude-opus-4-20250514")
+    # low / medium / high / xhigh / max; empty = the model's default (medium on Claude Opus 5.5).
+    CLAUDE_EFFORT: str = os.getenv("CLAUDE_EFFORT", "")
     OLLAMA_URL: str = os.getenv("OLLAMA_URL")
     OLLAMA_MODEL_NAME: str = os.getenv("OLLAMA_MODEL_NAME")
     OPENWEATHERMAP_API_KEY: str = os.getenv("OPENWEATHERMAP_API_KEY", "")

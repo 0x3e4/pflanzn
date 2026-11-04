@@ -37,6 +37,20 @@ def _response_text(response) -> str:
     return "".join(block.text for block in blocks[last_tool + 1:] if block.type == "text")
 
 
+_EFFORTS = {"low", "medium", "high", "xhigh", "max"}
+
+
+def _effort() -> dict:
+    """output_config for CLAUDE_EFFORT; nothing when unset, so the model's default applies."""
+    effort = (settings.CLAUDE_EFFORT or "").strip().lower()
+    if not effort:
+        return {}
+    if effort not in _EFFORTS:
+        logger.warning(f"Ignoring CLAUDE_EFFORT={effort!r}: use one of {', '.join(sorted(_EFFORTS))}")
+        return {}
+    return {"output_config": {"effort": effort}}
+
+
 def _web_tools(model: str) -> list[dict]:
     dynamic = _DYNAMIC_WEB_TOOLS.match(model or "")
     return [
@@ -53,6 +67,7 @@ def _care_request(content: list[dict], tools: Optional[list[dict]]):
         "max_tokens": MAX_TOKENS_CARE_ADVICE,
         "system": PromptConfig.get_system_message(),
         "messages": messages,
+        **_effort(),
     }
     if tools:
         request["tools"] = tools
@@ -76,6 +91,7 @@ class ClaudeClient:
             response = anthropic_client.messages.create(
                 model=settings.CLAUDE_MODEL_NAME,
                 max_tokens=MAX_TOKENS_TEXT,
+                **_effort(),
                 system=PromptConfig.get_system_message(),
                 messages=[
                     {"role": "user", "content": prompt}
@@ -118,6 +134,7 @@ class ClaudeClient:
             response = anthropic_client.messages.create(
                 model=settings.CLAUDE_MODEL_NAME,
                 max_tokens=MAX_TOKENS_TEXT,
+                **_effort(),
                 system=PromptConfig.get_system_message(),
                 messages=[{"role": "user", "content": prompt}],
             )

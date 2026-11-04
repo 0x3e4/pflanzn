@@ -357,3 +357,29 @@ class TestClaudeDescriptions:
             ClaudeClient().generate_species_description("Bogenhanf", "Sansevieria")
         with pytest.raises(RuntimeError, match="max_tokens"):
             ClaudeClient().generate_location_description("Beet", "Basilikum", "bed")
+
+
+class TestClaudeEffort:
+    @pytest.fixture
+    def create(self, plant_db):
+        with patch("app.services.anthropic.anthropic_client") as client, \
+             patch.object(settings, "CARE_WEB_SEARCH", False):
+            client.messages.create.return_value = _response(_block("text", text="ok"))
+            yield client.messages.create
+
+    @pytest.mark.parametrize("value, expected", [
+        ("high", {"effort": "high"}),
+        (" XHigh ", {"effort": "xhigh"}),
+        ("", None),
+        ("extreme", None),  # not a level: ignored, the model's default applies
+    ])
+    def test_every_claude_call_sends_the_configured_effort(self, create, plant_db, value, expected):
+        from app.services.anthropic import ClaudeClient
+
+        with patch.object(settings, "CLAUDE_EFFORT", value):
+            client = ClaudeClient()
+            client.care_helper(plant_db, 1)
+            client.generate_species_description("Bogenhanf", "Sansevieria")
+            client.generate_location_description("Beet", "Basilikum", "bed")
+        for call in create.call_args_list:
+            assert call.kwargs.get("output_config") == expected
