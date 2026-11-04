@@ -14,6 +14,7 @@ import {
     faChevronRight,
     faCircleXmark,
     faListCheck,
+    faArrowUpFromBracket,
     faBoxArchive,
     faTrashCanArrowUp,
 } from "@fortawesome/free-solid-svg-icons";
@@ -305,7 +306,7 @@ export default function PlantsPanel() {
                                   </tr>
                               ))
                             : currentPlants.map((p) => (
-                                  <tr key={p.id}>
+                                  <tr key={p.id} className={p.is_archived ? "archived-row" : undefined}>
                                       <td>{p.id}</td>
                                       <td>
                                           <input
@@ -325,28 +326,27 @@ export default function PlantsPanel() {
                                       </td>
                                       <td>
                                           <div className="action-buttons">
-                                              <button className="view-btn" onClick={() => openTagModal(p)} title="Manage tags">
+                                              <button className="view-btn" onClick={() => openTagModal(p)} title="Manage tags" aria-label={`Manage tags of ${p.name}`}>
                                                   <FontAwesomeIcon icon={faListCheck} />
                                               </button>
-                                              <button className="view-btn" onClick={() => handleNavigateToPlant(p.id)}>
+                                              <button className="view-btn" onClick={() => handleNavigateToPlant(p.id)} title="Open plant" aria-label={`Open ${p.name}`}>
                                                   <FontAwesomeIcon icon={faEye} />
                                               </button>
-                                              <button className="update-btn" onClick={() => handleUpdatePlant(p.id)}>
+                                              <button className="update-btn" onClick={() => handleUpdatePlant(p.id)} title="Save changes" aria-label={`Save ${p.name}`}>
                                                   <FontAwesomeIcon icon={faSave} />
                                               </button>
                                               <button
-                                                  className="archive-btn"
+                                                  className={`archive-btn${p.is_archived ? " archive-btn--restore" : ""}`}
                                                   onClick={() => {
                                                       setArchiveReason("");
                                                       setArchiveModalOpen(p.id);
                                                   }}
                                                   title={p.is_archived ? "Restore plant" : "Archive plant"}
+                                                  aria-label={`${p.is_archived ? "Restore" : "Archive"} ${p.name}`}
                                               >
-                                                  <FontAwesomeIcon
-                                                      icon={p.is_archived ? faTrashCanArrowUp : faBoxArchive}
-                                                  />
+                                                  <FontAwesomeIcon icon={p.is_archived ? faArrowUpFromBracket : faBoxArchive} />
                                               </button>
-                                              <button className="delete-btn" onClick={() => setDeleteModalOpen(p.id)}>
+                                              <button className="delete-btn" onClick={() => setDeleteModalOpen(p.id)} title="Delete plant" aria-label={`Delete ${p.name}`}>
                                                   <FontAwesomeIcon icon={faTrash} />
                                               </button>
                                           </div>

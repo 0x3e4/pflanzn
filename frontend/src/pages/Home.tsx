@@ -244,7 +244,9 @@ export default function Home() {
                             ? [...Array(RECENT_PHOTOS)].map((_, i) => <Skeleton key={i} height={180} borderRadius={12} />)
                             : recent.map(({ plant, at }) => (
                                   <Link key={plant.id} to={`/plant/${plant.id}`} className="home-recent-item">
-                                      <img src={thumb(plant, "medium") ?? ""} alt={plant.name} className="home-plant-image" />
+                                      <span className="home-recent-frame">
+                                          <img src={thumb(plant, "medium") ?? ""} alt={plant.name} className="home-plant-image" />
+                                      </span>
                                       <span>
                                           {plant.name},{" "}
                                           {DateTime.fromMillis(at).setZone(timezone).toRelativeCalendar()}

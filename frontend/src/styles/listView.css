@@ -166,8 +166,8 @@
 }
 
 .list-row-btn--water {
-    background-color: var(--octal-color);
-    color: var(--text-on-fill);
+    background-color: var(--water-bg);
+    color: var(--water-ink);
 }
 
 .list-row-btn--water:hover {

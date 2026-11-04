@@ -304,13 +304,30 @@
     background: var(--season-color-hover);
 }
 
+/* Restore looks unlike archive: an outline in the same amber, an arrow out of the box. */
+.archive-btn.archive-btn--restore {
+    background: transparent;
+    color: var(--season-color);
+    box-shadow: inset 0 0 0 1px var(--season-color);
+}
+
+.archive-btn.archive-btn--restore:hover {
+    background: color-mix(in srgb, var(--season-color) 16%, transparent);
+}
+
+.data-table tr.archived-row td {
+    color: var(--muted-text-color);
+}
+
+/* White on #a7a7a7 was 2.3:1: tags and open are neutral buttons. */
 .view-btn {
-    background: var(--quinary-color);
+    background: var(--secondary-background-color);
     color: var(--text-color);
+    box-shadow: inset 0 0 0 1px var(--card-border);
 }
 
 .view-btn:hover {
-    background: var(--background-color);
+    background: var(--card-background);
 }
 
 .update-btn {
@@ -847,4 +864,8 @@
     word-break: break-word;
     font-size: 12px;
     color: var(--text-color);
+}
+
+.data-table tr.archived-row .editable-input {
+    color: var(--muted-text-color);
 }

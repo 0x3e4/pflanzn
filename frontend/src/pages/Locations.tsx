@@ -710,10 +710,11 @@ export default function Locations() {
                                 <div className="location-buttons">
                                     {isLoggedIn ? (
                                         <>
-                                            <label className="upload-location-btn">
+                                            <label className="upload-location-btn" title="Add a photo">
                                                 <FontAwesomeIcon icon={faUpload} />
                                                 <input
                                                     type="file"
+                                                    aria-label={`Add a photo of ${location.name}`}
                                                     accept="image/*"
                                                     onChange={(e) => {
                                                         const selected = e.target.files?.[0];
@@ -729,6 +730,7 @@ export default function Locations() {
                                                 className="identify-location-btn"
                                                 onClick={() => handleIdentifyExistingLocation(location)}
                                                 disabled={identifyingLocationId === location.id}
+                                                aria-label={`Identify the crop at ${location.name}`}
                                                 title="Identify crop/herb from latest image"
                                             >
                                                 <FontAwesomeIcon icon={faFingerprint} />
@@ -738,12 +740,14 @@ export default function Locations() {
                                         <>
                                             <button
                                                 className="upload-location-btn"
+                                                aria-label={`Add a photo of ${location.name}`}
                                                 onClick={() => toast.warning("You must be logged in to upload images.")}
                                             >
                                                 <FontAwesomeIcon icon={faUpload} />
                                             </button>
                                             <button
                                                 className="identify-location-btn"
+                                                aria-label={`Identify the crop at ${location.name}`}
                                                 onClick={() =>
                                                     toast.warning("You must be logged in to identify locations.")
                                                 }

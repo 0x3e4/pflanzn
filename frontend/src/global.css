@@ -2,6 +2,7 @@
  * floor: 0 FAIL (was 296) · reflex: 248 off-scale spacing (24b) left open, 1 prose measure · recomposed: home, plant page, plants list
  * built: the project · redesign: full · v2.0.0 */
 /* Hallmark · dropped /plants?species=, onerror={handleimageload}, onload={handleimageload} · the user approved a home built around what needs water today: Species Snapshot and the autoplaying carousel (no pause control) and its preloader went */
+/* Hallmark · waive 11 · the photo is the one hover signal on a card (the card itself keeps still) · the owner asked for the photos on the plant, location and home cards to zoom on hover again */
 /* Hallmark · reworded "Recently Captured" to "Recently photographed" · the section now shows each plant's latest photo by date instead of a random carousel */
 /* Hallmark · dropped species snapshot, 2026, 05:02, 08:03 · Species Snapshot went with the user's approval; the long last-watered dates on the cards became the short form (yesterday, 3 days ago) */
 /* Hallmark · dropped onclick={handlewaterplant}, onclick={handlefertilizeplant}, onclick={handlegeneratedescription}, onclick={handleopencareadvicemodal}, setisarchiving(!plant.is_archived), onclick={() => document.getelementbyid(`file-upload-${plant.id}`)?.click()}, generate a description with ai., logged in to delete plants.")}, logged in to fertilize plants.")}, logged in to identify images.")} · the plant page's bottom bar moved into the actions block beside the name; every action calls the same function with the same login warning, through one handler instead of a logged-in and a guest copy */
@@ -43,10 +44,14 @@
     --pale-rgb: 200 200 200;
     --neutral-rgb: 128 128 128;
     --ink-rgb: 22 22 22;
-    /* The one primary action: white on #4caf50 is 2.8:1, this ink is 5.9:1. */
-    --button-primary-bg: #4caf50;
-    --button-primary-ink: #0d2410;
-    --button-primary-hover: #66bb6a;
+    /* Primary buttons: white on #4caf50 is 2.8:1, so the fill is a deeper green (5.1:1). */
+    --button-primary-bg: #2e7d32;
+    --button-primary-ink: #fbfdfb;
+    --button-primary-hover: #1b5e20;
+    /* Watering is always blue: every water action, in lists, cards, plans and pages. */
+    --water-bg: var(--octal-color);
+    --water-ink: var(--text-on-fill);
+    --water-hover: var(--nonal-color);
     /* Watering status, the same everywhere: due (water now), soon, ok. */
     --status-due-bg: #af4c4c;
     --status-due-ink: #fbfdfb;
@@ -207,7 +212,7 @@ a:focus-visible,
 
 /* Lighten whatever fill the button has, so coloured buttons keep their own colour. */
 button:hover:not(:disabled) {
-    filter: brightness(1.12);
+    filter: brightness(1.08);
 }
 
 button:active:not(:disabled) {

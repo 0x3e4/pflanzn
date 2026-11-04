@@ -19,8 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Home shows what needs water today: the due plants with a Water button each and "Water all", what comes up next, the collection's figures and the latest photos. The species bar list and the autoplaying carousel are gone.
 - Plant page: "Water now" is the one primary action, right under the name (under the photo on a phone), with Fertilize, Add photo and a More menu (identify, AI care advice, AI description, archive, delete) beside it. Watering at another time opens from "Watered earlier? Set the time". The header shows the watering status, the latest care advice has its own block, and the activity feed no longer scrolls inside a box.
 - Plants list: square cards with the water, photo and identify buttons on the photo; two columns on a phone, with species and sort behind a Filter button.
+- Locations list: the same square cards, with the photo and identify buttons on the photo and two columns on a phone.
+- Manage, Plants: restoring an archived plant looks different from archiving (an outline and its own icon), archived rows are muted, and the table buttons have names for screen readers.
 - One watering-status colour everywhere: red means water now, amber means soon, neutral means fine (it was blue for overdue).
-- Primary buttons use dark text on the green (white on green was 2.8:1, below the 4.5:1 minimum); light mode uses a deeper green with white. Keyboard focus shows a light ring on every control. Labels use sentence case instead of spaced capitals, and the footer is a quiet line instead of a green band.
+- Primary buttons use a deeper green with white text (white on #4caf50 was 2.8:1, below the 4.5:1 minimum). Watering is always blue, on every water button. Keyboard focus shows a light ring on every control. Labels use sentence case instead of spaced capitals, and the footer is a quiet line instead of a green band.
 
 ### Security
 - A user could take over another account (including admin) by renaming themselves to its email.

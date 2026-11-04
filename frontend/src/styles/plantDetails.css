@@ -896,8 +896,8 @@ body.modal-open {
     gap: 10px;
     min-height: 48px;
     border-radius: 10px;
-    background-color: var(--button-primary-bg);
-    color: var(--button-primary-ink);
+    background-color: var(--water-bg);
+    color: var(--water-ink);
     font-size: 1rem;
     font-weight: 600;
 }

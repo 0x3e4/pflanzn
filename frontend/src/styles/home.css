@@ -61,10 +61,14 @@
         border-color 0.2s ease;
 }
 
-.home-cta.primary,
-.home-water-all {
+.home-cta.primary {
     background-color: var(--button-primary-bg);
     color: var(--button-primary-ink);
+}
+
+.home-water-all {
+    background-color: var(--water-bg);
+    color: var(--water-ink);
 }
 
 .home-cta.primary:hover {
@@ -177,9 +181,9 @@
     min-height: 40px;
     padding: 0 14px;
     border-radius: 10px;
-    border: 1px solid var(--card-border);
-    background: transparent;
-    color: var(--text-color);
+    border: none;
+    background: var(--water-bg);
+    color: var(--water-ink);
     font-size: 0.9rem;
     font-weight: 600;
 }
@@ -286,12 +290,22 @@
     color: var(--text-color);
 }
 
+.home-recent-frame {
+    display: block;
+    overflow: hidden;
+    border-radius: 12px;
+}
+
 .home-plant-image {
     width: 100%;
     aspect-ratio: 4 / 3;
     object-fit: cover;
-    border-radius: 12px;
     display: block;
+    transition: transform 0.3s ease;
+}
+
+.home-recent-item:hover .home-plant-image {
+    transform: scale(1.05);
 }
 
 .home-empty-state {

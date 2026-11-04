@@ -310,8 +310,8 @@
     position: relative;
 }
 
-.location-card:hover {
-    box-shadow: 0px 12px 20px rgb(var(--shadow-rgb) / 0.7);
+.location-card:hover .location-image {
+    transform: scale(1.05);
 }
 
 .location-card-main-link {
@@ -325,9 +325,9 @@
 
 .location-image-container {
     width: 100%;
-    height: 450px;
+    aspect-ratio: 1 / 1;
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: 12px 12px 0 0;
     position: relative;
 }
 
@@ -338,20 +338,20 @@
     transition: transform 0.3s ease;
 }
 
-.location-image-container:hover .location-image {
-    transform: scale(1.1);
-}
+
 
 .location-card-text {
-    padding: 10px;
-    margin-bottom: 44px;
+    padding: 10px 12px 12px;
     box-sizing: border-box;
 }
 
-.location-card h3 {
-    font-size: 20px;
-    margin: 5px 0;
+.location-card .location-card-text h3 {
+    font-size: 18px;
+    margin: 0 0 2px !important;
     color: var(--text-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .location-card p {
@@ -499,5 +499,51 @@
 
     .location-sort-container select {
         width: 100%;
+    }
+}
+
+/* The card's actions sit on the photo, bottom right, like the plant cards. */
+.location-buttons {
+    top: 0;
+    left: 0;
+    bottom: auto;
+    aspect-ratio: 1 / 1;
+    align-items: flex-end;
+    justify-content: flex-end;
+    gap: 6px;
+    padding: 8px;
+    pointer-events: none;
+}
+
+.location-buttons button,
+.location-buttons .upload-location-btn {
+    pointer-events: auto;
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 999px;
+    background-color: rgb(var(--ink-rgb) / 0.82);
+    color: var(--text-on-fill);
+    font-size: 15px;
+}
+
+.location-buttons button:hover,
+.location-buttons .upload-location-btn:hover {
+    background-color: rgb(var(--ink-rgb) / 0.95);
+}
+
+@media (max-width: 768px) {
+    .locations-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .location-card .location-card-text h3 {
+        font-size: 16px;
+    }
+
+    .location-card p {
+        font-size: 13px;
     }
 }

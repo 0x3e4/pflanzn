@@ -461,9 +461,9 @@
 }
 
 .plan-sheet-actions .plan-sheet-water {
-    background: var(--octal-color);
-    border-color: var(--octal-color);
-    color: var(--text-on-fill);
+    background: var(--water-bg);
+    border-color: var(--water-bg);
+    color: var(--water-ink);
 }
 
 .plan-sheet-actions .plan-sheet-remove {

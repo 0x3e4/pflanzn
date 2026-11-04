@@ -145,8 +145,8 @@
     box-sizing: border-box;
 }
 
-.plant-card:hover {
-    box-shadow: 0px 12px 20px rgb(var(--shadow-rgb) / 0.15);
+.plant-card:hover .plant-image {
+    transform: scale(1.05);
 }
 
 /* Plant image styling */
@@ -226,11 +226,10 @@
     transition: background-color 0.2s ease;
 }
 
+/* Same size as the others; watering in its blue. */
 .plant-buttons .water-plant-btn {
-    width: 44px;
-    height: 44px;
-    background-color: var(--button-primary-bg);
-    color: var(--button-primary-ink);
+    background-color: var(--water-bg);
+    color: var(--water-ink);
 }
 
 .plant-buttons .archive-plant-btn {
@@ -659,13 +658,9 @@
 }
 
 .plants-container .water-plant-input-container .water-plant-btn {
-    background-color: var(--secondary-background-color);
-    color: var(--text-color);
+    background-color: var(--water-bg);
+    color: var(--water-ink);
     border-radius: 8px 0 0 8px;
-}
-
-.plants-container .water-plant-input-container .water-plant-btn:hover {
-    background-color: var(--card-background);
 }
 
 @media (max-width: 768px) {
