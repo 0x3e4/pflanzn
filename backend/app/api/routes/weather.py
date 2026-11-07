@@ -4,7 +4,6 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.core.security import AUDIENCE_MEMBER, require_read_access, require_write_access
 from app.database import get_db
 from app.models import Plant, PlantWatering, User, WeatherConfig, WeatherLog
@@ -15,7 +14,6 @@ from app.schemas import (
     WeatherConfigResponse,
     WeatherConfigUpdate,
     WeatherLogPaginatedResponse,
-    WeatherLogResponse,
 )
 from app.services.weather_service import check_and_auto_water, get_current_weather
 
@@ -230,11 +228,11 @@ def get_auto_waterings(
         db.query(PlantWatering, Plant.id, Plant.name, Plant.weather_config_id, WeatherConfig.city_name)
         .join(Plant, PlantWatering.plant_id == Plant.id)
         .outerjoin(WeatherConfig, Plant.weather_config_id == WeatherConfig.id)
-        .filter(PlantWatering.user_id == None)
+        .filter(PlantWatering.user_id.is_(None))
     )
     total = (
         db.query(PlantWatering)
-        .filter(PlantWatering.user_id == None)
+        .filter(PlantWatering.user_id.is_(None))
         .count()
     )
     rows = (

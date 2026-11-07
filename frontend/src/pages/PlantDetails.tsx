@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
     fetchSinglePlant,
@@ -27,6 +27,7 @@ import { Plant } from "../types/Plant";
 import { Tag } from "../types/Tag";
 import TimelineImages from "../components/TimelineImages";
 import LoginHint from "../components/LoginHint";
+import { useModalA11y } from "../hooks/useModalA11y";
 import Description from "../components/Description";
 import Calendar from "../components/Calendar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -106,6 +107,11 @@ export default function PlantDetails() {
     const [activities, setActivities] = useState<any[]>([]);
     const [loadingActivities, setLoadingActivities] = useState(false);
     const [notesModalOpen, setNotesModalOpen] = useState(false);
+    // Escape closes it and focus goes back to the button, like the other dialogs.
+    const { modalRef: notesModalRef } = useModalA11y({
+        isOpen: notesModalOpen,
+        onClose: useCallback(() => setNotesModalOpen(false), []),
+    });
     const [notes, setNotes] = useState<any[]>([]);
     const [newNote, setNewNote] = useState("");
     const [careAdviceModalOpen, setCareAdviceModalOpen] = useState(false);
@@ -196,7 +202,7 @@ export default function PlantDetails() {
             await archivePlant(plant.id, isArchiving, archiveReason);
             toast.success(isArchiving ? "Plant archived!" : "Plant restored!");
             navigate("/plants");
-        } catch (err) {
+        } catch {
             toast.error(`Failed to ${isArchiving ? "archive" : "restore"} plant.`);
         }
     };
@@ -298,7 +304,10 @@ export default function PlantDetails() {
             if (plant) {
                 setPlant({
                     ...plant,
-                    last_watered: new Date(wateringDateTimeUTC),
+                    // An ISO string with its offset, like the API sends: a Date object made the
+                    // status read "Water today" until reload, and parsing the bare UTC string as
+                    // local time put it an hour off.
+                    last_watered: DateTime.fromISO(at, { zone: timezone }).toISO() as unknown as Date,
                     waterings: [...(plant.waterings || []), newWatering],
                 });
             }
@@ -333,7 +342,7 @@ export default function PlantDetails() {
             if (plant) {
                 setPlant({
                     ...plant,
-                    last_fertilized: new Date(fertilizingDateTimeUTC),
+                    last_fertilized: DateTime.fromISO(at, { zone: timezone }).toISO() as unknown as Date,
                     fertilizings: [...(plant.fertilizings || []), newFertilizing],
                 });
             }
@@ -440,7 +449,7 @@ export default function PlantDetails() {
                 return;
             }
             setAvailableTags([...tags]);
-        } catch (error) {
+        } catch {
             toast.error("Failed to load tags.");
         }
     };
@@ -520,7 +529,7 @@ export default function PlantDetails() {
             setAvailableTags((prevTags) => prevTags.filter((tag) => tag.id !== tagId));
             setFilteredTags((prevTags) => prevTags.filter((tag) => tag.id !== tagId));
             toast.success("Tag deleted successfully!");
-        } catch (error) {
+        } catch {
             toast.error("Failed to delete tag.");
         }
     };
@@ -532,7 +541,7 @@ export default function PlantDetails() {
         try {
             const data = await fetchPlantActivities(Number(plantId), { limit: 20 });
             setActivities(data);
-        } catch (error) {
+        } catch {
             toast.error("Failed to load activity log.");
         } finally {
             setLoadingActivities(false);
@@ -545,7 +554,7 @@ export default function PlantDetails() {
         try {
             const data = await fetchPlantNotes(Number(plantId), { limit: 10 });
             setNotes(data);
-        } catch (error) {
+        } catch {
             toast.error("Failed to load notes.");
         }
     };
@@ -567,7 +576,7 @@ export default function PlantDetails() {
 
             // Always refresh activity feed
             loadActivities();
-        } catch (error) {
+        } catch {
             toast.error("Failed to create note.");
         }
     };
@@ -712,7 +721,8 @@ export default function PlantDetails() {
     )[0]?.id;
     const feedActivities = activities.filter((activity) => activity.id !== `care_${latestAdviceId}`);
 
-    const ActivityFeedSection = () => (
+    // A render function, not a component: defined in here it would remount on every render.
+    const renderActivityFeed = () => (
         <div className="activity-log-container">
             <div className="activity-log-header">
                 <h3>Activity feed</h3>
@@ -1424,7 +1434,7 @@ export default function PlantDetails() {
                         );
                     })()}
 
-                    <ActivityFeedSection />
+                    {renderActivityFeed()}
 
                     {plant.is_archived && plant.archive_reason && (
                         <div className="archive-reason-box mt-5">
@@ -1508,7 +1518,13 @@ export default function PlantDetails() {
             {/* Notes Modal */}
             {notesModalOpen && (
                 <div className="notes-modal-overlay">
-                    <div className="notes-modal">
+                    <div
+                        className="notes-modal"
+                        ref={notesModalRef}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Write a note about the plant"
+                    >
                         <div className="notes-modal-header">
                             <span>Write a note about the plant</span>
                         </div>

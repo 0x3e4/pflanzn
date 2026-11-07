@@ -1,6 +1,6 @@
 import logging
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta, timezone
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -12,6 +12,7 @@ from app.core.security import AUTH_MODE, SHARE_COOKIE, get_current_admin_user
 from app.database import get_db
 from app.models import ShareLink, User
 from app.schemas import ShareLinkCreate, ShareLinkResponse
+from app.utils.time import utcnow
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ def validate_share_link(token: str, db: Session = Depends(get_db)):
     link = db.query(ShareLink).filter(ShareLink.token == token).first()
     if not link:
         return _share_link_refused(404, "Invalid share link")
-    if link.expires_at and link.expires_at < datetime.utcnow():
+    if link.expires_at and link.expires_at < utcnow():
         return _share_link_refused(410, "Share link has expired")
 
     response = JSONResponse(content={"valid": True, "alias": link.alias})
@@ -81,7 +82,7 @@ def create_share_link(
 
     expires_at = None
     if payload.expires_in_hours is not None:
-        expires_at = datetime.utcnow() + timedelta(hours=payload.expires_in_hours)
+        expires_at = utcnow() + timedelta(hours=payload.expires_in_hours)
 
     link = ShareLink(
         token=secrets.token_urlsafe(32),

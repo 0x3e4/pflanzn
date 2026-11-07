@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Optional
 
 import jwt
@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.database import get_db
 from app.models import User
+from app.utils.time import utcnow
 
 # Environment variables / settings
 SECRET_KEY = settings.SECRET_KEY
@@ -38,7 +39,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def create_access_token(data: dict, expires_delta: timedelta) -> str:
     """Create JWT token and enforce session rotation in Redis."""
     to_encode = data.copy()
-    expire = datetime.utcnow() + expires_delta
+    expire = utcnow() + expires_delta
     to_encode.update({"exp": expire})
 
     new_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
@@ -55,7 +56,7 @@ def create_access_token(data: dict, expires_delta: timedelta) -> str:
 
 def create_refresh_token(data: dict, expires_delta: timedelta) -> str:
     to_encode = data.copy()
-    expire = datetime.utcnow() + expires_delta
+    expire = utcnow() + expires_delta
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -97,7 +98,6 @@ def validate_session(identifier: str, token: str, request: Request):
 
 def _is_valid_share_token(share_token: str, db: Session) -> bool:
     """Check if a share token is valid and not expired."""
-    from datetime import datetime
 
     from app.models import ShareLink
     # Only the random token is a credential; the alias is an admin-chosen label
@@ -105,7 +105,7 @@ def _is_valid_share_token(share_token: str, db: Session) -> bool:
     link = db.query(ShareLink).filter(ShareLink.token == share_token).first()
     if not link:
         return False
-    if link.expires_at and link.expires_at < datetime.utcnow():
+    if link.expires_at and link.expires_at < utcnow():
         return False
     return True
 

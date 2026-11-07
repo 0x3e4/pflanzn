@@ -14,7 +14,7 @@ import hashlib
 import hmac
 import json
 import secrets
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Optional
 from urllib.parse import urlencode, urlparse
 
@@ -24,6 +24,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.security import redis_client
 from app.models import OAuthClient, OAuthGrant
+from app.utils.time import utcnow
 
 SCOPE_READ = "pflanzn:read"
 SCOPE_WRITE = "pflanzn:write"
@@ -129,7 +130,7 @@ def verify_client_secret(client: OAuthClient, secret: Optional[str]) -> bool:
 def issue_tokens(grant: OAuthGrant) -> dict:
     """Rotates both tokens on the grant and returns the RFC 6749 token response.
     The caller commits."""
-    now = datetime.utcnow()
+    now = utcnow()
     access_token = new_token("pfz_at")
     refresh_token = new_token("pfz_rt")
     grant.access_token_hash = hash_token(access_token)
@@ -147,14 +148,14 @@ def issue_tokens(grant: OAuthGrant) -> dict:
 
 def find_grant_by_access_token(db: Session, token: str) -> Optional[OAuthGrant]:
     grant = db.query(OAuthGrant).filter(OAuthGrant.access_token_hash == hash_token(token)).first()
-    if not grant or not grant.access_expires_at or grant.access_expires_at <= datetime.utcnow():
+    if not grant or not grant.access_expires_at or grant.access_expires_at <= utcnow():
         return None
     return grant
 
 
 def find_grant_by_refresh_token(db: Session, token: str) -> Optional[OAuthGrant]:
     grant = db.query(OAuthGrant).filter(OAuthGrant.refresh_token_hash == hash_token(token)).first()
-    if not grant or not grant.refresh_expires_at or grant.refresh_expires_at <= datetime.utcnow():
+    if not grant or not grant.refresh_expires_at or grant.refresh_expires_at <= utcnow():
         return None
     return grant
 
@@ -270,6 +271,6 @@ def prune_unused_clients(db: Session) -> None:
     """Deletes registrations older than UNUSED_CLIENT_TTL that never got a grant."""
     used = select(OAuthGrant.client_id)
     db.query(OAuthClient).filter(
-        OAuthClient.created_at < datetime.utcnow() - UNUSED_CLIENT_TTL,
+        OAuthClient.created_at < utcnow() - UNUSED_CLIENT_TTL,
         ~OAuthClient.id.in_(used),
     ).delete(synchronize_session=False)

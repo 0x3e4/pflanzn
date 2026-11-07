@@ -35,6 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - "Archive location" in the location page's More menu: it only said it wasn't available yet.
 - The footer. About, GitHub and the version are at the bottom of the Manage menu; signed-out visitors find About in the navigation.
 
+### Internal
+- Backend: no more deprecated `datetime.utcnow()`, class-based Pydantic `Config` or `on_event("startup")`; ruff is clean.
+- Frontend: all tests pass (two sign-in tests assumed local auth without setting it); the plant page's activity feed no longer remounts on every render.
+
 ### Security
 - A user could take over another account (including admin) by renaming themselves to its email.
 - The PlantNet API key could appear in identify error messages and logs. **Rotate `PLANTNET_API_KEY`.**
@@ -58,6 +62,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Long care advice was cut off; the answer limit is higher now.
 - Generating a description with a newer Claude model saved an empty text: thinking used up the answer limit. The limit is higher now, and an empty answer is reported as an error.
 - After editing a plant, its page showed "Water today" until reloaded (the update didn't return the last watering).
+- "Water now" and "Fertilize" on the plant page also showed "Water today" until reloaded, and the new time an hour off when the browser's timezone differed from the server's.
+- The note dialogs on the plant and location pages now close with Escape and return focus to their button.
+- Manage → Plants could break when the sign-in state changed while it was open (a hook ran conditionally).
 - More changes show without reloading the page: changing tags no longer blanks the care advice and outdoor settings; picking a species after identifying updates the page (and the card) once it's saved, with an error if it isn't; a new photo is shown right after uploading instead of the previous one; deleting a photo updates the activity feed and calendar; a saved profile shows its new name at once; refreshing a location after an edit no longer blanks the page.
 - Lists and pages no longer show cached data when the server takes more than 3 seconds to answer; the cache is only used offline.
 - Uploading the same photo twice in a row did nothing the second time.

@@ -1,16 +1,15 @@
 
-from datetime import datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.security import require_write_access
 from app.database import get_db
 from app.models import Plant, PlantWatering, Tag, User, plant_tag_association
 from app.schemas import PlantWateringCreate, TagCreate, TagListResponse, TagResponse
+from app.utils.time import utcnow
 
 
 class TagPlantsUpdate(BaseModel):
@@ -169,7 +168,7 @@ def water_plants_by_tag(
     if not plants:
         raise HTTPException(status_code=404, detail="No plants found with this tag")
 
-    now = watering_data.watered_at or datetime.utcnow()
+    now = watering_data.watered_at or utcnow()
 
     for plant in plants:
         watering = PlantWatering(

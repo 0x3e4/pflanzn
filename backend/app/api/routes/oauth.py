@@ -13,7 +13,6 @@ import json
 import logging
 import re
 import secrets
-from datetime import datetime
 from typing import List, Optional
 from urllib.parse import unquote
 
@@ -31,6 +30,7 @@ from app.database import get_db
 from app.models import OAuthClient, OAuthGrant, User
 from app.schemas import OAuthDecision, OAuthGrantResponse, OAuthRedirect, OAuthRequestInfo
 from app.services import mcp_external_auth, mcp_login, mcp_oauth
+from app.utils.time import utcnow
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +146,7 @@ async def register_client(request: Request, db: Session = Depends(get_db)):
 
     body = {
         "client_id": client_id,
-        "client_id_issued_at": int(datetime.utcnow().timestamp()),
+        "client_id_issued_at": int(utcnow().timestamp()),
         "client_name": client_name or None,
         "redirect_uris": redirect_uris,
         "grant_types": ["authorization_code", "refresh_token"],
@@ -442,7 +442,7 @@ async def revoke(request: Request, db: Session = Depends(get_db)):
 @router.get("/grants", response_model=List[OAuthGrantResponse])
 def list_grants(db: Session = Depends(get_db), current_user: User = Depends(require_write_access)):
     """The caller's connections; admins see everyone's. Expired grants are pruned."""
-    db.query(OAuthGrant).filter(OAuthGrant.refresh_expires_at < datetime.utcnow()).delete(synchronize_session=False)
+    db.query(OAuthGrant).filter(OAuthGrant.refresh_expires_at < utcnow()).delete(synchronize_session=False)
     db.commit()
 
     query = db.query(OAuthGrant)

@@ -22,7 +22,7 @@ def identify_species_via_plantnet(
 ) -> dict[str, any]:
     """
     Call the Pl@ntNet API to identify a plant from an image.
-    
+
     :param image_path: Absolute path to the local image file
     :param mime_type: MIME type, e.g., 'image/png' or 'image/jpeg'
     :param filename: Just the filename (for the multipart form)

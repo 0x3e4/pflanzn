@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -25,6 +25,7 @@ import LocationTimelineImages from "../components/LocationTimelineImages";
 import StaticLeafletMap from "../components/StaticLeafletMap";
 import LocationCalendar from "../components/LocationCalendar";
 import LoginHint from "../components/LoginHint";
+import { useModalA11y } from "../hooks/useModalA11y";
 import { importLocalLocationDataOnce } from "../services/locationLocalImport";
 import {
     addLocationNote,
@@ -138,6 +139,11 @@ export default function LocationDetails() {
         };
     }, [moreOpen]);
     const [notesModalOpen, setNotesModalOpen] = useState(false);
+    // Escape closes it and focus goes back to the button, like the other dialogs.
+    const { modalRef: notesModalRef } = useModalA11y({
+        isOpen: notesModalOpen,
+        onClose: useCallback(() => setNotesModalOpen(false), []),
+    });
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [generatingDescription, setGeneratingDescription] = useState(false);
     const [actionLoading, setActionLoading] = useState<ActionLoadingState>(null);
@@ -1279,7 +1285,13 @@ export default function LocationDetails() {
 
             {notesModalOpen && (
                 <div className="notes-modal-overlay">
-                    <div className="notes-modal">
+                    <div
+                        className="notes-modal"
+                        ref={notesModalRef}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Write a note about the location"
+                    >
                         <div className="notes-modal-header">
                             <span>Write a note about the location</span>
                         </div>

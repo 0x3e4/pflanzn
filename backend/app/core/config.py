@@ -2,7 +2,7 @@ import os
 import tomllib
 from pathlib import Path
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 def _read_app_version() -> str:
@@ -153,7 +153,6 @@ class Settings(BaseSettings):
     def public_base_url(self) -> str:
         return (self.DOMAIN or "").rstrip("/")
 
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(env_file=".env")
 
 settings = Settings()

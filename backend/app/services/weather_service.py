@@ -197,7 +197,7 @@ def check_and_auto_water(db: Session) -> int:
             # rainy zone cannot water plants that belong to (or default to) a dry one.
             if config.is_default:
                 query = query.filter(
-                    (Plant.weather_config_id == config.id) | (Plant.weather_config_id == None)
+                    (Plant.weather_config_id == config.id) | (Plant.weather_config_id.is_(None))
                 )
             else:
                 query = query.filter(Plant.weather_config_id == config.id)
@@ -210,7 +210,7 @@ def check_and_auto_water(db: Session) -> int:
                     db.query(PlantWatering)
                     .filter(
                         PlantWatering.plant_id == plant.id,
-                        PlantWatering.user_id == None,
+                        PlantWatering.user_id.is_(None),
                         PlantWatering.watered_at >= today_start,
                     )
                     .first()

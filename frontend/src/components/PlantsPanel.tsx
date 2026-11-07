@@ -256,13 +256,14 @@ export default function PlantsPanel() {
         }
     };
 
-    if (!isLoggedIn && authMode !== "no") {
-        return <p>Access denied</p>;
-    }
-
+    // Before the early return: hooks must run in the same order on every render.
     useEffect(() => {
         setOverlayOpen(!!deleteModalOpen || !!tagModalPlant || archiveModalOpen !== null);
     }, [deleteModalOpen, tagModalPlant, archiveModalOpen]);
+
+    if (!isLoggedIn && authMode !== "no") {
+        return <p>Access denied</p>;
+    }
 
     const archiveTarget = archiveModalOpen !== null ? plants.find((p) => p.id === archiveModalOpen) : undefined;
     const isArchivingTarget = !archiveTarget?.is_archived;

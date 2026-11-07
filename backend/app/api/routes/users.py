@@ -150,7 +150,7 @@ def update_user(
     if current_user.id != user_id and current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Not authorized to update this user")
 
-    update_fields = user_data.dict(exclude_unset=True)
+    update_fields = user_data.model_dump(exclude_unset=True)
 
     # Usernames and emails both identify sessions, so neither may match another account's
     for key in ("username", "email"):

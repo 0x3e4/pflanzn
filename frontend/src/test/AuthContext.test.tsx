@@ -14,7 +14,12 @@ vi.mock("../services/apiClient", () => ({
     },
 }));
 
-const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+// These tests are about local sign-in; the default config has auth off (everyone signed in).
+vi.mock("../context/ConfigContext", () => ({
+    useConfig: () => ({ authMode: "local", showProtectedView: false, mcpLogin: "app" }),
+}));
+
+const wrapper =({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
 
 describe("AuthContext", () => {
     beforeEach(() => {

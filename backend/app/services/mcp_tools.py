@@ -29,6 +29,7 @@ from app.models import (
     plant_tag_association,
 )
 from app.services.mcp_oauth import SCOPE_READ, SCOPE_WRITE
+from app.utils.time import utcnow
 
 LOCAL_TZ = ZoneInfo(settings.TZ)
 MAX_TEXT = 20000
@@ -94,7 +95,7 @@ def _iso(dt: Optional[datetime]) -> Optional[str]:
 
 
 def _days_since(dt: Optional[datetime]) -> Optional[int]:
-    return (datetime.utcnow() - dt).days if dt else None
+    return (utcnow() - dt).days if dt else None
 
 
 def _watering_due(interval_days: Optional[int], last_watered: Optional[datetime],
@@ -185,7 +186,7 @@ def _arg_when(args: dict, name: str) -> datetime:
     """Optional ISO 8601 timestamp -> naive UTC. Times without an offset are read in TZ."""
     raw = args.get(name)
     if raw is None:
-        return datetime.utcnow()
+        return utcnow()
     if not isinstance(raw, str):
         raise ToolError(f"'{name}' must be an ISO 8601 date or datetime")
     try:
@@ -195,7 +196,7 @@ def _arg_when(args: dict, name: str) -> datetime:
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=LOCAL_TZ)
     as_utc = parsed.astimezone(timezone.utc).replace(tzinfo=None)
-    if as_utc > datetime.utcnow() + timedelta(minutes=5):
+    if as_utc > utcnow() + timedelta(minutes=5):
         raise ToolError(f"'{name}' cannot be in the future")
     return as_utc
 
@@ -444,7 +445,7 @@ def get_recent_activity(ctx: ToolContext, args: dict) -> dict:
     plant_id = args.get("plant_id")
     if plant_id is not None:
         plant_id = _get_plant(ctx.db, _arg_int(args, "plant_id")).id
-    since = datetime.utcnow() - timedelta(days=days)
+    since = utcnow() - timedelta(days=days)
     names = dict(ctx.db.query(Plant.id, Plant.name).all())
 
     events = []
@@ -521,7 +522,7 @@ def add_plant_note(ctx: ToolContext, args: dict) -> dict:
     note = PlantNote(
         plant_id=plant.id,
         note_text=_arg_str(args, "text", required=True, max_length=MAX_TEXT),
-        created_at=datetime.utcnow(),
+        created_at=utcnow(),
         user_id=_user_id(ctx),
     )
     ctx.db.add(note)
@@ -534,7 +535,7 @@ def add_care_advice(ctx: ToolContext, args: dict) -> dict:
     advice = PlantCareAdvice(
         plant_id=plant.id,
         advice_text=_arg_str(args, "advice", required=True, max_length=MAX_TEXT),
-        generated_at=datetime.utcnow(),
+        generated_at=utcnow(),
         user_id=_user_id(ctx),
     )
     ctx.db.add(advice)

@@ -7,7 +7,7 @@ there is no session to keep and GET/SSE streams are not offered.
 import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -21,6 +21,7 @@ from app.core.config import APP_VERSION, settings
 from app.database import get_db
 from app.models import User
 from app.services import mcp_external_auth, mcp_oauth, mcp_tools
+from app.utils.time import utcnow
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +96,7 @@ def _authenticate(request: Request, db: Session) -> Principal | JSONResponse:
     if not grant or not grant.user:
         return _unauthorized(request, "invalid_token")
 
-    now = datetime.utcnow()
+    now = utcnow()
     if not grant.last_used_at or now - grant.last_used_at > LAST_USED_RESOLUTION:
         grant.last_used_at = now
         db.commit()

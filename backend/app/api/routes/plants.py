@@ -56,6 +56,7 @@ from app.schemas import (
 from app.services import plant_reference
 from app.services.llm_client import LLMClient
 from app.services.plantnet import PlantNetError, identify_species_via_plantnet
+from app.utils.time import utcnow
 from app.utils.uploads import IMAGE_VARIANTS
 from app.utils.uploads import generate_image_variants as _generate_image_variants
 
@@ -331,7 +332,7 @@ def update_plant(plant_id: int, plant_data: PlantUpdate, db: Session = Depends(g
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
 
-    for key, value in plant_data.dict(exclude_unset=True).items():
+    for key, value in plant_data.model_dump(exclude_unset=True).items():
         logger.debug(f"Updating {key} to {value} for plant ID {plant_id}")
         setattr(plant, key, value)
 
@@ -394,9 +395,9 @@ def upload_plant_image(
                 timestamp = datetime.fromisoformat(uploaded_at)
             except ValueError:
                 logger.warning(f"Invalid timestamp format: {uploaded_at}, using current UTC time")
-                timestamp = datetime.utcnow()
+                timestamp = utcnow()
         else:
-            timestamp = datetime.utcnow()
+            timestamp = utcnow()
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error processing image: {str(e)}")
@@ -735,7 +736,7 @@ def water_plant(
 
     watering = PlantWatering(
         plant_id=plant_id,
-        watered_at=watering_data.watered_at or datetime.utcnow(),
+        watered_at=watering_data.watered_at or utcnow(),
         user_id=(current_user.id if current_user else None),
     )
     db.add(watering)
@@ -859,7 +860,7 @@ def fertilize_plant(
 
     fertilizing = PlantFertilizing(
         plant_id=plant_id,
-        fertilized_at=fertilizing_data.fertilized_at or datetime.utcnow(),
+        fertilized_at=fertilizing_data.fertilized_at or utcnow(),
         user_id=(current_user.id if current_user else None),
     )
     db.add(fertilizing)
@@ -1202,7 +1203,7 @@ def get_care_helper(
         care_advice = PlantCareAdvice(
             plant_id=plant_id,
             advice_text=advice_text,
-            generated_at=datetime.utcnow(),
+            generated_at=utcnow(),
             user_id=(current_user.id if current_user else None),
         )
 
@@ -1292,7 +1293,7 @@ def create_plant_note(
     note = PlantNote(
         plant_id=plant_id,
         note_text=note_data.note_text,
-        created_at=datetime.utcnow(),
+        created_at=utcnow(),
         user_id=(current_user.id if current_user else None),
     )
 

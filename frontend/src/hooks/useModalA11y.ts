@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 
 interface UseModalA11yOptions {
     isOpen: boolean;
@@ -11,7 +11,7 @@ export function useModalA11y({ isOpen, onClose }: UseModalA11yOptions) {
     const modalRef = useRef<HTMLDivElement>(null);
     const previousFocusRef = useRef<HTMLElement | null>(null);
 
-    const stableOnClose = useCallback(onClose, [onClose]);
+    const stableOnClose = onClose;
 
     // Store previous focus and move into modal on open; restore on close
     useEffect(() => {

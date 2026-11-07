@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI
@@ -23,6 +24,7 @@ from app.api.routes import (
 )
 from app.api.routes import config as config_route
 from app.api.routes import settings as settings_route
+from app.core.audit_middleware import audit_middleware
 from app.core.body_limit import BodySizeLimitMiddleware
 from app.core.config import APP_VERSION, settings
 from app.core.security import create_admin_user, require_read_access
@@ -54,7 +56,14 @@ init_db()
 logger.debug("Database initialized.")
 
 # Initialize FastAPI
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    startup_event()  # defined below
+    yield
+
+
 app = FastAPI(
+    lifespan=lifespan,
     title="Plant Management API",
     version=APP_VERSION,
     docs_url="/api/docs" if settings.ENABLE_API_DOCS else None,
@@ -87,7 +96,6 @@ if settings.AUTH_MODE == "oidc":
     )
 
 # Audit logging middleware (logs every write request as a baseline row)
-from app.core.audit_middleware import audit_middleware
 app.middleware("http")(audit_middleware)
 
 # Include routers
@@ -137,7 +145,6 @@ async def _weather_check_loop():
             logger.error(f"Weather check loop error: {e}")
 
 
-@app.on_event("startup")
 def startup_event():
     if settings.AUTH_MODE == "local":
         create_admin_user()

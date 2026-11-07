@@ -70,12 +70,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const login = async (username: string, password: string) => {
         if (authMode === "local") {
-            try {
-                await apiClient.post("/auth/login", { username, password });
-                await fetchProfile();
-            } catch (error) {
-                throw error;
-            }
+            await apiClient.post("/auth/login", { username, password });
+            await fetchProfile();
         } else if (authMode === "oidc") {
             window.location.href = "/auth/oidc-login";
         }

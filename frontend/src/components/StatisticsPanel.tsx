@@ -287,10 +287,10 @@ export default function StatisticsPanel() {
                 if (dailyWateringsResponse && dailyWateringsResponse.dailyWaterings) {
                     setDailyWaterings(dailyWateringsResponse.dailyWaterings);
                 }
-            } catch (wateringError) {
+            } catch {
                 setError("Failed to load chart data");
             }
-        } catch (error) {
+        } catch {
             setError("Failed to load statistics");
         }
         setLoading(false);

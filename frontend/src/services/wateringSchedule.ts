@@ -11,6 +11,12 @@ export interface WateringStatus {
 
 // Mirrors `_watering_due` in backend/app/services/mcp_tools.py: plants without an
 // interval are never due, a plant with an interval that was never watered is due today.
+// The API sends ISO strings; tolerate a Date too (String(date) isn't ISO and read as "never watered").
+const toDateTime = (value: Date | string, timezone: string): DateTime =>
+    value instanceof Date
+        ? DateTime.fromJSDate(value).setZone(timezone)
+        : DateTime.fromISO(String(value), { zone: timezone });
+
 export const getWateringStatus = (
     plant: Pick<Plant, "watering_interval_days" | "last_watered">,
     timezone: string,
@@ -23,7 +29,7 @@ export const getWateringStatus = (
         return { intervalDays, daysUntilDue: 0, needsWater: true };
     }
 
-    const wateredOn = DateTime.fromISO(String(plant.last_watered), { zone: timezone }).startOf("day");
+    const wateredOn = toDateTime(plant.last_watered, timezone).startOf("day");
     if (!wateredOn.isValid) {
         return { intervalDays, daysUntilDue: 0, needsWater: true };
     }
@@ -48,7 +54,7 @@ export const wateringBadgeVariant = (status: WateringStatus): "due" | "soon" | "
 
 export const formatLastWateredShort = (lastWatered: Plant["last_watered"] | null, timezone: string): string => {
     if (!lastWatered) return "Never watered";
-    const watered = DateTime.fromISO(String(lastWatered), { zone: timezone });
+    const watered = toDateTime(lastWatered, timezone);
     if (!watered.isValid) return "Never watered";
     return watered.toRelativeCalendar({ unit: "days" }) ?? watered.toRelative() ?? "";
 };

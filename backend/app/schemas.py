@@ -30,8 +30,7 @@ class UserResponse(BaseModel):
     email: str
     role: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class LoginRequest(BaseModel):
     username: str
@@ -48,8 +47,7 @@ class TagResponse(BaseModel):
     id: int
     name: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class TagListResponse(BaseModel):
     tags: List[TagResponse]
@@ -79,8 +77,7 @@ class PlantImageResponse(BaseModel):
     image_path: str
     uploaded_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PlantImageCreate(BaseModel):
     uploaded_at: Optional[datetime] = None
@@ -99,8 +96,7 @@ class PlantWateringResponse(BaseModel):
     id: int
     watered_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PlantFertilizingCreate(BaseModel):
     fertilized_at: Optional[datetime] = None
@@ -109,8 +105,7 @@ class PlantFertilizingResponse(BaseModel):
     id: int
     fertilized_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PlantIdentificationCreate(BaseModel):
     scientific_name: str
@@ -131,8 +126,7 @@ class PlantIdentificationResponse(PlantIdentificationCreate):
     identified_at: datetime
     is_primary: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PlantCareAdviceCreate(BaseModel):
     pass
@@ -142,8 +136,7 @@ class PlantCareAdviceResponse(BaseModel):
     advice_text: str
     generated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PlantNoteCreate(BaseModel):
     note_text: str
@@ -153,8 +146,7 @@ class PlantNoteResponse(BaseModel):
     note_text: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ActivityResponse(BaseModel):
     id: str
@@ -164,8 +156,7 @@ class ActivityResponse(BaseModel):
     activity_data: dict
     timestamp: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PlantResponse(BaseModel):
     id: int
@@ -190,8 +181,7 @@ class PlantResponse(BaseModel):
     watering_count: Optional[int] = None
     fertilizing_count: Optional[int] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class UserLogin(BaseModel):
     username: str
@@ -204,8 +194,7 @@ class LocationImageResponse(BaseModel):
     exif_latitude: Optional[float] = None
     exif_longitude: Optional[float] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class LocationBase(BaseModel):
     name: str
@@ -306,8 +295,7 @@ class LocationResponse(LocationBase):
     def _tag_names(cls, value):
         return [getattr(tag, "name", tag) for tag in (value or [])]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ShareLinkCreate(BaseModel):
     alias: str = Field(..., min_length=1, max_length=255)
@@ -320,8 +308,7 @@ class ShareLinkResponse(BaseModel):
     expires_at: Optional[datetime] = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class WeatherConfigCreate(BaseModel):
     city_name: Optional[str] = None
@@ -347,8 +334,7 @@ class WeatherConfigResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class WeatherLogResponse(BaseModel):
     id: int
@@ -359,8 +345,7 @@ class WeatherLogResponse(BaseModel):
     temperature: Optional[float] = None
     auto_watered_count: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AutoWateringResponse(BaseModel):
@@ -435,8 +420,7 @@ class AuditLogResponse(BaseModel):
     user_agent: Optional[str] = None
     details: Optional[dict] = None  # parsed JSON, not the raw stored string
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AuditLogPage(BaseModel):

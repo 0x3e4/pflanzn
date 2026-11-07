@@ -38,6 +38,13 @@ describe("getWateringStatus", () => {
     it("accepts offset-less local timestamps from optimistic updates", () => {
         expect(getWateringStatus(plant(2, "2026-05-04T08:55:00.000"), TZ, NOW)?.daysUntilDue).toBe(2);
     });
+
+    it("accepts a Date (it read as never watered: 'Water today' right after watering)", () => {
+        const justNow = { watering_interval_days: 14, last_watered: new Date(NOW - 60_000) } as unknown as Parameters<
+            typeof getWateringStatus
+        >[0];
+        expect(getWateringStatus(justNow, TZ, NOW)?.daysUntilDue).toBe(14);
+    });
 });
 
 describe("formatWateringDue", () => {

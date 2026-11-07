@@ -1,4 +1,4 @@
-import { RefObject, useCallback, useEffect, useRef, useState } from "react";
+import { RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 export interface PanZoomState {
     scale: number;
@@ -25,7 +25,10 @@ const IDENTITY: PanZoomState = { scale: 1, x: 0, y: 0 };
 export function usePanZoom(viewportRef: RefObject<HTMLElement | null>, maxScale = 5) {
     const [state, setState] = useState<PanZoomState>(IDENTITY);
     const stateRef = useRef(state);
-    stateRef.current = state;
+    // Handlers read the latest state from here; keep it in step after each render.
+    useLayoutEffect(() => {
+        stateRef.current = state;
+    }, [state]);
 
     const pointers = useRef(new Map<number, Point>());
     const panStart = useRef<{ pointer: Point; state: PanZoomState } | null>(null);
