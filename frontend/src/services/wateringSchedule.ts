@@ -12,7 +12,7 @@ export interface WateringStatus {
 // Mirrors `_watering_due` in backend/app/services/mcp_tools.py: plants without an
 // interval are never due, a plant with an interval that was never watered is due today.
 // The API sends ISO strings; tolerate a Date too (String(date) isn't ISO and read as "never watered").
-const toDateTime = (value: Date | string, timezone: string): DateTime =>
+const toDateTime = (value: Date | string, timezone: string) =>
     value instanceof Date
         ? DateTime.fromJSDate(value).setZone(timezone)
         : DateTime.fromISO(String(value), { zone: timezone });
