@@ -3,7 +3,7 @@
     flex-direction: column;
     align-items: center;
     gap: 1rem;
-    padding: 15px 0;
+    padding: 16px 0;
 }
 
 .location-carousel-viewer {
@@ -37,7 +37,7 @@
     background: rgb(var(--ink-rgb) / 0.82);
     color: var(--text-on-fill);
     text-align: center;
-    padding: 5px 8px;
+    padding: 4px 8px;
     font-size: 0.8rem;
     font-weight: 400;
 }
@@ -70,7 +70,7 @@
     color: var(--text-on-fill);
     border: none;
     border-radius: 6px;
-    padding: 7px;
+    padding: 8px;
     cursor: pointer;
 }
 
@@ -83,7 +83,7 @@
     color: var(--text-on-fill);
     border: none;
     border-radius: 6px;
-    padding: 7px;
+    padding: 8px;
     cursor: pointer;
 }
 

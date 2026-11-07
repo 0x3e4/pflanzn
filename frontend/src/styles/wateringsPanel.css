@@ -15,7 +15,7 @@
     color: var(--text-on-fill);
     border: none;
     border-radius: 6px;
-    padding: 8px 14px;
+    padding: 8px 16px;
     cursor: pointer;
     font-size: 0.9rem;
     display: inline-flex;
@@ -34,7 +34,7 @@
     border: 1px solid var(--border-color);
     color: var(--text-color);
     border-radius: 6px;
-    padding: 8px 14px;
+    padding: 8px 16px;
     cursor: pointer;
     font-size: 0.9rem;
     display: inline-flex;

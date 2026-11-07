@@ -42,7 +42,7 @@
 }
 
 .location-information-names {
-    margin: 3px 0;
+    margin: 4px 0;
 }
 
 .location-description-container,
@@ -92,14 +92,14 @@
 }
 
 .location-tags-container--top {
-    margin-bottom: 14px;
+    margin-bottom: 16px;
 }
 
 .location-tag {
     display: flex;
     align-items: center;
     background-color: var(--background-color);
-    padding: 5px 12px;
+    padding: 4px 12px;
     border-radius: 15px;
     font-size: 14px;
     font-weight: bold;
@@ -193,7 +193,7 @@
 }
 
 .location-calendar-section {
-    margin-top: 15px;
+    margin-top: 16px;
 }
 
 .location-calendar-section .react-calendar {
@@ -490,7 +490,7 @@
 .watering-delete-modal-buttons {
     display: flex;
     gap: 10px;
-    margin-top: 15px;
+    margin-top: 16px;
     justify-content: center;
 }
 
@@ -502,7 +502,7 @@
 .plant-cancel-btn,
 .watering-delete-confirm,
 .watering-delete-cancel {
-    padding: 10px 15px;
+    padding: 10px 16px;
     border: none;
     cursor: pointer;
     border-radius: 6px;

@@ -63,7 +63,7 @@
 .identify-modal ul {
     list-style-type: none;
     padding: 0;
-    margin: 15px 0;
+    margin: 16px 0;
 }
 
 /* Individual Species Item */
@@ -156,7 +156,7 @@
 
 /* Cancel Button */
 .cancel-btn {
-    padding: 10px 15px;
+    padding: 10px 16px;
     background: var(--tertiary-color);
     color: var(--text-on-fill);
     border: none;

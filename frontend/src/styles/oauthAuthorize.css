@@ -38,7 +38,7 @@
 
 .oauth-permissions svg {
     color: var(--primary-color);
-    margin-top: 3px;
+    margin-top: 4px;
     flex-shrink: 0;
 }
 
@@ -47,7 +47,7 @@
 }
 
 .oauth-write-toggle input {
-    margin-top: 3px;
+    margin-top: 4px;
     accent-color: var(--primary-color);
     flex-shrink: 0;
 }
@@ -72,7 +72,7 @@
 }
 
 .oauth-deny {
-    padding: 14px;
+    padding: 16px;
     font-size: 16px;
     font-weight: 600;
     border-radius: 10px;

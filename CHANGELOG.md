@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Internal
 - Backend: no more deprecated `datetime.utcnow()`, class-based Pydantic `Config` or `on_event("startup")`; ruff is clean.
+- CSS: 83 paddings, margins and gaps that were 1–2px off the spacing scale (3, 5, 7, 9, 14, 15, 18, 25, 30px) now use it; the 10px values stay.
 - Frontend: all tests pass (two sign-in tests assumed local auth without setting it); the plant page's activity feed no longer remounts on every render.
 
 ### Security

@@ -118,7 +118,7 @@
 }
 
 .plant-information-names {
-    margin: 3px 0;
+    margin: 4px 0;
 }
 
 /* A quiet icon after the species name, not a second label. */
@@ -544,7 +544,7 @@ h3 {
 .note-actions {
     display: flex;
     gap: 10px;
-    margin-top: 15px;
+    margin-top: 16px;
     justify-content: center;
 }
 
@@ -554,7 +554,7 @@ h3 {
 .archive-plant-cancel,
 .save-note-btn,
 .notes-modal-close {
-    padding: 10px 15px;
+    padding: 10px 16px;
     border: none;
     cursor: pointer;
     border-radius: 6px;
@@ -613,7 +613,7 @@ h3 {
     display: flex;
     align-items: center;
     background-color: var(--background-color);
-    padding: 5px 12px;
+    padding: 4px 12px;
     border-radius: 15px;
     font-size: 14px;
     font-weight: bold;
@@ -728,7 +728,7 @@ h3 {
 
 .plant-outdoor-section {
     margin-top: 1rem;
-    padding: 12px 14px;
+    padding: 12px 16px;
     background: var(--background-color);
     border-radius: 8px;
     display: flex;
@@ -874,7 +874,7 @@ body.modal-open {
 
 .plant-status-line .watering-badge {
     font-size: 0.8rem;
-    padding: 3px 10px;
+    padding: 4px 10px;
 }
 
 .plant-last-watered {
@@ -1032,7 +1032,7 @@ body.modal-open {
 .plant-feed-more {
     margin-top: 12px;
     min-height: 36px;
-    padding: 0 14px;
+    padding: 0 16px;
     border-radius: 8px;
     border: 1px solid var(--card-border);
     background: transparent;

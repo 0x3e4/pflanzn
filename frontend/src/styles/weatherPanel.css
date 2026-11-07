@@ -161,7 +161,7 @@
     color: var(--button-primary-ink);
     border: none;
     border-radius: 6px;
-    padding: 10px 18px;
+    padding: 10px 16px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;

@@ -3,7 +3,7 @@
     flex-direction: column;
     align-items: center;
     gap: 1rem;
-    padding: 15px 0;
+    padding: 16px 0;
     position: relative;
 }
 
@@ -272,7 +272,7 @@ h5 {
 }
 
 .plant-delete-modal button {
-    padding: 10px 15px;
+    padding: 10px 16px;
     color: var(--text-on-fill);
     border: none;
     cursor: pointer;

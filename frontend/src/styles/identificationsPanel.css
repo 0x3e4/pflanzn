@@ -93,7 +93,7 @@
     border: 1px solid var(--border-color);
     border-radius: 10px;
     width: min(440px, calc(100% - 24px));
-    padding: 18px;
+    padding: 16px;
     color: var(--text-color);
 }
 
@@ -105,7 +105,7 @@
 .identification-delete-modal-buttons {
     display: flex;
     gap: 10px;
-    margin-top: 14px;
+    margin-top: 16px;
 }
 
 .identification-delete-confirm,
@@ -113,7 +113,7 @@
     border: none;
     border-radius: 6px;
     height: 38px;
-    padding: 0 14px;
+    padding: 0 16px;
     display: inline-flex;
     align-items: center;
     justify-content: center;

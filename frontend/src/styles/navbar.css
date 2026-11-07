@@ -4,7 +4,7 @@
     top: 0;
     left: 0;
     background-color: var(--background-color);
-    padding: 15px 0px;
+    padding: 16px 0px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -55,7 +55,7 @@
     color: var(--text-color);
     font-size: 1rem;
     transition: color 0.3s ease;
-    padding: 10px 15px;
+    padding: 10px 16px;
 }
 
 .nav-links a:hover {
@@ -111,7 +111,7 @@
         top: 70px;
         right: 10px;
         background: var(--background-color);
-        padding: 15px;
+        padding: 16px;
         border-radius: 5px;
         align-items: flex-start;
         width: 200px;

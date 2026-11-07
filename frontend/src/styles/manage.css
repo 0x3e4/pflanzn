@@ -24,7 +24,7 @@
     margin: 0;
 }
 .profile-sidebar li {
-    padding: 12px 15px;
+    padding: 12px 16px;
     cursor: pointer;
     transition: background-color 0.3s ease;
     color: var(--text-color);
@@ -42,9 +42,9 @@
 .sidebar-section-header {
     font-weight: bold;
     color: var(--primary-color) !important;
-    margin-top: 15px;
-    margin-bottom: 5px;
-    padding: 8px 15px;
+    margin-top: 16px;
+    margin-bottom: 4px;
+    padding: 8px 16px;
     font-size: 0.9rem;
     cursor: default;
     background: none !important;
@@ -56,7 +56,7 @@
 }
 
 .sidebar-subsection {
-    padding-left: 30px !important;
+    padding-left: 32px !important;
     font-size: 0.95rem;
     color: var(--text-color);
     cursor: pointer;
@@ -157,7 +157,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-top: 18px;
+    margin-top: 16px;
     font-size: 1rem;
     color: var(--text-color);
 }
@@ -218,7 +218,7 @@
 
 .data-table th,
 .data-table td {
-    padding: 12px 15px;
+    padding: 12px 16px;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
     height: 56px;
@@ -367,9 +367,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 15px;
+    gap: 16px;
     margin-top: 20px;
-    padding: 15px;
+    padding: 16px;
     background: var(--background-color);
     border-radius: 0 0 8px 8px;
     
@@ -379,7 +379,7 @@
     background: var(--button-primary-bg);
     color: var(--button-primary-ink);
     border: none;
-    padding: 10px 15px;
+    padding: 10px 16px;
     cursor: pointer;
     border-radius: 6px;
     transition: background 0.3s ease;
@@ -424,7 +424,7 @@
 
 .modal-content {
     background: var(--secondary-background-color);
-    padding: 30px;
+    padding: 32px;
     border-radius: 12px;
     text-align: center;
     width: 90%;
@@ -449,7 +449,7 @@
 }
 
 .modal-content h2 {
-    margin-bottom: 25px;
+    margin-bottom: 24px;
     color: var(--primary-color);
     font-size: 1.8rem;
 }
@@ -458,7 +458,7 @@
 .modal-content input,
 .modal-content select {
     width: 100%;
-    padding: 12px 15px;
+    padding: 12px 16px;
     margin: 10px 0;
     border: 1px solid var(--border-color);
     border-radius: 8px;
@@ -479,8 +479,8 @@
 .input-row {
     display: flex;
     justify-content: space-between;
-    gap: 15px;
-    margin-bottom: 15px;
+    gap: 16px;
+    margin-bottom: 16px;
 }
 
 .input-row input,
@@ -498,7 +498,7 @@
     cursor: pointer;
     font-size: 16px;
     font-weight: bold;
-    padding: 12px 25px;
+    padding: 12px 24px;
     width: 100%;
     margin-top: 20px;
     transition: background-color 0.3s ease;
@@ -515,7 +515,7 @@
     background-color: var(--button-primary-bg);
     color: var(--button-primary-ink);
     border: none;
-    padding: 10px 15px;
+    padding: 10px 16px;
     margin-top: 10px;
     border-radius: 5px;
     cursor: pointer;
@@ -526,8 +526,8 @@
 }
 .profile-editable-input {
     width: 100%;
-    padding: 10px 0 10px 5px;
-    margin: 5px 0 10px;
+    padding: 10px 0 10px 4px;
+    margin: 4px 0 10px;
     border: 1px solid var(--border-color);
     border-radius: 5px;
     background: var(--background-color);
@@ -539,7 +539,7 @@
     font-size: 16px;
 }
 .profile-editable-input:focus {
-    padding: 10px 0 10px 5px;
+    padding: 10px 0 10px 4px;
     cursor: text;
     background-color: var(--background-color);
     border: 1px solid var(--primary-color) !important;
@@ -651,7 +651,7 @@
 
     .profile-main-content {
         width: 100%;
-        padding: 0 15px;
+        padding: 0 16px;
         box-sizing: border-box;
     }
     .profile-info,
@@ -663,7 +663,7 @@
     .weather-panel,
     .map-panel {
         width: 100%;
-        padding: 15px 0;
+        padding: 16px 0;
         box-sizing: border-box;
     }
 
@@ -766,7 +766,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 14px;
+    padding: 10px 16px;
     cursor: pointer;
     border-bottom: 1px solid var(--border-color);
     transition: background-color 0.15s;
@@ -816,7 +816,7 @@
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
 }
 
 .audit-filters select,

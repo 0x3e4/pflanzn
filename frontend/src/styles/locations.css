@@ -212,7 +212,7 @@
     background: var(--secondary-background-color);
     color: var(--text-color);
     border-radius: 12px;
-    padding: 14px;
+    padding: 16px;
 }
 
 .location-filter-sort-bar {
@@ -258,7 +258,7 @@
 
 .location-search-input {
     width: 100%;
-    padding: 9px;
+    padding: 8px;
     border: 1px solid var(--quinary-color);
     border-radius: 6px;
     font-size: 16px;
@@ -357,7 +357,7 @@
 .location-card p {
     font-size: 14px;
     color: var(--muted-text-color);
-    margin: 3px 0;
+    margin: 4px 0;
 }
 
 .location-card-id {
