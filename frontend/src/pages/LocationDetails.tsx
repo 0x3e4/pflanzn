@@ -24,16 +24,25 @@ import IdentifyResults from "../components/IdentifyResults";
 import LoadingOverlay from "../components/LoadingOverlay";
 import LocationTimelineImages from "../components/LocationTimelineImages";
 import StaticLeafletMap from "../components/StaticLeafletMap";
-import LocationCalendar, { LocationLocalNote, LocationSeasonEvent } from "../components/LocationCalendar";
+import LocationCalendar from "../components/LocationCalendar";
+import { importLocalLocationDataOnce } from "../services/locationLocalImport";
 import {
+    addLocationNote,
+    addLocationSeasonEvent,
     deleteLocation,
+    deleteLocationNote,
+    deleteLocationSeasonEvent,
+    deleteLocationTagEverywhere,
     fetchLocations,
+    fetchLocationTagNames,
     fetchSingleLocation,
     generateLocationDescription,
     identifyLocationFromImage,
+    setLocationTags,
     updateLocation,
     uploadLocationImage,
 } from "../services/LocationService";
+import { extractErrorMessage } from "../services/apiClient";
 import { Location, LocationUpdateInput, SpotType, Visibility } from "../types/Location";
 import "../styles/locationDetails.css";
 
@@ -75,7 +84,7 @@ const toHashtag = (value: string) =>
     `#${value
         .trim()
         .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/[^\p{L}\p{N}]+/gu, "_") // keep umlauts: "Kräuterbeet" is #kräuterbeet
         .replace(/^_+|_+$/g, "")}`;
 
 const resolveSpotType = (value: string): SpotType | null => {
@@ -89,22 +98,6 @@ const resolveSpotType = (value: string): SpotType | null => {
 };
 
 const formatCoordinate = (value: number | null) => (value === null ? "" : value.toFixed(6));
-
-const readStorage = <T,>(key: string, fallback: T): T => {
-    try {
-        const raw = localStorage.getItem(key);
-        if (!raw) {
-            return fallback;
-        }
-        return JSON.parse(raw) as T;
-    } catch {
-        return fallback;
-    }
-};
-
-const writeStorage = (key: string, value: unknown) => {
-    localStorage.setItem(key, JSON.stringify(value));
-};
 
 const toLocalDateTimeInputValue = (date: Date) => {
     const offsetMs = date.getTimezoneOffset() * 60 * 1000;
@@ -121,12 +114,10 @@ export default function LocationDetails() {
     const [loading, setLoading] = useState(true);
     const [identifying, setIdentifying] = useState(false);
     const [identifyResults, setIdentifyResults] = useState<LocationIdentifyResult[] | null>(null);
-    const [customTags, setCustomTags] = useState<string[]>([]);
+    const [knownTagNames, setKnownTagNames] = useState<string[]>([]);
     const [newTag, setNewTag] = useState("");
     const [showTagDropdown, setShowTagDropdown] = useState(false);
     const [filteredTags, setFilteredTags] = useState<string[]>([]);
-    const [localNotes, setLocalNotes] = useState<LocationLocalNote[]>([]);
-    const [localSeasonEvents, setLocalSeasonEvents] = useState<LocationSeasonEvent[]>([]);
     const [newNote, setNewNote] = useState("");
     const [seasonEventDateTime, setSeasonEventDateTime] = useState(() => toLocalDateTimeInputValue(new Date()));
     const [moreOpen, setMoreOpen] = useState(false);
@@ -212,6 +203,10 @@ export default function LocationDetails() {
         [mapLocations, location?.id, navigate],
     );
 
+    const customTags = useMemo(() => location?.tags ?? [], [location]);
+    const localNotes = useMemo(() => location?.notes ?? [], [location]);
+    const localSeasonEvents = useMemo(() => location?.season_events ?? [], [location]);
+
     const derivedTags = useMemo(() => {
         if (!location) {
             return [];
@@ -233,31 +228,10 @@ export default function LocationDetails() {
         derivedTags.forEach((tag) => tagPool.add(tag.replace(/^#/, "").toLowerCase()));
         customTags.forEach((tag) => tagPool.add(tag.trim().toLowerCase()));
 
-        for (let index = 0; index < localStorage.length; index += 1) {
-            const key = localStorage.key(index);
-            if (!key || !key.startsWith("location_tags_")) {
-                continue;
-            }
-            try {
-                const parsed = JSON.parse(localStorage.getItem(key) || "[]");
-                if (Array.isArray(parsed)) {
-                    parsed.forEach((entry) => {
-                        const value = String(entry || "")
-                            .trim()
-                            .toLowerCase()
-                            .replace(/^#+/, "");
-                        if (value) {
-                            tagPool.add(value);
-                        }
-                    });
-                }
-            } catch {
-                // Ignore malformed legacy entries.
-            }
-        }
+        knownTagNames.forEach((tag) => tagPool.add(tag.trim().toLowerCase()));
 
         return [...tagPool];
-    }, [customTags, derivedTags]);
+    }, [customTags, derivedTags, knownTagNames]);
 
     const activityEvents = useMemo(() => {
         if (!location) {
@@ -276,7 +250,7 @@ export default function LocationDetails() {
             id: `note-${note.id}`,
             type: "note" as const,
             title: "Note",
-            description: note.text,
+            description: note.note_text,
             timestamp: note.created_at,
         }));
 
@@ -328,16 +302,28 @@ export default function LocationDetails() {
         loadLocationsForMap();
     }, [locationId]);
 
+    // Tag suggestions, and a one-time move of what older versions kept in this browser.
+    useEffect(() => {
+        fetchLocationTagNames()
+            .then(setKnownTagNames)
+            .catch(() => setKnownTagNames([]));
+        if (!isLoggedIn) return;
+        importLocalLocationDataOnce().then((changed) => {
+            if (!changed.length) return;
+            fetchLocationTagNames().then(setKnownTagNames).catch(() => undefined);
+            // Swap in the fresh copy only if it's still the location on screen.
+            changed.forEach((id) =>
+                fetchSingleLocation(id)
+                    .then((fresh) => setLocation((prev) => (prev?.id === fresh.id ? fresh : prev)))
+                    .catch(() => undefined),
+            );
+        });
+    }, [isLoggedIn]);
+
     useEffect(() => {
         if (!location) {
             return;
         }
-        const tagsKey = `location_tags_${location.id}`;
-        const notesKey = `location_notes_${location.id}`;
-        const seasonKey = `location_season_events_${location.id}`;
-        setCustomTags(readStorage<string[]>(tagsKey, []));
-        setLocalNotes(readStorage<LocationLocalNote[]>(notesKey, []));
-        setLocalSeasonEvents(readStorage<LocationSeasonEvent[]>(seasonKey, []));
         setSeasonEventDateTime(toLocalDateTimeInputValue(new Date()));
     }, [location?.id]);
 
@@ -352,37 +338,26 @@ export default function LocationDetails() {
         };
     }, [hasBlockingOverlay]);
 
-    const persistCustomTags = (updater: (prev: string[]) => string[]) => {
-        if (!location) {
-            return;
-        }
-        setCustomTags((prev) => {
-            const next = updater(prev);
-            writeStorage(`location_tags_${location.id}`, next);
-            return next;
-        });
+    const applyLocation = (updated: Location) => {
+        setLocation(updated);
+        setAllLocations((prev) => prev.map((entry) => (entry.id === updated.id ? updated : entry)));
     };
 
-    const persistNotes = (updater: (prev: LocationLocalNote[]) => LocationLocalNote[]) => {
+    const persistCustomTags = async (updater: (prev: string[]) => string[]) => {
         if (!location) {
             return;
         }
-        setLocalNotes((prev) => {
-            const next = updater(prev);
-            writeStorage(`location_notes_${location.id}`, next);
-            return next;
-        });
-    };
-
-    const persistSeasonEvents = (updater: (prev: LocationSeasonEvent[]) => LocationSeasonEvent[]) => {
-        if (!location) {
+        const next = updater(customTags);
+        if (next === customTags) {
             return;
         }
-        setLocalSeasonEvents((prev) => {
-            const next = updater(prev);
-            writeStorage(`location_season_events_${location.id}`, next);
-            return next;
-        });
+        try {
+            const updated = await setLocationTags(location.id, next);
+            applyLocation(updated);
+            setKnownTagNames((prev) => [...new Set([...prev, ...updated.tags])]);
+        } catch (error) {
+            toast.error(extractErrorMessage(error, "Couldn't save the tags."));
+        }
     };
 
     const patchLocation = async (changes: LocationUpdateInput): Promise<boolean> => {
@@ -713,7 +688,7 @@ export default function LocationDetails() {
         setNewTag("");
     };
 
-    const handleDeleteKnownTag = (tagName: string) => {
+    const handleDeleteKnownTag = async (tagName: string) => {
         if (!isLoggedIn) {
             toast.warning("You must be logged in to edit hashtags.");
             return;
@@ -724,32 +699,15 @@ export default function LocationDetails() {
             return;
         }
 
-        for (let index = 0; index < localStorage.length; index += 1) {
-            const key = localStorage.key(index);
-            if (!key || !key.startsWith("location_tags_")) {
-                continue;
-            }
-            try {
-                const parsed = JSON.parse(localStorage.getItem(key) || "[]");
-                if (!Array.isArray(parsed)) {
-                    continue;
-                }
-                const next = parsed.filter(
-                    (entry) =>
-                        String(entry || "")
-                            .trim()
-                            .toLowerCase()
-                            .replace(/^#+/, "") !== normalized,
-                );
-                writeStorage(key, next);
-            } catch {
-                // Ignore malformed legacy entries.
-            }
+        try {
+            await deleteLocationTagEverywhere(normalized);
+            setKnownTagNames((prev) => prev.filter((entry) => entry.toLowerCase() !== normalized));
+            setFilteredTags((prev) => prev.filter((entry) => entry.toLowerCase() !== normalized));
+            await loadLocation();
+            toast.success(`#${normalized} deleted.`);
+        } catch (error) {
+            toast.error(extractErrorMessage(error, `Couldn't delete #${normalized}.`));
         }
-
-        persistCustomTags((prev) => prev.filter((entry) => entry.trim().toLowerCase() !== normalized));
-        setFilteredTags((prev) => prev.filter((entry) => entry.toLowerCase() !== normalized));
-        toast.success(`#${normalized} deleted.`);
     };
 
     const removeCustomTag = (tag: string) => {
@@ -757,10 +715,10 @@ export default function LocationDetails() {
             toast.warning("You must be logged in to edit hashtags.");
             return;
         }
-        persistCustomTags((prev) => prev.filter((item) => item !== tag));
+        persistCustomTags((prev) => prev.filter((item) => toHashtag(item) !== toHashtag(tag)));
     };
 
-    const addLocalNote = () => {
+    const addLocalNote = async () => {
         if (!location) {
             return;
         }
@@ -772,17 +730,16 @@ export default function LocationDetails() {
         if (!text) {
             return;
         }
-        const next: LocationLocalNote = {
-            id: crypto.randomUUID(),
-            text,
-            created_at: new Date().toISOString(),
-        };
-        persistNotes((prev) => [next, ...prev]);
-        setNewNote("");
-        setNotesModalOpen(false);
+        try {
+            applyLocation(await addLocationNote(location.id, text));
+            setNewNote("");
+            setNotesModalOpen(false);
+        } catch (error) {
+            toast.error(extractErrorMessage(error, "Couldn't save the note."));
+        }
     };
 
-    const addSeasonEvent = () => {
+    const addSeasonEvent = async () => {
         if (!location) {
             return;
         }
@@ -797,23 +754,30 @@ export default function LocationDetails() {
             return;
         }
 
-        const nextEvent: LocationSeasonEvent = {
-            id: crypto.randomUUID(),
-            title: "Harvest time",
-            occurred_at: parsedDate.toISOString(),
-            created_at: new Date().toISOString(),
-        };
-
-        persistSeasonEvents((prev) => [nextEvent, ...prev]);
-        toast.success("Season event added.");
+        try {
+            applyLocation(await addLocationSeasonEvent(location.id, parsedDate.toISOString()));
+            toast.success("Season event added.");
+        } catch (error) {
+            toast.error(extractErrorMessage(error, "Couldn't save the harvest time."));
+        }
     };
 
-    const removeLocalNote = (noteId: string) => {
-        persistNotes((prev) => prev.filter((note) => note.id !== noteId));
+    const removeLocalNote = async (noteId: number) => {
+        if (!location) return;
+        try {
+            applyLocation(await deleteLocationNote(location.id, noteId));
+        } catch (error) {
+            toast.error(extractErrorMessage(error, "Couldn't delete the note."));
+        }
     };
 
-    const removeLocalSeasonEvent = (eventId: string) => {
-        persistSeasonEvents((prev) => prev.filter((event) => event.id !== eventId));
+    const removeLocalSeasonEvent = async (eventId: number) => {
+        if (!location) return;
+        try {
+            applyLocation(await deleteLocationSeasonEvent(location.id, eventId));
+        } catch (error) {
+            toast.error(extractErrorMessage(error, "Couldn't delete the harvest time."));
+        }
     };
 
     const handleOpenNotesModal = () => {

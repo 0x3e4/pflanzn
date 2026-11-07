@@ -22,11 +22,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Plants list: square cards with the water, photo and identify buttons on the photo; two columns on a phone, with species and sort behind a Filter button.
 - Location page: "Add photo" is the one primary action under the name, with "Add a harvest time" behind a disclosure, Identify crop and a More menu (AI description, archive, delete); the bottom button bar is gone. "Use my location" is a quiet button.
 - Navigation: the links and the theme and camera icons sit together on the right, instead of the icons floating mid-bar.
+- Location tags, notes and harvest times are stored on the server, so they show on every device and for everyone with access. Until now they lived only in the browser they were entered in: the first visit to a location page with this version moves them to the server (signed in, once per browser; nothing is lost if it can't reach the server).
 - Manage, Statistics: a row of figures instead of icon tiles, and the top species as a table beside the chart.
 - Locations list: the same square cards, with the photo and identify buttons on the photo and two columns on a phone.
 - Manage, Plants: restoring an archived plant looks different from archiving (an outline and its own icon), archived rows are muted, and the table buttons have names for screen readers.
 - One watering-status colour everywhere: red means water now, amber means soon, neutral means fine (it was blue for overdue).
 - Primary buttons use a deeper green with white text (white on #4caf50 was 2.8:1, below the 4.5:1 minimum). Watering is always blue, on every water button. Keyboard focus shows a light ring on every control. Labels use sentence case instead of spaced capitals, and the footer is a quiet line instead of a green band.
+
+### Removed
+- The footer. About, GitHub and the version are at the bottom of the Manage menu; signed-out visitors find About in the navigation.
 
 ### Security
 - A user could take over another account (including admin) by renaming themselves to its email.
@@ -56,6 +60,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Uploading the same photo twice in a row did nothing the second time.
 - The calendars marked days one day off when the browser's timezone differed from the server's `TZ`.
 - Pull to refresh reloaded the page twice.
+- A white line ran along the bottom of every page (the focus ring of the page area after navigating).
+- Location hashtags dropped umlauts (`#kr_uterbeet`), and a tag with capital letters couldn't be removed.
 
 ## [1.2.0] - 2026-10-22
 

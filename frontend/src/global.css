@@ -217,6 +217,13 @@ a:focus-visible,
     outline-offset: 3px;
 }
 
+/* Focus moves to <main> on every route change, for screen readers; it isn't a control, so no
+   ring (it drew a white line along the bottom of every page). */
+main[tabindex="-1"]:focus,
+main[tabindex="-1"]:focus-visible {
+    outline: none;
+}
+
 /* Lighten whatever fill the button has, so coloured buttons keep their own colour. */
 button:hover:not(:disabled) {
     filter: brightness(1.08);

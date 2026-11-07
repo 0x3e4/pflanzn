@@ -10,6 +10,19 @@ export interface LocationImage {
     exif_longitude: number | null;
 }
 
+export interface LocationNote {
+    id: number;
+    note_text: string;
+    created_at: string;
+}
+
+export interface LocationSeasonEvent {
+    id: number;
+    title: string;
+    occurred_at: string;
+    created_at: string;
+}
+
 export interface Location {
     id: number;
     name: string;
@@ -23,6 +36,10 @@ export interface Location {
     created_at: string;
     updated_at: string;
     images: LocationImage[];
+    /** The location's own tags, without "#" (type and visibility tags are derived, not stored). */
+    tags: string[];
+    notes: LocationNote[];
+    season_events: LocationSeasonEvent[];
 }
 
 export interface LocationCreateInput {

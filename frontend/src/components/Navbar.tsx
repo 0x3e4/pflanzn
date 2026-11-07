@@ -172,9 +172,14 @@ export default function Navbar() {
                                 Manage
                             </Link>
                         ) : authMode !== "no" ? (
-                            <Link to="/login" onClick={() => setMenuOpen(false)}>
-                                Login
-                            </Link>
+                            <>
+                                <Link to="/about" onClick={() => setMenuOpen(false)}>
+                                    About
+                                </Link>
+                                <Link to="/login" onClick={() => setMenuOpen(false)}>
+                                    Login
+                                </Link>
+                            </>
                         ) : null)}
                 </div>
             </div>

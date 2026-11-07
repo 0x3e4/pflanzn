@@ -45,7 +45,7 @@ src/
 │   ├── Manage.tsx
 │   └── About.tsx
 ├── components/         # Reusable UI components
-│   ├── Navbar.tsx, BottomNav.tsx, Footer.tsx
+│   ├── Navbar.tsx, BottomNav.tsx
 │   ├── Calendar.tsx, LocationCalendar.tsx
 │   ├── TimelineImages.tsx, LocationTimelineImages.tsx
 │   ├── MapPanel.tsx, StaticLeafletMap.tsx

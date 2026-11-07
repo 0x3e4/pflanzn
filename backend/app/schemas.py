@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_serializer, field_validator
 
 
 class UserCreate(BaseModel):
@@ -225,12 +225,83 @@ class LocationUpdate(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
 
+def _as_utc(value: datetime) -> str:
+    """Naive datetimes in these tables are UTC; say so, so the browser doesn't read them as local."""
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+class LocationNoteCreate(BaseModel):
+    note_text: str = Field(..., min_length=1, max_length=10000)
+
+
+class LocationNoteResponse(BaseModel):
+    id: int
+    note_text: str
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer("created_at")
+    def _utc(self, value: datetime) -> str:
+        return _as_utc(value)
+
+
+class LocationSeasonEventCreate(BaseModel):
+    title: str = Field("Harvest time", min_length=1, max_length=255)
+    occurred_at: datetime
+
+
+class LocationSeasonEventResponse(BaseModel):
+    id: int
+    title: str
+    occurred_at: datetime
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer("occurred_at", "created_at")
+    def _utc(self, value: datetime) -> str:
+        return _as_utc(value)
+
+
+class LocationTagsUpdate(BaseModel):
+    tags: List[str] = Field(default_factory=list, max_length=100)
+
+
+class LocalLocationNote(BaseModel):
+    text: str = Field(..., min_length=1, max_length=10000)
+    created_at: Optional[datetime] = None
+
+
+class LocalLocationSeasonEvent(BaseModel):
+    title: str = Field("Harvest time", min_length=1, max_length=255)
+    occurred_at: datetime
+    created_at: Optional[datetime] = None
+
+
+class LocationLocalImport(BaseModel):
+    """What older versions kept in the browser's localStorage, in its own shape."""
+    tags: List[str] = Field(default_factory=list, max_length=500)
+    notes: List[LocalLocationNote] = Field(default_factory=list, max_length=2000)
+    season_events: List[LocalLocationSeasonEvent] = Field(default_factory=list, max_length=2000)
+
+
 class LocationResponse(LocationBase):
     id: int
     coordinate_source: Optional[Literal["manual", "photo_exif"]] = None
     created_at: datetime
     updated_at: datetime
     images: List[LocationImageResponse] = []
+    tags: List[str] = []
+    notes: List[LocationNoteResponse] = []
+    season_events: List[LocationSeasonEventResponse] = []
+
+    @field_validator("tags", mode="before")
+    @classmethod
+    def _tag_names(cls, value):
+        return [getattr(tag, "name", tag) for tag in (value or [])]
 
     class Config:
         from_attributes = True

@@ -86,6 +86,20 @@
     opacity: 0.8;
 }
 
+.sidebar-about {
+    font-size: 0.875rem;
+}
+
+.sidebar-about a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.sidebar-about a:hover {
+    color: var(--text-color);
+}
+
 .sidebar-info-item:hover {
     background: transparent !important;
     color: var(--text-color) !important;

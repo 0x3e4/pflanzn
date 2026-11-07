@@ -6,32 +6,20 @@ import { createPortal } from "react-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCamera, faCircleXmark, faSeedling, faStickyNote, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
-import { LocationImage } from "../types/Location";
+import { LocationImage, LocationNote, LocationSeasonEvent } from "../types/Location";
 import { deleteLocationImage } from "../services/LocationService";
 import { useAuth } from "../context/AuthContext";
 import { useConfig } from "../context/ConfigContext";
 import { setOverlayOpen } from "../services/overlayControl";
 
-export interface LocationLocalNote {
-    id: string;
-    text: string;
-    created_at: string;
-}
-
-export interface LocationSeasonEvent {
-    id: string;
-    title: string;
-    occurred_at: string;
-    created_at: string;
-}
 
 interface LocationCalendarProps {
     locationId: number;
     images: LocationImage[];
-    notes: LocationLocalNote[];
+    notes: LocationNote[];
     seasonEvents: LocationSeasonEvent[];
-    onDeleteNote: (noteId: string) => void;
-    onDeleteSeasonEvent: (eventId: string) => void;
+    onDeleteNote: (noteId: number) => void;
+    onDeleteSeasonEvent: (eventId: number) => void;
     onChanged?: () => void;
 }
 
@@ -41,7 +29,7 @@ interface TooltipPosition {
     width: number;
 }
 
-type DeleteTarget = { type: "image"; id: number } | { type: "note"; id: string } | { type: "season"; id: string };
+type DeleteTarget = { type: "image"; id: number } | { type: "note"; id: number } | { type: "season"; id: number };
 
 function TooltipOverlay({
     content,
@@ -125,7 +113,7 @@ export default function LocationCalendar({
     }, [images, locale, timezone]);
 
     const notesByDate = useMemo(() => {
-        return notes.reduce<Record<string, LocationLocalNote[]>>((acc, note) => {
+        return notes.reduce<Record<string, LocationNote[]>>((acc, note) => {
             const key = buildDateKey(new Date(note.created_at), locale, timezone);
             if (!acc[key]) {
                 acc[key] = [];

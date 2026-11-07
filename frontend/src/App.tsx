@@ -10,7 +10,6 @@ import Login from "./pages/Login";
 import Manage from "./pages/Manage";
 import OAuthAuthorize from "./pages/OAuthAuthorize";
 import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
 import ScrollToTopButton from "./components/ScrollToTopButton";
 import LoadingOverlay from "./components/LoadingOverlay";
 import { useBusyOverlay } from "./services/busyOverlay";
@@ -156,7 +155,6 @@ function AppLayout() {
                         pauseOnHover
                     />
                 </main>
-                <Footer />
             </div>
             <ScrollToTopButton />
             <BottomNav />

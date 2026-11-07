@@ -1,4 +1,17 @@
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Index, Integer, String, Table, Text, func
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Table,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -173,6 +186,19 @@ class Location(Base):
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
 
     images = relationship("LocationImage", back_populates="location", cascade="all, delete-orphan")
+    # Kept in the browser's localStorage before 1.3; see POST /locations/{id}/import_local.
+    tags = relationship(
+        "LocationTag", cascade="all, delete-orphan", lazy="selectin", order_by="LocationTag.id"
+    )
+    notes = relationship(
+        "LocationNote", cascade="all, delete-orphan", lazy="selectin", order_by="LocationNote.created_at.desc()"
+    )
+    season_events = relationship(
+        "LocationSeasonEvent",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+        order_by="LocationSeasonEvent.occurred_at.desc()",
+    )
 
     __table_args__ = (
         Index("idx_locations_spot_type", "spot_type"),
@@ -208,6 +234,37 @@ class LocationImage(Base):
     __table_args__ = (
         Index("idx_location_images_location_id", "location_id"),
     )
+
+
+class LocationTag(Base):
+    __tablename__ = "location_tags"
+
+    id = Column(Integer, primary_key=True, index=True)
+    location_id = Column(Integer, ForeignKey("locations.id", ondelete="CASCADE"), nullable=False, index=True)
+    name = Column(String(64), nullable=False)
+
+    __table_args__ = (UniqueConstraint("location_id", "name", name="uq_location_tags_location_name"),)
+
+
+class LocationNote(Base):
+    __tablename__ = "location_notes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    location_id = Column(Integer, ForeignKey("locations.id", ondelete="CASCADE"), nullable=False, index=True)
+    note_text = Column(Text, nullable=False)
+    created_at = Column(DateTime, nullable=False)  # naive UTC
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
+
+class LocationSeasonEvent(Base):
+    __tablename__ = "location_season_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    location_id = Column(Integer, ForeignKey("locations.id", ondelete="CASCADE"), nullable=False, index=True)
+    title = Column(String(255), nullable=False)
+    occurred_at = Column(DateTime, nullable=False)  # naive UTC
+    created_at = Column(DateTime, nullable=False)  # naive UTC
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
 
 class WeatherConfig(Base):

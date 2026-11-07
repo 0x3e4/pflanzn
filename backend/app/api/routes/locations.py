@@ -2,11 +2,13 @@ import io
 import logging
 import os
 import uuid
+from datetime import datetime, timezone
 from typing import List, Optional
 
 import pillow_heif
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from PIL import Image, ImageOps
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -18,11 +20,15 @@ from app.core.security import (
     require_write_access,
 )
 from app.database import get_db
-from app.models import Location, LocationImage, User
+from app.models import Location, LocationImage, LocationNote, LocationSeasonEvent, LocationTag, User
 from app.schemas import (
     LocationCreate,
     LocationImageResponse,
+    LocationLocalImport,
+    LocationNoteCreate,
     LocationResponse,
+    LocationSeasonEventCreate,
+    LocationTagsUpdate,
     LocationUpdate,
 )
 from app.services.llm_client import LLMClient
@@ -94,6 +100,70 @@ def list_locations(
     audience: str = Depends(require_read_access),
 ):
     return _visible_locations(db, audience).order_by(Location.updated_at.desc()).all()
+
+
+def _tag_name(value: str) -> str:
+    return value.strip().lstrip("#").strip()[:64]
+
+
+def _naive_utc(value: Optional[datetime]) -> datetime:
+    if value is None:
+        return datetime.now(timezone.utc).replace(tzinfo=None, microsecond=0)
+    if value.tzinfo is not None:
+        value = value.astimezone(timezone.utc).replace(tzinfo=None)
+    return value.replace(microsecond=0)
+
+
+def _get_location_for_write(db: Session, location_id: int) -> Location:
+    location = db.query(Location).filter(Location.id == location_id).first()
+    if not location:
+        raise HTTPException(status_code=404, detail="Location not found")
+    return location
+
+
+def _add_tags(location: Location, names: List[str]) -> None:
+    """Add tags the location doesn't have yet (case-insensitive, like the unique index)."""
+    have = {tag.name.lower() for tag in location.tags}
+    for raw in names:
+        name = _tag_name(raw)
+        if name and name.lower() not in have:
+            location.tags.append(LocationTag(name=name))
+            have.add(name.lower())
+
+
+@router.get("/tags", response_model=List[str])
+def list_location_tags(
+    _: None = Depends(ensure_feature_enabled),
+    db: Session = Depends(get_db),
+    audience: str = Depends(require_read_access),
+):
+    """Every tag used on a location the reader can see, for suggestions."""
+    visible = _visible_locations(db, audience).with_entities(Location.id)
+    rows = (
+        db.query(LocationTag.name)
+        .filter(LocationTag.location_id.in_(visible))
+        .group_by(LocationTag.name)
+        .order_by(LocationTag.name)
+        .all()
+    )
+    return [row[0] for row in rows]
+
+
+@router.delete("/tags/{tag_name}")
+def delete_location_tag_everywhere(
+    tag_name: str,
+    _: None = Depends(ensure_feature_enabled),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
+):
+    name = _tag_name(tag_name)
+    deleted = (
+        db.query(LocationTag)
+        .filter(func.lower(LocationTag.name) == name.lower())
+        .delete(synchronize_session=False)
+    )
+    db.commit()
+    return {"deleted": deleted}
 
 
 @router.get("/{location_id}", response_model=LocationResponse)
@@ -350,3 +420,140 @@ async def identify_location_item(
         return {"identified_species": species_data}
 
     return {"identified_species": [], "message": "No species found"}
+
+@router.put("/{location_id}/tags", response_model=LocationResponse)
+def set_location_tags(
+    location_id: int,
+    data: LocationTagsUpdate,
+    _: None = Depends(ensure_feature_enabled),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
+):
+    """Replace the location's own tags (the ones derived from its type and visibility aren't stored)."""
+    location = _get_location_for_write(db, location_id)
+    wanted = {_tag_name(name).lower() for name in data.tags} - {""}
+    location.tags = [tag for tag in location.tags if tag.name.lower() in wanted]
+    _add_tags(location, data.tags)
+    db.commit()
+    db.refresh(location)
+    return location
+
+
+@router.post("/{location_id}/notes", response_model=LocationResponse)
+def add_location_note(
+    location_id: int,
+    data: LocationNoteCreate,
+    _: None = Depends(ensure_feature_enabled),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
+):
+    location = _get_location_for_write(db, location_id)
+    location.notes.append(
+        LocationNote(
+            note_text=data.note_text.strip(),
+            created_at=_naive_utc(None),
+            user_id=current_user.id if current_user else None,
+        )
+    )
+    db.commit()
+    db.refresh(location)
+    return location
+
+
+@router.delete("/{location_id}/notes/{note_id}", response_model=LocationResponse)
+def delete_location_note(
+    location_id: int,
+    note_id: int,
+    _: None = Depends(ensure_feature_enabled),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
+):
+    location = _get_location_for_write(db, location_id)
+    note = next((n for n in location.notes if n.id == note_id), None)
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found for this location")
+    location.notes.remove(note)
+    db.commit()
+    db.refresh(location)
+    return location
+
+
+@router.post("/{location_id}/season_events", response_model=LocationResponse)
+def add_location_season_event(
+    location_id: int,
+    data: LocationSeasonEventCreate,
+    _: None = Depends(ensure_feature_enabled),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
+):
+    location = _get_location_for_write(db, location_id)
+    location.season_events.append(
+        LocationSeasonEvent(
+            title=data.title.strip(),
+            occurred_at=_naive_utc(data.occurred_at),
+            created_at=_naive_utc(None),
+            user_id=current_user.id if current_user else None,
+        )
+    )
+    db.commit()
+    db.refresh(location)
+    return location
+
+
+@router.delete("/{location_id}/season_events/{event_id}", response_model=LocationResponse)
+def delete_location_season_event(
+    location_id: int,
+    event_id: int,
+    _: None = Depends(ensure_feature_enabled),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
+):
+    location = _get_location_for_write(db, location_id)
+    event = next((e for e in location.season_events if e.id == event_id), None)
+    if not event:
+        raise HTTPException(status_code=404, detail="Season event not found for this location")
+    location.season_events.remove(event)
+    db.commit()
+    db.refresh(location)
+    return location
+
+
+@router.post("/{location_id}/import_local", response_model=LocationResponse)
+def import_local_location_data(
+    location_id: int,
+    data: LocationLocalImport,
+    _: None = Depends(ensure_feature_enabled),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
+):
+    """Take over tags, notes and harvest times an older version kept in one browser.
+    Safe to repeat: entries the location already has are skipped."""
+    location = _get_location_for_write(db, location_id)
+    user_id = current_user.id if current_user else None
+
+    _add_tags(location, data.tags)
+
+    have_notes = {(n.note_text, n.created_at) for n in location.notes}
+    for note in data.notes:
+        key = (note.text.strip(), _naive_utc(note.created_at))
+        if key[0] and key not in have_notes:
+            location.notes.append(LocationNote(note_text=key[0], created_at=key[1], user_id=user_id))
+            have_notes.add(key)
+
+    have_events = {(e.title, e.occurred_at) for e in location.season_events}
+    for event in data.season_events:
+        key = (event.title.strip(), _naive_utc(event.occurred_at))
+        if key[0] and key not in have_events:
+            location.season_events.append(
+                LocationSeasonEvent(
+                    title=key[0],
+                    occurred_at=key[1],
+                    created_at=_naive_utc(event.created_at),
+                    user_id=user_id,
+                )
+            )
+            have_events.add(key)
+
+    db.commit()
+    db.refresh(location)
+    return location

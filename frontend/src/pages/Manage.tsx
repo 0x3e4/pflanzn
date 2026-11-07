@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useConfig } from "../context/ConfigContext";
 import { toast } from "react-toastify";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { updateUser, updateUserPassword } from "../services/UserService";
 import StatisticsPanel from "../components/StatisticsPanel";
 import UsersPanel from "../components/UsersPanel";
@@ -330,7 +330,15 @@ const Manage: React.FC = () => {
                     >
                         Support
                     </li>
-                    <li className="sidebar-info-item">Version {APP_VERSION}</li>
+                    <li className="sidebar-info-item sidebar-about">
+                        <Link to="/about">About</Link>
+                        <span aria-hidden="true"> · </span>
+                        <a href="https://github.com/0x3e4/pflanzn" target="_blank" rel="noreferrer">
+                            GitHub
+                        </a>
+                        <span aria-hidden="true"> · </span>
+                        <span>Version {APP_VERSION}</span>
+                    </li>
 
                     {authMode !== "no" && (
                         <li className="logout-link" onClick={handleLogout}>

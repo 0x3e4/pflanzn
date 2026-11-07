@@ -86,3 +86,57 @@ export const generateLocationDescription = async (locationId: number): Promise<{
     });
     return response.data;
 };
+
+// Tags, notes and harvest times. Every write answers with the whole location.
+export const fetchLocationTagNames = async (): Promise<string[]> => {
+    const response = await apiClient.get<string[]>(`${API_BASE}/tags`);
+    return response.data;
+};
+
+export const setLocationTags = async (locationId: number, tags: string[]): Promise<Location> => {
+    const response = await apiClient.put<Location>(`${API_BASE}/${locationId}/tags`, { tags });
+    return response.data;
+};
+
+export const deleteLocationTagEverywhere = async (tagName: string): Promise<{ deleted: number }> => {
+    const response = await apiClient.delete<{ deleted: number }>(`${API_BASE}/tags/${encodeURIComponent(tagName)}`);
+    return response.data;
+};
+
+export const addLocationNote = async (locationId: number, noteText: string): Promise<Location> => {
+    const response = await apiClient.post<Location>(`${API_BASE}/${locationId}/notes`, { note_text: noteText });
+    return response.data;
+};
+
+export const deleteLocationNote = async (locationId: number, noteId: number): Promise<Location> => {
+    const response = await apiClient.delete<Location>(`${API_BASE}/${locationId}/notes/${noteId}`);
+    return response.data;
+};
+
+export const addLocationSeasonEvent = async (
+    locationId: number,
+    occurredAt: string,
+    title = "Harvest time",
+): Promise<Location> => {
+    const response = await apiClient.post<Location>(`${API_BASE}/${locationId}/season_events`, {
+        title,
+        occurred_at: occurredAt,
+    });
+    return response.data;
+};
+
+export const deleteLocationSeasonEvent = async (locationId: number, eventId: number): Promise<Location> => {
+    const response = await apiClient.delete<Location>(`${API_BASE}/${locationId}/season_events/${eventId}`);
+    return response.data;
+};
+
+export interface LocalLocationData {
+    tags: string[];
+    notes: { text: string; created_at?: string }[];
+    season_events: { title: string; occurred_at: string; created_at?: string }[];
+}
+
+export const importLocalLocationData = async (locationId: number, data: LocalLocationData): Promise<Location> => {
+    const response = await apiClient.post<Location>(`${API_BASE}/${locationId}/import_local`, data);
+    return response.data;
+};
