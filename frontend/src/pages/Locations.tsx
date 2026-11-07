@@ -640,6 +640,7 @@ export default function Locations() {
                                             <FontAwesomeIcon icon={faUpload} />
                                             <input
                                                 type="file"
+                                                onClick={(e) => (e.currentTarget.value = "")}
                                                 accept="image/*"
                                                 onChange={(e) => {
                                                     const selected = e.target.files?.[0];
@@ -714,6 +715,7 @@ export default function Locations() {
                                                 <FontAwesomeIcon icon={faUpload} />
                                                 <input
                                                     type="file"
+                                                    onClick={(e) => (e.currentTarget.value = "")}
                                                     aria-label={`Add a photo of ${location.name}`}
                                                     accept="image/*"
                                                     onChange={(e) => {

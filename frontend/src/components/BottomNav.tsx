@@ -164,6 +164,7 @@ export default function BottomNav() {
 
             <input
                 type="file"
+                onClick={(e) => (e.currentTarget.value = "")}
                 ref={fileInputRef}
                 style={{ display: "none" }}
                 accept="image/*"

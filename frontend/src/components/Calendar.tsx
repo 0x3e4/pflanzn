@@ -126,6 +126,12 @@ export default function LogCalendar({ waterings, fertilizings, images, careadvic
         return `${parts.find((p) => p.type === "year")?.value}-${parts.find((p) => p.type === "month")?.value}-${parts.find((p) => p.type === "day")?.value}`;
     };
 
+    // A calendar tile is the browser's local midnight of the day it shows: key it by that day,
+    // not by converting it into the app timezone (which shifted every mark by a day whenever the
+    // browser and server timezones differ).
+    const tileKey = (date: Date) =>
+        `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
     const wateredDates = localWaterings.reduce(
         (acc, watering) => {
             const date = new Date(watering.watered_at);
@@ -197,14 +203,14 @@ export default function LogCalendar({ waterings, fertilizings, images, careadvic
     };
 
     const tileClassName = ({ date }: { date: Date }) => {
-        const dateKey = formatDateKey(date);
+        const dateKey = tileKey(date);
         const classes = getActiveEventTypes(dateKey);
         if (classes.length >= 2) classes.push("multi-day");
         return classes.join(" ");
     };
 
     const tileContent = ({ date }: { date: Date }) => {
-        const dateKey = formatDateKey(date);
+        const dateKey = tileKey(date);
         const activeTypes = getActiveEventTypes(dateKey);
         if (activeTypes.length < 2) return null;
 
@@ -221,7 +227,7 @@ export default function LogCalendar({ waterings, fertilizings, images, careadvic
     };
 
     const handleClickDay = (date: Date, event: React.MouseEvent) => {
-        const dateKey = formatDateKey(date);
+        const dateKey = tileKey(date);
 
         if (wateredDates[dateKey] || fertilizedDates[dateKey] || imageDates[dateKey] || adviceDates[dateKey] || noteDates[dateKey]) {
             setHoveredDate(dateKey);

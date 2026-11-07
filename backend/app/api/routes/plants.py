@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from PIL import Image, ImageOps
 from pydantic import BaseModel
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -46,7 +47,6 @@ from app.schemas import (
     PlantUpdate,
     PlantWateringCreate,
     PlantWateringResponse,
-    TagResponse,
     WateringBulkDeleteRequest,
     WateringBulkDeleteResponse,
     WateringListItemResponse,
@@ -604,6 +604,31 @@ def delete_plant_image(plant_id: int, image_id: int, db: Session = Depends(get_d
 
     return {"message": "Image deleted successfully"}
 
+@router.get("/{plant_id}/species_description")
+def get_species_description(plant_id: int, db: Session = Depends(get_db)):
+    """A description another plant of the same species already has, to reuse instead of
+    writing one again. Active plants first, then the most recently added."""
+    plant = db.query(Plant).filter(Plant.id == plant_id).first()
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+    species = (plant.species or "").strip()
+    if not species or species.lower() == "unknown":
+        return {"description": None, "source_plant_id": None, "source_plant_name": None}
+    source = (
+        db.query(Plant)
+        .filter(
+            Plant.id != plant_id,
+            func.lower(func.trim(Plant.species)) == species.lower(),
+            Plant.description.isnot(None),
+            func.trim(Plant.description) != "",
+        )
+        .order_by(Plant.is_archived.asc(), Plant.id.desc())
+        .first()
+    )
+    if not source:
+        return {"description": None, "source_plant_id": None, "source_plant_name": None}
+    return {"description": source.description, "source_plant_id": source.id, "source_plant_name": source.name}
+
 @router.post("/{plant_id}/generate_description", dependencies=[Depends(require_llm)])
 async def generate_species_description_for_plant(
     plant_id: int,
@@ -839,21 +864,8 @@ def assign_tags_to_plant(plant_id: int, tag_names: List[str], db: Session = Depe
     db.commit()
     db.refresh(plant)
 
-    # Convert to Pydantic model before returning
-    return PlantResponse(
-        id=plant.id,
-        name=plant.name,
-        species=plant.species,
-        description=plant.description,
-        images=[PlantImageResponse(id=img.id, image_path=img.image_path, uploaded_at=img.uploaded_at) for img in plant.images],
-        waterings=[PlantWateringResponse(id=w.id, watered_at=w.watered_at) for w in plant.waterings],
-        fertilizings=[PlantFertilizingResponse(id=f.id, fertilized_at=f.fertilized_at) for f in plant.fertilizings],
-        last_watered=max([w.watered_at for w in plant.waterings], default=None),
-        last_fertilized=max([f.fertilized_at for f in plant.fertilizings], default=None),
-        tags=[TagResponse(id=t.id, name=t.name) for t in plant.tags],
-        notes=[PlantNoteResponse(id=n.id, note_text=n.note_text, created_at=n.created_at) for n in plant.notes],
-        watering_interval_days=plant.watering_interval_days,
-    )
+    # Same shape as GET (care advice, outdoor flags, local times): the page swaps it in.
+    return get_plant(plant_id, db)
 
 # Remove a tag from a plant
 @router.delete("/{plant_id}/remove/{tag_id}", response_model=PlantResponse)
@@ -872,20 +884,8 @@ def remove_tag_from_plant(plant_id: int, tag_id: int, db: Session = Depends(get_
         db.commit()
         db.refresh(plant)
 
-    # Return updated plant object instead of empty response
-    return PlantResponse(
-        id=plant.id,
-        name=plant.name,
-        species=plant.species,
-        description=plant.description,
-        images=[PlantImageResponse(id=img.id, image_path=img.image_path, uploaded_at=img.uploaded_at) for img in plant.images],
-        waterings=[PlantWateringResponse(id=w.id, watered_at=w.watered_at) for w in plant.waterings],
-        fertilizings=[PlantFertilizingResponse(id=f.id, fertilized_at=f.fertilized_at) for f in plant.fertilizings],
-        last_watered=max([w.watered_at for w in plant.waterings], default=None),
-        last_fertilized=max([f.fertilized_at for f in plant.fertilizings], default=None),
-        tags=[TagResponse(id=t.id, name=t.name) for t in plant.tags],
-        watering_interval_days=plant.watering_interval_days,
-    )
+    # Same shape as GET (care advice, outdoor flags, local times): the page swaps it in.
+    return get_plant(plant_id, db)
 
 # Set tags for a plant (bulk assign/unassign)
 @router.put("/{plant_id}/tags", response_model=PlantResponse)
@@ -924,19 +924,8 @@ def set_plant_tags(plant_id: int, data: PlantTagsUpdate, db: Session = Depends(g
     db.commit()
     db.refresh(plant)
 
-    return PlantResponse(
-        id=plant.id,
-        name=plant.name,
-        species=plant.species,
-        description=plant.description,
-        images=[PlantImageResponse(id=img.id, image_path=img.image_path, uploaded_at=img.uploaded_at) for img in plant.images],
-        waterings=[PlantWateringResponse(id=w.id, watered_at=w.watered_at) for w in plant.waterings],
-        fertilizings=[PlantFertilizingResponse(id=f.id, fertilized_at=f.fertilized_at) for f in plant.fertilizings],
-        last_watered=max([w.watered_at for w in plant.waterings], default=None),
-        last_fertilized=max([f.fertilized_at for f in plant.fertilizings], default=None),
-        tags=[TagResponse(id=t.id, name=t.name) for t in plant.tags],
-        watering_interval_days=plant.watering_interval_days,
-    )
+    # Same shape as GET (care advice, outdoor flags, local times): the page swaps it in.
+    return get_plant(plant_id, db)
 
 # Archive or restore from archive
 @router.post("/{plant_id}/archive")

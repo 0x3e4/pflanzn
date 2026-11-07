@@ -96,9 +96,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             const response = await apiClient.get<User>("/users/profile");
             if (response.data) {
-                if (!user || user.id !== response.data.id) {
-                    setUser(response.data);
-                    setIsLoggedIn(true);
+                const isNewUser = !user || user.id !== response.data.id;
+                // Always take the fresh copy, so a saved profile (name, email) shows at once.
+                setUser(response.data);
+                setIsLoggedIn(true);
+                if (isNewUser) {
                     // Pull this user's UI preferences from the backend into
                     // localStorage so synchronous readers (Plants/Locations) see them.
                     void syncUiPreferencesFromBackend();

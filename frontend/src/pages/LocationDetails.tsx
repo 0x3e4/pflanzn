@@ -300,7 +300,9 @@ export default function LocationDetails() {
             return;
         }
 
-        setLoading(true);
+        // Only the first load (or another location) shows the skeleton; refreshes after an
+        // edit or upload swap the data in place, so the page doesn't blank and jump to the top.
+        if (location?.id !== parsedId) setLoading(true);
         try {
             const data = await fetchSingleLocation(parsedId);
             setLocation(data);
@@ -1012,6 +1014,7 @@ export default function LocationDetails() {
                         {isLoggedIn && (
                             <input
                                 type="file"
+                                onClick={(e) => (e.currentTarget.value = "")}
                                 id={`file-upload-location-${location.id}`}
                                 className="file-input"
                                 accept="image/*"

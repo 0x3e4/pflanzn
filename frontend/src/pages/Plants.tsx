@@ -462,10 +462,14 @@ export default function Plants() {
     };
 
     const handleSelectSpeciesForExistingPlant = async (plantId: number, name: string, species: string) => {
-        await updatePlant(plantId, { name, species });
-        fetchPlantsFromService();
         setPlantIdentifyResults(null);
-        toast.success(`Plant updated to ${name} (${species})`);
+        try {
+            const updated: Plant = await updatePlant(plantId, { name, species });
+            setPlants((prev) => prev.map((p) => (p.id === plantId ? updated : p)));
+            toast.success(`Plant updated to ${name} (${species})`);
+        } catch (err) {
+            toast.error(extractErrorMessage(err, "Couldn't save the species. Try again."));
+        }
     };
 
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -1024,6 +1028,7 @@ export default function Plants() {
                                                       </button>
                                                       <input
                                                           type="file"
+                                                          onClick={(e) => (e.currentTarget.value = "")}
                                                           id={`file-upload-${plant.id}`}
                                                           className="file-input"
                                                           onChange={(e) => handleUploadImageForPlant(plant.id, e)}
@@ -1161,6 +1166,7 @@ export default function Plants() {
                             <input
                                 ref={fileInputRef}
                                 type="file"
+                                onClick={(e) => (e.currentTarget.value = "")}
                                 onChange={handleFileChange}
                                 style={{ display: "none" }}
                             />

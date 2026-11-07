@@ -15,9 +15,11 @@ import "react-loading-skeleton/dist/skeleton.css";
 interface TimelineImagesProps {
     images: PlantImage[];
     plantId: number;
+    /** Called after a photo is deleted, so the page can refresh what depends on it. */
+    onChanged?: () => void;
 }
 
-export default function TimelineImages({ images, plantId }: TimelineImagesProps) {
+export default function TimelineImages({ images, plantId, onChanged }: TimelineImagesProps) {
     const { isLoggedIn } = useAuth();
     const { locale, tz: timezone } = useConfig();
 
@@ -27,6 +29,7 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
     const [localImages, setLocalImages] = useState<PlantImage[]>(images);
     const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
     const [currentImageLoaded, setCurrentImageLoaded] = useState(false);
+    const [activeIndex, setActiveIndex] = useState<number>(images.length > 0 ? images.length - 1 : 0);
 
     useEffect(() => {
         // Only reset loaded images if the actual image IDs have changed
@@ -38,6 +41,17 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
             newImageIds.size !== currentImageIds.size || [...newImageIds].some((id) => !currentImageIds.has(id));
 
         setLocalImages(images);
+
+        // A photo was added: show it (it may be back-dated, so look it up), not the old one.
+        const added = images.find((img) => !currentImageIds.has(img.id));
+        if (added && currentImageIds.size > 0) {
+            const byDate = [...images].sort(
+                (x, y) => new Date(x.uploaded_at).getTime() - new Date(y.uploaded_at).getTime(),
+            );
+            setActiveIndex(byDate.findIndex((img) => img.id === added.id));
+        } else {
+            setActiveIndex((i) => Math.min(i, Math.max(0, images.length - 1)));
+        }
 
         if (hasImageChanges) {
             // Only reset if images actually changed, not just reloaded
@@ -57,8 +71,6 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
     const sortedImages = [...localImages].sort(
         (a, b) => new Date(a.uploaded_at).getTime() - new Date(b.uploaded_at).getTime(),
     );
-
-    const [activeIndex, setActiveIndex] = useState<number>(sortedImages.length > 0 ? sortedImages.length - 1 : 0);
 
     const activeImage = sortedImages[activeIndex];
 
@@ -133,6 +145,7 @@ export default function TimelineImages({ images, plantId }: TimelineImagesProps)
             });
             toast.success("Image deleted successfully!");
             setActiveIndex((prevIndex) => Math.max(0, prevIndex - 1));
+            onChanged?.();
         } catch (err: any) {
             toast.error(err.message);
         } finally {

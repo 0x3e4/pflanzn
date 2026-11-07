@@ -91,6 +91,11 @@ const buildDateKey = (date: Date, locale: string, timezone: string) => {
     return `${year}-${month}-${day}`;
 };
 
+// A tile is the browser's local midnight of the day it shows; converting it into the app
+// timezone moved marks to the wrong day when browser and server timezones differ.
+const tileKey = (date: Date) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
 export default function LocationCalendar({
     locationId,
     images,
@@ -145,7 +150,7 @@ export default function LocationCalendar({
         if (view !== "month") {
             return "";
         }
-        const key = buildDateKey(date, locale, timezone);
+        const key = tileKey(date);
         const classes: string[] = [];
         if (imagesByDate[key]) {
             classes.push("image-day");
@@ -166,7 +171,7 @@ export default function LocationCalendar({
     };
 
     const handleClickDay = (date: Date, event: React.MouseEvent) => {
-        const dateKey = buildDateKey(date, locale, timezone);
+        const dateKey = tileKey(date);
 
         if (imagesByDate[dateKey] || notesByDate[dateKey] || seasonEventsByDate[dateKey]) {
             setHoveredDate(dateKey);

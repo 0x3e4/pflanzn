@@ -1166,3 +1166,13 @@ body.modal-open {
         margin-top: 1.5rem;
     }
 }
+
+.description-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.description-actions .description-generate {
+    margin-top: 12px;
+}

@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 
 def _make_plant(id=1, name="Monstera", species="Monstera deliciosa", is_archived=False):
@@ -90,7 +90,7 @@ class TestWateringInterval:
         after any edit until it was reloaded."""
         from datetime import datetime
 
-        from app.models import Plant, PlantFertilizing, PlantWatering
+        from app.models import Plant, PlantWatering
 
         plant = Plant(id=1, name="Curio", species="Curio citriformis", watering_interval_days=7)
         watering = PlantWatering(id=1, plant_id=1, watered_at=datetime(2026, 11, 1, 9, 0))
@@ -132,3 +132,66 @@ class TestWateringDue:
         assert _watering_due(3, watered, today=date(2026, 5, 2)) == (2, False)
         assert _watering_due(3, watered, today=date(2026, 5, 4)) == (0, True)
         assert _watering_due(3, watered, today=date(2026, 5, 6)) == (-2, True)
+
+
+class TestSpeciesDescription:
+    """GET /api/plants/{id}/species_description offers another plant's text for the same species."""
+
+    def _setup(self, mock_db, plant, source):
+        chain = mock_db.query.return_value.filter.return_value
+        chain.first.return_value = plant
+        chain.order_by.return_value.first.return_value = source
+
+    def test_offers_the_description_of_the_same_species(self, client, mock_db):
+        plant = _make_plant(id=2, name="Gummi 2", species="Ficus elastica")
+        source = _make_plant(id=1, name="Gummibaum", species="Ficus elastica")
+        source.description = "Der Gummibaum stammt aus Südostasien."
+        self._setup(mock_db, plant, source)
+
+        with patch("app.core.security.AUTH_MODE", "no"):
+            body = client.get("/api/plants/2/species_description").json()
+
+        assert body == {"description": "Der Gummibaum stammt aus Südostasien.", "source_plant_id": 1,
+                        "source_plant_name": "Gummibaum"}
+
+    def test_nothing_to_offer(self, client, mock_db):
+        self._setup(mock_db, _make_plant(id=2, species="Ficus elastica"), None)
+        with patch("app.core.security.AUTH_MODE", "no"):
+            assert client.get("/api/plants/2/species_description").json()["description"] is None
+
+    def test_unknown_species_is_not_looked_up(self, client, mock_db):
+        self._setup(mock_db, _make_plant(id=2, species="Unknown"), _make_plant(id=1))
+        with patch("app.core.security.AUTH_MODE", "no"):
+            assert client.get("/api/plants/2/species_description").json()["description"] is None
+
+
+class TestTagEndpointsReturnTheWholePlant:
+    def test_set_tags_keeps_last_watered_and_flags(self, client, mock_db):
+        """Regression: the tag endpoints built a partial response (no care advice, outdoor
+        flags or archive state), so changing tags blanked those parts until a reload."""
+        from datetime import datetime
+
+        from app.models import Plant, PlantWatering
+
+        plant = Plant(id=1, name="Curio", species="Curio citriformis", watering_interval_days=7,
+                      is_outdoor=True, is_archived=False)
+        watering = PlantWatering(id=1, plant_id=1, watered_at=datetime(2026, 11, 1, 9, 0))
+        plant.waterings = [watering]
+
+        def query(model, *args):
+            chain = MagicMock()
+            chain.filter.return_value = chain
+            chain.order_by.return_value = chain
+            chain.all.return_value = []
+            chain.first.return_value = {Plant: plant, PlantWatering: watering}.get(model)
+            return chain
+        mock_db.query.side_effect = query
+
+        with patch("app.core.security.AUTH_MODE", "no"):
+            response = client.put("/api/plants/1/tags", json={"tag_ids": []})
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["last_watered"].startswith("2026-11-01")
+        assert body["is_outdoor"] is True
+        assert "care_advice" in body

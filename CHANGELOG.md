@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The AI care helper looks at the three latest photos and the plant's notes, fertilizing, location, watering plan and last advice, and uses facts from the species' Pl@ntNet page. Answers come in four sections: diagnosis, likely causes, what to do now, what to watch for.
 - With Claude or OpenAI, the care helper can also search the web; Claude also reads pages (`CARE_WEB_SEARCH`, on by default). OpenAI care advice now uses the Responses API.
 - `CLAUDE_EFFORT` sets how hard Claude thinks (`low`, `medium`, `high`, `xhigh`, `max`); empty keeps the model's default.
+- A plant without a description offers the one another plant of the same species already has, next to "Write with AI".
 
 ### Changed
 - Care advice in the activity feed shows its sections as headings and the steps as a numbered list; it opens on the diagnosis, the rest is one tap away.
@@ -50,6 +51,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Long care advice was cut off; the answer limit is higher now.
 - Generating a description with a newer Claude model saved an empty text: thinking used up the answer limit. The limit is higher now, and an empty answer is reported as an error.
 - After editing a plant, its page showed "Water today" until reloaded (the update didn't return the last watering).
+- More changes show without reloading the page: changing tags no longer blanks the care advice and outdoor settings; picking a species after identifying updates the page (and the card) once it's saved, with an error if it isn't; a new photo is shown right after uploading instead of the previous one; deleting a photo updates the activity feed and calendar; a saved profile shows its new name at once; refreshing a location after an edit no longer blanks the page.
+- Lists and pages no longer show cached data when the server takes more than 3 seconds to answer; the cache is only used offline.
+- Uploading the same photo twice in a row did nothing the second time.
+- The calendars marked days one day off when the browser's timezone differed from the server's `TZ`.
+- Pull to refresh reloaded the page twice.
 
 ## [1.2.0] - 2026-10-22
 

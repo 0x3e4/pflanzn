@@ -128,6 +128,7 @@ const Manage: React.FC = () => {
             }
 
             await updateUser(user!.id, editedUser);
+            await fetchProfile();
             toast.success("User details updated successfully!");
         } catch {
             toast.error("Failed to update user details.");

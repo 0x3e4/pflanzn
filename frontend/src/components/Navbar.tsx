@@ -137,6 +137,7 @@ export default function Navbar() {
                 )}
                 <input
                     type="file"
+                    onClick={(e) => (e.currentTarget.value = "")}
                     ref={fileInputRef}
                     style={{ display: "none" }}
                     accept="image/*"

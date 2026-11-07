@@ -85,6 +85,14 @@ export const deletePlantImage = async (plantId: number, imageId: number) => {
     return response.data;
 };
 
+// A description another plant of the same species already has
+export const fetchSpeciesDescription = async (
+    plantId: number,
+): Promise<{ description: string | null; source_plant_id: number | null; source_plant_name: string | null }> => {
+    const response = await apiClient.get(`${API_BASE}/${plantId}/species_description`);
+    return response.data;
+};
+
 // Generate description
 export const generatePlantDescription = async (plantId: number): Promise<{ description: string }> => {
     // Models that think before answering can take a while.

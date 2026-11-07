@@ -1013,6 +1013,7 @@ export default function PlantDetails() {
                                     {isLoggedIn && (
                                         <input
                                             type="file"
+                                            onClick={(e) => (e.currentTarget.value = "")}
                                             id={`file-upload-${plant.id}`}
                                             className="file-input"
                                             onChange={(e) => handleUploadImageForPlant(e)}
@@ -1122,7 +1123,14 @@ export default function PlantDetails() {
                         )}
                     </div>
 
-                    <TimelineImages images={plant.images} plantId={plant.id} />
+                    <TimelineImages
+                        images={plant.images}
+                        plantId={plant.id}
+                        onChanged={() => {
+                            loadPlant();
+                            loadActivities();
+                        }}
+                    />
                     <Calendar
                         waterings={plant.waterings}
                         fertilizings={plant.fertilizings}
@@ -1420,11 +1428,14 @@ export default function PlantDetails() {
                 <IdentifyResults
                     plantId={Number(plantId)}
                     results={identifyResults}
-                    onSelectSpecies={(plantId, name, species) => {
-                        updatePlant(plantId, { name, species });
+                    onSelectSpecies={async (plantId, name, species) => {
                         setIdentifyResults(null);
-                        loadPlant();
-                        toast.success(`Plant updated to ${name} (${species})`);
+                        try {
+                            setPlant(await updatePlant(plantId, { name, species }));
+                            toast.success(`Plant updated to ${name} (${species})`);
+                        } catch {
+                            toast.error("Couldn't save the species. Try again.");
+                        }
                     }}
                     onClose={() => setIdentifyResults(null)}
                 />

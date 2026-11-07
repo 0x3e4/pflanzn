@@ -100,8 +100,9 @@ export default function Home() {
                 setPlants((current) =>
                     current.map((plant) => (plant.id === plantId ? { ...plant, last_watered: nowLocal as unknown as Date } : plant)),
                 );
+                // Count each one as it lands, so a failure halfway through doesn't lose the ones that worked.
+                setOverview((current) => ({ ...current, totalWaterings: current.totalWaterings + 1 }));
             }
-            setOverview((current) => ({ ...current, totalWaterings: current.totalWaterings + plantIds.length }));
         } catch (err) {
             toast.error(extractErrorMessage(err, "Failed to water plants."));
         } finally {

@@ -50,10 +50,6 @@ function AppLayout() {
         }, 1500);
     });
 
-    usePullToRefresh(ref, () => {
-        window.location.reload();
-    });
-
     // Move focus to main content on route change for keyboard/screen reader users
     useEffect(() => {
         const mainContent = document.getElementById("main-content");

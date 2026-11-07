@@ -42,7 +42,6 @@ export default defineConfig(() => {
               options: {
                 cacheName: 'api-plants',
                 expiration: { maxEntries: 200, maxAgeSeconds: 7 * 24 * 60 * 60 },
-                networkTimeoutSeconds: 3,
               },
             },
             {
@@ -51,7 +50,6 @@ export default defineConfig(() => {
               options: {
                 cacheName: 'api-locations',
                 expiration: { maxEntries: 50, maxAgeSeconds: 7 * 24 * 60 * 60 },
-                networkTimeoutSeconds: 3,
               },
             },
             {
@@ -78,7 +76,6 @@ export default defineConfig(() => {
               options: {
                 cacheName: 'api-statistics',
                 expiration: { maxEntries: 10, maxAgeSeconds: 24 * 60 * 60 },
-                networkTimeoutSeconds: 3,
               },
             },
           ],
