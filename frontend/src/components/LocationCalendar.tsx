@@ -12,7 +12,6 @@ import { useAuth } from "../context/AuthContext";
 import { useConfig } from "../context/ConfigContext";
 import { setOverlayOpen } from "../services/overlayControl";
 
-
 interface LocationCalendarProps {
     locationId: number;
     images: LocationImage[];
@@ -268,18 +267,7 @@ export default function LocationCalendar({
                                                 >
                                                     <FontAwesomeIcon icon={faTrash} />
                                                 </button>
-                                            ) : (
-                                                <button
-                                                    className="watering-delete-btn"
-                                                    onClick={() =>
-                                                        toast.warning(
-                                                            "You must be logged in to delete uploaded image events.",
-                                                        )
-                                                    }
-                                                >
-                                                    <FontAwesomeIcon icon={faTrash} />
-                                                </button>
-                                            )}
+                                            ) : null}
                                         </li>
                                     ))}
                                 </ul>
@@ -305,16 +293,7 @@ export default function LocationCalendar({
                                                 >
                                                     <FontAwesomeIcon icon={faTrash} />
                                                 </button>
-                                            ) : (
-                                                <button
-                                                    className="watering-delete-btn"
-                                                    onClick={() =>
-                                                        toast.warning("You must be logged in to delete notes.")
-                                                    }
-                                                >
-                                                    <FontAwesomeIcon icon={faTrash} />
-                                                </button>
-                                            )}
+                                            ) : null}
                                         </li>
                                     ))}
                                 </ul>
@@ -340,16 +319,7 @@ export default function LocationCalendar({
                                                 >
                                                     <FontAwesomeIcon icon={faTrash} />
                                                 </button>
-                                            ) : (
-                                                <button
-                                                    className="watering-delete-btn"
-                                                    onClick={() =>
-                                                        toast.warning("You must be logged in to delete season events.")
-                                                    }
-                                                >
-                                                    <FontAwesomeIcon icon={faTrash} />
-                                                </button>
-                                            )}
+                                            ) : null}
                                         </li>
                                     ))}
                                 </ul>

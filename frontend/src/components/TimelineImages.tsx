@@ -239,21 +239,18 @@ export default function TimelineImages({ images, plantId, onChanged }: TimelineI
         }
     }, [fullSizeModalOpen, deleteModalOpen]);
 
-    const handleZoomWheel = useCallback(
-        (e: React.WheelEvent) => {
-            e.stopPropagation();
-            const delta = e.deltaY > 0 ? -0.2 : 0.2;
-            setZoomScale((prev) => {
-                const next = Math.min(5, Math.max(1, prev + delta));
-                if (next === 1) {
-                    setZoomTranslate({ x: 0, y: 0 });
-                    lastTranslate.current = { x: 0, y: 0 };
-                }
-                return next;
-            });
-        },
-        [],
-    );
+    const handleZoomWheel = useCallback((e: React.WheelEvent) => {
+        e.stopPropagation();
+        const delta = e.deltaY > 0 ? -0.2 : 0.2;
+        setZoomScale((prev) => {
+            const next = Math.min(5, Math.max(1, prev + delta));
+            if (next === 1) {
+                setZoomTranslate({ x: 0, y: 0 });
+                lastTranslate.current = { x: 0, y: 0 };
+            }
+            return next;
+        });
+    }, []);
 
     const handleZoomPointerDown = useCallback(
         (e: React.PointerEvent) => {
@@ -299,22 +296,19 @@ export default function TimelineImages({ images, plantId, onChanged }: TimelineI
         [zoomScale],
     );
 
-    const handleZoomTouchMove = useCallback(
-        (e: React.TouchEvent) => {
-            if (e.touches.length === 2 && pinchStartDist.current !== null) {
-                e.preventDefault();
-                const dist = getTouchDistance(e.touches);
-                const ratio = dist / pinchStartDist.current;
-                const next = Math.min(5, Math.max(1, pinchStartScale.current * ratio));
-                setZoomScale(next);
-                if (next === 1) {
-                    setZoomTranslate({ x: 0, y: 0 });
-                    lastTranslate.current = { x: 0, y: 0 };
-                }
+    const handleZoomTouchMove = useCallback((e: React.TouchEvent) => {
+        if (e.touches.length === 2 && pinchStartDist.current !== null) {
+            e.preventDefault();
+            const dist = getTouchDistance(e.touches);
+            const ratio = dist / pinchStartDist.current;
+            const next = Math.min(5, Math.max(1, pinchStartScale.current * ratio));
+            setZoomScale(next);
+            if (next === 1) {
+                setZoomTranslate({ x: 0, y: 0 });
+                lastTranslate.current = { x: 0, y: 0 };
             }
-        },
-        [],
-    );
+        }
+    }, []);
 
     const handleZoomTouchEnd = useCallback(() => {
         pinchStartDist.current = null;
@@ -348,7 +342,13 @@ export default function TimelineImages({ images, plantId, onChanged }: TimelineI
         <div className="plant-carousel-container">
             {deleteModalOpen && (
                 <div className="plant-delete-modal-overlay">
-                    <div className="plant-delete-modal" ref={deleteModalRef} role="dialog" aria-modal="true" aria-label="Confirm image deletion">
+                    <div
+                        className="plant-delete-modal"
+                        ref={deleteModalRef}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Confirm image deletion"
+                    >
                         <span>Are you sure you want to delete this image?</span>
                         <div className="plant-delete-modal-buttons">
                             <button className="plant-delete-btn" onClick={handleConfirmDelete}>
@@ -462,14 +462,7 @@ export default function TimelineImages({ images, plantId, onChanged }: TimelineI
                             <button className="plant-image-delete-btn" onClick={openDeleteModal}>
                                 <FontAwesomeIcon icon={faTrash} />
                             </button>
-                        ) : (
-                            <button
-                                className="plant-image-delete-btn"
-                                onClick={() => toast.warning("You must be logged in to delete images.")}
-                            >
-                                <FontAwesomeIcon icon={faTrash} />
-                            </button>
-                        )}
+                        ) : null}
                     </div>
 
                     <div

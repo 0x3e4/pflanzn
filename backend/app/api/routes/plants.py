@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Upload
 from PIL import Image, ImageOps
 from pydantic import BaseModel
 from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.core.config import settings
 from app.core.features import require_identification, require_llm
@@ -47,6 +47,7 @@ from app.schemas import (
     PlantUpdate,
     PlantWateringCreate,
     PlantWateringResponse,
+    TagResponse,
     WateringBulkDeleteRequest,
     WateringBulkDeleteResponse,
     WateringListItemResponse,
@@ -133,8 +134,63 @@ def create_plant(plant_data: PlantCreate, db: Session = Depends(get_db), current
     db.refresh(new_plant)
     return new_plant
 
+def _local(value):
+    return value.replace(tzinfo=timezone.utc).astimezone(tz) if value else None
+
+
+def _plant_summaries(db: Session) -> List[PlantResponse]:
+    """What list pages need, without every watering, fertilizing, note and care advice text:
+    those grow with each plant's history and made the list heavier every week."""
+    plants = db.query(Plant).options(selectinload(Plant.images), selectinload(Plant.tags)).all()
+    waterings = dict(
+        (pid, (last, count))
+        for pid, last, count in db.query(
+            PlantWatering.plant_id, func.max(PlantWatering.watered_at), func.count(PlantWatering.id)
+        ).group_by(PlantWatering.plant_id)
+    )
+    fertilizings = dict(
+        (pid, (last, count))
+        for pid, last, count in db.query(
+            PlantFertilizing.plant_id, func.max(PlantFertilizing.fertilized_at), func.count(PlantFertilizing.id)
+        ).group_by(PlantFertilizing.plant_id)
+    )
+    result = []
+    for plant in plants:
+        last_watered, watering_count = waterings.get(plant.id, (None, 0))
+        last_fertilized, fertilizing_count = fertilizings.get(plant.id, (None, 0))
+        result.append(
+            PlantResponse(
+                id=plant.id,
+                name=plant.name,
+                species=plant.species,
+                description=plant.description,
+                images=[
+                    PlantImageResponse(id=i.id, image_path=i.image_path, uploaded_at=_local(i.uploaded_at))
+                    for i in plant.images
+                ],
+                tags=[TagResponse.model_validate(t) for t in plant.tags],
+                last_watered=_local(last_watered),
+                last_fertilized=_local(last_fertilized),
+                watering_count=watering_count,
+                fertilizing_count=fertilizing_count,
+                is_archived=plant.is_archived,
+                archive_reason=plant.archive_reason,
+                is_outdoor=plant.is_outdoor,
+                reaches_rain=plant.reaches_rain,
+                weather_config_id=plant.weather_config_id,
+                watering_interval_days=plant.watering_interval_days,
+            )
+        )
+    return result
+
+
 @router.get("/", response_model=List[PlantResponse])
-def get_all_plants(db: Session = Depends(get_db)):
+def get_all_plants(
+    summary: bool = Query(False, description="Leave out the history lists; give counts instead."),
+    db: Session = Depends(get_db),
+):
+    if summary:
+        return _plant_summaries(db)
     plants = db.query(Plant).all()
 
     for plant in plants:

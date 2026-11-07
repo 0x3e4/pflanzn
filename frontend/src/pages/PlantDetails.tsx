@@ -26,6 +26,7 @@ import { useShare } from "../context/ShareContext";
 import { Plant } from "../types/Plant";
 import { Tag } from "../types/Tag";
 import TimelineImages from "../components/TimelineImages";
+import LoginHint from "../components/LoginHint";
 import Description from "../components/Description";
 import Calendar from "../components/Calendar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -284,7 +285,9 @@ export default function PlantDetails() {
         }
 
         try {
-            const at = showWaterTime ? selectedDateTime : (DateTime.now().setZone(timezone).toISO({ includeOffset: false }) ?? "");
+            const at = showWaterTime
+                ? selectedDateTime
+                : (DateTime.now().setZone(timezone).toISO({ includeOffset: false }) ?? "");
             const wateringDateTimeUTC = DateTime.fromISO(at, { zone: timezone })
                 .toUTC()
                 .toISO({ includeOffset: false });
@@ -316,7 +319,9 @@ export default function PlantDetails() {
         }
 
         try {
-            const at = showWaterTime ? selectedDateTime : (DateTime.now().setZone(timezone).toISO({ includeOffset: false }) ?? "");
+            const at = showWaterTime
+                ? selectedDateTime
+                : (DateTime.now().setZone(timezone).toISO({ includeOffset: false }) ?? "");
             const fertilizingDateTimeUTC = DateTime.fromISO(at, { zone: timezone })
                 .toUTC()
                 .toISO({ includeOffset: false });
@@ -711,9 +716,11 @@ export default function PlantDetails() {
         <div className="activity-log-container">
             <div className="activity-log-header">
                 <h3>Activity feed</h3>
-                <button className="notes-btn" onClick={handleOpenNotesModal} title="Manage Notes">
-                    <FontAwesomeIcon icon={faStickyNote} />
-                </button>
+                {isLoggedIn && (
+                    <button className="notes-btn" onClick={handleOpenNotesModal} title="Add a note">
+                        <FontAwesomeIcon icon={faStickyNote} />
+                    </button>
+                )}
             </div>
 
             <div className="activity-log-list">
@@ -857,16 +864,7 @@ export default function PlantDetails() {
                                     </span>
                                 </>
                             ) : (
-                                <>
-                                    <span
-                                        className="editable-input-noauth"
-                                        suppressContentEditableWarning
-                                        onClick={() => toast.warning("You must be logged in to update plants.")}
-                                        tabIndex={0}
-                                    >
-                                        {plant.name || "Unnamed Plant"}
-                                    </span>
-                                </>
+                                <span>{plant.name || "Unnamed Plant"}</span>
                             )}
                         </h2>
                         <small>#{plant.id}</small>
@@ -885,16 +883,7 @@ export default function PlantDetails() {
                                     </span>
                                 </>
                             ) : (
-                                <>
-                                    <span
-                                        className="editable-input-noauth"
-                                        suppressContentEditableWarning
-                                        onClick={() => toast.warning("You must be logged in to update plants.")}
-                                        tabIndex={0}
-                                    >
-                                        {plant.species || "Unknown"}
-                                    </span>
-                                </>
+                                <span>{plant.species || "Unknown"}</span>
                             )}
                             {plantNetUrl && (
                                 <a
@@ -914,7 +903,9 @@ export default function PlantDetails() {
                                 const status = plant.is_archived ? null : getWateringStatus(plant, timezone);
                                 return (
                                     status && (
-                                        <span className={`watering-badge watering-badge--${wateringBadgeVariant(status)}`}>
+                                        <span
+                                            className={`watering-badge watering-badge--${wateringBadgeVariant(status)}`}
+                                        >
                                             {formatWateringDue(status)}
                                         </span>
                                     )
@@ -935,193 +926,211 @@ export default function PlantDetails() {
                         </span>
                     </div>
 
-                    <div className="plant-actions">
-                        {plant.is_archived ? (
-                            <div className="plant-actions-secondary">
-                                <button
-                                    type="button"
-                                    className="plant-action archive-plant-btn"
-                                    onClick={() => {
-                                        if (!isLoggedIn) {
-                                            toast.warning("You must be logged in to restore plants.");
-                                            return;
-                                        }
-                                        setIsArchiving(false);
-                                        setArchiveModalOpen(true);
-                                    }}
-                                >
-                                    <FontAwesomeIcon icon={faTrashCanArrowUp} /> Restore plant
-                                </button>
-                                <button
-                                    type="button"
-                                    className="plant-action plant-action--danger delete-plant-btn"
-                                    onClick={() =>
-                                        isLoggedIn
-                                            ? setDeleteModalOpen(true)
-                                            : toast.warning("You must be logged in to delete plants.")
-                                    }
-                                >
-                                    <FontAwesomeIcon icon={faTrash} /> Delete plant
-                                </button>
-                            </div>
-                        ) : (
-                            <>
-                                <button
-                                    type="button"
-                                    className="plant-action-primary water-plant-btn"
-                                    onClick={() =>
-                                        isLoggedIn ? handleWaterPlant() : toast.warning("You must be logged in to water plants.")
-                                    }
-                                >
-                                    <FontAwesomeIcon icon={faDroplet} /> {showWaterTime ? "Log watering" : "Water now"}
-                                </button>
-                                <details
-                                    className="plant-water-earlier"
-                                    open={showWaterTime}
-                                    onToggle={(e) => {
-                                        const open = e.currentTarget.open;
-                                        if (open && !showWaterTime) {
-                                            setSelectedDateTime(
-                                                DateTime.now().setZone(timezone).toISO({ includeOffset: false }) ?? "",
-                                            );
-                                        }
-                                        setShowWaterTime(open);
-                                    }}
-                                >
-                                    <summary>Watered earlier? Set the time</summary>
-                                    <label className="plant-water-time">
-                                        <span>Watered or fertilized at</span>
-                                        <input
-                                            type="datetime-local"
-                                            value={selectedDateTime.slice(0, 16)}
-                                            onChange={(e) => setSelectedDateTime(e.target.value)}
-                                        />
-                                    </label>
-                                </details>
+                    {!isLoggedIn ? (
+                        <LoginHint to="water, add photos or change this plant" />
+                    ) : (
+                        <div className="plant-actions">
+                            {plant.is_archived ? (
                                 <div className="plant-actions-secondary">
                                     <button
                                         type="button"
-                                        className="plant-action fertilize-plant-btn"
-                                        onClick={() =>
-                                            isLoggedIn
-                                                ? handleFertilizePlant()
-                                                : toast.warning("You must be logged in to fertilize plants.")
-                                        }
+                                        className="plant-action archive-plant-btn"
+                                        onClick={() => {
+                                            if (!isLoggedIn) {
+                                                toast.warning("You must be logged in to restore plants.");
+                                                return;
+                                            }
+                                            setIsArchiving(false);
+                                            setArchiveModalOpen(true);
+                                        }}
                                     >
-                                        <FontAwesomeIcon icon={faSeedling} /> Fertilize
+                                        <FontAwesomeIcon icon={faTrashCanArrowUp} /> Restore plant
                                     </button>
-                                    {isLoggedIn && (
-                                        <input
-                                            type="file"
-                                            onClick={(e) => (e.currentTarget.value = "")}
-                                            id={`file-upload-${plant.id}`}
-                                            className="file-input"
-                                            onChange={(e) => handleUploadImageForPlant(e)}
-                                        />
-                                    )}
                                     <button
                                         type="button"
-                                        className="plant-action file-input-plant-btn"
+                                        className="plant-action plant-action--danger delete-plant-btn"
                                         onClick={() =>
                                             isLoggedIn
-                                                ? document.getElementById(`file-upload-${plant.id}`)?.click()
-                                                : toast.warning("You must be logged in to upload images.")
+                                                ? setDeleteModalOpen(true)
+                                                : toast.warning("You must be logged in to delete plants.")
                                         }
                                     >
-                                        <FontAwesomeIcon icon={faUpload} /> Add photo
+                                        <FontAwesomeIcon icon={faTrash} /> Delete plant
                                     </button>
-                                    <div className="plant-more" ref={moreRef}>
+                                </div>
+                            ) : (
+                                <>
+                                    <button
+                                        type="button"
+                                        className="plant-action-primary water-plant-btn"
+                                        onClick={() =>
+                                            isLoggedIn
+                                                ? handleWaterPlant()
+                                                : toast.warning("You must be logged in to water plants.")
+                                        }
+                                    >
+                                        <FontAwesomeIcon icon={faDroplet} />{" "}
+                                        {showWaterTime ? "Log watering" : "Water now"}
+                                    </button>
+                                    <details
+                                        className="plant-water-earlier"
+                                        open={showWaterTime}
+                                        onToggle={(e) => {
+                                            const open = e.currentTarget.open;
+                                            if (open && !showWaterTime) {
+                                                setSelectedDateTime(
+                                                    DateTime.now().setZone(timezone).toISO({ includeOffset: false }) ??
+                                                        "",
+                                                );
+                                            }
+                                            setShowWaterTime(open);
+                                        }}
+                                    >
+                                        <summary>Watered earlier? Set the time</summary>
+                                        <label className="plant-water-time">
+                                            <span>Watered or fertilized at</span>
+                                            <input
+                                                type="datetime-local"
+                                                value={selectedDateTime.slice(0, 16)}
+                                                onChange={(e) => setSelectedDateTime(e.target.value)}
+                                            />
+                                        </label>
+                                    </details>
+                                    <div className="plant-actions-secondary">
                                         <button
                                             type="button"
-                                            className="plant-action"
-                                            aria-haspopup="menu"
-                                            aria-expanded={moreOpen}
-                                            onClick={() => setMoreOpen((open) => !open)}
+                                            className="plant-action fertilize-plant-btn"
+                                            onClick={() =>
+                                                isLoggedIn
+                                                    ? handleFertilizePlant()
+                                                    : toast.warning("You must be logged in to fertilize plants.")
+                                            }
                                         >
-                                            More <FontAwesomeIcon icon={faChevronDown} />
+                                            <FontAwesomeIcon icon={faSeedling} /> Fertilize
                                         </button>
-                                        {moreOpen && (
-                                            <div className="plant-more-menu" role="menu">
-                                                {identificationEnabled && (
-                                                    <button
-                                                        type="button"
-                                                        role="menuitem"
-                                                        className="identify-plant-btn"
-                                                        onClick={() => {
-                                                            setMoreOpen(false);
-                                                            if (isLoggedIn) handleIdentifyPlant();
-                                                            else toast.warning("You must be logged in to identify images.");
-                                                        }}
-                                                    >
-                                                        <FontAwesomeIcon icon={faFingerprint} /> Identify species
-                                                    </button>
-                                                )}
-                                                {llmProvider && (
-                                                    <>
+                                        {isLoggedIn && (
+                                            <input
+                                                type="file"
+                                                onClick={(e) => (e.currentTarget.value = "")}
+                                                id={`file-upload-${plant.id}`}
+                                                className="file-input"
+                                                onChange={(e) => handleUploadImageForPlant(e)}
+                                            />
+                                        )}
+                                        <button
+                                            type="button"
+                                            className="plant-action file-input-plant-btn"
+                                            onClick={() =>
+                                                isLoggedIn
+                                                    ? document.getElementById(`file-upload-${plant.id}`)?.click()
+                                                    : toast.warning("You must be logged in to upload images.")
+                                            }
+                                        >
+                                            <FontAwesomeIcon icon={faUpload} /> Add photo
+                                        </button>
+                                        <div className="plant-more" ref={moreRef}>
+                                            <button
+                                                type="button"
+                                                className="plant-action"
+                                                aria-haspopup="menu"
+                                                aria-expanded={moreOpen}
+                                                onClick={() => setMoreOpen((open) => !open)}
+                                            >
+                                                More <FontAwesomeIcon icon={faChevronDown} />
+                                            </button>
+                                            {moreOpen && (
+                                                <div className="plant-more-menu" role="menu">
+                                                    {identificationEnabled && (
                                                         <button
                                                             type="button"
                                                             role="menuitem"
-                                                            className="ai-care-helper-btn"
+                                                            className="identify-plant-btn"
                                                             onClick={() => {
                                                                 setMoreOpen(false);
-                                                                handleOpenCareAdviceModal();
-                                                            }}
-                                                        >
-                                                            <FontAwesomeIcon icon={faWandMagicSparkles} /> Ask AI for care advice
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            role="menuitem"
-                                                            className="generate-description-btn"
-                                                            onClick={() => {
-                                                                setMoreOpen(false);
-                                                                if (isLoggedIn) handleGenerateDescription();
+                                                                if (isLoggedIn) handleIdentifyPlant();
                                                                 else
                                                                     toast.warning(
-                                                                        "You must be logged in to generate a description with AI.",
+                                                                        "You must be logged in to identify images.",
                                                                     );
                                                             }}
                                                         >
-                                                            <FontAwesomeIcon icon={faWandMagicSparkles} /> Write description with AI
+                                                            <FontAwesomeIcon icon={faFingerprint} /> Identify species
                                                         </button>
-                                                    </>
-                                                )}
-                                                <div role="separator" className="plant-more-separator" />
-                                                <button
-                                                    type="button"
-                                                    role="menuitem"
-                                                    className="archive-plant-btn"
-                                                    onClick={() => {
-                                                        setMoreOpen(false);
-                                                        if (!isLoggedIn) {
-                                                            toast.warning("You must be logged in to archive plants.");
-                                                            return;
-                                                        }
-                                                        setIsArchiving(true);
-                                                        setArchiveModalOpen(true);
-                                                    }}
-                                                >
-                                                    <FontAwesomeIcon icon={faBoxArchive} /> Archive plant
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    role="menuitem"
-                                                    className="delete-plant-btn plant-more-danger"
-                                                    onClick={() => {
-                                                        setMoreOpen(false);
-                                                        if (isLoggedIn) setDeleteModalOpen(true);
-                                                        else toast.warning("You must be logged in to delete plants.");
-                                                    }}
-                                                >
-                                                    <FontAwesomeIcon icon={faTrash} /> Delete plant
-                                                </button>
-                                            </div>
-                                        )}
+                                                    )}
+                                                    {llmProvider && (
+                                                        <>
+                                                            <button
+                                                                type="button"
+                                                                role="menuitem"
+                                                                className="ai-care-helper-btn"
+                                                                onClick={() => {
+                                                                    setMoreOpen(false);
+                                                                    handleOpenCareAdviceModal();
+                                                                }}
+                                                            >
+                                                                <FontAwesomeIcon icon={faWandMagicSparkles} /> Ask AI
+                                                                for care advice
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                role="menuitem"
+                                                                className="generate-description-btn"
+                                                                onClick={() => {
+                                                                    setMoreOpen(false);
+                                                                    if (isLoggedIn) handleGenerateDescription();
+                                                                    else
+                                                                        toast.warning(
+                                                                            "You must be logged in to generate a description with AI.",
+                                                                        );
+                                                                }}
+                                                            >
+                                                                <FontAwesomeIcon icon={faWandMagicSparkles} /> Write
+                                                                description with AI
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    <div role="separator" className="plant-more-separator" />
+                                                    <button
+                                                        type="button"
+                                                        role="menuitem"
+                                                        className="archive-plant-btn"
+                                                        onClick={() => {
+                                                            setMoreOpen(false);
+                                                            if (!isLoggedIn) {
+                                                                toast.warning(
+                                                                    "You must be logged in to archive plants.",
+                                                                );
+                                                                return;
+                                                            }
+                                                            setIsArchiving(true);
+                                                            setArchiveModalOpen(true);
+                                                        }}
+                                                    >
+                                                        <FontAwesomeIcon icon={faBoxArchive} /> Archive plant
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        role="menuitem"
+                                                        className="delete-plant-btn plant-more-danger"
+                                                        onClick={() => {
+                                                            setMoreOpen(false);
+                                                            if (isLoggedIn) setDeleteModalOpen(true);
+                                                            else
+                                                                toast.warning(
+                                                                    "You must be logged in to delete plants.",
+                                                                );
+                                                        }}
+                                                    >
+                                                        <FontAwesomeIcon icon={faTrash} /> Delete plant
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            </>
-                        )}
-                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
 
                     <TimelineImages
                         images={plant.images}
@@ -1374,7 +1383,9 @@ export default function PlantDetails() {
                     <Description
                         plant={plant}
                         onDescriptionUpdated={setPlant}
-                        onGenerate={llmProvider && isLoggedIn && !plant.is_archived ? handleGenerateDescription : undefined}
+                        onGenerate={
+                            llmProvider && isLoggedIn && !plant.is_archived ? handleGenerateDescription : undefined
+                        }
                     />
 
                     {(() => {

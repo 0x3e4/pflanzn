@@ -195,3 +195,36 @@ class TestTagEndpointsReturnTheWholePlant:
         assert body["last_watered"].startswith("2026-11-01")
         assert body["is_outdoor"] is True
         assert "care_advice" in body
+
+
+class TestPlantListSummary:
+    def test_summary_gives_counts_and_last_times_instead_of_history(self, client, mock_db):
+        """GET /plants/?summary=true: the list pages don't need every watering and care advice text."""
+        from datetime import datetime
+
+        from app.models import Plant, PlantFertilizing, PlantImage, PlantWatering
+
+        plant = Plant(id=1, name="Curio", species="Curio citriformis", watering_interval_days=7, is_archived=False)
+        plant.images = [PlantImage(id=3, plant_id=1, image_path="plants/a", uploaded_at=datetime(2026, 11, 1, 8, 0))]
+        plant.tags = []
+
+        def query(*args):
+            chain = MagicMock()
+            chain.options.return_value = chain
+            if args[0] is Plant:
+                chain.all.return_value = [plant]
+            elif args[0] is PlantWatering.plant_id:
+                chain.group_by.return_value = [(1, datetime(2026, 11, 5, 7, 30), 12)]
+            elif args[0] is PlantFertilizing.plant_id:
+                chain.group_by.return_value = []
+            return chain
+        mock_db.query.side_effect = query
+
+        body = client.get("/api/plants/?summary=true").json()
+
+        assert len(body) == 1
+        row = body[0]
+        assert row["watering_count"] == 12 and row["fertilizing_count"] == 0
+        assert row["last_watered"].startswith("2026-11-05") and row["last_fertilized"] is None
+        assert row["waterings"] == [] and row["care_advice"] == []
+        assert row["images"][0]["image_path"] == "plants/a"

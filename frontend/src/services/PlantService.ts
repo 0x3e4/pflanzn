@@ -5,9 +5,10 @@ import { PlantIdentification } from "../types/Identification";
 
 const API_BASE = "/plants";
 
-// Fetch all plants
+// Fetch all plants for the list pages: without each plant's watering, fertilizing, note and
+// care advice history (counts instead). The plant page loads the full plant.
 export const fetchPlants = async (): Promise<Plant[]> => {
-    const response = await apiClient.get<Plant[]>(`${API_BASE}/`);
+    const response = await apiClient.get<Plant[]>(`${API_BASE}/`, { params: { summary: true } });
     return response.data;
 };
 

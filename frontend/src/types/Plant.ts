@@ -19,6 +19,9 @@ export interface Plant {
     reaches_rain: boolean;
     weather_config_id: number | null;
     watering_interval_days: number | null;
+    /** Only in list responses (GET /plants/?summary=true), where the history lists are empty. */
+    watering_count?: number;
+    fertilizing_count?: number;
 }
 
 export interface PlantImage {

@@ -217,6 +217,20 @@ a:focus-visible,
     outline-offset: 3px;
 }
 
+/* Stands in for the actions a signed-out visitor can't use. */
+.login-hint {
+    margin: 12px 0;
+    color: var(--muted-text-color);
+    font-size: 0.95rem;
+    text-align: left;
+}
+
+.login-hint a {
+    color: var(--text-color);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
 /* Focus moves to <main> on every route change, for screen readers; it isn't a control, so no
    ring (it drew a white line along the bottom of every page). */
 main[tabindex="-1"]:focus,

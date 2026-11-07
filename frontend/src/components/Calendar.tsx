@@ -218,18 +218,19 @@ export default function LogCalendar({ waterings, fertilizings, images, careadvic
         const stops = activeTypes
             .map((t, i) => `${EVENT_COLORS[t]} ${i * pct}%, ${EVENT_COLORS[t]} ${(i + 1) * pct}%`)
             .join(", ");
-        return (
-            <div
-                className="multi-day-indicator"
-                style={{ background: `linear-gradient(135deg, ${stops})` }}
-            />
-        );
+        return <div className="multi-day-indicator" style={{ background: `linear-gradient(135deg, ${stops})` }} />;
     };
 
     const handleClickDay = (date: Date, event: React.MouseEvent) => {
         const dateKey = tileKey(date);
 
-        if (wateredDates[dateKey] || fertilizedDates[dateKey] || imageDates[dateKey] || adviceDates[dateKey] || noteDates[dateKey]) {
+        if (
+            wateredDates[dateKey] ||
+            fertilizedDates[dateKey] ||
+            imageDates[dateKey] ||
+            adviceDates[dateKey] ||
+            noteDates[dateKey]
+        ) {
             setHoveredDate(dateKey);
 
             const rect = (event.target as HTMLElement).getBoundingClientRect();
@@ -356,18 +357,7 @@ export default function LogCalendar({ waterings, fertilizings, images, careadvic
                                                         <FontAwesomeIcon icon={faTrash} />
                                                     </button>
                                                 </>
-                                            ) : (
-                                                <button
-                                                    className="watering-delete-btn"
-                                                    onClick={() =>
-                                                        toast.warning(
-                                                            "You must be logged in to delete watering events.",
-                                                        )
-                                                    }
-                                                >
-                                                    <FontAwesomeIcon icon={faTrash} />
-                                                </button>
-                                            )}
+                                            ) : null}
                                         </li>
                                     ))}
                                 </ul>
@@ -393,18 +383,7 @@ export default function LogCalendar({ waterings, fertilizings, images, careadvic
                                                 >
                                                     <FontAwesomeIcon icon={faTrash} />
                                                 </button>
-                                            ) : (
-                                                <button
-                                                    className="watering-delete-btn"
-                                                    onClick={() =>
-                                                        toast.warning(
-                                                            "You must be logged in to delete fertilizing events.",
-                                                        )
-                                                    }
-                                                >
-                                                    <FontAwesomeIcon icon={faTrash} />
-                                                </button>
-                                            )}
+                                            ) : null}
                                         </li>
                                     ))}
                                 </ul>
@@ -432,18 +411,7 @@ export default function LogCalendar({ waterings, fertilizings, images, careadvic
                                                         <FontAwesomeIcon icon={faTrash} />
                                                     </button>
                                                 </>
-                                            ) : (
-                                                <button
-                                                    className="watering-delete-btn"
-                                                    onClick={() =>
-                                                        toast.warning(
-                                                            "You must be logged in to delete uploaded image events.",
-                                                        )
-                                                    }
-                                                >
-                                                    <FontAwesomeIcon icon={faTrash} />
-                                                </button>
-                                            )}
+                                            ) : null}
                                         </li>
                                     ))}
                                 </ul>
@@ -471,18 +439,7 @@ export default function LogCalendar({ waterings, fertilizings, images, careadvic
                                                         <FontAwesomeIcon icon={faTrash} />
                                                     </button>
                                                 </>
-                                            ) : (
-                                                <button
-                                                    className="watering-delete-btn"
-                                                    onClick={() =>
-                                                        toast.warning(
-                                                            "You must be logged in to delete care advice events.",
-                                                        )
-                                                    }
-                                                >
-                                                    <FontAwesomeIcon icon={faTrash} />
-                                                </button>
-                                            )}
+                                            ) : null}
                                         </li>
                                     ))}
                                 </ul>
@@ -508,16 +465,7 @@ export default function LogCalendar({ waterings, fertilizings, images, careadvic
                                                 >
                                                     <FontAwesomeIcon icon={faTrash} />
                                                 </button>
-                                            ) : (
-                                                <button
-                                                    className="watering-delete-btn"
-                                                    onClick={() =>
-                                                        toast.warning("You must be logged in to delete notes.")
-                                                    }
-                                                >
-                                                    <FontAwesomeIcon icon={faTrash} />
-                                                </button>
-                                            )}
+                                            ) : null}
                                         </li>
                                     ))}
                                 </ul>
@@ -545,7 +493,13 @@ export default function LogCalendar({ waterings, fertilizings, images, careadvic
 
             {deleteModalOpen && (
                 <div className="watering-delete-modal-overlay">
-                    <div className="watering-delete-modal" ref={deleteModalRef} role="dialog" aria-modal="true" aria-label="Confirm deletion">
+                    <div
+                        className="watering-delete-modal"
+                        ref={deleteModalRef}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Confirm deletion"
+                    >
                         <p>Are you sure you want to delete this entry?</p>
                         <div className="watering-delete-modal-buttons">
                             <button className="watering-delete-confirm" onClick={handleConfirmDelete}>

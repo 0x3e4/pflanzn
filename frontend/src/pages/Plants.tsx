@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import LoginHint from "../components/LoginHint";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
     fetchPlants,
@@ -626,15 +627,8 @@ export default function Plants() {
                             </button>
                         )}
                     </div>
-                    {isLoggedIn ? (
+                    {isLoggedIn && (
                         <button className="add-plant-btn" onClick={() => setModalOpen(true)}>
-                            <FontAwesomeIcon icon={faPlus} />
-                        </button>
-                    ) : (
-                        <button
-                            className="add-plant-btn"
-                            onClick={() => toast.warning("You must be logged in to add plants.")}
-                        >
                             <FontAwesomeIcon icon={faPlus} />
                         </button>
                     )}
@@ -699,29 +693,25 @@ export default function Plants() {
                     )}
                 </div>
 
-                <div className="water-plant-input-container">
-                    {isLoggedIn ? (
-                        <>
-                            <button className="water-plant-btn" onClick={handleWaterVisiblePlants}>
-                                <FontAwesomeIcon icon={faDroplet} /> Water shown plants
-                            </button>
-                        </>
-                    ) : (
-                        <button
-                            className="water-plant-btn"
-                            onClick={() => toast.warning("You must be logged in to water plants.")}
-                        >
-                            <FontAwesomeIcon icon={faDroplet} /> Water shown plants
-                        </button>
-                    )}
-                    <div className="water-plant-datetime">
-                        <input
-                            type="datetime-local"
-                            value={selectedDateTime.slice(0, 16)}
-                            onChange={(e) => setSelectedDateTime(e.target.value)}
-                        />
+                {!isLoggedIn && <LoginHint to="add plants, water them or add photos" />}
+                {isLoggedIn && (
+                    <div className="water-plant-input-container">
+                        {isLoggedIn && (
+                            <>
+                                <button className="water-plant-btn" onClick={handleWaterVisiblePlants}>
+                                    <FontAwesomeIcon icon={faDroplet} /> Water shown plants
+                                </button>
+                            </>
+                        )}
+                        <div className="water-plant-datetime">
+                            <input
+                                type="datetime-local"
+                                value={selectedDateTime.slice(0, 16)}
+                                onChange={(e) => setSelectedDateTime(e.target.value)}
+                            />
+                        </div>
                     </div>
-                </div>
+                )}
 
                 <div className="plant-search-container">
                     <input
@@ -842,8 +832,6 @@ export default function Plants() {
                                   (a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime(),
                               )[0];
                               const status = plant.is_archived ? null : wateringStatuses.get(plant.id);
-                              const requireLogin = (action: string) =>
-                                  toast.warning(`You must be logged in to ${action}.`);
                               return (
                                   <div key={plant.id} className={`list-row${plant.is_archived ? " archived" : ""}`}>
                                       <Link to={`/plant/${plant.id}`} className="list-row-link">
@@ -878,59 +866,48 @@ export default function Plants() {
                                               </div>
                                           </div>
                                       </Link>
-                                      <div className="list-row-actions">
-                                          {plant.is_archived ? (
-                                              <button
-                                                  className="list-row-btn list-row-btn--restore"
-                                                  aria-label={`Restore ${plant.name}`}
-                                                  onClick={() => {
-                                                      if (!isLoggedIn) return requireLogin("restore plants");
-                                                      setSelectedPlantToUnarchive(plant.id);
-                                                      setArchiveModalOpen(true);
-                                                  }}
-                                              >
-                                                  <FontAwesomeIcon icon={faTrashCanArrowUp} />
-                                              </button>
-                                          ) : (
-                                              <>
-                                                  {isLoggedIn ? (
-                                                      <label
-                                                          className="list-row-btn list-row-btn--upload"
-                                                          aria-label={`Upload image for ${plant.name}`}
-                                                      >
-                                                          <FontAwesomeIcon icon={faUpload} />
-                                                          <input
-                                                              type="file"
-                                                              accept="image/*"
-                                                              onChange={(e) => {
-                                                                  handleUploadImageForPlant(plant.id, e);
-                                                                  e.currentTarget.value = "";
-                                                              }}
-                                                          />
-                                                      </label>
-                                                  ) : (
-                                                      <button
-                                                          className="list-row-btn list-row-btn--upload"
-                                                          aria-label={`Upload image for ${plant.name}`}
-                                                          onClick={() => requireLogin("upload images")}
-                                                      >
-                                                          <FontAwesomeIcon icon={faUpload} />
-                                                      </button>
-                                                  )}
+                                      {isLoggedIn && (
+                                          <div className="list-row-actions">
+                                              {plant.is_archived ? (
                                                   <button
-                                                      className="list-row-btn list-row-btn--water"
-                                                      aria-label={`Water ${plant.name}`}
-                                                      onClick={() =>
-                                                          isLoggedIn
-                                                              ? handleWaterPlant(plant.id)
-                                                              : requireLogin("water plants")
-                                                      }
+                                                      className="list-row-btn list-row-btn--restore"
+                                                      aria-label={`Restore ${plant.name}`}
+                                                      onClick={() => {
+                                                          setSelectedPlantToUnarchive(plant.id);
+                                                          setArchiveModalOpen(true);
+                                                      }}
                                                   >
-                                                      <FontAwesomeIcon icon={faDroplet} />
+                                                      <FontAwesomeIcon icon={faTrashCanArrowUp} />
                                                   </button>
-                                              </>
-                                          )}
-                                      </div>
+                                              ) : (
+                                                  <>
+                                                      {isLoggedIn && (
+                                                          <label
+                                                              className="list-row-btn list-row-btn--upload"
+                                                              aria-label={`Upload image for ${plant.name}`}
+                                                          >
+                                                              <FontAwesomeIcon icon={faUpload} />
+                                                              <input
+                                                                  type="file"
+                                                                  accept="image/*"
+                                                                  onChange={(e) => {
+                                                                      handleUploadImageForPlant(plant.id, e);
+                                                                      e.currentTarget.value = "";
+                                                                  }}
+                                                              />
+                                                          </label>
+                                                      )}
+                                                      <button
+                                                          className="list-row-btn list-row-btn--water"
+                                                          aria-label={`Water ${plant.name}`}
+                                                          onClick={() => handleWaterPlant(plant.id)}
+                                                      >
+                                                          <FontAwesomeIcon icon={faDroplet} />
+                                                      </button>
+                                                  </>
+                                              )}
+                                          </div>
+                                      )}
                                   </div>
                               );
                           })}
@@ -1015,9 +992,9 @@ export default function Plants() {
                                               )}
                                           </div>
                                       </Link>
-                                      {!plant.is_archived ? (
+                                      {!isLoggedIn ? null : !plant.is_archived ? (
                                           <div className="plant-buttons">
-                                              {isLoggedIn ? (
+                                              {isLoggedIn && (
                                                   <>
                                                       <button
                                                           className="water-plant-btn"
@@ -1053,59 +1030,17 @@ export default function Plants() {
                                                           </button>
                                                       )}
                                                   </>
-                                              ) : (
-                                                  <>
-                                                      <button
-                                                          className="water-plant-btn"
-                                                          aria-label={`Water ${plant.name}`}
-                                                          onClick={() =>
-                                                              toast.warning("You must be logged in to water plants.")
-                                                          }
-                                                      >
-                                                          <FontAwesomeIcon icon={faDroplet} />
-                                                      </button>
-                                                      <button
-                                                          className="file-input-plant-btn"
-                                                          aria-label={`Add a photo of ${plant.name}`}
-                                                          onClick={() =>
-                                                              toast.warning("You must be logged in to upload images.")
-                                                          }
-                                                      >
-                                                          <FontAwesomeIcon icon={faUpload} />
-                                                      </button>
-                                                      {identificationEnabled && (
-                                                          <button
-                                                              aria-label={`Identify ${plant.name}`}
-                                                              onClick={() =>
-                                                                  toast.warning(
-                                                                      "You must be logged in to identify plants.",
-                                                                  )
-                                                              }
-                                                          >
-                                                              <FontAwesomeIcon icon={faFingerprint} />
-                                                          </button>
-                                                      )}
-                                                  </>
                                               )}
                                           </div>
                                       ) : (
                                           <div className="plant-buttons">
-                                              {isLoggedIn ? (
+                                              {isLoggedIn && (
                                                   <button
                                                       className="archive-plant-btn"
                                                       onClick={() => {
                                                           setSelectedPlantToUnarchive(plant.id);
                                                           setArchiveModalOpen(true);
                                                       }}
-                                                  >
-                                                      <FontAwesomeIcon icon={faTrashCanArrowUp} />
-                                                  </button>
-                                              ) : (
-                                                  <button
-                                                      className="archive-plant-btn"
-                                                      onClick={() =>
-                                                          toast.warning("You must be logged in to restore plants.")
-                                                      }
                                                   >
                                                       <FontAwesomeIcon icon={faTrashCanArrowUp} />
                                                   </button>

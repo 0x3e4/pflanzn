@@ -4,7 +4,12 @@ import { Plant } from "../types/Plant";
 import { fetchPlants, waterPlant } from "../services/PlantService";
 import { fetchStatistics } from "../services/StatisticService";
 import { extractErrorMessage } from "../services/apiClient";
-import { formatWateringDue, getWateringStatus, wateringBadgeVariant, WateringStatus } from "../services/wateringSchedule";
+import {
+    formatWateringDue,
+    getWateringStatus,
+    wateringBadgeVariant,
+    WateringStatus,
+} from "../services/wateringSchedule";
 import "../styles/home.css";
 import { toast } from "react-toastify";
 import Skeleton from "react-loading-skeleton";
@@ -65,8 +70,14 @@ export default function Home() {
                     active: active.length,
                     identified: stats?.identificationsCount ?? 0,
                     species: new Set(active.map((plant) => plant.species ?? "Unknown")).size,
-                    totalWaterings: data.reduce((sum, plant) => sum + (plant.waterings?.length ?? 0), 0),
-                    totalFertilizings: data.reduce((sum, plant) => sum + (plant.fertilizings?.length ?? 0), 0),
+                    totalWaterings: data.reduce(
+                        (sum, plant) => sum + (plant.watering_count ?? plant.waterings?.length ?? 0),
+                        0,
+                    ),
+                    totalFertilizings: data.reduce(
+                        (sum, plant) => sum + (plant.fertilizing_count ?? plant.fertilizings?.length ?? 0),
+                        0,
+                    ),
                     totalPhotos: data.reduce((sum, plant) => sum + (plant.images?.length ?? 0), 0),
                 });
             })
@@ -98,7 +109,9 @@ export default function Home() {
             for (const plantId of plantIds) {
                 await waterPlant(plantId, { watered_at: nowUTC ?? undefined });
                 setPlants((current) =>
-                    current.map((plant) => (plant.id === plantId ? { ...plant, last_watered: nowLocal as unknown as Date } : plant)),
+                    current.map((plant) =>
+                        plant.id === plantId ? { ...plant, last_watered: nowLocal as unknown as Date } : plant,
+                    ),
                 );
                 // Count each one as it lands, so a failure halfway through doesn't lose the ones that worked.
                 setOverview((current) => ({ ...current, totalWaterings: current.totalWaterings + 1 }));
@@ -110,11 +123,14 @@ export default function Home() {
         }
     };
 
-    const today = DateTime.now().setZone(timezone).setLocale(locale || "en").toLocaleString({
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-    });
+    const today = DateTime.now()
+        .setZone(timezone)
+        .setLocale(locale || "en")
+        .toLocaleString({
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+        });
     const heading =
         due.length > 0
             ? `${due.length} ${due.length === 1 ? "plant needs" : "plants need"} water`
@@ -170,16 +186,23 @@ export default function Home() {
                                                 {src ? (
                                                     <img src={src} alt="" className="home-due-thumb" />
                                                 ) : (
-                                                    <span className="home-due-thumb home-due-initial" aria-hidden="true">
+                                                    <span
+                                                        className="home-due-thumb home-due-initial"
+                                                        aria-hidden="true"
+                                                    >
                                                         {plant.name.charAt(0)}
                                                     </span>
                                                 )}
                                                 <span className="home-due-names">
                                                     <span className="home-due-name">{plant.name}</span>
-                                                    {plant.species && <span className="home-due-species">{plant.species}</span>}
+                                                    {plant.species && (
+                                                        <span className="home-due-species">{plant.species}</span>
+                                                    )}
                                                 </span>
                                             </Link>
-                                            <span className={`watering-badge watering-badge--${wateringBadgeVariant(status)}`}>
+                                            <span
+                                                className={`watering-badge watering-badge--${wateringBadgeVariant(status)}`}
+                                            >
                                                 {formatWateringDue(status)}
                                             </span>
                                             {canWater && (
@@ -242,15 +265,20 @@ export default function Home() {
                     <h2 id="home-recent">Recently photographed</h2>
                     <div className="home-recent-grid">
                         {loadingPlants
-                            ? [...Array(RECENT_PHOTOS)].map((_, i) => <Skeleton key={i} height={180} borderRadius={12} />)
+                            ? [...Array(RECENT_PHOTOS)].map((_, i) => (
+                                  <Skeleton key={i} height={180} borderRadius={12} />
+                              ))
                             : recent.map(({ plant, at }) => (
                                   <Link key={plant.id} to={`/plant/${plant.id}`} className="home-recent-item">
                                       <span className="home-recent-frame">
-                                          <img src={thumb(plant, "medium") ?? ""} alt={plant.name} className="home-plant-image" />
+                                          <img
+                                              src={thumb(plant, "medium") ?? ""}
+                                              alt={plant.name}
+                                              className="home-plant-image"
+                                          />
                                       </span>
                                       <span>
-                                          {plant.name},{" "}
-                                          {DateTime.fromMillis(at).setZone(timezone).toRelativeCalendar()}
+                                          {plant.name}, {DateTime.fromMillis(at).setZone(timezone).toRelativeCalendar()}
                                       </span>
                                   </Link>
                               ))}

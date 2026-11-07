@@ -186,6 +186,9 @@ class PlantResponse(BaseModel):
     reaches_rain: Optional[bool] = False
     weather_config_id: Optional[int] = None
     watering_interval_days: Optional[int] = None
+    # Only in GET /plants/?summary=true, where the lists above are left out.
+    watering_count: Optional[int] = None
+    fertilizing_count: Optional[int] = None
 
     class Config:
         from_attributes = True

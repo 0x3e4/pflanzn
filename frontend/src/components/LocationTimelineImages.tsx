@@ -187,7 +187,13 @@ export default function LocationTimelineImages({ locationId, images, onChanged }
         <div className="location-carousel-container">
             {deleteModalOpen && (
                 <div className="plant-delete-modal-overlay">
-                    <div className="plant-delete-modal" ref={deleteModalRef} role="dialog" aria-modal="true" aria-label="Confirm image deletion">
+                    <div
+                        className="plant-delete-modal"
+                        ref={deleteModalRef}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Confirm image deletion"
+                    >
                         <span>Are you sure you want to delete this image?</span>
                         <div className="plant-delete-modal-buttons">
                             <button className="plant-delete-btn" onClick={handleDeleteImage}>
@@ -254,14 +260,7 @@ export default function LocationTimelineImages({ locationId, images, onChanged }
                             <button className="location-image-delete-btn" onClick={() => setDeleteModalOpen(true)}>
                                 <FontAwesomeIcon icon={faTrash} />
                             </button>
-                        ) : (
-                            <button
-                                className="location-image-delete-btn"
-                                onClick={() => toast.warning("You must be logged in to delete images.")}
-                            >
-                                <FontAwesomeIcon icon={faTrash} />
-                            </button>
-                        )}
+                        ) : null}
                     </div>
 
                     <img

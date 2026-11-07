@@ -421,7 +421,6 @@
     background-color: var(--button-primary-hover);
 }
 
-.archive-location-btn,
 .delete-location-btn-bottom {
     flex-shrink: 0;
     white-space: nowrap;
@@ -432,18 +431,6 @@
     border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.3s ease;
-}
-
-.archive-location-btn {
-    background-color: var(--text-color);
-    color: var(--quaternary-color);
-    border: 1px solid var(--quaternary-color);
-}
-
-.archive-location-btn:hover {
-    background-color: var(--septimal-color);
-    color: var(--quaternary-color);
-    border: 1px solid var(--tertiary-color);
 }
 
 .delete-location-btn-bottom,

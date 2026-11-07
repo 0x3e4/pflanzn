@@ -2,7 +2,6 @@ import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-    faBoxArchive,
     faCamera,
     faChevronDown,
     faCircleXmark,
@@ -25,6 +24,7 @@ import LoadingOverlay from "../components/LoadingOverlay";
 import LocationTimelineImages from "../components/LocationTimelineImages";
 import StaticLeafletMap from "../components/StaticLeafletMap";
 import LocationCalendar from "../components/LocationCalendar";
+import LoginHint from "../components/LoginHint";
 import { importLocalLocationDataOnce } from "../services/locationLocalImport";
 import {
     addLocationNote,
@@ -310,7 +310,9 @@ export default function LocationDetails() {
         if (!isLoggedIn) return;
         importLocalLocationDataOnce().then((changed) => {
             if (!changed.length) return;
-            fetchLocationTagNames().then(setKnownTagNames).catch(() => undefined);
+            fetchLocationTagNames()
+                .then(setKnownTagNames)
+                .catch(() => undefined);
             // Swap in the fresh copy only if it's still the location on screen.
             changed.forEach((id) =>
                 fetchSingleLocation(id)
@@ -974,117 +976,117 @@ export default function LocationDetails() {
                         )}
                     </div>
 
-                    <div className="plant-actions location-actions">
-                        {isLoggedIn && (
-                            <input
-                                type="file"
-                                onClick={(e) => (e.currentTarget.value = "")}
-                                id={`file-upload-location-${location.id}`}
-                                className="file-input"
-                                accept="image/*"
-                                onChange={handleUploadImage}
-                            />
-                        )}
-                        <button
-                            type="button"
-                            className="plant-action-primary location-action-primary file-input-location-btn"
-                            onClick={() =>
-                                isLoggedIn
-                                    ? document.getElementById(`file-upload-location-${location.id}`)?.click()
-                                    : toast.warning("You must be logged in to upload images.")
-                            }
-                        >
-                            <FontAwesomeIcon icon={faUpload} /> Add photo
-                        </button>
-                        <details className="plant-water-earlier">
-                            <summary>Add a harvest time</summary>
-                            <div className="season-event-input-container">
-                                <label className="plant-water-time">
-                                    <span>Harvest at</span>
-                                    <input
-                                        type="datetime-local"
-                                        value={seasonEventDateTime}
-                                        onChange={(event) => setSeasonEventDateTime(event.target.value)}
-                                    />
-                                </label>
-                                <button type="button" className="plant-action season-event-btn" onClick={addSeasonEvent}>
-                                    <FontAwesomeIcon icon={faSeedling} /> Save harvest time
-                                </button>
-                            </div>
-                        </details>
-                        <div className="plant-actions-secondary location-actions-secondary">
-                            {identificationEnabled && (
-                                <button
-                                    type="button"
-                                    className="plant-action identify-location-btn-bottom"
-                                    onClick={() =>
-                                        isLoggedIn
-                                            ? handleIdentifyFromLatestImage()
-                                            : toast.warning("You must be logged in to identify locations.")
-                                    }
-                                    disabled={identifying}
-                                >
-                                    <FontAwesomeIcon icon={faFingerprint} /> {identifying ? "Identifying…" : "Identify crop"}
-                                </button>
+                    {!isLoggedIn ? (
+                        <LoginHint to="add photos, harvest times, notes or tags" />
+                    ) : (
+                        <div className="plant-actions location-actions">
+                            {isLoggedIn && (
+                                <input
+                                    type="file"
+                                    onClick={(e) => (e.currentTarget.value = "")}
+                                    id={`file-upload-location-${location.id}`}
+                                    className="file-input"
+                                    accept="image/*"
+                                    onChange={handleUploadImage}
+                                />
                             )}
-                            <div className="plant-more" ref={moreRef}>
-                                <button
-                                    type="button"
-                                    className="plant-action"
-                                    aria-haspopup="menu"
-                                    aria-expanded={moreOpen}
-                                    onClick={() => setMoreOpen((open) => !open)}
-                                >
-                                    More <FontAwesomeIcon icon={faChevronDown} />
-                                </button>
-                                {moreOpen && (
-                                    <div className="plant-more-menu" role="menu">
-                                        {llmProvider && (
+                            <button
+                                type="button"
+                                className="plant-action-primary location-action-primary file-input-location-btn"
+                                onClick={() =>
+                                    isLoggedIn
+                                        ? document.getElementById(`file-upload-location-${location.id}`)?.click()
+                                        : toast.warning("You must be logged in to upload images.")
+                                }
+                            >
+                                <FontAwesomeIcon icon={faUpload} /> Add photo
+                            </button>
+                            <details className="plant-water-earlier">
+                                <summary>Add a harvest time</summary>
+                                <div className="season-event-input-container">
+                                    <label className="plant-water-time">
+                                        <span>Harvest at</span>
+                                        <input
+                                            type="datetime-local"
+                                            value={seasonEventDateTime}
+                                            onChange={(event) => setSeasonEventDateTime(event.target.value)}
+                                        />
+                                    </label>
+                                    <button
+                                        type="button"
+                                        className="plant-action season-event-btn"
+                                        onClick={addSeasonEvent}
+                                    >
+                                        <FontAwesomeIcon icon={faSeedling} /> Save harvest time
+                                    </button>
+                                </div>
+                            </details>
+                            <div className="plant-actions-secondary location-actions-secondary">
+                                {identificationEnabled && (
+                                    <button
+                                        type="button"
+                                        className="plant-action identify-location-btn-bottom"
+                                        onClick={() =>
+                                            isLoggedIn
+                                                ? handleIdentifyFromLatestImage()
+                                                : toast.warning("You must be logged in to identify locations.")
+                                        }
+                                        disabled={identifying}
+                                    >
+                                        <FontAwesomeIcon icon={faFingerprint} />{" "}
+                                        {identifying ? "Identifying…" : "Identify crop"}
+                                    </button>
+                                )}
+                                <div className="plant-more" ref={moreRef}>
+                                    <button
+                                        type="button"
+                                        className="plant-action"
+                                        aria-haspopup="menu"
+                                        aria-expanded={moreOpen}
+                                        onClick={() => setMoreOpen((open) => !open)}
+                                    >
+                                        More <FontAwesomeIcon icon={faChevronDown} />
+                                    </button>
+                                    {moreOpen && (
+                                        <div className="plant-more-menu" role="menu">
+                                            {llmProvider && (
+                                                <button
+                                                    type="button"
+                                                    role="menuitem"
+                                                    className="generate-location-description-btn"
+                                                    disabled={generatingDescription}
+                                                    onClick={() => {
+                                                        setMoreOpen(false);
+                                                        if (isLoggedIn) handleGenerateLocationDescription();
+                                                        else
+                                                            toast.warning(
+                                                                "You must be logged in to generate an AI description.",
+                                                            );
+                                                    }}
+                                                >
+                                                    <FontAwesomeIcon icon={faWandMagicSparkles} />{" "}
+                                                    {generatingDescription ? "Writing…" : "Write description with AI"}
+                                                </button>
+                                            )}
+                                            <div role="separator" className="plant-more-separator" />
                                             <button
                                                 type="button"
                                                 role="menuitem"
-                                                className="generate-location-description-btn"
-                                                disabled={generatingDescription}
+                                                className="delete-location-btn-bottom plant-more-danger"
                                                 onClick={() => {
                                                     setMoreOpen(false);
-                                                    if (isLoggedIn) handleGenerateLocationDescription();
-                                                    else toast.warning("You must be logged in to generate an AI description.");
+                                                    if (isLoggedIn) setDeleteModalOpen(true);
+                                                    else toast.warning("You must be logged in to delete locations.");
                                                 }}
                                             >
-                                                <FontAwesomeIcon icon={faWandMagicSparkles} />{" "}
-                                                {generatingDescription ? "Writing…" : "Write description with AI"}
+                                                <FontAwesomeIcon icon={faTrash} /> Delete location
                                             </button>
-                                        )}
-                                        <div role="separator" className="plant-more-separator" />
-                                        <button
-                                            type="button"
-                                            role="menuitem"
-                                            className="archive-location-btn"
-                                            onClick={() => {
-                                                setMoreOpen(false);
-                                                if (isLoggedIn) toast.info("Archive for locations is not wired to backend yet.");
-                                                else toast.warning("You must be logged in to archive locations.");
-                                            }}
-                                        >
-                                            <FontAwesomeIcon icon={faBoxArchive} /> Archive location
-                                        </button>
-                                        <button
-                                            type="button"
-                                            role="menuitem"
-                                            className="delete-location-btn-bottom plant-more-danger"
-                                            onClick={() => {
-                                                setMoreOpen(false);
-                                                if (isLoggedIn) setDeleteModalOpen(true);
-                                                else toast.warning("You must be logged in to delete locations.");
-                                            }}
-                                        >
-                                            <FontAwesomeIcon icon={faTrash} /> Delete location
-                                        </button>
-                                    </div>
-                                )}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
 
                     <LocationTimelineImages
                         locationId={location.id}
@@ -1120,62 +1122,68 @@ export default function LocationDetails() {
                                 </span>
                             );
                         })}
-                        <div className="location-tag-input-wrapper">
-                            <input
-                                type="text"
-                                className="location-tag-input"
-                                placeholder="Add tag..."
-                                value={newTag}
-                                onChange={(event) => handleTagInputChange(event.target.value)}
-                                onKeyDown={(event) => {
-                                    if (event.key === "Enter") {
-                                        addCustomTag();
-                                    }
-                                }}
-                                onBlur={() => {
-                                    setTimeout(() => setShowTagDropdown(false), 120);
-                                }}
-                            />
-                            {showTagDropdown && filteredTags.length > 0 && (
-                                <div className="location-tag-dropdown">
-                                    {filteredTags.map((tag) => {
-                                        const isTagUsed = allTags.some(
-                                            (existingTag) =>
-                                                existingTag.replace(/^#/, "").toLowerCase() === tag.toLowerCase(),
-                                        );
+                        {isLoggedIn && (
+                            <div className="location-tag-input-wrapper">
+                                <input
+                                    type="text"
+                                    className="location-tag-input"
+                                    placeholder="Add tag..."
+                                    value={newTag}
+                                    onChange={(event) => handleTagInputChange(event.target.value)}
+                                    onKeyDown={(event) => {
+                                        if (event.key === "Enter") {
+                                            addCustomTag();
+                                        }
+                                    }}
+                                    onBlur={() => {
+                                        setTimeout(() => setShowTagDropdown(false), 120);
+                                    }}
+                                />
+                                {showTagDropdown && filteredTags.length > 0 && (
+                                    <div className="location-tag-dropdown">
+                                        {filteredTags.map((tag) => {
+                                            const isTagUsed = allTags.some(
+                                                (existingTag) =>
+                                                    existingTag.replace(/^#/, "").toLowerCase() === tag.toLowerCase(),
+                                            );
 
-                                        return (
-                                            <div
-                                                key={tag}
-                                                className={`location-tag-dropdown-item${isTagUsed ? " disabled" : ""}`}
-                                            >
-                                                <span onMouseDown={() => handleTagSuggestionClick(tag)}>#{tag}</span>
-                                                {isLoggedIn && (
-                                                    <FontAwesomeIcon
-                                                        icon={faTrash}
-                                                        className={`location-tag-delete-icon ${isTagUsed ? "disabled" : ""}`}
-                                                        onMouseDown={(event) => {
-                                                            event.stopPropagation();
-                                                            if (isTagUsed) {
-                                                                toast.warning(
-                                                                    `"${tag}" is used on this location and cannot be deleted.`,
-                                                                );
-                                                                setNewTag("");
-                                                                return;
+                                            return (
+                                                <div
+                                                    key={tag}
+                                                    className={`location-tag-dropdown-item${isTagUsed ? " disabled" : ""}`}
+                                                >
+                                                    <span onMouseDown={() => handleTagSuggestionClick(tag)}>
+                                                        #{tag}
+                                                    </span>
+                                                    {isLoggedIn && (
+                                                        <FontAwesomeIcon
+                                                            icon={faTrash}
+                                                            className={`location-tag-delete-icon ${isTagUsed ? "disabled" : ""}`}
+                                                            onMouseDown={(event) => {
+                                                                event.stopPropagation();
+                                                                if (isTagUsed) {
+                                                                    toast.warning(
+                                                                        `"${tag}" is used on this location and cannot be deleted.`,
+                                                                    );
+                                                                    setNewTag("");
+                                                                    return;
+                                                                }
+                                                                handleDeleteKnownTag(tag);
+                                                            }}
+                                                            title={
+                                                                isTagUsed
+                                                                    ? "Tag is in use on this location"
+                                                                    : "Delete tag"
                                                             }
-                                                            handleDeleteKnownTag(tag);
-                                                        }}
-                                                        title={
-                                                            isTagUsed ? "Tag is in use on this location" : "Delete tag"
-                                                        }
-                                                    />
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
+                                                        />
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div
@@ -1212,9 +1220,11 @@ export default function LocationDetails() {
                     <div className="location-activity-log-container">
                         <div className="activity-log-header">
                             <h3>Activity feed</h3>
-                            <button className="notes-btn" onClick={handleOpenNotesModal} title="Manage Notes">
-                                <FontAwesomeIcon icon={faStickyNote} />
-                            </button>
+                            {isLoggedIn && (
+                                <button className="notes-btn" onClick={handleOpenNotesModal} title="Add a note">
+                                    <FontAwesomeIcon icon={faStickyNote} />
+                                </button>
+                            )}
                         </div>
                         <div className="location-activity-log-list">
                             {activityEvents.length === 0 ? (
