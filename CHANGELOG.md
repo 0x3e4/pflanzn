@@ -59,6 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Weather zones are no longer visible to share-link viewers.
 - Replaced python-jose with PyJWT (CVE-2024-33663, CVE-2026-85394); this also drops ecdsa (CVE-2024-23342, CVE-2026-33936).
 - Bumped certifi to 2026.10.23 (GHSA-6q48-6c7w-9gw2) and vitest to 4.1.12 (@vitest/mocker).
+- Frontend build and test dependencies: undici 7.30.1, zod 4.6.7, fast-uri 3.1.9 and serialize-javascript 7.1.4 (pnpm overrides). None of them ship in the image.
 
 ### Fixed
 - The plant page's photo was forced square and stretched, with mismatched corners under its date caption (a card style leaked onto it).
