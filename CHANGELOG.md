@@ -17,10 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Home: the collection figures sit in one row under the plants that need water, so a short list leaves no hole.
 - Plant cards show a long name on two lines before cutting it off; tall plant photos are cropped to a sensible height on the plant page.
 - Phone: the tag filter on the plants list scrolls as one row.
+- Plant page: every care advice sits in the Care advice block, the newest open and the earlier ones under "Earlier advice" with their dates, instead of scattered through the activity feed.
 - Fonts (Alegreya, Inter) are bundled with the app instead of loaded from Google Fonts, so they also work offline.
 - New frontend dependency releases are accepted after 7 days instead of 14 (`minimumReleaseAge` in `frontend/pnpm-workspace.yaml`).
 
 ### Fixed
+- "Show older" in a plant's activity feed loads older entries from the server; before, only the newest 20 were ever reachable.
 - A one-line plant description no longer leaves a large empty box under it.
 - Date and time fields use the app's font instead of the browser's.
 - The icon-only "Add a note" buttons have an accessible name.

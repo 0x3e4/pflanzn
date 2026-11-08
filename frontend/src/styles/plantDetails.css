@@ -1029,7 +1029,8 @@ body.modal-open {
 }
 
 .description-generate,
-.plant-feed-more {
+.plant-feed-more,
+.plant-earlier-advice-toggle {
     margin-top: 12px;
     min-height: 36px;
     padding: 0 16px;
@@ -1043,6 +1044,38 @@ body.modal-open {
 
 .plant-latest-advice {
     margin-top: 2rem;
+}
+
+.plant-feed-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.plant-earlier-advice-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.plant-earlier-advice-list {
+    list-style: none;
+    margin: 16px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.plant-earlier-advice-list > li {
+    padding-top: 16px;
+    border-top: 1px solid var(--card-border);
+}
+
+.plant-earlier-advice-date {
+    margin: 0 0 8px;
+    font-size: 0.9rem;
+    color: var(--muted-text-color);
 }
 
 .plant-latest-advice-head {

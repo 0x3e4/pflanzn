@@ -48,6 +48,7 @@ import {
     faLocationDot,
     faArrowUpRightFromSquare,
     faChevronDown,
+    faChevronUp,
 } from "@fortawesome/free-solid-svg-icons";
 import EditableDiv from "../components/EditableDiv";
 import "../styles/plantDetails.css";
@@ -69,6 +70,9 @@ type ActionLoadingState = {
     message: string;
     details?: string[];
 } | null;
+
+// Activities per request (the API allows up to 50).
+const ACTIVITY_PAGE = 20;
 
 export default function PlantDetails() {
     const { isLoggedIn } = useAuth();
@@ -125,6 +129,10 @@ export default function PlantDetails() {
     const [moreOpen, setMoreOpen] = useState(false);
     const moreRef = useRef<HTMLDivElement>(null);
     const [feedExpanded, setFeedExpanded] = useState(false);
+    // The feed loads a page at a time; a full page means there may be more behind it.
+    const [hasMoreActivities, setHasMoreActivities] = useState(false);
+    const [loadingMoreActivities, setLoadingMoreActivities] = useState(false);
+    const [earlierAdviceOpen, setEarlierAdviceOpen] = useState(false);
 
     // Fetch plant and activites data on load
     useEffect(() => {
@@ -539,12 +547,34 @@ export default function PlantDetails() {
 
         setLoadingActivities(true);
         try {
-            const data = await fetchPlantActivities(Number(plantId), { limit: 20 });
+            const data = await fetchPlantActivities(Number(plantId), { limit: ACTIVITY_PAGE });
             setActivities(data);
+            setHasMoreActivities(data.length === ACTIVITY_PAGE);
         } catch {
             toast.error("Failed to load activity log.");
         } finally {
             setLoadingActivities(false);
+        }
+    };
+
+    const loadMoreActivities = async () => {
+        if (!plantId) return;
+
+        setLoadingMoreActivities(true);
+        try {
+            const data = await fetchPlantActivities(Number(plantId), {
+                limit: ACTIVITY_PAGE,
+                offset: activities.length,
+            });
+            setActivities((current) => {
+                const seen = new Set(current.map((activity) => activity.id));
+                return [...current, ...data.filter((activity) => !seen.has(activity.id))];
+            });
+            setHasMoreActivities(data.length === ACTIVITY_PAGE);
+        } catch {
+            toast.error("Failed to load older activities.");
+        } finally {
+            setLoadingMoreActivities(false);
         }
     };
 
@@ -715,11 +745,8 @@ export default function PlantDetails() {
     }, [moreOpen]);
 
     const FEED_PREVIEW = 6;
-    // The newest care advice has its own block above the feed; it is not repeated in it.
-    const latestAdviceId = [...(plant?.care_advice || [])].sort(
-        (a, b) => new Date(b.generated_at).getTime() - new Date(a.generated_at).getTime(),
-    )[0]?.id;
-    const feedActivities = activities.filter((activity) => activity.id !== `care_${latestAdviceId}`);
+    // Every care advice lives in the Care advice block above the feed (the newest, then the earlier ones), not in it.
+    const feedActivities = activities.filter((activity) => activity.activity_type !== "care_advice");
 
     // A render function, not a component: defined in here it would remount on every render.
     const renderActivityFeed = () => (
@@ -727,7 +754,12 @@ export default function PlantDetails() {
             <div className="activity-log-header">
                 <h3>Activity feed</h3>
                 {isLoggedIn && (
-                    <button className="notes-btn" onClick={handleOpenNotesModal} title="Add a note" aria-label="Add a note">
+                    <button
+                        className="notes-btn"
+                        onClick={handleOpenNotesModal}
+                        title="Add a note"
+                        aria-label="Add a note"
+                    >
                         <FontAwesomeIcon icon={faStickyNote} />
                     </button>
                 )}
@@ -750,7 +782,7 @@ export default function PlantDetails() {
                             </div>
                         ))}
                     </>
-                ) : activities.length === 0 ? (
+                ) : feedActivities.length === 0 ? (
                     <div className="activity-log-empty">No activities yet</div>
                 ) : (
                     (feedExpanded ? feedActivities : feedActivities.slice(0, FEED_PREVIEW)).map((activity) => (
@@ -794,10 +826,31 @@ export default function PlantDetails() {
                     ))
                 )}
             </div>
-            {!loadingActivities && feedActivities.length > FEED_PREVIEW && (
-                <button type="button" className="plant-feed-more" onClick={() => setFeedExpanded((open) => !open)}>
-                    {feedExpanded ? "Show fewer" : "Show older"}
-                </button>
+            {!loadingActivities && (feedActivities.length > FEED_PREVIEW || hasMoreActivities) && (
+                <div className="plant-feed-actions">
+                    {(!feedExpanded || hasMoreActivities) && (
+                        <button
+                            type="button"
+                            className="plant-feed-more"
+                            disabled={loadingMoreActivities}
+                            onClick={() => {
+                                // First reveal what is loaded; once open, fetch the next page.
+                                if (!feedExpanded && feedActivities.length > FEED_PREVIEW) setFeedExpanded(true);
+                                else {
+                                    setFeedExpanded(true);
+                                    loadMoreActivities();
+                                }
+                            }}
+                        >
+                            {loadingMoreActivities ? "Loading…" : "Show older"}
+                        </button>
+                    )}
+                    {feedExpanded && (
+                        <button type="button" className="plant-feed-more" onClick={() => setFeedExpanded(false)}>
+                            Show fewer
+                        </button>
+                    )}
+                </div>
             )}
         </div>
     );
@@ -1399,36 +1452,72 @@ export default function PlantDetails() {
                     />
 
                     {(() => {
-                        const latest = [...(plant.care_advice || [])].sort(
+                        const [latest, ...earlier] = [...(plant.care_advice || [])].sort(
                             (a, b) => new Date(b.generated_at).getTime() - new Date(a.generated_at).getTime(),
-                        )[0];
+                        );
+                        const when = (iso: string) =>
+                            new Date(iso).toLocaleString(locale, {
+                                timeZone: timezone,
+                                year: new Date(iso).getFullYear() === new Date().getFullYear() ? undefined : "numeric",
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            });
+                        const toggle = (key: string) =>
+                            setExpandedAdvice((open) => {
+                                const next = new Set(open);
+                                if (next.has(key)) next.delete(key);
+                                else next.add(key);
+                                return next;
+                            });
                         return (
                             latest && (
                                 <section className="plant-latest-advice" aria-labelledby="latest-advice-heading">
                                     <div className="plant-latest-advice-head">
                                         <h3 id="latest-advice-heading">Care advice</h3>
-                                        <span>
-                                            {new Date(latest.generated_at).toLocaleString(locale, {
-                                                timeZone: timezone,
-                                                month: "short",
-                                                day: "numeric",
-                                                hour: "2-digit",
-                                                minute: "2-digit",
-                                            })}
-                                        </span>
+                                        <span>{when(latest.generated_at)}</span>
                                     </div>
                                     <CareAdviceText
                                         text={latest.advice_text}
                                         expanded={expandedAdvice.has("latest")}
-                                        onToggle={() =>
-                                            setExpandedAdvice((open) => {
-                                                const next = new Set(open);
-                                                if (next.has("latest")) next.delete("latest");
-                                                else next.add("latest");
-                                                return next;
-                                            })
-                                        }
+                                        onToggle={() => toggle("latest")}
                                     />
+                                    {earlier.length > 0 && (
+                                        <div className="plant-earlier-advice">
+                                            <button
+                                                type="button"
+                                                className="plant-earlier-advice-toggle"
+                                                aria-expanded={earlierAdviceOpen}
+                                                aria-controls="plant-earlier-advice-list"
+                                                onClick={() => setEarlierAdviceOpen((open) => !open)}
+                                            >
+                                                <FontAwesomeIcon
+                                                    icon={earlierAdviceOpen ? faChevronUp : faChevronDown}
+                                                />
+                                                Earlier advice ({earlier.length})
+                                            </button>
+                                            {earlierAdviceOpen && (
+                                                <ol
+                                                    id="plant-earlier-advice-list"
+                                                    className="plant-earlier-advice-list"
+                                                >
+                                                    {earlier.map((advice) => (
+                                                        <li key={advice.id}>
+                                                            <p className="plant-earlier-advice-date">
+                                                                {when(advice.generated_at)}
+                                                            </p>
+                                                            <CareAdviceText
+                                                                text={advice.advice_text}
+                                                                expanded={expandedAdvice.has(`advice_${advice.id}`)}
+                                                                onToggle={() => toggle(`advice_${advice.id}`)}
+                                                            />
+                                                        </li>
+                                                    ))}
+                                                </ol>
+                                            )}
+                                        </div>
+                                    )}
                                 </section>
                             )
                         );
