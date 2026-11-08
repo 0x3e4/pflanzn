@@ -237,6 +237,25 @@ class TestSecretKeyCheck:
             with pytest.raises(RuntimeError):
                 check_secret_key()
 
+    @pytest.mark.parametrize("mode", ["locla", "no ", " local", "oidc2", ""])
+    def test_unknown_auth_mode_refused(self, mode):
+        """Regression: an unknown AUTH_MODE skipped the SECRET_KEY check while password
+        login still worked, so tokens signed with the example key were accepted."""
+        from app.core.config import settings
+        from app.main import check_secret_key
+
+        with patch.object(settings, "AUTH_MODE", mode), patch.object(settings, "SECRET_KEY", "change_me"):
+            with pytest.raises(RuntimeError, match="AUTH_MODE"):
+                check_secret_key()
+
+    @pytest.mark.parametrize("mode", ["NO", "Local", "OIDC"])
+    def test_auth_mode_case_does_not_matter(self, mode):
+        from app.core.config import settings
+        from app.main import check_secret_key
+
+        with patch.object(settings, "AUTH_MODE", mode), patch.object(settings, "SECRET_KEY", "k" * 48):
+            check_secret_key()
+
     def test_open_mode_needs_no_key(self):
         from app.core.config import settings
         from app.main import check_secret_key

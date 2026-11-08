@@ -39,8 +39,15 @@ logger = logging.getLogger(__name__)
 
 def check_secret_key() -> None:
     """Signed session tokens are only as strong as SECRET_KEY: refuse the example value,
-    warn about short ones. AUTH_MODE=no signs nothing."""
-    if settings.AUTH_MODE.lower() not in ("local", "oidc"):
+    warn about short ones. AUTH_MODE=no signs nothing.
+
+    An AUTH_MODE that is none of the three is refused first: a typo like "locla" used to
+    skip this check and the session binding while password login kept working, so a
+    forged token signed with the example key was accepted."""
+    mode = (settings.AUTH_MODE or "").lower()
+    if mode not in ("no", "local", "oidc"):
+        raise RuntimeError(f"AUTH_MODE must be no, local or oidc, not {settings.AUTH_MODE!r}")
+    if mode not in ("local", "oidc"):
         return
     secret = settings.SECRET_KEY or ""
     if secret.strip().lower() in ("", "change_me", "changeme", "secret"):
