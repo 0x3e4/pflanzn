@@ -98,7 +98,8 @@ const WateringChart = ({ data }: { data: DailyWateringData[] }) => {
                     const ctx = canvasRef.current.getContext("2d");
                     if (ctx) {
                         const computedStyle = getComputedStyle(document.documentElement);
-                        const primaryColor = computedStyle.getPropertyValue("--primary-color").trim() || "#4CAF50";
+                        // Watering is blue everywhere, the chart of waterings too.
+                        const waterColor = computedStyle.getPropertyValue("--octal-color").trim() || "#4c61af";
                         const backgroundColor =
                             computedStyle.getPropertyValue("--background-color").trim() || "#2c2c2c";
                         const textColor = computedStyle.getPropertyValue("--text-color").trim() || "#ffffff";
@@ -112,17 +113,17 @@ const WateringChart = ({ data }: { data: DailyWateringData[] }) => {
                                     {
                                         label: "Daily Waterings",
                                         data: data.map((item) => item.waterings),
-                                        borderColor: primaryColor,
-                                        backgroundColor: `${primaryColor}20`,
+                                        borderColor: waterColor,
+                                        backgroundColor: `${waterColor}20`,
                                         borderWidth: 2,
                                         fill: true,
                                         tension: 0.2,
-                                        pointBackgroundColor: primaryColor,
+                                        pointBackgroundColor: waterColor,
                                         pointBorderColor: backgroundColor,
                                         pointBorderWidth: 2,
                                         pointRadius: 4,
                                         pointHoverRadius: 6,
-                                        pointHoverBackgroundColor: primaryColor,
+                                        pointHoverBackgroundColor: waterColor,
                                         pointHoverBorderColor: textColor,
                                     },
                                 ],

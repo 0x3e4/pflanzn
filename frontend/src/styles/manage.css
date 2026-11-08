@@ -87,7 +87,15 @@
 }
 
 .sidebar-about {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     font-size: 0.875rem;
+}
+
+.sidebar-about-links {
+    display: flex;
+    gap: 16px;
 }
 
 .sidebar-about a {

@@ -819,7 +819,7 @@ export default function LocationDetails() {
     if (loading) {
         return (
             <div className="container location-details-page">
-                <div className="location-details-empty">Loading location...</div>
+                <div className="location-details-empty">Loading location…</div>
             </div>
         );
     }

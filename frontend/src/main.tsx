@@ -1,4 +1,6 @@
 import { createRoot } from "react-dom/client";
+import "@fontsource-variable/inter";
+import "@fontsource-variable/alegreya";
 import "./global.css";
 import App from "./App.tsx";
 import { SkeletonTheme } from "react-loading-skeleton";

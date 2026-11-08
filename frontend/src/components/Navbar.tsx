@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import "../styles/navbar.css";
 import { useAuth } from "../context/AuthContext";
 import { useConfig } from "../context/ConfigContext";
@@ -155,30 +155,30 @@ export default function Navbar() {
                 </button>
 
                 <div className={`nav-links ${menuOpen ? "active" : ""}`}>
-                    <Link to="/plants" onClick={() => setMenuOpen(false)}>
+                    <NavLink to="/plants" onClick={() => setMenuOpen(false)}>
                         Plants
-                    </Link>
+                    </NavLink>
                     {showLocations && (
-                        <Link to="/locations" onClick={() => setMenuOpen(false)}>
+                        <NavLink to="/locations" onClick={() => setMenuOpen(false)}>
                             Locations
-                        </Link>
+                        </NavLink>
                     )}
 
                     {!loading &&
                         (authMode === "no" ||
                         (authMode === "oidc" && isLoggedIn) ||
                         (authMode === "local" && isLoggedIn) ? (
-                            <Link to="/manage" onClick={() => setMenuOpen(false)}>
+                            <NavLink to="/manage" onClick={() => setMenuOpen(false)}>
                                 Manage
-                            </Link>
+                            </NavLink>
                         ) : authMode !== "no" ? (
                             <>
-                                <Link to="/about" onClick={() => setMenuOpen(false)}>
+                                <NavLink to="/about" onClick={() => setMenuOpen(false)}>
                                     About
-                                </Link>
-                                <Link to="/login" onClick={() => setMenuOpen(false)}>
+                                </NavLink>
+                                <NavLink to="/login" onClick={() => setMenuOpen(false)}>
                                     Login
-                                </Link>
+                                </NavLink>
                             </>
                         ) : null)}
                 </div>

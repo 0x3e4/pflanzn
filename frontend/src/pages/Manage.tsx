@@ -331,12 +331,12 @@ const Manage: React.FC = () => {
                         Support
                     </li>
                     <li className="sidebar-info-item sidebar-about">
-                        <Link to="/about">About</Link>
-                        <span aria-hidden="true"> · </span>
-                        <a href="https://github.com/0x3e4/pflanzn" target="_blank" rel="noreferrer">
-                            GitHub
-                        </a>
-                        <span aria-hidden="true"> · </span>
+                        <span className="sidebar-about-links">
+                            <Link to="/about">About</Link>
+                            <a href="https://github.com/0x3e4/pflanzn" target="_blank" rel="noreferrer">
+                                GitHub
+                            </a>
+                        </span>
                         <span>Version {APP_VERSION}</span>
                     </li>
 

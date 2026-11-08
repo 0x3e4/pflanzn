@@ -33,7 +33,7 @@
 .home-date {
     margin: 0 0 4px;
     font-size: 0.95rem;
-    color: var(--muted-text-color);
+    color: var(--accent-cream);
 }
 
 .home-today h1 {

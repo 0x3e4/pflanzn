@@ -1,6 +1,8 @@
-/* Hallmark · checked: 2026-11-04 · genre: editorial (inferred) · shape: app screen
- * floor: 0 FAIL (was 296) · reflex: 248 off-scale spacing (24b) left open, 1 prose measure · recomposed: home, plant page, plants list
- * built: the project · redesign: full · v2.0.0 */
+/* Hallmark · checked: 2026-11-08 · genre: editorial (inferred) · shape: app screen · theme: custom, botanical warm (by request) · modes: light+dark
+ * floor: 0 FAIL (was 1) · reflex: off-scale 10px spacing (24b) left open by the owner · fonts: Alegreya (display), Inter (body, the project's own face, now self-hosted)
+ * built: the project · redesign: restyle (keep the layout) · v2.0.0 */
+/* Hallmark · critique: grounds tinted green-black / warm cream instead of neutral grey, one calligraphic book serif on every heading and the wordmark, a few drawn leaves across the top of each page; watering stays blue and the status colours stay */
+/* Hallmark · waive 80 · one line drawing of leaves inked in --leaf-ink at --texture-opacity (0.05 dark, 0.07 light), masked to fade out within 300px, pointer-events none, never animated · the owner asked for a subtle leaf texture at the top of the pages */
 /* Hallmark · dropped /plants?species=, onerror={handleimageload}, onload={handleimageload} · the user approved a home built around what needs water today: Species Snapshot and the autoplaying carousel (no pause control) and its preloader went */
 /* Hallmark · reworded "Top 5 Species" to "Top species", "Daily Waterings" to "Daily waterings", "Here you can monitor plant statistics." to "" · 19 names the filler line; the species list became a table beside the chart */
 /* Hallmark · dropped here you can monitor plant statistics., no watering data available or still loading... · filler and a message that said two things at once; the empty chart now says what is missing */
@@ -10,7 +12,6 @@
 /* Hallmark · reworded "Recently Captured" to "Recently photographed" · the section now shows each plant's latest photo by date instead of a random carousel */
 /* Hallmark · dropped species snapshot, 2026, 05:02, 08:03 · Species Snapshot went with the user's approval; the long last-watered dates on the cards became the short form (yesterday, 3 days ago) */
 /* Hallmark · dropped onclick={handlewaterplant}, onclick={handlefertilizeplant}, onclick={handlegeneratedescription}, onclick={handleopencareadvicemodal}, setisarchiving(!plant.is_archived), onclick={() => document.getelementbyid(`file-upload-${plant.id}`)?.click()}, generate a description with ai., logged in to delete plants.")}, logged in to fertilize plants.")}, logged in to identify images.")} · the plant page's bottom bar moved into the actions block beside the name; every action calls the same function with the same login warning, through one handler instead of a logged-in and a guest copy */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap");
 
 /* Root Variables */
 :root {
@@ -18,36 +19,44 @@
     --secondary-color: #2e6a31;
     --tertiary-color: #af4c4c;
     --quaternary-color: #6a2e2e;
-    --quinary-color: #a7a7a7;
-    --senary-color: #535353;
-    --septimal-color: #c8c8c8;
+    --quinary-color: #a9b3a2;
+    --senary-color: #3e4b41;
+    --septimal-color: #d2d6c6;
     --octal-color: #4c61af;
     --nonal-color: #2e456a;
     --decimal-color: #794caf;
     --undecimal-color: #642e6a;
     --duodecimal-color: #af4ca7;
     --tridecimal-color: #6a2e64;
-    --background-color: #2c2c2c;
-    --secondary-background-color: #333;
-    --text-color: #ffffff;
-    --muted-text-color: #b0b0b0;
-    --border-color: #ccc;
-    --card-background: rgba(0, 0, 0, 0.16);
-    --card-border: rgba(255, 255, 255, 0.12);
-    --overlay-background: rgba(22, 22, 22, 0.82);
-    --input-background: #222;
-    --input-border: #555;
+    --background-color: #121a15;
+    --secondary-background-color: #19231c;
+    --text-color: #f2ead8;
+    --muted-text-color: #aab3a2;
+    --border-color: #6f7d6c;
+    --card-background: rgb(242 234 216 / 0.055);
+    --card-border: rgb(242 234 216 / 0.13);
+    --overlay-background: rgb(10 15 12 / 0.84);
+    --input-background: #0f1612;
+    --input-border: #46544a;
 
-    --font-body: "Inter", system-ui, sans-serif;
-    --focus-ring: #f4f7f4;
+    --font-body: "Inter Variable", "Inter", system-ui, sans-serif;
+    /* Headings: a calligraphic book serif, the botanical half of the pair. */
+    --font-display: "Alegreya Variable", "Alegreya", Georgia, serif;
+    /* The leaf texture at the top of each page: one drawing, inked in a token, inside the texture budget. */
+    --leaf-ink: var(--text-color);
+    /* Warm cream: the active nav link and the date line. Never on status or watering. */
+    --accent-cream: #e8d3a0;
+    --texture-opacity: 0.05;
+    --leaf-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='300' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='translate%2860 70%29 rotate%28-28%29 scale%281.0%29'%3E%3Cpath d='M0-44C24-28 24 28 0 44C-24 28-24-28 0-44Z'/%3E%3Cpath d='M0-40V40M0-18l12-9M0-18l-12-9M0 4l14-9M0 4l-14-9M0 24l11-8M0 24l-11-8'/%3E%3C/g%3E%3Cg transform='translate%28205 40%29 rotate%2852%29 scale%280.55%29'%3E%3Cpath d='M0-46C12-26 12 26 0 46C-12 26-12-26 0-46Z'/%3E%3Cpath d='M0-42V42'/%3E%3C/g%3E%3Cg transform='translate%28300 118%29 rotate%2818%29 scale%280.85%29'%3E%3Cpath d='M0-44C24-28 24 28 0 44C-24 28-24-28 0-44Z'/%3E%3Cpath d='M0-40V40M0-18l12-9M0-18l-12-9M0 4l14-9M0 4l-14-9M0 24l11-8M0 24l-11-8'/%3E%3C/g%3E%3Cg transform='translate%28430 52%29 rotate%28-70%29 scale%280.6%29'%3E%3Cpath d='M0-44C24-28 24 28 0 44C-24 28-24-28 0-44Z'/%3E%3Cpath d='M0-40V40M0-18l12-9M0-18l-12-9M0 4l14-9M0 4l-14-9M0 24l11-8M0 24l-11-8'/%3E%3C/g%3E%3Cg transform='translate%28520 150%29 rotate%2830%29 scale%281.05%29'%3E%3Cpath d='M0-46C12-26 12 26 0 46C-12 26-12-26 0-46Z'/%3E%3Cpath d='M0-42V42'/%3E%3C/g%3E%3Cg transform='translate%28140 205%29 rotate%2874%29 scale%280.7%29'%3E%3Cpath d='M0-46C12-26 12 26 0 46C-12 26-12-26 0-46Z'/%3E%3Cpath d='M0-42V42'/%3E%3C/g%3E%3Cg transform='translate%28395 230%29 rotate%28-40%29 scale%280.5%29'%3E%3Cpath d='M0-44C24-28 24 28 0 44C-24 28-24-28 0-44Z'/%3E%3Cpath d='M0-40V40M0-18l12-9M0-18l-12-9M0 4l14-9M0 4l-14-9M0 24l11-8M0 24l-11-8'/%3E%3C/g%3E%3Cpath d='M240 300C250 250 268 215 300 190'/%3E%3Cpath d='M560 20C548 70 530 100 520 120'/%3E%3C/svg%3E");
+    --focus-ring: #f6efde;
     /* Ink on coloured fills (blue, purple, red); white, a breath toward the green. */
     --text-on-fill: #fbfdfb;
     /* Channels for translucent shades: rgb(var(--shadow-rgb) / 0.3). */
     --shadow-rgb: 6 12 7;
     --light-rgb: 251 253 251;
-    --pale-rgb: 200 200 200;
+    --pale-rgb: 210 214 198;
     --neutral-rgb: 128 128 128;
-    --ink-rgb: 22 22 22;
+    --ink-rgb: 16 23 18;
     /* Primary buttons: white on #4caf50 is 2.8:1, so the fill is a deeper green (5.1:1). */
     --button-primary-bg: #2e7d32;
     --button-primary-ink: #fbfdfb;
@@ -63,8 +72,8 @@
     --status-soon-ink: #241a04;
     /* Amber as text on the page surface (the fill is too light on paper). */
     --status-soon-text: #e0b24f;
-    --status-ok-bg: #3a3a3a;
-    --status-ok-ink: #c9c9c9;
+    --status-ok-bg: #26332a;
+    --status-ok-ink: #cdd3c3;
     /* Harvest and season markers on the calendar and locations. */
     --season-color: #b8892d;
     --season-color-hover: #a8780f;
@@ -80,27 +89,27 @@
     --secondary-color: #1b5e20;
     --tertiary-color: #c62828;
     --quaternary-color: #b71c1c;
-    --quinary-color: #666666;
-    --senary-color: #cccccc;
-    --septimal-color: #444444;
+    --quinary-color: #6d7768;
+    --senary-color: #d8cfba;
+    --septimal-color: #3f4a40;
     --octal-color: #3949ab;
     --nonal-color: #1a237e;
     --decimal-color: #6a1b9a;
     --undecimal-color: #4a148c;
     --duodecimal-color: #ad1457;
     --tridecimal-color: #880e4f;
-    --background-color: #fafafa;
-    --secondary-background-color: var(--text-on-fill);
-    --text-color: #212121;
-    --muted-text-color: #666666;
-    --border-color: #e0e0e0;
+    --background-color: #f3eee2;
+    --secondary-background-color: #fbf8f0;
+    --text-color: #1d2a20;
+    --muted-text-color: #5a6656;
+    --border-color: #d9cfba;
     --card-background: rgb(var(--shadow-rgb) / 0.04);
     --card-border: rgb(var(--shadow-rgb) / 0.1);
     --overlay-background: rgb(var(--light-rgb) / 0.92);
-    --input-background: #f5f5f5;
-    --input-border: #ccc;
+    --input-background: #f7f2e6;
+    --input-border: #c9bea6;
 
-    --focus-ring: #1b2a1c;
+    --focus-ring: #1d2a20;
     /* #388e3c fails 4.5:1 with both inks; the button takes a deeper green. */
     --button-primary-bg: #2e7d32;
     --button-primary-ink: #fbfdfb;
@@ -108,8 +117,12 @@
     --status-due-bg: #c62828;
     --status-soon-bg: #f0c05a;
     --status-soon-text: #8a5d00;
-    --status-ok-bg: #ececec;
-    --status-ok-ink: #444444;
+    --status-ok-bg: #e9e2d0;
+    --status-ok-ink: #3f4a40;
+    --leaf-ink: #2e5a35;
+    --accent-cream: #7d5a17;
+    --shadow-rgb: 74 60 32;
+    --texture-opacity: 0.07;
 }
 
 ::selection {
@@ -139,7 +152,11 @@ body {
 
 h1,
 h2,
-h3 {
+h3,
+h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 0;
     text-wrap: balance;
     overflow-wrap: break-word;
     min-width: 0;
@@ -283,8 +300,35 @@ button[aria-disabled="true"] {
     margin: 0 auto;
     padding: 32px;
     width: 100%;
+    position: relative;
+    isolation: isolate;
     box-shadow: 0px 0px 0px 1px color-mix(in srgb, var(--secondary-color) 30%, transparent);
     padding-bottom: 4rem;
+}
+
+/* A few drawn leaves across the top of every page, fading out before the content gets busy. */
+.container::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 300px;
+    z-index: -1;
+    pointer-events: none;
+    background-color: var(--leaf-ink);
+    opacity: var(--texture-opacity);
+    -webkit-mask-image: var(--leaf-tile), linear-gradient(to bottom, black, transparent);
+    -webkit-mask-composite: source-in;
+    mask-image: var(--leaf-tile), linear-gradient(to bottom, black, transparent);
+    mask-composite: intersect;
+    -webkit-mask-size: 600px 300px, 100% 100%;
+    mask-size: 600px 300px, 100% 100%;
+    -webkit-mask-repeat: repeat, no-repeat;
+    mask-repeat: repeat, no-repeat;
+}
+
+/* Manage: the sidebar would cover all but a few stray strokes. */
+.profile-container::before {
+    display: none;
 }
 
 .flex-center {
@@ -304,6 +348,11 @@ button[aria-disabled="true"] {
     cursor: pointer;
     font-family: var(--font-body);
     font-size: 16px;
+}
+
+/* An editable name inside a heading (plant and location pages) keeps the heading's face. */
+:is(h1, h2, h3) :is(.editable-input, .editable-input-noauth) {
+    font-family: inherit;
 }
 
 .editable-input:focus {

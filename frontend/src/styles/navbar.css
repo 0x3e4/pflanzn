@@ -27,8 +27,9 @@
 .nav-logo {
     display: flex;
     align-items: center;
-    font-size: 1.5rem;
-    font-weight: bold;
+    font-family: var(--font-display);
+    font-size: 1.65rem;
+    font-weight: 700;
     text-decoration: none;
     color: var(--text-color);
     transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out, border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
@@ -60,6 +61,13 @@
 
 .nav-links a:hover {
     color: var(--primary-color);
+}
+
+.nav-links a[aria-current="page"] {
+    color: var(--accent-cream);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 8px;
 }
 
 .nav-toggle {

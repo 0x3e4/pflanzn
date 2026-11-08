@@ -584,7 +584,7 @@ export default function Locations() {
             </div>
 
             {loading ? (
-                <div className="locations-empty">Loading locations...</div>
+                <div className="locations-empty">Loading locations…</div>
             ) : filteredLocations.length === 0 ? (
                 <div className="locations-empty">
                     {locations.length === 0

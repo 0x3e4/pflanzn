@@ -230,7 +230,7 @@ export default function WeatherPanel() {
     const wateringTotalPages = Math.min(Math.ceil(wateringTotal / 10), MAX_PAGES);
 
     if (loading) {
-        return <div className="weather-panel-empty">Loading weather settings...</div>;
+        return <div className="weather-panel-empty">Loading weather settings…</div>;
     }
 
     return (

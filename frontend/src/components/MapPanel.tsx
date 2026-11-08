@@ -40,7 +40,7 @@ export default function MapPanel() {
     }));
 
     if (loading) {
-        return <div className="map-panel-empty">Loading map...</div>;
+        return <div className="map-panel-empty">Loading map…</div>;
     }
 
     if (geoLocations.length === 0) {

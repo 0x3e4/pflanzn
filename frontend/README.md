@@ -101,6 +101,7 @@ src/
 - Functional components with hooks only (no class components)
 - State management via React Context API (no Redux)
 - CSS variables for theming (dark/light mode), 768px responsive breakpoint
+- Colours and fonts only through the tokens at the top of `src/global.css` (dark default, `[data-theme="light"]` overrides): headings use `--font-display` (Alegreya), text `--font-body` (Inter), both bundled via `@fontsource-variable/*` in `main.tsx`, no font CDN. The leaf texture at the top of each page is `.container::before` (`--leaf-tile`, `--leaf-ink`, `--texture-opacity`)
 - All modals use `useModalA11y` hook for keyboard accessibility
 - Signed-out visitors don't get write controls: render them only when `isLoggedIn` and show one `<LoginHint to="…" />` per page instead of buttons that answer "you must be logged in"
 - List pages load `fetchPlants()`, which asks for `GET /api/plants/?summary=true` (no watering/fertilizing/note/care-advice lists, `watering_count`/`fertilizing_count` instead); the plant page loads the full plant

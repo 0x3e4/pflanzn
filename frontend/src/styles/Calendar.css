@@ -2,7 +2,7 @@
     position: relative;
     margin-top: 16px;
     padding: 10px;
-    border: 1px solid var(--text-color);
+    border: 1px solid var(--card-border);
     background-color: var(--secondary-background-color);
     overflow: visible;
 }
@@ -54,7 +54,7 @@
 }
 
 .react-calendar__month-view__days__day--weekend {
-    color: var(--tertiary-color);
+    color: var(--muted-text-color);
 }
 
 .react-calendar__month-view__days__day--weekend:hover {
