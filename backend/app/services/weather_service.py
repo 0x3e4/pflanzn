@@ -29,8 +29,14 @@ def _get_openweathermap(latitude: float, longitude: float) -> dict:
         "appid": settings.OPENWEATHERMAP_API_KEY,
         "units": "metric",
     }
-    response = requests.get(url, params=params, timeout=10)
-    response.raise_for_status()
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        # The API key is in the query string and requests repeats the full URL in its
+        # errors, so re-raise without it (and without chaining the original).
+        status = getattr(getattr(exc, "response", None), "status_code", None)
+        raise RuntimeError(f"OpenWeatherMap request failed ({status or type(exc).__name__})") from None
     return response.json()
 
 

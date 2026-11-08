@@ -27,6 +27,7 @@ from app.core.security import (
 from app.database import get_db
 from app.models import User
 from app.schemas import LoginRequest
+from app.utils.errors import public_error
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -294,7 +295,7 @@ async def oidc_callback(request: Request, db: Session = Depends(get_db)):
             logger.debug(f"Userinfo endpoint response: {user_info}")
         except Exception as e:
             logger.error(f"Failed to get userinfo: {e}")
-            raise HTTPException(status_code=400, detail=f"Failed to fetch user info: {str(e)}")
+            raise HTTPException(status_code=400, detail=public_error("Failed to fetch user info", e))
 
         if not user_info:
             logger.error("No user information received from OIDC provider")

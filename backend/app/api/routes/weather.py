@@ -16,6 +16,7 @@ from app.schemas import (
     WeatherLogPaginatedResponse,
 )
 from app.services.weather_service import check_and_auto_water, get_current_weather
+from app.utils.errors import public_error
 
 logger = logging.getLogger(__name__)
 
@@ -194,7 +195,8 @@ def get_current_weather_endpoint(
             "city_name": config.city_name,
         }
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Failed to fetch weather: {str(e)}")
+        logger.warning(f"Failed to fetch weather: {e}")
+        raise HTTPException(status_code=502, detail=public_error("Failed to fetch weather", e))
 
 
 @router.get("/logs", response_model=WeatherLogPaginatedResponse)

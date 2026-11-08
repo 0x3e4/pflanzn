@@ -55,6 +55,7 @@ from app.schemas import (
 from app.services import plant_reference
 from app.services.llm_client import LLMClient
 from app.services.plantnet import PlantNetError, identify_species_via_plantnet
+from app.utils.errors import public_error
 from app.utils.time import utcnow
 from app.utils.uploads import IMAGE_VARIANTS, MAX_PHOTO_PIXELS, UploadRejected, open_upload_image
 from app.utils.uploads import generate_image_variants as _generate_image_variants
@@ -397,7 +398,8 @@ def upload_plant_image(
     except UploadRejected as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error processing image: {str(e)}")
+        logger.error(f"Error processing image: {e}")
+        raise HTTPException(status_code=400, detail=public_error("Error processing image", e))
 
     relative_path = f"plants/{base_name}"
     plant_image = PlantImage(
@@ -453,7 +455,7 @@ def identify_species(
         jpeg_path = _to_jpeg_for_plantnet(source_path, jpeg_name)
     except Exception as e:
         logger.error(f"Error processing image: {str(e)}")
-        raise HTTPException(status_code=400, detail=f"Error processing image: {str(e)}")
+        raise HTTPException(status_code=400, detail=public_error("Error processing image", e))
 
     # Send request to Pl@ntNet API
     try:
@@ -568,7 +570,7 @@ async def identify_species_from_image(
             raise HTTPException(status_code=e.status_code, detail=e.detail)
         except Exception as e:
             logger.error(f"Error processing image: {str(e)}")
-            raise HTTPException(status_code=400, detail=f"Error processing image: {str(e)}")
+            raise HTTPException(status_code=400, detail=public_error("Error processing image", e))
 
         # Send request to Pl@ntNet API
         logger.debug("Sending image to Pl@ntNet for identification...")
@@ -634,7 +636,7 @@ async def identify_species_from_image(
         raise
     except Exception as e:
         logger.error(f"Error identifying plant: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error identifying species: {str(e)}")
+        raise HTTPException(status_code=500, detail=public_error("Error identifying species", e))
 
 @router.delete("/{plant_id}/images/{image_id}")
 def delete_plant_image(plant_id: int, image_id: int, db: Session = Depends(get_db), current_user: Optional[User] = Depends(require_write_access)):
@@ -722,7 +724,7 @@ async def generate_species_description_for_plant(
     except Exception as e:
         logger.error(f"Failed to generate plant description: {e}")
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Failed to generate description: {str(e)}")
+        raise HTTPException(status_code=500, detail=public_error("Failed to generate description", e))
 
 @router.post("/{plant_id}/watering", response_model=PlantWateringResponse)
 def water_plant(
@@ -1019,7 +1021,7 @@ def get_care_helper(plant_id: int, db: Session = Depends(get_db), current_user: 
 
     except Exception as e:
         logger.error(f"Failed to generate care advice: {e}")
-        raise HTTPException(status_code=500, detail=f"Care helper failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=public_error("Care helper failed", e))
 
 @router.get("/{plant_id}/activities")
 def get_plant_activities(
@@ -1223,7 +1225,7 @@ def get_care_helper(
         logger.error(f"Error type: {type(e)}")
         import traceback
         logger.error(f"Traceback: {traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail=f"Care helper failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=public_error("Care helper failed", e))
 
 @router.get("/{plant_id}/care_advice", response_model=List[PlantCareAdviceResponse])
 def get_plant_care_advice(

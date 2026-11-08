@@ -32,6 +32,7 @@ from app.schemas import (
 )
 from app.services.llm_client import LLMClient
 from app.services.plantnet import identify_species_via_plantnet
+from app.utils.errors import public_error
 from app.utils.exif import extract_gps_coordinates
 from app.utils.uploads import MAX_PHOTO_PIXELS, UploadRejected, open_upload_image
 
@@ -257,7 +258,7 @@ def upload_location_image(
     except UploadRejected as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.detail)
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"Error processing image: {exc}")
+        raise HTTPException(status_code=400, detail=public_error("Error processing image", exc))
 
     location_image = LocationImage(
         location_id=location.id,
@@ -353,7 +354,7 @@ def generate_location_description(
         }
     except Exception as exc:
         logger.error(f"Failed to generate location description: {exc}")
-        raise HTTPException(status_code=500, detail=f"Failed to generate location description: {exc}")
+        raise HTTPException(status_code=500, detail=public_error("Failed to generate location description", exc))
 
 
 @router.post("/identify", dependencies=[Depends(require_identification)])
@@ -380,7 +381,7 @@ async def identify_location_item(
     except UploadRejected as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.detail)
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"Error processing image: {exc}")
+        raise HTTPException(status_code=400, detail=public_error("Error processing image", exc))
 
     try:
         result = identify_species_via_plantnet(

@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - With `AUTH_MODE=local` and `ADMIN_USER`/`ADMIN_PASSWORD` left empty (as in `.env.example`), the first start created an admin named "" with the password "". The backend now refuses to start until they are set, and an empty password never logs in. Check for such an account: `SELECT id FROM users WHERE username = '';`
 - `/api/oauth/authorize` redirected malformed requests (wrong `response_type`, missing PKCE) to the client's `redirect_uri` before the user decided anything. Since anyone can register a client, that was an open redirect from your domain. Those errors are shown as a 400 now; redirects happen only after Allow or Deny.
 - Plant and location photos and both identification uploads decoded images of any size up to Pillow's own limit (about 179 MP), so a small, highly compressed file could take more than a gigabyte of memory per request. They are capped at 64 MP before decoding now, like floor plans, and Pillow's global limit matches.
+- Error responses no longer repeat the exception's text, which could carry the OpenWeatherMap API key (requests puts the full URL, `appid` included, into its errors), SQL or file paths. They say what failed and the kind of error, e.g. "Care helper failed (RateLimitError)"; the full text goes to the backend log. The OpenWeatherMap error is cleaned where it happens, so the key stays out of the log too. **If OpenWeatherMap ever failed on your instance, rotate the key.**
 
 ## [2.1.0] - 2026-11-08
 
