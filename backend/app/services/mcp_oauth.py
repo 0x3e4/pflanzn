@@ -203,8 +203,14 @@ def is_valid_redirect_uri(uri: str) -> bool:
 
 
 def redirect_host(uri: str) -> str:
+    """Where the consent page says the user will be sent. Only a web address is shown by
+    its host: for a private-use scheme (a native app) the scheme is the destination, so
+    "x-evil://claude.ai/cb" must not read as "claude.ai"."""
     parsed = urlparse(uri)
-    return parsed.netloc or f"{parsed.scheme}:"
+    scheme = parsed.scheme.lower()
+    if scheme in ("https", "http"):
+        return parsed.netloc
+    return f"{scheme}://{parsed.netloc}" if parsed.netloc else f"{scheme}:"
 
 
 def build_redirect(redirect_uri: str, params: dict) -> str:

@@ -869,3 +869,16 @@ def test_github_only_verified_emails():
     with patch.object(settings, "MCP_LOGIN_PROVIDER", "github"), patch("app.services.mcp_login.httpx.Client",
                                                                        return_value=http):
         assert mcp_login.verified_emails(BASE, "code", "verifier") == ["a@example.com"]
+
+
+@pytest.mark.parametrize("uri, shown", [
+    ("https://claude.ai/api/mcp/auth_callback", "claude.ai"),
+    ("http://127.0.0.1:33418/callback", "127.0.0.1:33418"),
+    # Regression: the consent page showed only the host, so this read as "claude.ai".
+    ("x-evil://claude.ai/cb", "x-evil://claude.ai"),
+    ("com.example.app:/oauth", "com.example.app:"),
+])
+def test_consent_shows_where_a_native_redirect_really_goes(uri, shown):
+    from app.services.mcp_oauth import redirect_host
+
+    assert redirect_host(uri) == shown
