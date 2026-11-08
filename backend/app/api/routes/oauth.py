@@ -181,21 +181,15 @@ def authorize(request: Request, db: Session = Depends(get_db)):
     if not redirect_uri or redirect_uri not in registered:
         raise HTTPException(status_code=400, detail="redirect_uri does not match the registered client")
 
-    base = mcp_oauth.public_base(request)
     state = params.get("state")
 
-    def fail(error: str, description: str):
-        return RedirectResponse(
-            mcp_oauth.build_redirect(
-                redirect_uri, {"error": error, "error_description": description, "state": state, "iss": base}
-            ),
-            status_code=302,
-        )
-
+    # Malformed requests get their error here, not as a redirect. Anyone can register a
+    # client with any https redirect URI, so redirecting before the user has decided would
+    # make this an open redirect (RFC 9700, 4.11.2). Redirects happen only after Allow/Deny.
     if params.get("response_type") != "code":
-        return fail("unsupported_response_type", "Only response_type=code is supported")
+        raise HTTPException(status_code=400, detail="unsupported_response_type: only response_type=code is supported")
     if not params.get("code_challenge") or params.get("code_challenge_method") != "S256":
-        return fail("invalid_request", "PKCE with code_challenge_method=S256 is required")
+        raise HTTPException(status_code=400, detail="invalid_request: PKCE with code_challenge_method=S256 is required")
 
     request_id = mcp_oauth.save_pending_request({
         "client_pk": client.id,

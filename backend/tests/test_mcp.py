@@ -406,15 +406,21 @@ class TestOAuth:
         }, follow_redirects=False)
         assert response.status_code == 400
 
-    def test_authorize_requires_pkce(self, client, mock_db):
-        _route_queries(mock_db, {OAuthClient: OAuthClient(id=7, client_id="c", redirect_uris=json.dumps([REDIRECT]))})
+    @pytest.mark.parametrize("params", [
+        {"response_type": "code", "state": "s"},  # no PKCE
+        {"response_type": "token", "code_challenge": "c", "code_challenge_method": "S256"},
+        {"response_type": "code", "code_challenge": "c", "code_challenge_method": "plain"},
+    ])
+    def test_malformed_authorize_does_not_redirect(self, client, mock_db, params):
+        """Regression: these errors were 302s to the client's redirect_uri. Anyone can register a
+        client with https://evil.example/ as its URI, which made /authorize an open redirect."""
+        _route_queries(mock_db, {OAuthClient: OAuthClient(id=7, client_id="c",
+                                                          redirect_uris=json.dumps(["https://evil.example/"]))})
         response = client.get("/api/oauth/authorize", params={
-            "client_id": "c", "redirect_uri": REDIRECT, "response_type": "code", "state": "s",
+            "client_id": "c", "redirect_uri": "https://evil.example/", **params,
         }, follow_redirects=False)
-        assert response.status_code == 302
-        query = parse_qs(urlparse(response.headers["location"]).query)
-        assert query["error"] == ["invalid_request"]
-        assert query["state"] == ["s"]
+        assert response.status_code == 400
+        assert "location" not in response.headers
 
     def test_approve_requires_login(self, client, _env):
         _env.store["oauth:req:r1"] = json.dumps({"client_pk": 7, "redirect_uri": REDIRECT, "state": None,

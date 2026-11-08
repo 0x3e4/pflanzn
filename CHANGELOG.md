@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - Location names (and the crop of a location) reached the map tooltips as HTML, so a member could put script into a name that ran for whoever hovered the marker, an admin included. They are text now. Leaflet, loaded from unpkg, is pinned with Subresource Integrity.
 - With `AUTH_MODE=local` and `ADMIN_USER`/`ADMIN_PASSWORD` left empty (as in `.env.example`), the first start created an admin named "" with the password "". The backend now refuses to start until they are set, and an empty password never logs in. Check for such an account: `SELECT id FROM users WHERE username = '';`
+- `/api/oauth/authorize` redirected malformed requests (wrong `response_type`, missing PKCE) to the client's `redirect_uri` before the user decided anything. Since anyone can register a client, that was an open redirect from your domain. Those errors are shown as a 400 now; redirects happen only after Allow or Deny.
 
 ## [2.1.0] - 2026-11-08
 
