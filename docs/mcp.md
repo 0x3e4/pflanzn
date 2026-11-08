@@ -45,15 +45,9 @@ needs a backend restart but no image rebuild.
 ### Reverse proxy
 
 The MCP endpoint and the two well-known documents MCP clients use to find the authorization server
-have to reach the backend, next to `/api`:
-
-| Path | To |
-| --- | --- |
-| `/api/` | backend `:8000` |
-| `/mcp` | backend `:8000` |
-| `/.well-known/oauth-*` | backend `:8000` |
-
-In nginx that is one location:
+(`/mcp`, `/.well-known/oauth-*`) have to reach the backend. The frontend container forwards them,
+together with `/api`, so a proxy that sends everything to the frontend needs nothing extra. If your
+proxy sends `/api` straight to the backend instead, add these two:
 
 ```nginx
 location ~ ^/(api(/|$)|mcp/?$|\.well-known/oauth-) {
@@ -64,11 +58,10 @@ location ~ ^/(api(/|$)|mcp/?$|\.well-known/oauth-) {
 }
 ```
 
-Forward `/mcp` as it is. Rewriting it to `/api/mcp` at the proxy breaks the sign-in, because the
-OAuth metadata names the path the client used and clients check that it matches.
-
-If they end up at the frontend instead, Manage → MCP shows a warning. The full proxy examples
-are under [Getting Started](getting-started.md#reverse-proxy).
+Forward `/mcp` as it is. Rewriting it to `/api/mcp` breaks the sign-in, because the OAuth metadata
+names the path the client used and clients check that it matches. If the documents end up at the
+app instead, Manage → MCP shows a warning. The full proxy setup is under
+[Getting Started](getting-started.md#reverse-proxy).
 
 ## How sign-in works
 

@@ -1,3 +1,16 @@
+# The frontend is also the gateway: /api, /mcp and the OAuth discovery documents go to the
+# backend, /docs to the docs container. So the reverse proxy only needs this container, and
+# backend and docs need no port and no place on the proxy's network.
+# BACKEND_UPSTREAM, DOCS_UPSTREAM, UPSTREAM_RESOLVER and MAX_UPLOAD_MB are filled in by the
+# nginx image on start (envsubst on /etc/nginx/templates). The client IP comes from
+# the real_ip settings that docker-entrypoint.d/15-real-ip.sh writes from TRUSTED_PROXIES.
+
+# The scheme the visitor used: the outer proxy's X-Forwarded-Proto, else our own.
+map $http_x_forwarded_proto $forwarded_proto {
+    default $http_x_forwarded_proto;
+    ""      $scheme;
+}
+
 server {
     listen 4173;
     # Relative redirects, so /docs → /docs/ keeps the host and scheme the proxy used.
@@ -38,22 +51,42 @@ server {
         try_files $uri =404;
     }
 
+    # Backend: the API, MCP and the OAuth discovery documents. The upstream is looked up per
+    # request (resolver + variable), so a recreated backend with a new IP is found again and
+    # the frontend starts even before the backend does. With a variable and no URI part,
+    # proxy_pass sends the original path on unchanged.
+    location ~ ^/(api(/|$)|mcp/?$|\.well-known/oauth-) {
+        resolver ${UPSTREAM_RESOLVER} valid=30s ipv6=off;
+        resolver_timeout 2s;
+        set $backend_upstream ${BACKEND_UPSTREAM};
+        proxy_pass $backend_upstream;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $host;
+        # Only the client IP real_ip worked out: the backend reads the right-most entry.
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-Proto $forwarded_proto;
+        client_max_body_size ${MAX_UPLOAD_MB}m;   # the backend's own upload limit
+        proxy_read_timeout 300s;                  # AI care advice with web search can take minutes
+        proxy_send_timeout 300s;
+    }
+
     # Documentation: /docs/ is forwarded unchanged to the docs container
     # (ghcr.io/0x3e4/pflanzn-docs), which serves the same site at / and /docs/.
     # The upstream is looked up per request, so the frontend starts without it;
     # when it isn't there, /docs goes to the docs on GitHub instead.
-    # ${DOCS_UPSTREAM} and ${DOCS_RESOLVER} are filled in by the nginx image on start.
     location = /docs {
         return 301 /docs/;
     }
 
     location /docs/ {
-        resolver ${DOCS_RESOLVER} valid=30s ipv6=off;
+        resolver ${UPSTREAM_RESOLVER} valid=30s ipv6=off;
         resolver_timeout 2s;
         set $docs_upstream ${DOCS_UPSTREAM};
         proxy_pass $docs_upstream;
         proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto $forwarded_proto;
         proxy_intercept_errors on;
         error_page 502 503 504 = @docs_unavailable;
     }

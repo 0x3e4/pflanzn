@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- The frontend container is now the gateway: it forwards `/api`, `/mcp` and `/.well-known/oauth-*` to the backend and `/docs/` to the docs container, so the reverse proxy only needs the frontend (one `location /` block) and backend and docs need no published port. Upstreams are looked up per request, so a recreated backend is found again and the frontend starts without it. New frontend variables: `BACKEND_UPSTREAM` (default `http://pflanzn-backend:8000`), `TRUSTED_PROXIES` (whose `X-Forwarded-For` gives the client IP; default private networks), `MAX_UPLOAD_MB` and `UPSTREAM_RESOLVER`, which replaces `DOCS_RESOLVER`. **`DOCS_UPSTREAM` now defaults to `http://pflanzn-docs:80`**: give the docs service that alias (as in the compose example) or set it, otherwise `/docs` falls back to GitHub. A proxy that sends `/api` straight to the backend keeps working.
+- Compose example: backend and docs get the aliases `pflanzn-backend` and `pflanzn-docs` and no published port; the frontend listens on `127.0.0.1:4173` and only gets `DOMAIN` and `MAX_UPLOAD_MB` instead of the whole `.env`; Redis moves to the internal network with the database.
 - The MCP endpoint moves to `/mcp`, like Hecate's. `/api/mcp` keeps working, so existing connections stay connected; the OAuth metadata names whichever path the client used. **Reverse proxy:** forward `/mcp` to the backend as well (nginx: `location ~ ^/(api(/|$)|mcp/?$|\.well-known/oauth-)`), and don't rewrite it to `/api/mcp`.
 
 ### Fixed

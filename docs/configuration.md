@@ -75,8 +75,11 @@ These are set on the **frontend** container, not the backend.
 
 | Variable | Default | What it controls |
 | --- | --- | --- |
-| `DOCS_UPSTREAM` | `http://docs:80` | Where `/docs/` is forwarded, see [Documentation site](getting-started.md#documentation-site). |
-| `DOCS_RESOLVER` | `127.0.0.11` | DNS server nginx uses to find the docs container (Docker's own by default). |
+| `BACKEND_UPSTREAM` | `http://pflanzn-backend:8000` | Where `/api`, `/mcp` and `/.well-known/oauth-*` are forwarded, see [Reverse proxy](getting-started.md#reverse-proxy). |
+| `DOCS_UPSTREAM` | `http://pflanzn-docs:80` | Where `/docs/` is forwarded, see [Documentation site](getting-started.md#documentation-site). |
+| `TRUSTED_PROXIES` | private networks | Addresses or CIDRs whose `X-Forwarded-For` gives the client IP. Set it to your proxy; `none` turns it off. |
+| `MAX_UPLOAD_MB` | `30` | Largest upload passed on to the backend; keep it equal to the backend's. |
+| `UPSTREAM_RESOLVER` | `127.0.0.11` | DNS server nginx uses to find backend and docs (Docker's own by default). |
 
 > [!NOTE]
 > Older `VITE_*` names (`VITE_DOMAIN`, `VITE_AUTH_MODE`, …) still work as fallbacks, but they are

@@ -1,9 +1,10 @@
 services:
+  # Reached only through the frontend (the gateway for /api, /mcp and /.well-known/oauth-*),
+  # so no port. The alias is the name the frontend uses; it is unique, so a shared Docker
+  # network can never send the frontend to another app's "backend".
   backend:
     image: ghcr.io/0x3e4/pflanzn-backend:latest
     pull_policy: always
-    ports:
-      - "8000:8000"
     env_file:
       - .env
     volumes:
@@ -15,35 +16,43 @@ services:
         condition: service_healthy
     restart: always
     networks:
-      - default
-      - db
+      default:
+        aliases:
+          - pflanzn-backend
+      db:
 
+  # The only container the reverse proxy talks to. Port 4173 on localhost for a proxy on
+  # the same host; for a proxy in Docker, drop the port and attach the frontend to the
+  # proxy's network instead.
   frontend:
     image: ghcr.io/0x3e4/pflanzn-frontend:latest
     pull_policy: always
     environment:
       DOMAIN: ${DOMAIN}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-30}
+      # Defaults, shown for reference:
+      # BACKEND_UPSTREAM: http://pflanzn-backend:8000
+      # DOCS_UPSTREAM: http://pflanzn-docs:80
+      # TRUSTED_PROXIES: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.1,::1,fc00::/7
     ports:
-      - "4173:4173"
-    env_file:
-      - .env
+      - "127.0.0.1:4173:4173"
     restart: always
     depends_on:
       - backend
     networks:
       - default
 
-  # Documentation, optional. The frontend forwards /docs/ to this service, so the docs
-  # are at {DOMAIN}/docs/ without any proxy change; without it, /docs goes to GitHub.
-  # For a separate docs domain, route it to this service's port 80.
+  # Documentation, optional. The frontend forwards /docs/ to it, so the docs are at
+  # {DOMAIN}/docs/; without it, /docs goes to the docs on GitHub. For a separate docs
+  # domain, route that domain to this container's port 80 as well.
   docs:
     image: ghcr.io/0x3e4/pflanzn-docs:latest
     pull_policy: always
     restart: always
-    # ports:
-    #   - "4174:80"
     networks:
-      - default
+      default:
+        aliases:
+          - pflanzn-docs
 
   mariadb:
     image: mariadb:latest
@@ -64,13 +73,16 @@ services:
     networks:
       - db
 
+  # Sessions and OAuth state: only the backend needs it, so it lives on the internal network.
   redis:
     image: redis:latest
     restart: always
     networks:
-      - default
+      - db
 
 networks:
+  # The backend needs the internet (Pl@ntNet, AI providers, weather), so it also stays on
+  # "default". Database and Redis are only reachable from inside.
   db:
     name: pflanzn_db
     internal: true

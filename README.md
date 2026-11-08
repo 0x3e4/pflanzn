@@ -158,21 +158,15 @@ The app will be reachable at the domain you configured in `DOMAIN`. See [.env.ex
 
 ### Reverse proxy
 
-> [!IMPORTANT]
-> The frontend container only serves the static app — it does **not** proxy the API. Opening `:4173` directly loads the UI, but every `/api` call gets `index.html` back and no data shows up. Put a reverse proxy in front that routes:
-
-| Path | Target |
-| --- | --- |
-| `/api/*` | backend `:8000` |
-| `/mcp`, `/.well-known/oauth-*` | backend `:8000` (only needed for MCP) |
-| everything else | frontend `:4173` |
+The frontend container is the gateway: it serves the app and forwards `/api`, `/mcp` and
+`/.well-known/oauth-*` to the backend and `/docs/` to the docs container. Your reverse proxy only
+needs the frontend, and backend and docs need no published port and no place on the proxy's
+network.
 
 Caddy:
 
 ```caddyfile
 plants.example.com {
-    @backend path /api /api/* /mcp /mcp/ /.well-known/oauth-*
-    reverse_proxy @backend localhost:8000
     reverse_proxy localhost:4173
 }
 ```
@@ -180,25 +174,39 @@ plants.example.com {
 nginx:
 
 ```nginx
-location ~ ^/(api(/|$)|mcp/?$|\.well-known/oauth-) {
-    proxy_pass http://localhost:8000;
+location / {
+    proxy_pass http://localhost:4173;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
     client_max_body_size 30m;   # match MAX_UPLOAD_MB
     proxy_read_timeout 300s;    # AI care advice with web search can take minutes
 }
-
-location / {
-    proxy_pass http://localhost:4173;
-    proxy_set_header Host $host;
-}
 ```
+
+How the frontend finds the others, and whose client IP it believes, is set on the frontend
+container:
+
+| Variable | Default | What it controls |
+| --- | --- | --- |
+| `BACKEND_UPSTREAM` | `http://pflanzn-backend:8000` | The backend. The compose example gives it this alias. |
+| `DOCS_UPSTREAM` | `http://pflanzn-docs:80` | The docs container. Without one, `/docs` redirects to the docs on GitHub. |
+| `TRUSTED_PROXIES` | private networks | Addresses or CIDRs (comma-separated) whose `X-Forwarded-For` is believed, for the client IP in the audit log and the rate limits. Set it to your proxy's address; `none` turns it off. |
+| `MAX_UPLOAD_MB` | `30` | The largest upload the frontend passes on; keep it equal to the backend's. |
+| `UPSTREAM_RESOLVER` | `127.0.0.11` | The DNS server for those names (Docker's own). Change it outside Docker. |
+
+> [!IMPORTANT]
+> On a Docker network shared with other apps, use names only Pflanzn has, like the
+> `pflanzn-backend` and `pflanzn-docs` aliases in the compose example. A bare `backend` can resolve
+> to another app's container.
+
+The old layout still works: a proxy that sends `/api`, `/mcp` and `/.well-known/oauth-*` straight to
+the backend's port 8000 (and everything else to the frontend) needs no change.
 
 Prebuilt images are published to GHCR on every push to `main` and on every semver tag (`X.Y.Z`) by [build-images.yml](.github/workflows/build-images.yml):
 
 - `ghcr.io/0x3e4/pflanzn-backend`
-- `ghcr.io/0x3e4/pflanzn-frontend` (multi-stage build → nginx alpine; forwards `/docs/` to the docs container)
+- `ghcr.io/0x3e4/pflanzn-frontend` (multi-stage build → nginx alpine; the gateway: forwards `/api`, `/mcp` and `/.well-known/oauth-*` to the backend and `/docs/` to the docs container)
 - `ghcr.io/0x3e4/pflanzn-docs` (MkDocs Material → nginx alpine, optional)
 
 `main` builds get the `latest` and `main-<sha>` tags; release builds get `X.Y.Z`, `X.Y`, and `X` tags. For production, pin to an explicit semver tag — see [SECURITY.md](SECURITY.md) for the supported-version policy.
@@ -325,8 +333,8 @@ create or edit plants. Nothing can be deleted through it.
 Set `MCP_ENABLED=true` and add `{DOMAIN}/mcp` as a custom connector in Claude (Claude Code:
 `claude mcp add --transport http pflanzn {DOMAIN}/mcp`; `/api/mcp` still works). Clients sign in through Pflanzn's
 built-in OAuth server with your normal login, through another provider (`MCP_LOGIN_PROVIDER`), or
-through an external OAuth/OIDC server (`MCP_OAUTH_ISSUER`). The [reverse proxy](#reverse-proxy) must
-forward `/mcp` and `/.well-known/oauth-*` to the backend. Connected apps can be revoked under Manage → MCP.
+through an external OAuth/OIDC server (`MCP_OAUTH_ISSUER`). The frontend forwards `/mcp` and
+`/.well-known/oauth-*` to the backend (see [Reverse proxy](#reverse-proxy)). Connected apps can be revoked under Manage → MCP.
 
 **[MCP guide](docs/mcp.md)**: the sign-in modes, connecting each client, all 15 tools and example
 prompts.
