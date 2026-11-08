@@ -1,4 +1,3 @@
-import io
 import logging
 import os
 import uuid
@@ -7,7 +6,7 @@ from typing import List, Optional
 
 import pillow_heif
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
-from PIL import Image, ImageOps
+from PIL import Image
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -34,6 +33,7 @@ from app.schemas import (
 from app.services.llm_client import LLMClient
 from app.services.plantnet import identify_species_via_plantnet
 from app.utils.exif import extract_gps_coordinates
+from app.utils.uploads import MAX_PHOTO_PIXELS, UploadRejected, open_upload_image
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -244,19 +244,18 @@ def upload_location_image(
         file.file.close()
         exif_latitude, exif_longitude = extract_gps_coordinates(contents)
 
-        image_stream = io.BytesIO(contents)
-        image_stream.seek(0)
-        with Image.open(image_stream) as img:
-            img = ImageOps.exif_transpose(img)
-            img = img.convert("RGB")
+        # Size-checked before decoding; EXIF-rotated, RGB.
+        img = open_upload_image(contents, MAX_PHOTO_PIXELS)
 
-            max_width = 1200
-            if img.width > max_width:
-                ratio = max_width / float(img.width)
-                new_height = int(float(img.height) * ratio)
-                img = img.resize((max_width, new_height), Image.LANCZOS)
+        max_width = 1200
+        if img.width > max_width:
+            ratio = max_width / float(img.width)
+            new_height = int(float(img.height) * ratio)
+            img = img.resize((max_width, new_height), Image.LANCZOS)
 
-            img.save(final_file_path, format="JPEG", optimize=True, quality=82)
+        img.save(final_file_path, format="JPEG", optimize=True, quality=82)
+    except UploadRejected as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
     except Exception as exc:
         raise HTTPException(status_code=400, detail=f"Error processing image: {exc}")
 
@@ -370,18 +369,16 @@ async def identify_location_item(
         if not contents:
             raise HTTPException(status_code=400, detail="Uploaded file is empty.")
 
-        image_stream = io.BytesIO(contents)
-        image_stream.seek(0)
+        # Size-checked before decoding; EXIF-rotated, RGB.
+        img = open_upload_image(contents, MAX_PHOTO_PIXELS)
 
-        with Image.open(image_stream) as img:
-            img = ImageOps.exif_transpose(img)
-            img = img.convert("RGB")
-
-            identify_filename = f"{uuid.uuid4()}.jpg"
-            identification_file_path = os.path.join(IDENTIFICATION_FOLDER, identify_filename)
-            img.save(identification_file_path, format="JPEG", optimize=True, quality=82)
+        identify_filename = f"{uuid.uuid4()}.jpg"
+        identification_file_path = os.path.join(IDENTIFICATION_FOLDER, identify_filename)
+        img.save(identification_file_path, format="JPEG", optimize=True, quality=82)
     except HTTPException:
         raise
+    except UploadRejected as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
     except Exception as exc:
         raise HTTPException(status_code=400, detail=f"Error processing image: {exc}")
 

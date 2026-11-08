@@ -1,4 +1,3 @@
-import io
 import json
 import logging
 import os
@@ -57,7 +56,7 @@ from app.services import plant_reference
 from app.services.llm_client import LLMClient
 from app.services.plantnet import PlantNetError, identify_species_via_plantnet
 from app.utils.time import utcnow
-from app.utils.uploads import IMAGE_VARIANTS
+from app.utils.uploads import IMAGE_VARIANTS, MAX_PHOTO_PIXELS, UploadRejected, open_upload_image
 from app.utils.uploads import generate_image_variants as _generate_image_variants
 from app.utils.watering_hint import split_watering_interval
 
@@ -379,14 +378,9 @@ def upload_plant_image(
         logger.debug(f"Uploaded file size: {len(contents)} bytes")
         file.file.close()
 
-        image_stream = io.BytesIO(contents)
-        image_stream.seek(0)
-
-        with Image.open(image_stream) as img:
-            logger.debug(f"Opened image: format={img.format}, size={img.size}")
-            img = ImageOps.exif_transpose(img)
-            img = img.convert("RGB")
-            _generate_image_variants(img, base_path)
+        # Size-checked before decoding; EXIF-rotated, RGB.
+        img = open_upload_image(contents, MAX_PHOTO_PIXELS)
+        _generate_image_variants(img, base_path)
 
         logger.debug(f"Image variants saved for plant {plant_id}.")
 
@@ -400,6 +394,8 @@ def upload_plant_image(
         else:
             timestamp = utcnow()
 
+    except UploadRejected as e:
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error processing image: {str(e)}")
 
@@ -546,35 +542,30 @@ async def identify_species_from_image(
         logger.debug(f"Uploaded file: {file.filename}, Size: {len(contents)} bytes")
 
         # Convert file to image
-        image_stream = io.BytesIO(contents)
-        image_stream.seek(0)
-
         try:
-            with Image.open(image_stream) as img:
-                logger.debug(f"Opened image: format={img.format}, size={img.size}")
+            # Size-checked before decoding; EXIF-rotated, RGB.
+            img = open_upload_image(contents, MAX_PHOTO_PIXELS)
 
-                # Correct EXIF orientation and convert to RGB
-                img = ImageOps.exif_transpose(img)
-                img = img.convert("RGB")
+            # Normalize to JPEG before sending to PlantNet — accept any
+            # PIL-readable format (JPG, PNG, WebP, HEIC, …) and hand
+            # PlantNet a uniform JPEG so we never have to guess what it
+            # accepts.
+            id_uuid = str(uuid.uuid4())
+            filename = f"{id_uuid}.jpg"
+            identification_file_path = os.path.join(IDENTIFICATION_FOLDER, filename)
+            img.save(identification_file_path, format="JPEG", optimize=True, quality=85)
+            mime_type = "image/jpeg"
 
-                # Normalize to JPEG before sending to PlantNet — accept any
-                # PIL-readable format (JPG, PNG, WebP, HEIC, …) and hand
-                # PlantNet a uniform JPEG so we never have to guess what it
-                # accepts.
-                id_uuid = str(uuid.uuid4())
-                filename = f"{id_uuid}.jpg"
-                identification_file_path = os.path.join(IDENTIFICATION_FOLDER, filename)
-                img.save(identification_file_path, format="JPEG", optimize=True, quality=85)
-                mime_type = "image/jpeg"
-
-                # Generate WebP variants for frontend serving
-                base_path = os.path.join(IDENTIFICATION_FOLDER, id_uuid)
-                _generate_image_variants(img, base_path)
-                relative_path = os.path.join("identifications", id_uuid)
-                logger.debug(f"Image saved to: {identification_file_path}")
+            # Generate WebP variants for frontend serving
+            base_path = os.path.join(IDENTIFICATION_FOLDER, id_uuid)
+            _generate_image_variants(img, base_path)
+            relative_path = os.path.join("identifications", id_uuid)
+            logger.debug(f"Image saved to: {identification_file_path}")
 
         except HTTPException:
             raise
+        except UploadRejected as e:
+            raise HTTPException(status_code=e.status_code, detail=e.detail)
         except Exception as e:
             logger.error(f"Error processing image: {str(e)}")
             raise HTTPException(status_code=400, detail=f"Error processing image: {str(e)}")

@@ -37,6 +37,21 @@ IMAGE_VARIANTS = {
 }
 
 
+# Photos: well above a 50 MP phone camera, far below what fits a 30 MB body as a highly
+# compressed PNG/HEIC and decodes to gigabytes. Also Pillow's global limit, so any other
+# Image.open on uploaded bytes refuses a decompression bomb (it raises above twice this).
+MAX_PHOTO_PIXELS = 64_000_000
+
+
+def _cap_pillow() -> None:
+    from PIL import Image
+
+    Image.MAX_IMAGE_PIXELS = MAX_PHOTO_PIXELS
+
+
+_cap_pillow()
+
+
 class UploadRejected(Exception):
     """An upload that must not be stored. `status_code` is 400 or 413."""
 
