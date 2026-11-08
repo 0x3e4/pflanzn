@@ -19,30 +19,35 @@
 ---
 
 <p align="center">
-  <img src="./docs/images/pflanzn-home.png" alt="Pflanzn home — recently captured plants, species snapshot, and overall counts" width="100%" />
+  <img src="./docs/images/pflanzn-home.png" alt="Pflanzn home — the plants that need water today with a Water button each, what comes up next, collection figures and the latest photos" width="100%" />
 </p>
 
 <details>
-<summary><strong>More screenshots</strong> — plants list, plant detail, identification</summary>
+<summary><strong>More screenshots</strong> — plants list, plant page, phone, identification</summary>
 
 <br/>
 
 <table>
   <tr>
-    <td width="50%"><img src="./docs/images/pflanzn-plants.png" alt="Plants list with thumbnails and tags" /></td>
-    <td width="50%"><img src="./docs/images/pflanzn-plant.png" alt="Plant detail with timeline and care advice" /></td>
+    <td width="50%"><img src="./docs/images/pflanzn-plants.png" alt="Plants list: photo cards with watering status and water, photo and identify buttons" /></td>
+    <td width="50%"><img src="./docs/images/pflanzn-plant.png" alt="Plant page: watering status, Water now, Fertilize, Add photo and More, photo timeline and activity feed" /></td>
   </tr>
   <tr>
     <td align="center"><sub>Plants list</sub></td>
-    <td align="center"><sub>Plant detail · timeline</sub></td>
+    <td align="center"><sub>Plant page</sub></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td width="33%"><img src="./docs/images/pflanzn-mobile-plants.png" alt="Plants list on a phone: two columns with a bottom navigation" /></td>
+    <td width="33%"><img src="./docs/images/pflanzn-mobile-plant.png" alt="Plant page on a phone: the actions sit under the photo" /></td>
+    <td width="33%"><img src="./docs/images/planzn-identification.png" alt="Species identification via Pl@ntNet" /></td>
   </tr>
   <tr>
-    <td width="50%"><img src="./docs/images/planzn-identification.png" alt="Species identification via PlantNet" /></td>
-    <td width="50%"></td>
-  </tr>
-  <tr>
+    <td align="center"><sub>Phone · plants</sub></td>
+    <td align="center"><sub>Phone · plant page</sub></td>
     <td align="center"><sub>Species identification</sub></td>
-    <td></td>
   </tr>
 </table>
 
