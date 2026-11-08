@@ -6,7 +6,8 @@ collection in plain language. Instead of opening the app to check what is due, y
 "*which plants need water today?*", and it reads Pflanzn directly. If you allow it, it also logs
 the watering for you.
 
-The server is mounted at **`/api/mcp`** on the same host as the rest of Pflanzn. It has 15 tools:
+The server is mounted at **`/mcp`** on the same host as the rest of Pflanzn (`/api/mcp`, its
+address before 2.1, keeps working for existing connections). It has 15 tools:
 seven that read (plants, photos, tags, the care log, collection figures, garden locations) and
 eight that write (log waterings and fertilizing, add notes and care advice, create and edit plants,
 set tags, archive). **No tool deletes anything.**
@@ -43,13 +44,28 @@ needs a backend restart but no image rebuild.
 
 ### Reverse proxy
 
-MCP clients discover the authorization server through two well-known documents. Your reverse proxy
-has to send these to the backend, next to `/api`:
+The MCP endpoint and the two well-known documents MCP clients use to find the authorization server
+have to reach the backend, next to `/api`:
 
 | Path | To |
 | --- | --- |
 | `/api/` | backend `:8000` |
+| `/mcp` | backend `:8000` |
 | `/.well-known/oauth-*` | backend `:8000` |
+
+In nginx that is one location:
+
+```nginx
+location ~ ^/(api(/|$)|mcp/?$|\.well-known/oauth-) {
+    proxy_pass http://localhost:8000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
+Forward `/mcp` as it is. Rewriting it to `/api/mcp` at the proxy breaks the sign-in, because the
+OAuth metadata names the path the client used and clients check that it matches.
 
 If they end up at the frontend instead, Manage → MCP shows a warning. The full proxy examples
 are under [Getting Started](getting-started.md#reverse-proxy).
@@ -95,14 +111,16 @@ client ID the tokens are issued for. The token's email must belong to a Pflanzn 
 ### Claude (claude.ai and Claude Desktop)
 
 Open **Settings → Connectors → Add custom connector**, give it the name `Pflanzn` and the URL
-`https://<your-host>/api/mcp`. Leave the OAuth Client ID and Secret fields **empty**, since Pflanzn
-registers the client by itself. Click *Add*: a browser window opens Pflanzn's consent page. Sign in,
-decide whether Claude may make changes, and click *Allow*.
+`https://<your-host>/mcp`. Keep *Sign in now* under Authentication, and under OAuth client choose
+**Register automatically**: Pflanzn registers Claude as a client by itself (Dynamic Client
+Registration). *Use Claude's published identity* (CIMD) is not supported yet. Click *Add*: a browser
+window opens Pflanzn's consent page. Sign in, decide whether Claude may make changes, and click
+*Allow*.
 
 ### Claude Code
 
 ```bash
-claude mcp add --transport http pflanzn https://<your-host>/api/mcp
+claude mcp add --transport http pflanzn https://<your-host>/mcp
 ```
 
 On the first call Claude Code opens the browser for the same consent page. In Claude Code you can
@@ -111,7 +129,7 @@ also run `/mcp` to see the connection and sign in again.
 ### Other clients
 
 Any client that speaks Streamable HTTP and MCP authorization works the same way: point it at
-`https://<your-host>/api/mcp`. For a client without OAuth support, the `mcp-remote` bridge
+`https://<your-host>/mcp`. For a client without OAuth support, the `mcp-remote` bridge
 runs the flow for it (it needs Node.js):
 
 ```json
@@ -119,7 +137,7 @@ runs the flow for it (it needs Node.js):
   "mcpServers": {
     "pflanzn": {
       "command": "npx",
-      "args": ["-y", "mcp-remote", "https://<your-host>/api/mcp"]
+      "args": ["-y", "mcp-remote", "https://<your-host>/mcp"]
     }
   }
 }
@@ -176,4 +194,4 @@ advice Pflanzn generated itself. This works without `LLM_PROVIDER` or any API ke
 > [!TIP]
 > **Keep it behind TLS**
 > OAuth only protects the tokens if the connection is encrypted. Run Pflanzn behind HTTPS, and if
-> you don't need MCP from outside, restrict `/api/mcp` at the reverse proxy.
+> you don't need MCP from outside, restrict `/mcp` at the reverse proxy.

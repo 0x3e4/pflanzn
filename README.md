@@ -164,14 +164,14 @@ The app will be reachable at the domain you configured in `DOMAIN`. See [.env.ex
 | Path | Target |
 | --- | --- |
 | `/api/*` | backend `:8000` |
-| `/.well-known/oauth-*` | backend `:8000` (only needed for MCP) |
+| `/mcp`, `/.well-known/oauth-*` | backend `:8000` (only needed for MCP) |
 | everything else | frontend `:4173` |
 
 Caddy:
 
 ```caddyfile
 plants.example.com {
-    @backend path /api/* /.well-known/oauth-*
+    @backend path /api /api/* /mcp /mcp/ /.well-known/oauth-*
     reverse_proxy @backend localhost:8000
     reverse_proxy localhost:4173
 }
@@ -180,7 +180,7 @@ plants.example.com {
 nginx:
 
 ```nginx
-location ~ ^/(api/|\.well-known/oauth-) {
+location ~ ^/(api(/|$)|mcp/?$|\.well-known/oauth-) {
     proxy_pass http://localhost:8000;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -322,11 +322,11 @@ Pflanzn has a built-in [MCP](https://modelcontextprotocol.io) server, so Claude 
 client can read your plants and, if you allow it, log waterings, add notes and care advice, and
 create or edit plants. Nothing can be deleted through it.
 
-Set `MCP_ENABLED=true` and add `{DOMAIN}/api/mcp` as a custom connector in Claude (Claude Code:
-`claude mcp add --transport http pflanzn {DOMAIN}/api/mcp`). Clients sign in through Pflanzn's
+Set `MCP_ENABLED=true` and add `{DOMAIN}/mcp` as a custom connector in Claude (Claude Code:
+`claude mcp add --transport http pflanzn {DOMAIN}/mcp`; `/api/mcp` still works). Clients sign in through Pflanzn's
 built-in OAuth server with your normal login, through another provider (`MCP_LOGIN_PROVIDER`), or
 through an external OAuth/OIDC server (`MCP_OAUTH_ISSUER`). The [reverse proxy](#reverse-proxy) must
-forward `/.well-known/oauth-*` to the backend. Connected apps can be revoked under Manage → MCP.
+forward `/mcp` and `/.well-known/oauth-*` to the backend. Connected apps can be revoked under Manage → MCP.
 
 **[MCP guide](docs/mcp.md)**: the sign-in modes, connecting each client, all 15 tools and example
 prompts.

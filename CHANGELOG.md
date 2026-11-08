@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- The MCP endpoint moves to `/mcp`, like Hecate's. `/api/mcp` keeps working, so existing connections stay connected; the OAuth metadata names whichever path the client used. **Reverse proxy:** forward `/mcp` to the backend as well (nginx: `location ~ ^/(api(/|$)|mcp/?$|\.well-known/oauth-)`), and don't rewrite it to `/api/mcp`.
 
 ### Fixed
 

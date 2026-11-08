@@ -7,7 +7,7 @@ provider and the weather services only when those features are on.
 | Part | What it does |
 | --- | --- |
 | **Frontend** | React 19 PWA, served by nginx on port 4173. Reads its settings from `/api/config`. Forwards `/docs/` to the docs container. |
-| **Backend** | FastAPI on Python 3.14, port 8000: the REST API under `/api`, the MCP server at `/api/mcp` with its OAuth server, the weather loop and the image pipeline. |
+| **Backend** | FastAPI on Python 3.14, port 8000: the REST API under `/api`, the MCP server at `/mcp` (and the older `/api/mcp`) with its OAuth server, the weather loop and the image pipeline. |
 | **MariaDB** | Plants, waterings, notes, care advice, users, the audit log. New tables and columns are added on start. |
 | **Redis** | Sessions (with theft detection), OAuth requests and codes, rate limits. |
 | **Uploads** | Photos on disk under `plants/`, `identifications/` and `locations/`, each stored as WebP in three sizes. |
@@ -16,11 +16,11 @@ provider and the weather services only when those features are on.
 ## Requests
 
 ```text
-Browser ──► reverse proxy ──┬─ /api/*, /.well-known/oauth-* ──► backend :8000 ──┬─ MariaDB
-                            │                                                   ├─ Redis
-                            │                                                   ├─ uploads (disk)
-                            │                                                   └─ Pl@ntNet, AI provider, Open-Meteo
-                            └─ everything else ─────────────► frontend :4173 ──── /docs/* ──► docs :80
+Browser ──► reverse proxy ─┬─ /api/*, /mcp, /.well-known/oauth-* ──► backend :8000 ─┬─ MariaDB
+                           │                                                        ├─ Redis
+                           │                                                        ├─ uploads (disk)
+                           │                                                        └─ Pl@ntNet, AI, Open-Meteo
+                           └─ everything else ──► frontend :4173 ─── /docs/* ──► docs :80
 ```
 
 ## Images

@@ -120,7 +120,9 @@ app.include_router(floor_plans.router, prefix="/api/floor-plans", tags=["Floor p
 app.include_router(settings_route.router, prefix="/api/settings", tags=["Settings"])
 # MCP for external AI clients, authorized through Pflanzn's own OAuth server. Both
 # answer 404 unless MCP_ENABLED (and AI_ENABLED); OAuth also needs AUTH_MODE != no.
-app.include_router(mcp.router, prefix="/api/mcp", tags=["MCP"])
+app.include_router(mcp.router, prefix="/mcp", tags=["MCP"])
+# The pre-2.1 path, so existing connections keep working.
+app.include_router(mcp.router, prefix="/api/mcp", tags=["MCP"], include_in_schema=False)
 app.include_router(oauth.router, prefix="/api/oauth", tags=["OAuth"])
 app.include_router(oauth.well_known_router, tags=["OAuth"])
 

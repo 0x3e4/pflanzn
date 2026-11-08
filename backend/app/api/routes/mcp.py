@@ -1,6 +1,6 @@
 """MCP server (Streamable HTTP transport, stateless JSON responses).
 
-Clients POST JSON-RPC messages to /api/mcp. Every request carries an OAuth bearer
+Clients POST JSON-RPC messages to /mcp (/api/mcp still works for older connections). Every request carries an OAuth bearer
 token from /api/oauth (AUTH_MODE=no excepted, where the app is open anyway), so
 there is no session to keep and GET/SSE streams are not offered.
 """
@@ -51,7 +51,8 @@ class Principal:
 
 def _unauthorized(request: Request, error: Optional[str] = None) -> JSONResponse:
     base = mcp_oauth.public_base(request)
-    challenge = f'Bearer resource_metadata="{mcp_oauth.protected_resource_metadata_url(base)}"'
+    path = mcp_oauth.mcp_path_for(request.url.path)
+    challenge = f'Bearer resource_metadata="{mcp_oauth.protected_resource_metadata_url(base, path)}"'
     scopes = mcp_oauth.EXTERNAL_SCOPES if settings.MCP_OAUTH_ISSUER else mcp_oauth.SUPPORTED_SCOPES
     challenge += f', scope="{" ".join(scopes)}"'
     if error:

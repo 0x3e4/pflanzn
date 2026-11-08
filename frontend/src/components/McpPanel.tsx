@@ -23,7 +23,7 @@ const MCP_DOCS_URL = "/docs/mcp/";
 export default function McpPanel() {
     const { domain, locale, mcpAuth } = useConfig();
     const { user } = useAuth();
-    const serverUrl = `${domain || window.location.origin}/api/mcp`;
+    const serverUrl = `${domain || window.location.origin}/mcp`;
     const builtin = mcpAuth === "builtin";
     const isAdmin = user?.role === "admin";
 

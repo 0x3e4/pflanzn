@@ -1,4 +1,4 @@
-"""OAuth endpoints that let MCP clients (Claude web/desktop, …) connect to /api/mcp.
+"""OAuth endpoints that let MCP clients (Claude web/desktop, …) connect to /mcp (or /api/mcp).
 
 Flow: the client discovers us via the /.well-known documents, registers itself
 (RFC 7591), and sends the user's browser to /api/oauth/authorize. That validates
@@ -75,14 +75,16 @@ def _oauth_error(error: str, description: str, status_code: int = 400, headers: 
 # ==============================================================================
 
 @well_known_router.get("/.well-known/oauth-protected-resource")
+@well_known_router.get("/.well-known/oauth-protected-resource/mcp")
 @well_known_router.get("/.well-known/oauth-protected-resource/api/mcp")
 def protected_resource_metadata(request: Request):
     base = mcp_oauth.public_base(request)
+    path = mcp_oauth.mcp_path_for(request.url.path)
     if _mcp_auth() == "external":
         return mcp_oauth.protected_resource_metadata(
-            base, mcp_external_auth.issuer(), mcp_oauth.EXTERNAL_SCOPES
+            base, mcp_external_auth.issuer(), mcp_oauth.EXTERNAL_SCOPES, path
         )
-    return mcp_oauth.protected_resource_metadata(base)
+    return mcp_oauth.protected_resource_metadata(base, path=path)
 
 
 @well_known_router.get("/.well-known/oauth-authorization-server", dependencies=[Depends(require_builtin_oauth)])

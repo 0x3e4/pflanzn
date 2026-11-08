@@ -33,6 +33,8 @@ export default defineConfig(() => {
             // Full-page navigations to the backend (OIDC login, MCP OAuth authorize,
             // discovery documents) must never be answered with the SPA shell.
             /^\/api\//,
+            // The MCP endpoint, for whoever opens its URL in the browser.
+            /^\/mcp$/,
             // The documentation site is another app, served by the docs container.
             /^\/docs(\/|$)/,
             /^\/\.well-known\//

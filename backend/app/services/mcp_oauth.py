@@ -61,13 +61,27 @@ def public_base(request) -> str:
     return settings.public_base_url or f"{request.url.scheme}://{request.url.netloc}"
 
 
-def mcp_resource_url(base: str) -> str:
-    return f"{base}/api/mcp"
+# The MCP endpoint answers at /mcp, and at /api/mcp for clients connected before 2.1.
+# Each path is its own resource: the metadata names the one the client used, since
+# clients check that it matches the URL they were given.
+MCP_PATH = "/mcp"
+LEGACY_MCP_PATH = "/api/mcp"
 
 
-def protected_resource_metadata_url(base: str) -> str:
-    # RFC 9728 path-suffixed form for the resource at /api/mcp.
-    return f"{base}/.well-known/oauth-protected-resource/api/mcp"
+def mcp_path_for(request_path: str) -> str:
+    """The MCP path a request belongs to: the legacy one only when it was used."""
+    marker = "/.well-known/oauth-protected-resource"
+    path = request_path[len(marker):] if request_path.startswith(marker) else request_path
+    return LEGACY_MCP_PATH if path.rstrip("/") == LEGACY_MCP_PATH else MCP_PATH
+
+
+def mcp_resource_url(base: str, path: str = MCP_PATH) -> str:
+    return f"{base}{path}"
+
+
+def protected_resource_metadata_url(base: str, path: str = MCP_PATH) -> str:
+    # RFC 9728 path-suffixed form for the resource at that path.
+    return f"{base}/.well-known/oauth-protected-resource{path}"
 
 
 def authorization_server_metadata(base: str) -> dict:
@@ -89,9 +103,9 @@ def authorization_server_metadata(base: str) -> dict:
 
 
 def protected_resource_metadata(base: str, authorization_server: Optional[str] = None,
-                                scopes: tuple = SUPPORTED_SCOPES) -> dict:
+                                scopes: tuple = SUPPORTED_SCOPES, path: str = MCP_PATH) -> dict:
     return {
-        "resource": mcp_resource_url(base),
+        "resource": mcp_resource_url(base, path),
         "authorization_servers": [authorization_server or base],
         "scopes_supported": list(scopes),
         "bearer_methods_supported": ["header"],

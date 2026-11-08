@@ -35,7 +35,7 @@ export const revokeOAuthGrant = async (grantId: number): Promise<void> => {
 /** Whether the reverse proxy forwards the root-level OAuth discovery documents to the backend. */
 export const checkOAuthDiscovery = async (): Promise<boolean> => {
     try {
-        const response = await fetch("/.well-known/oauth-protected-resource/api/mcp", { cache: "no-store" });
+        const response = await fetch("/.well-known/oauth-protected-resource/mcp", { cache: "no-store" });
         if (!response.ok) return false;
         const data = await response.json();
         return Array.isArray(data.authorization_servers);

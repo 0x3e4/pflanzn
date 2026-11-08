@@ -264,6 +264,22 @@ class TestMcpAuth:
         assert challenge.startswith("Bearer ")
         assert f'resource_metadata="{BASE}/.well-known/oauth-protected-resource/api/mcp"' in challenge
 
+    def test_mcp_path_challenges_with_its_own_metadata(self, client):
+        response = client.post("/mcp", json=_rpc("initialize"))
+        assert response.status_code == 401
+        assert f'resource_metadata="{BASE}/.well-known/oauth-protected-resource/mcp"' in (
+            response.headers["www-authenticate"]
+        )
+
+    def test_both_paths_serve_the_same_tools(self, client, mock_db):
+        _route_queries(mock_db, {OAuthGrant: _grant("pflanzn:read")})
+        headers = {"Authorization": "Bearer t"}
+        names = [
+            {t["name"] for t in client.post(path, json=_rpc("tools/list"), headers=headers).json()["result"]["tools"]}
+            for path in ("/mcp", "/api/mcp")
+        ]
+        assert names[0] == names[1] and "list_plants" in names[0]
+
     def test_invalid_token(self, client, mock_db):
         _route_queries(mock_db, {OAuthGrant: None})
         response = client.post("/api/mcp", json=_rpc("ping"), headers={"Authorization": "Bearer nope"})
@@ -322,9 +338,19 @@ class TestOAuth:
             assert client.get("/.well-known/oauth-authorization-server").status_code == 404
             assert client.post("/api/oauth/register", json={}).status_code == 404
 
+    @pytest.mark.parametrize("path, resource", [
+        ("/.well-known/oauth-protected-resource", "/mcp"),
+        ("/.well-known/oauth-protected-resource/mcp", "/mcp"),
+        ("/.well-known/oauth-protected-resource/api/mcp", "/api/mcp"),
+    ])
+    def test_metadata_names_the_path_the_client_used(self, client, path, resource):
+        prm = client.get(path).json()
+        assert prm["resource"] == f"{BASE}{resource}"
+        assert prm["authorization_servers"] == [BASE]
+
     def test_metadata(self, client):
-        prm = client.get("/.well-known/oauth-protected-resource/api/mcp").json()
-        assert prm["resource"] == f"{BASE}/api/mcp"
+        prm = client.get("/.well-known/oauth-protected-resource/mcp").json()
+        assert prm["resource"] == f"{BASE}/mcp"
         assert prm["authorization_servers"] == [BASE]
 
         asm = client.get("/.well-known/oauth-authorization-server").json()

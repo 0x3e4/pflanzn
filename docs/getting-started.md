@@ -39,14 +39,14 @@ Put a reverse proxy in front that routes:
 | Path | Target |
 | --- | --- |
 | `/api/*` | backend `:8000` |
-| `/.well-known/oauth-*` | backend `:8000` (only needed for [MCP](mcp.md)) |
+| `/mcp`, `/.well-known/oauth-*` | backend `:8000` (only needed for [MCP](mcp.md)) |
 | everything else | frontend `:4173` |
 
 Caddy:
 
 ```caddyfile
 plants.example.com {
-    @backend path /api/* /.well-known/oauth-*
+    @backend path /api /api/* /mcp /mcp/ /.well-known/oauth-*
     reverse_proxy @backend localhost:8000
     reverse_proxy localhost:4173
 }
@@ -55,7 +55,7 @@ plants.example.com {
 nginx:
 
 ```nginx
-location ~ ^/(api/|\.well-known/oauth-) {
+location ~ ^/(api(/|$)|mcp/?$|\.well-known/oauth-) {
     proxy_pass http://localhost:8000;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
