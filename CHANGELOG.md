@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+## [2.1.0] - 2026-11-08
+
+### Added
 - Statistics, rebuilt: the watering status of the whole collection (overdue, due today and tomorrow, fine, no schedule; the due parts open the filtered plants list), a year of care as a calendar, waterings per week for twelve weeks split into by hand and by rain, plants per tag and top species as bars, the most cared-for plants of the last 90 days and the plants longest without water. Totals now include fertilizing and show the last 30 days against the 30 before. Every chart has a table view; colours are validated for colour-blind readers in both themes. New endpoint `GET /api/statistics/activity`.
 - The plants list opens filtered from links: `?needs_water=1` and `?tag=<name>`.
 - Documentation site (MkDocs Material, in the app's colours and fonts, light and dark): getting started, a user guide for plants, locations and AI, MCP, access, configuration, architecture and the changelog. It ships as its own image, `ghcr.io/0x3e4/pflanzn-docs`, and is served both at `{DOMAIN}/docs/` (the frontend forwards it to the docs container, or to the docs on GitHub when there is none) and on a domain of its own. The compose example has the new `docs` service; `DOCS_UPSTREAM` and `DOCS_RESOLVER` on the frontend point elsewhere if needed.
