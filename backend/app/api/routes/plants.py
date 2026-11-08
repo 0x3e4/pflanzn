@@ -59,6 +59,7 @@ from app.services.plantnet import PlantNetError, identify_species_via_plantnet
 from app.utils.time import utcnow
 from app.utils.uploads import IMAGE_VARIANTS
 from app.utils.uploads import generate_image_variants as _generate_image_variants
+from app.utils.watering_hint import split_watering_interval
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -708,14 +709,23 @@ async def generate_species_description_for_plant(
 
     try:
         llm = LLMClient()
-        description = llm.generate_species_description(common_name, species)
+        description, suggested_interval = split_watering_interval(
+            llm.generate_species_description(common_name, species)
+        )
         plant.description = description
+        # The suggestion only fills an empty field; an interval someone set by hand stays.
+        interval_applied = suggested_interval is not None and plant.watering_interval_days is None
+        if interval_applied:
+            plant.watering_interval_days = suggested_interval
         db.commit()
         db.refresh(plant)
 
         return {
             "message": "Description generated and saved successfully.",
-            "description": description
+            "description": description,
+            "suggested_watering_interval_days": suggested_interval,
+            "watering_interval_applied": interval_applied,
+            "watering_interval_days": plant.watering_interval_days,
         }
 
     except Exception as e:

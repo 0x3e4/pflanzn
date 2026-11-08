@@ -80,7 +80,7 @@
 | **Mobile list view** | Plants and Locations switch between a photo grid and a compact list with one-tap water/upload buttons; the choice is remembered per device. |
 | **Archive** | Plants can be archived with a reason instead of deleted — they drop out of the normal lists and stay reachable under the `#archive` filter, and can be restored at any time. |
 | **Identification** | One-shot PlantNet integration — accepts JPG / PNG / WebP / HEIC; the backend normalises uploads to JPEG before forwarding. |
-| **AI care advice** | Optional integration with OpenAI, Claude, Mistral, HuggingFace, or a local Ollama instance — provider auto-detected from whichever API key is set. |
+| **AI care advice** | Care advice and species descriptions; a generated description also fills in the watering interval when none is set. Optional integration with OpenAI, Claude, Mistral, HuggingFace, or a local Ollama instance — provider auto-detected from whichever API key is set. |
 | **Floor plans** | Upload a plan of your home, place plants on it and see at a glance which ones need water. Pinch-zoom and tap-to-place on mobile; members only. Enabled by an admin under Manage → Floor plans. |
 | **MCP** | Optional [MCP](https://modelcontextprotocol.io) endpoint for Claude and other AI clients, secured with OAuth. |
 | **Auto-watering** | Outdoor plants with `reaches_rain=true` are auto-watered when Open-Meteo reports rainfall above your threshold. Optional OpenWeatherMap key for current-weather display. |

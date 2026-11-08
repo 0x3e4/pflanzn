@@ -31,7 +31,11 @@ class PromptConfig:
             f"Include: natural habitat, distinctive appearance features, essential care requirements, "
             f"and one interesting fact. "
             f"Write in '{settings.LLM_LANGUAGE}' in a professional yet accessible style. "
-            f"Avoid markdown formatting, titles, or bold text. Maximum 1500 characters."
+            f"Avoid markdown formatting, titles, or bold text. Maximum 1500 characters. "
+            f"After the description, add one last line in exactly this form, in English: "
+            f"'WATERING_INTERVAL_DAYS: N', where N is the usual number of days between waterings "
+            f"for this plant kept in a pot indoors during the growing season, as one whole number. "
+            f"Software reads that line and removes it from the description."
         )
 
     @staticmethod

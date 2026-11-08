@@ -45,7 +45,7 @@ app/
 │   └── security.py        # JWT, Argon2, session management, token theft detection
 ├── api/routes/            # REST endpoints
 │   ├── auth.py            # Login, register, token refresh, OIDC
-│   ├── plants.py          # Plant CRUD (list with ?summary=true), watering, fertilizing, notes, care advice, species description reuse
+│   ├── plants.py          # Plant CRUD (list with ?summary=true), watering, fertilizing, notes, care advice, species description (generation also suggests a watering interval) and its reuse
 │   ├── locations.py       # Location CRUD, photos, tags, notes, harvest times, import of old browser-only data
 │   ├── users.py           # User management (admin)
 │   ├── tags.py            # Tag CRUD and plant-tag associations
@@ -59,7 +59,7 @@ app/
 │   ├── plantnet.py        # PlantNet species identification
 │   ├── prompt_config.py   # LLM prompt templates
 │   └── weather_service.py # Weather data fetching and auto-watering logic
-└── utils/                 # EXIF extraction, text cleaning, utcnow() (naive UTC, as stored)
+└── utils/                 # EXIF extraction, text cleaning, the watering interval in a generated description, utcnow() (naive UTC, as stored)
 ```
 
 ## Key Conventions

@@ -375,13 +375,32 @@ export default function PlantDetails() {
             details: [
                 "Checking existing plant data and context",
                 "Generating text with the configured AI provider",
-                "Saving the new description to this plant",
+                "Saving the description, and a watering interval if none is set",
             ],
         });
 
         try {
-            const { description } = await generatePlantDescription(Number(plantId));
-            await handleUpdate({ description });
+            // The server saves both; no second request, just take what it stored.
+            const result = await generatePlantDescription(Number(plantId));
+            setPlant((current) =>
+                current
+                    ? {
+                          ...current,
+                          description: result.description,
+                          watering_interval_days: result.watering_interval_days,
+                      }
+                    : current,
+            );
+            const suggested = result.suggested_watering_interval_days;
+            if (result.watering_interval_applied && suggested) {
+                toast.success(`Description saved. Watering every ${suggested} days, set from it.`);
+            } else if (suggested && suggested !== result.watering_interval_days) {
+                toast.success(
+                    `Description saved. It suggests watering every ${suggested} days; your ${result.watering_interval_days} days stay.`,
+                );
+            } else {
+                toast.success("Description saved.");
+            }
         } catch (error) {
             toast.error((error as Error).message || "Failed to generate description.");
         } finally {

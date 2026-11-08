@@ -95,7 +95,15 @@ export const fetchSpeciesDescription = async (
 };
 
 // Generate description
-export const generatePlantDescription = async (plantId: number): Promise<{ description: string }> => {
+export interface GeneratedDescription {
+    description: string;
+    // The model's watering interval; it only fills an empty field, never one set by hand.
+    suggested_watering_interval_days: number | null;
+    watering_interval_applied: boolean;
+    watering_interval_days: number | null;
+}
+
+export const generatePlantDescription = async (plantId: number): Promise<GeneratedDescription> => {
     // Models that think before answering can take a while.
     const response = await apiClient.post(`${API_BASE}/${plantId}/generate_description`, undefined, { timeout: 180000 });
     return response.data;
