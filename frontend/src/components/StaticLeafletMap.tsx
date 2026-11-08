@@ -1,9 +1,10 @@
 import { useEffect, useRef } from "react";
 import "../styles/staticLeafletMap.css";
+import { tooltipNode } from "../services/leafletText";
 
 type LeafletMarkerLike = {
     addTo: (map: any) => LeafletMarkerLike;
-    bindTooltip?: (content: string, options?: Record<string, unknown>) => void;
+    bindTooltip?: (content: string | HTMLElement, options?: Record<string, unknown>) => void;
     on?: (event: string, handler: () => void) => void;
 };
 
@@ -30,6 +31,10 @@ const LEAFLET_CSS_ID = "leaflet-css-cdn";
 const LEAFLET_SCRIPT_ID = "leaflet-js-cdn";
 const LEAFLET_CSS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
 const LEAFLET_JS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+// Subresource Integrity: the browser refuses the files if the CDN ever serves anything else.
+// The hashes Leaflet publishes for 1.9.4 (leafletjs.com/download.html).
+const LEAFLET_CSS_SRI = "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=";
+const LEAFLET_JS_SRI = "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=";
 
 const ensureLeaflet = async (): Promise<LeafletLike> => {
     if (window.L) {
@@ -41,6 +46,8 @@ const ensureLeaflet = async (): Promise<LeafletLike> => {
         cssLink.id = LEAFLET_CSS_ID;
         cssLink.rel = "stylesheet";
         cssLink.href = LEAFLET_CSS_URL;
+        cssLink.integrity = LEAFLET_CSS_SRI;
+        cssLink.crossOrigin = "anonymous";
         document.head.appendChild(cssLink);
     }
 
@@ -67,6 +74,8 @@ const ensureLeaflet = async (): Promise<LeafletLike> => {
             const script = document.createElement("script");
             script.id = LEAFLET_SCRIPT_ID;
             script.src = LEAFLET_JS_URL;
+            script.integrity = LEAFLET_JS_SRI;
+            script.crossOrigin = "anonymous";
             script.async = true;
             script.onload = handleLoaded;
             script.onerror = handleError;
@@ -177,7 +186,7 @@ export default function StaticLeafletMap({
                         .addTo(map);
 
                     if (markerConfig.tooltipText && typeof marker.bindTooltip === "function") {
-                        marker.bindTooltip(markerConfig.tooltipText, {
+                        marker.bindTooltip(tooltipNode(markerConfig.tooltipText), {
                             direction: "top",
                             offset: [0, -10],
                             className: "location-leaflet-tooltip",
