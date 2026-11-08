@@ -95,7 +95,19 @@
 
 .sidebar-about-links {
     display: flex;
-    gap: 16px;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+}
+
+/* The arrow says the link leaves the app (a new tab). */
+.sidebar-about-links a {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.sidebar-about-links svg {
+    font-size: 0.7em;
 }
 
 .sidebar-about a {

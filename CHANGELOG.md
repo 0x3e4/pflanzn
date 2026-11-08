@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- A link to the documentation (`/docs/`) in the Manage sidebar, next to About and GitHub, and on the About page; both open in a new tab and say so with the external-link arrow.
 
 ### Changed
 - The frontend container is now the gateway: it forwards `/api`, `/mcp` and `/.well-known/oauth-*` to the backend and `/docs/` to the docs container, so the reverse proxy only needs the frontend (one `location /` block) and backend and docs need no published port. Upstreams are looked up per request, so a recreated backend is found again and the frontend starts without it. New frontend variables: `BACKEND_UPSTREAM` (default `http://pflanzn-backend:8000`), `TRUSTED_PROXIES` (whose `X-Forwarded-For` gives the client IP; default private networks), `MAX_UPLOAD_MB` and `UPSTREAM_RESOLVER`, which replaces `DOCS_RESOLVER`. **`DOCS_UPSTREAM` now defaults to `http://pflanzn-docs:80`**: give the docs service that alias (as in the compose example) or set it, otherwise `/docs` falls back to GitHub. A proxy that sends `/api` straight to the backend keeps working.

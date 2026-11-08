@@ -20,7 +20,7 @@ import McpPanel from "../components/McpPanel";
 import FloorPlansPanel from "../components/FloorPlansPanel";
 import "../styles/manage.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPenToSquare, faUnlock } from "@fortawesome/free-solid-svg-icons";
+import { faArrowUpRightFromSquare, faPenToSquare, faUnlock } from "@fortawesome/free-solid-svg-icons";
 import { User } from "../types/User";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -333,8 +333,20 @@ const Manage: React.FC = () => {
                     <li className="sidebar-info-item sidebar-about">
                         <span className="sidebar-about-links">
                             <Link to="/about">About</Link>
-                            <a href="https://github.com/0x3e4/pflanzn" target="_blank" rel="noreferrer">
+                            {/* The docs site at /docs (the frontend forwards it to the docs container,
+                                or to the docs on GitHub when there is none). */}
+                            <a href="/docs/" target="_blank" rel="noreferrer" aria-label="Docs (opens in a new tab)">
+                                Docs
+                                <FontAwesomeIcon icon={faArrowUpRightFromSquare} aria-hidden="true" />
+                            </a>
+                            <a
+                                href="https://github.com/0x3e4/pflanzn"
+                                target="_blank"
+                                rel="noreferrer"
+                                aria-label="GitHub (opens in a new tab)"
+                            >
                                 GitHub
+                                <FontAwesomeIcon icon={faArrowUpRightFromSquare} aria-hidden="true" />
                             </a>
                         </span>
                         <span>Version {APP_VERSION}</span>

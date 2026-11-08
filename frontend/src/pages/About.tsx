@@ -1,7 +1,15 @@
 import {} from "react";
 import "../styles/about.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSeedling, faCamera, faTint, faKey, faMobileAlt, faRobot } from "@fortawesome/free-solid-svg-icons";
+import {
+    faArrowUpRightFromSquare,
+    faSeedling,
+    faCamera,
+    faTint,
+    faKey,
+    faMobileAlt,
+    faRobot,
+} from "@fortawesome/free-solid-svg-icons";
 
 export default function About() {
     return (
@@ -10,6 +18,14 @@ export default function About() {
             <div className="about-content">
                 <h1>Pflanzn</h1>
                 <p>A simple and efficient plant management system.</p>
+                <p className="about-docs">
+                    Setup, the user guide, MCP and every setting are in the{" "}
+                    <a href="/docs/" target="_blank" rel="noreferrer" aria-label="documentation (opens in a new tab)">
+                        documentation
+                        <FontAwesomeIcon icon={faArrowUpRightFromSquare} aria-hidden="true" />
+                    </a>
+                    .
+                </p>
 
                 <h2>Pronunciation & Meaning</h2>
                 <p>
