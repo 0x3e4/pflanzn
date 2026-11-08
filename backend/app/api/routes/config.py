@@ -32,5 +32,4 @@ def get_app_config(db: Session = Depends(get_db)):
         floor_plans_enabled=app_settings.floor_plans_enabled(db),
         domain=settings.DOMAIN or "",
         oidc_name=settings.OIDC_NAME or "",
-        admin_user=settings.ADMIN_USER or None,
     )

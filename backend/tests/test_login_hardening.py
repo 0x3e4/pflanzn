@@ -185,3 +185,25 @@ class TestEmptyPasswords:
              patch.object(settings, "ADMIN_PASSWORD", ""):
             security.create_admin_user()
         db.add.assert_not_called()
+
+
+class TestAdminNameIsNotPublic:
+    def test_public_config_does_not_name_the_admin(self, client):
+        """Regression: GET /api/config (no login) returned admin_user, which handed out the
+        admin's login name, enough to keep that account locked out with failed logins."""
+        from app.core.config import settings
+
+        with patch.object(settings, "ADMIN_USER", "rootgardener"):
+            body = client.get("/api/config").json()
+        assert "admin_user" not in body
+        assert "rootgardener" not in str(body)
+
+    def test_admins_still_see_which_account_is_the_default_admin(self):
+        from app.core.config import settings
+        from app.schemas import UserResponse
+
+        with patch.object(settings, "ADMIN_USER", "rootgardener"):
+            default = UserResponse(id=1, username="rootgardener", email="r@x", role="admin")
+            other = UserResponse(id=2, username="ann", email="a@x", role="admin")
+            assert default.model_dump()["is_default_admin"] is True
+            assert other.model_dump()["is_default_admin"] is False

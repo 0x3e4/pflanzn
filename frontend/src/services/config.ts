@@ -13,7 +13,6 @@ export interface AppConfig {
     floorPlansEnabled: boolean;
     domain: string;
     oidcName: string;
-    adminUser: string | null;
 }
 
 declare global {
@@ -37,7 +36,6 @@ const DEFAULT_CONFIG: AppConfig = {
     floorPlansEnabled: false,
     domain: "",
     oidcName: "",
-    adminUser: null,
 };
 
 export async function loadConfig(): Promise<AppConfig> {
@@ -62,7 +60,6 @@ export async function loadConfig(): Promise<AppConfig> {
         floorPlansEnabled: !!data.floor_plans_enabled,
         domain: data.domain || "",
         oidcName: data.oidc_name || "",
-        adminUser: data.admin_user || null,
     };
     window.__APP_CONFIG__ = config;
     return config;

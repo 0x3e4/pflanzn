@@ -12,7 +12,7 @@ import "react-loading-skeleton/dist/skeleton.css";
 const roles = ["user", "admin"];
 
 export default function UsersPanel() {
-    const { authMode, adminUser } = useConfig();
+    const { authMode } = useConfig();
     const { user, isLoggedIn } = useAuth();
     const [users, setUsers] = useState<User[]>([]);
     const [newUser, setNewUser] = useState({ username: "", email: "", password: "", role: "user" });
@@ -133,8 +133,10 @@ export default function UsersPanel() {
     };
 
     // Update User
-    const handleUpdateUser = async (userId: number, username: string) => {
-        if (adminUser && username === adminUser) {
+    const isDefaultAdmin = (userId: number) => users.some((u) => u.id === userId && u.is_default_admin);
+
+    const handleUpdateUser = async (userId: number) => {
+        if (isDefaultAdmin(userId)) {
             toast.error("Cannot update the default admin.");
             return;
         }
@@ -174,7 +176,7 @@ export default function UsersPanel() {
 
     // Delete User
     const handleDeleteUser = async (userId: number, username: string) => {
-        if (adminUser && username === adminUser) {
+        if (isDefaultAdmin(userId)) {
             toast.error("Cannot delete the default admin.");
             return;
         }
@@ -216,99 +218,99 @@ export default function UsersPanel() {
 
             <div className="table-container">
                 <div className="table-scroll-wrapper">
-                <table className="data-table">
-                    <thead>
-                        <tr>
-                            <th onClick={() => handleSort("id")}>ID</th>
-                            <th onClick={() => handleSort("username")}>Username</th>
-                            <th onClick={() => handleSort("email")}>Email</th>
-                            <th onClick={() => handleSort("role")}>Role</th>
-                            {authMode !== "no" && <th></th>}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loading
-                            ? [...Array(6)].map((_, index) => (
-                                  <tr key={`user-skeleton-${index}`}>
-                                      <td>
-                                          <Skeleton width={24} />
-                                      </td>
-                                      <td>
-                                          <Skeleton />
-                                      </td>
-                                      <td>
-                                          <Skeleton />
-                                      </td>
-                                      <td>
-                                          <Skeleton width={70} />
-                                      </td>
-                                      {authMode !== "no" && (
+                    <table className="data-table">
+                        <thead>
+                            <tr>
+                                <th onClick={() => handleSort("id")}>ID</th>
+                                <th onClick={() => handleSort("username")}>Username</th>
+                                <th onClick={() => handleSort("email")}>Email</th>
+                                <th onClick={() => handleSort("role")}>Role</th>
+                                {authMode !== "no" && <th></th>}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loading
+                                ? [...Array(6)].map((_, index) => (
+                                      <tr key={`user-skeleton-${index}`}>
                                           <td>
-                                              <div className="action-buttons">
-                                                  <Skeleton circle width={30} height={30} />
-                                                  <Skeleton circle width={30} height={30} />
-                                              </div>
+                                              <Skeleton width={24} />
                                           </td>
-                                      )}
-                                  </tr>
-                              ))
-                            : currentUsers.map((u) => (
-                                  <tr key={u.id}>
-                                      <td>{u.id}</td>
-                                      <td>
-                                          <input
-                                              type="text"
-                                              value={getCurrentValue(u.id, "username", u.username)}
-                                              onChange={(e) => updateUserField(u.id, "username", e.target.value)}
-                                              className="editable-input"
-                                              disabled={authMode === "oidc"}
-                                          />
-                                      </td>
-                                      <td>
-                                          <input
-                                              type="email"
-                                              value={getCurrentValue(u.id, "email", u.email)}
-                                              onChange={(e) => updateUserField(u.id, "email", e.target.value)}
-                                              className="editable-input"
-                                              disabled={authMode === "oidc"}
-                                          />
-                                      </td>
-                                      <td>
-                                          <select
-                                              value={getCurrentValue(u.id, "role", u.role)}
-                                              onChange={(e) => updateUserField(u.id, "role", e.target.value)}
-                                              disabled={authMode === "no"}
-                                              className="editable-select"
-                                          >
-                                              {roles.map((role) => (
-                                                  <option key={role} value={role}>
-                                                      {role}
-                                                  </option>
-                                              ))}
-                                          </select>
-                                      </td>
-                                      {authMode !== "no" && (
                                           <td>
-                                              <div className="action-buttons">
-                                                  <button
-                                                      className="update-btn"
-                                                      onClick={() => handleUpdateUser(u.id, u.username)}
-                                                  >
-                                                      <FontAwesomeIcon icon={faSave} />
-                                                  </button>
-                                                  <button
-                                                      className="delete-btn"
-                                                      onClick={() => handleDeleteUser(u.id, u.username)}
-                                                  >
-                                                      <FontAwesomeIcon icon={faTrash} />
-                                                  </button>
-                                              </div>
+                                              <Skeleton />
                                           </td>
-                                      )}
-                                  </tr>
-                              ))}
-                    </tbody>
-                </table>
+                                          <td>
+                                              <Skeleton />
+                                          </td>
+                                          <td>
+                                              <Skeleton width={70} />
+                                          </td>
+                                          {authMode !== "no" && (
+                                              <td>
+                                                  <div className="action-buttons">
+                                                      <Skeleton circle width={30} height={30} />
+                                                      <Skeleton circle width={30} height={30} />
+                                                  </div>
+                                              </td>
+                                          )}
+                                      </tr>
+                                  ))
+                                : currentUsers.map((u) => (
+                                      <tr key={u.id}>
+                                          <td>{u.id}</td>
+                                          <td>
+                                              <input
+                                                  type="text"
+                                                  value={getCurrentValue(u.id, "username", u.username)}
+                                                  onChange={(e) => updateUserField(u.id, "username", e.target.value)}
+                                                  className="editable-input"
+                                                  disabled={authMode === "oidc"}
+                                              />
+                                          </td>
+                                          <td>
+                                              <input
+                                                  type="email"
+                                                  value={getCurrentValue(u.id, "email", u.email)}
+                                                  onChange={(e) => updateUserField(u.id, "email", e.target.value)}
+                                                  className="editable-input"
+                                                  disabled={authMode === "oidc"}
+                                              />
+                                          </td>
+                                          <td>
+                                              <select
+                                                  value={getCurrentValue(u.id, "role", u.role)}
+                                                  onChange={(e) => updateUserField(u.id, "role", e.target.value)}
+                                                  disabled={authMode === "no"}
+                                                  className="editable-select"
+                                              >
+                                                  {roles.map((role) => (
+                                                      <option key={role} value={role}>
+                                                          {role}
+                                                      </option>
+                                                  ))}
+                                              </select>
+                                          </td>
+                                          {authMode !== "no" && (
+                                              <td>
+                                                  <div className="action-buttons">
+                                                      <button
+                                                          className="update-btn"
+                                                          onClick={() => handleUpdateUser(u.id)}
+                                                      >
+                                                          <FontAwesomeIcon icon={faSave} />
+                                                      </button>
+                                                      <button
+                                                          className="delete-btn"
+                                                          onClick={() => handleDeleteUser(u.id, u.username)}
+                                                      >
+                                                          <FontAwesomeIcon icon={faTrash} />
+                                                      </button>
+                                                  </div>
+                                              </td>
+                                          )}
+                                      </tr>
+                                  ))}
+                        </tbody>
+                    </table>
                 </div>
 
                 {!loading && totalPages > 1 && (

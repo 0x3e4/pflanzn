@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_serializer, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, computed_field, field_serializer, field_validator
 
 
 class UserCreate(BaseModel):
@@ -31,6 +31,15 @@ class UserResponse(BaseModel):
     role: str
 
     model_config = ConfigDict(from_attributes=True)
+
+    @computed_field
+    @property
+    def is_default_admin(self) -> bool:
+        """The admin created from ADMIN_USER. Only sent in responses that already need a
+        login (no longer in the public /api/config, where it named the admin to anyone)."""
+        from app.core.config import settings
+
+        return bool(settings.ADMIN_USER) and self.role == "admin" and self.username == settings.ADMIN_USER
 
 class LoginRequest(BaseModel):
     username: str
@@ -446,7 +455,6 @@ class AppConfigResponse(BaseModel):
     floor_plans_enabled: bool
     domain: str
     oidc_name: str
-    admin_user: Optional[str] = None
 
 
 class OAuthRequestInfo(BaseModel):
