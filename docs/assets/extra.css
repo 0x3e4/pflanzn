@@ -1,0 +1,264 @@
+/* Pflanzn docs theme: the app's botanical palette and typefaces, taken from
+   frontend/src/global.css. Keep the two in step. Nothing loads from elsewhere:
+   Alegreya and Inter are served from assets/fonts (theme.font is off). */
+
+@font-face {
+  font-family: "Inter Variable"; font-style: normal; font-weight: 100 900; font-display: swap;
+  src: url("fonts/inter-latin-ext-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Inter Variable"; font-style: normal; font-weight: 100 900; font-display: swap;
+  src: url("fonts/inter-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Alegreya Variable"; font-style: normal; font-weight: 400 900; font-display: swap;
+  src: url("fonts/alegreya-latin-ext-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Alegreya Variable"; font-style: normal; font-weight: 400 900; font-display: swap;
+  src: url("fonts/alegreya-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  /* Material appends its own fallbacks to these. */
+  --md-text-font: "Inter Variable";
+  --md-code-font: ui-monospace, "Cascadia Code", "SFMono-Regular", Menlo, Consolas;
+  --pf-display: "Alegreya Variable", Georgia, serif;
+}
+
+/* Dark: green-black grounds, warm cream text, sage links. */
+[data-md-color-scheme="slate"] {
+  --md-hue: 140;
+  --pf-ground: #121a15;
+  --pf-raised: #19231c;
+  --pf-raised-2: #212d25;
+  --pf-rule: #2f3b32;
+  --pf-ink: #f2ead8;
+  --pf-muted: #aab3a2;
+  --pf-cream: #e8d3a0;
+  --pf-link: #86b97c;
+  --pf-focus: #f6efde;
+
+  --md-primary-fg-color: var(--pf-raised);
+  --md-primary-fg-color--light: var(--pf-raised-2);
+  --md-primary-fg-color--dark: var(--pf-ground);
+  --md-primary-bg-color: var(--pf-ink);
+  --md-primary-bg-color--light: var(--pf-muted);
+
+  --md-accent-fg-color: var(--pf-cream);
+  --md-accent-fg-color--transparent: rgb(232 211 160 / 0.12);
+  --md-accent-bg-color: var(--pf-ground);
+
+  --md-default-bg-color: var(--pf-ground);
+  --md-default-fg-color: var(--pf-ink);
+  --md-default-fg-color--light: #d9d2c0;
+  --md-default-fg-color--lighter: var(--pf-muted);
+  --md-default-fg-color--lightest: var(--pf-rule);
+
+  --md-code-bg-color: var(--pf-raised);
+  --md-code-fg-color: #d9d2c0;
+  --md-typeset-a-color: var(--pf-link);
+
+  --md-footer-bg-color: var(--pf-raised);
+  --md-footer-bg-color--dark: var(--pf-ground);
+  --md-footer-fg-color: var(--pf-ink);
+  --md-footer-fg-color--light: #d9d2c0;
+  --md-footer-fg-color--lighter: var(--pf-muted);
+}
+
+/* Light: warm cream grounds, green-black text, a forest-green header. */
+[data-md-color-scheme="default"] {
+  --pf-ground: #f3eee2;
+  --pf-raised: #fbf8f0;
+  --pf-raised-2: #ece5d4;
+  --pf-rule: #d9cfba;
+  --pf-ink: #1d2a20;
+  --pf-muted: #5a6656;
+  --pf-cream: #7d5a17;
+  --pf-link: #2f6b3a;
+  --pf-focus: #1d2a20;
+
+  --md-primary-fg-color: #2f6a3e;
+  --md-primary-fg-color--light: #3b7a4b;
+  --md-primary-fg-color--dark: #24532f;
+  --md-primary-bg-color: #fbf8f0;
+  --md-primary-bg-color--light: #e3dccb;
+
+  --md-accent-fg-color: var(--pf-cream);
+  --md-accent-fg-color--transparent: rgb(125 90 23 / 0.1);
+  --md-accent-bg-color: var(--pf-raised);
+
+  --md-default-bg-color: var(--pf-ground);
+  --md-default-fg-color: var(--pf-ink);
+  --md-default-fg-color--light: #3f4a40;
+  --md-default-fg-color--lighter: var(--pf-muted);
+  --md-default-fg-color--lightest: var(--pf-rule);
+
+  --md-code-bg-color: var(--pf-raised-2);
+  --md-code-fg-color: #2c372e;
+  --md-typeset-a-color: var(--pf-link);
+
+  --md-footer-bg-color: #24532f;
+  --md-footer-bg-color--dark: #1d4527;
+  --md-footer-fg-color: #fbf8f0;
+  --md-footer-fg-color--light: #e3dccb;
+  --md-footer-fg-color--lighter: #c9d2c0;
+}
+
+/* Headings and the site name in the app's display face. */
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-header__topic:first-child .md-ellipsis {
+  font-family: var(--pf-display);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.md-typeset h1 {
+  color: var(--md-default-fg-color);
+  font-size: 2.3em;
+}
+
+.md-typeset h2 {
+  font-size: 1.6em;
+}
+
+.md-header__topic:first-child .md-ellipsis {
+  font-size: 1.15rem;
+}
+
+.md-typeset a:focus-visible,
+.md-nav__link:focus-visible {
+  outline: 2px solid var(--pf-focus);
+  outline-offset: 2px;
+}
+
+.md-nav__link--active,
+.md-nav__item .md-nav__link--active {
+  color: var(--pf-cream);
+}
+
+/* Panels like the app's: a raised ground with a hairline rule. */
+.md-typeset .admonition,
+.md-typeset details {
+  background: var(--pf-raised);
+  border-color: var(--pf-rule);
+}
+
+.md-typeset table:not([class]) {
+  border-color: var(--pf-rule);
+}
+
+.md-typeset table:not([class]) th {
+  background: var(--pf-raised);
+}
+
+/* Screenshots: a hairline border so they sit on the page. */
+.md-typeset p > img {
+  border: 1px solid var(--pf-rule);
+  border-radius: 8px;
+}
+
+/* Grid cards on the home page, like the app's panels. */
+.md-typeset .grid.cards > ul > li {
+  position: relative;
+  background: var(--pf-raised);
+  border: 1px solid var(--pf-rule);
+  border-radius: 8px;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.md-typeset .grid.cards > ul > li:hover,
+.md-typeset .grid.cards > ul > li:focus-within {
+  border-color: var(--pf-cream);
+}
+
+.md-typeset .grid.cards .twemoji svg {
+  fill: var(--pf-link);
+}
+
+/* The whole card opens its link: the card's last link stretches over it. */
+.md-typeset .grid.cards > ul > li a:last-of-type::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.md-typeset .grid.cards > ul > li a:last-of-type:focus-visible {
+  outline: none;
+}
+
+.md-typeset .grid.cards > ul > li:has(a:focus-visible) {
+  outline: 2px solid var(--pf-focus);
+  outline-offset: 2px;
+}
+
+/* Screenshots open larger on a click (assets/zoom.js). */
+.md-typeset img[data-zoom] {
+  cursor: zoom-in;
+}
+
+.md-typeset img[data-zoom]:focus-visible {
+  outline: 2px solid var(--pf-focus);
+  outline-offset: 3px;
+}
+
+dialog.zoom {
+  max-width: 96vw;
+  max-height: 96vh;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+  cursor: zoom-out;
+}
+
+dialog.zoom::backdrop {
+  background: rgb(10 15 12 / 0.86);
+}
+
+dialog.zoom img {
+  display: block;
+  max-width: 96vw;
+  max-height: 92vh;
+  width: auto;
+  height: auto;
+  border: 1px solid var(--pf-rule);
+  border-radius: 8px;
+}
+
+.zoom__close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--pf-rule);
+  border-radius: 6px;
+  background: var(--pf-raised);
+  color: var(--pf-ink);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.zoom__close:hover {
+  background: var(--pf-raised-2);
+}
+
+.zoom__close:focus-visible {
+  outline: 2px solid var(--pf-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .md-typeset .grid.cards > ul > li {
+    transition: none;
+  }
+}

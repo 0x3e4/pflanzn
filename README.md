@@ -57,6 +57,7 @@
 
 ## Table of contents
 
+- [Documentation](#documentation)
 - [Highlights](#highlights)
 - [Architecture](#architecture)
 - [Quick start](#quick-start)
@@ -67,6 +68,16 @@
 - [Tech stack](#tech-stack)
 - [Demo](#demo)
 - [Support](#support)
+
+---
+
+## Documentation
+
+The full documentation (getting started, a user guide, MCP, access, configuration and
+architecture) lives in [docs/](docs/) and is built into its own image,
+`ghcr.io/0x3e4/pflanzn-docs`. Run it next to the app and it is served at **`{DOMAIN}/docs/`**,
+and on a domain of its own if you route one to it; both work at once. See
+[Documentation site](docs/getting-started.md#documentation-site).
 
 ---
 
@@ -186,7 +197,8 @@ location / {
 Prebuilt images are published to GHCR on every push to `main` and on every semver tag (`X.Y.Z`) by [build-images.yml](.github/workflows/build-images.yml):
 
 - `ghcr.io/0x3e4/pflanzn-backend`
-- `ghcr.io/0x3e4/pflanzn-frontend` (multi-stage build → nginx alpine)
+- `ghcr.io/0x3e4/pflanzn-frontend` (multi-stage build → nginx alpine; forwards `/docs/` to the docs container)
+- `ghcr.io/0x3e4/pflanzn-docs` (MkDocs Material → nginx alpine, optional)
 
 `main` builds get the `latest` and `main-<sha>` tags; release builds get `X.Y.Z`, `X.Y`, and `X` tags. For production, pin to an explicit semver tag — see [SECURITY.md](SECURITY.md) for the supported-version policy.
 
@@ -224,6 +236,15 @@ Tests:
 cd backend
 poetry run pytest tests/ -v
 ```
+
+### Documentation
+
+```bash
+poetry -P docs install
+poetry -P docs run mkdocs serve      # http://127.0.0.1:8000, reloads on change
+```
+
+Requires Python 3.14. The image build runs `mkdocs build --strict`, so a broken link fails it.
 
 ### Linting
 
@@ -326,6 +347,7 @@ prompts.
 | Weather | Open-Meteo (rainfall, no key); OpenWeatherMap (optional, current weather display) |
 | PWA | vite-plugin-pwa + Workbox (CacheFirst for images / NetworkFirst for API reads) |
 | Image pipeline | Pillow + pillow_heif → 3 WebP variants per upload (`thumb` 300px, `medium` 800px, `original` 2000px) served via `?size=…` |
+| Docs | MkDocs Material, own image, served at `/docs/` and on its own domain |
 | Deployment | Docker Compose; GHCR images via [GitHub Actions](.github/workflows/build-images.yml) |
 
 ---

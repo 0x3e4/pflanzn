@@ -33,6 +33,18 @@ services:
     networks:
       - default
 
+  # Documentation, optional. The frontend forwards /docs/ to this service, so the docs
+  # are at {DOMAIN}/docs/ without any proxy change; without it, /docs goes to GitHub.
+  # For a separate docs domain, route it to this service's port 80.
+  docs:
+    image: ghcr.io/0x3e4/pflanzn-docs:latest
+    pull_policy: always
+    restart: always
+    # ports:
+    #   - "4174:80"
+    networks:
+      - default
+
   mariadb:
     image: mariadb:latest
     restart: always

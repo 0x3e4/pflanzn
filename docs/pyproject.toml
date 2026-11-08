@@ -1,0 +1,15 @@
+# Documentation build dependencies, for `poetry run mkdocs serve -f ../mkdocs.yml`
+# here and for the docs image (docs/Dockerfile installs from the same poetry.lock).
+[tool.poetry]
+name = "pflanzn-docs"
+version = "2.0.0"
+description = "Documentation site for Pflanzn, the self-hostable plant manager."
+authors = ["Raphael Koller"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.14"
+# pymdown-extensions comes with Material.
+mkdocs-material = "9.8.0"
+# GitHub's "> [!NOTE]" alerts, so docs/*.md read the same on GitHub and on the site.
+markdown-callouts = "0.4.0"

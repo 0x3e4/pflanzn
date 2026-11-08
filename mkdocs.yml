@@ -1,0 +1,104 @@
+site_name: Pflanzn Documentation
+site_description: Self-hostable plant management — documentation
+site_author: Raphael Koller
+docs_dir: docs
+# Left empty on purpose: the pages link to each other relatively, so one build
+# works both on its own domain (docs.example.com/) and under the app at /docs/.
+# Set DOCS_SITE_URL only for a canonical URL in the page head.
+site_url: !ENV [DOCS_SITE_URL, ""]
+# The docs image's build files live in docs/ too, but are not part of the site.
+exclude_docs: |
+  /Dockerfile
+  /Dockerfile.dockerignore
+  /nginx.conf
+  /pyproject.toml
+  /poetry.lock
+
+theme:
+  name: material
+  # No Google Fonts: Alegreya and Inter, the app's typefaces, ship in assets/fonts.
+  font: false
+  logo: assets/logo.png
+  favicon: assets/logo.png
+  # Light and dark like the app; exact colours come from assets/extra.css.
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+    - toc.follow
+
+# A plain link, no repo_url: Material would fetch the star count from the GitHub
+# API on every page, and the site loads nothing from elsewhere.
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/0x3e4/pflanzn
+      name: Pflanzn on GitHub
+    - icon: material/sprout
+      link: https://pflanzn.app
+      name: Demo at pflanzn.app
+
+extra_css:
+  - assets/extra.css
+
+extra_javascript:
+  - assets/zoom.js
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  # GitHub's "> [!NOTE]" alerts, so the same Markdown reads well on GitHub and here.
+  - github-callouts
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.snippets:
+      # The changelog page includes CHANGELOG.md from the repository root.
+      base_path: ["."]
+      check_paths: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - User Guide:
+      - Plants & Watering: guide/plants.md
+      - Locations & Floor Plans: guide/locations.md
+      - Identification & AI: guide/ai.md
+  - Integrations:
+      - MCP Server: mcp.md
+  - Administration:
+      - Access & Visibility: access.md
+      - Configuration: configuration.md
+      - Architecture: architecture.md
+  - Changelog: changelog.md

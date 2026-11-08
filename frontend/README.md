@@ -11,7 +11,7 @@ React-based single-page application for the Pflanzn plant management system. Bui
 - **PWA:** vite-plugin-pwa + Workbox — CacheFirst for uploaded images (`/api/uploads/*`, 500 entries / 30 days), NetworkFirst with a 2–3 s network timeout for the cached API reads (plants, locations, `users/profile`, statistics). App shell is precached; `registerType: 'autoUpdate'`
 - **Testing:** Vitest + @testing-library/react (jsdom)
 - **Linting:** ESLint + Prettier (enforced via Husky pre-commit hooks)
-- **Production serving:** nginx (multi-stage Dockerfile — `builder` runs `vite build`, `runtime` is nginx alpine serving `dist/` on port 4173). Cache headers in [nginx.conf](nginx.conf): immutable for hashed `/assets/*`, no-cache for `sw.js` / `manifest.webmanifest` so PWA updates propagate
+- **Production serving:** nginx (multi-stage Dockerfile — `builder` runs `vite build`, `runtime` is nginx alpine serving `dist/` on port 4173). Cache headers in [nginx.conf.template](nginx.conf.template) (the nginx image fills in `DOCS_UPSTREAM` / `DOCS_RESOLVER` on start; `/docs/` is forwarded to the docs container): immutable for hashed `/assets/*`, no-cache for `sw.js` / `manifest.webmanifest` so PWA updates propagate
 
 ## Development
 

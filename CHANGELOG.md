@@ -8,7 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- MCP guide ([docs/mcp.md](docs/mcp.md)): enabling the server, the three sign-in modes, connecting Claude, Claude Code and other clients, every tool with its access, and example prompts. Manage → MCP links to it.
+- Documentation site (MkDocs Material, in the app's colours and fonts, light and dark): getting started, a user guide for plants, locations and AI, MCP, access, configuration, architecture and the changelog. It ships as its own image, `ghcr.io/0x3e4/pflanzn-docs`, and is served both at `{DOMAIN}/docs/` (the frontend forwards it to the docs container, or to the docs on GitHub when there is none) and on a domain of its own. The compose example has the new `docs` service; `DOCS_UPSTREAM` and `DOCS_RESOLVER` on the frontend point elsewhere if needed.
+- The MCP guide has a screenshot of Manage → MCP, and the link there now opens `/docs/mcp/`.
+- MCP guide ([docs/mcp.md](https://github.com/0x3e4/pflanzn/blob/main/docs/mcp.md)): enabling the server, the three sign-in modes, connecting Claude, Claude Code and other clients, every tool with its access, and example prompts. Manage → MCP links to it.
 - Generating a plant's description with AI also asks for its usual watering interval and fills it in when the plant has none. An interval set by hand stays; the toast then names the suggestion. Works with every provider.
 
 ### Changed

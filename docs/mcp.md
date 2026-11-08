@@ -21,6 +21,8 @@ You'll find the server URL for your instance, with a copy button, under **Manage
 also checks that OAuth discovery reaches the backend and lists the connected apps, which you can
 revoke there.
 
+![Manage → MCP: the server URL with a copy button, the OAuth discovery check and the connected apps](images/pflanzn-mcp.png)
+
 ## Enabling the server
 
 MCP is off by default. Two switches turn it on, both backend environment variables. Changing them
@@ -31,7 +33,7 @@ needs a backend restart but no image rebuild.
 | `MCP_ENABLED` | `false` | Turns the server on. |
 | `AI_ENABLED` | `true` | Master switch for every AI feature. `false` turns MCP off too. |
 | `DOMAIN` | — | The public URL of your instance. OAuth metadata and redirects are built from it; without it, the request's own URL is used. |
-| `MCP_OAUTH_ISSUER` | — | Use an external OAuth/OIDC server instead of the built-in one. See [External OAuth server](#external-oauth-server). |
+| `MCP_OAUTH_ISSUER` | — | Use an external OAuth/OIDC server instead of the built-in one. See [How sign-in works](#how-sign-in-works). |
 | `MCP_OAUTH_AUDIENCE` | — | Required with `MCP_OAUTH_ISSUER`: the client ID the tokens are issued for. |
 | `MCP_LOGIN_PROVIDER` | — | Sign in to the built-in server with another provider instead of the app login: `oidc` or `github`. |
 | `MCP_LOGIN_NAME` | — | Name on the sign-in button, for example `authentik`. |
@@ -50,7 +52,7 @@ has to send these to the backend, next to `/api`:
 | `/.well-known/oauth-*` | backend `:8000` |
 
 If they end up at the frontend instead, Manage → MCP shows a warning. The full proxy examples
-are in the [README](../README.md#reverse-proxy).
+are under [Getting Started](getting-started.md#reverse-proxy).
 
 ## How sign-in works
 

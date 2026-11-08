@@ -16,8 +16,9 @@ import { checkOAuthDiscovery, fetchOAuthGrants, revokeOAuthGrant } from "../serv
 import { MCP_SCOPE_WRITE, OAuthGrant } from "../types/Mcp";
 import "../styles/oauthAuthorize.css";
 
-// The MCP guide in the repository: how to connect, the sign-in modes and every tool.
-const MCP_DOCS_URL = "https://github.com/0x3e4/pflanzn/blob/main/docs/mcp.md";
+// The MCP guide on the documentation site at /docs (the frontend forwards it to the docs
+// container, or to the docs on GitHub when there is none): connecting, sign-in, every tool.
+const MCP_DOCS_URL = "/docs/mcp/";
 
 export default function McpPanel() {
     const { domain, locale, mcpAuth } = useConfig();

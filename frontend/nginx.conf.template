@@ -1,5 +1,7 @@
 server {
     listen 4173;
+    # Relative redirects, so /docs → /docs/ keeps the host and scheme the proxy used.
+    absolute_redirect off;
     server_name _;
 
     root /usr/share/nginx/html;
@@ -34,6 +36,30 @@ server {
         add_header Cache-Control "no-cache";
         types { } default_type application/manifest+json;
         try_files $uri =404;
+    }
+
+    # Documentation: /docs/ is forwarded unchanged to the docs container
+    # (ghcr.io/0x3e4/pflanzn-docs), which serves the same site at / and /docs/.
+    # The upstream is looked up per request, so the frontend starts without it;
+    # when it isn't there, /docs goes to the docs on GitHub instead.
+    # ${DOCS_UPSTREAM} and ${DOCS_RESOLVER} are filled in by the nginx image on start.
+    location = /docs {
+        return 301 /docs/;
+    }
+
+    location /docs/ {
+        resolver ${DOCS_RESOLVER} valid=30s ipv6=off;
+        resolver_timeout 2s;
+        set $docs_upstream ${DOCS_UPSTREAM};
+        proxy_pass $docs_upstream;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_intercept_errors on;
+        error_page 502 503 504 = @docs_unavailable;
+    }
+
+    location @docs_unavailable {
+        return 302 https://github.com/0x3e4/pflanzn/tree/main/docs;
     }
 
     # SPA fallback — serve index.html for any unmatched route
