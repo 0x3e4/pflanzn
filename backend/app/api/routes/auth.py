@@ -72,6 +72,15 @@ COOKIE_SAMESITE = (os.getenv("COOKIE_SAMESITE") or "lax").lower()
 COOKIE_PATH = "/"
 
 # Initialize OAuth for OIDC
+# code_challenge_method belongs here: authlib only creates and sends a PKCE verifier when the
+# client itself has it. Passed to authorize_redirect instead, the IdP got the method without
+# any challenge, so PKCE was silently off.
+OIDC_CLIENT_KWARGS = {
+    "scope": "openid profile email offline_access",
+    "response_type": "code",
+    "code_challenge_method": "S256",
+}
+
 oauth = OAuth()
 if AUTH_MODE == "oidc":
     oauth.register(
@@ -79,10 +88,7 @@ if AUTH_MODE == "oidc":
         client_id=OIDC_CLIENT_ID,
         client_secret=OIDC_CLIENT_SECRET,
         server_metadata_url=OIDC_PROVIDER_URL,
-        client_kwargs={
-            "scope": "openid profile email offline_access",
-            "response_type": "code"
-        },
+        client_kwargs=OIDC_CLIENT_KWARGS,
         redirect_uri=OIDC_REDIRECT_URI,
     )
 
@@ -266,7 +272,6 @@ async def oidc_login(request: Request, next: Optional[str] = None):
     return await oauth.oidc.authorize_redirect(
         request,
         redirect_uri=OIDC_REDIRECT_URI,
-        code_challenge_method="S256",
         nonce=os.urandom(16).hex()
     )
 

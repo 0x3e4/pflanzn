@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Plant and location photos and both identification uploads decoded images of any size up to Pillow's own limit (about 179 MP), so a small, highly compressed file could take more than a gigabyte of memory per request. They are capped at 64 MP before decoding now, like floor plans, and Pillow's global limit matches.
 - Error responses no longer repeat the exception's text, which could carry the OpenWeatherMap API key (requests puts the full URL, `appid` included, into its errors), SQL or file paths. They say what failed and the kind of error, e.g. "Care helper failed (RateLimitError)"; the full text goes to the backend log. The OpenWeatherMap error is cleaned where it happens, so the key stays out of the log too. **If OpenWeatherMap ever failed on your instance, rotate the key.**
 - `GET /api/config` (no login needed) named the admin account (`admin_user`), enough to keep it locked out with failed logins. It's gone; the users list, which only admins see, marks the default admin with `is_default_admin` instead.
+- The OIDC login meant to use PKCE but didn't: the method was passed where authlib ignores it, so the identity provider got no challenge and no verifier was sent. It's on now. If your provider requires a fixed PKCE setting per client, allow S256.
 
 ## [2.1.0] - 2026-11-08
 
