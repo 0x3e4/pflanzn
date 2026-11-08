@@ -296,13 +296,18 @@ location made private later may still show on a device that already loaded it.
 
 ## MCP (Claude connector)
 
-Set `MCP_ENABLED=true` and add `{DOMAIN}/api/mcp` as a custom connector in Claude
-(or any MCP client). Clients sign in through Pflanzn's built-in OAuth server with your
-normal login, or through an external OAuth/OIDC server when `MCP_OAUTH_ISSUER` is set
-(accounts are matched by email; `MCP_OAUTH_AUDIENCE` must name the client the tokens
-are issued for). To sign in to the built-in server with a different provider than the app —
-any OIDC server or GitHub — set `MCP_LOGIN_PROVIDER`. The [reverse proxy](#reverse-proxy) must forward `/.well-known/oauth-*` to the backend.
-Connected apps can be revoked under Manage → MCP.
+Pflanzn has a built-in [MCP](https://modelcontextprotocol.io) server, so Claude or any other MCP
+client can read your plants and, if you allow it, log waterings, add notes and care advice, and
+create or edit plants. Nothing can be deleted through it.
+
+Set `MCP_ENABLED=true` and add `{DOMAIN}/api/mcp` as a custom connector in Claude (Claude Code:
+`claude mcp add --transport http pflanzn {DOMAIN}/api/mcp`). Clients sign in through Pflanzn's
+built-in OAuth server with your normal login, through another provider (`MCP_LOGIN_PROVIDER`), or
+through an external OAuth/OIDC server (`MCP_OAUTH_ISSUER`). The [reverse proxy](#reverse-proxy) must
+forward `/.well-known/oauth-*` to the backend. Connected apps can be revoked under Manage → MCP.
+
+**[MCP guide](docs/mcp.md)**: the sign-in modes, connecting each client, all 15 tools and example
+prompts.
 
 ---
 

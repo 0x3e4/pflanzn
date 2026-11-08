@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- MCP guide ([docs/mcp.md](docs/mcp.md)): enabling the server, the three sign-in modes, connecting Claude, Claude Code and other clients, every tool with its access, and example prompts. Manage → MCP links to it.
 - Generating a plant's description with AI also asks for its usual watering interval and fills it in when the plant has none. An interval set by hand stays; the toast then names the suggestion. Works with every provider.
 
 ### Changed

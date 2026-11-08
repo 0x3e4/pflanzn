@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleCheck, faCopy, faTrash, faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
+import {
+    faArrowUpRightFromSquare,
+    faCircleCheck,
+    faCopy,
+    faTrash,
+    faTriangleExclamation,
+} from "@fortawesome/free-solid-svg-icons";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { useAuth } from "../context/AuthContext";
@@ -9,6 +15,9 @@ import { useConfig } from "../context/ConfigContext";
 import { checkOAuthDiscovery, fetchOAuthGrants, revokeOAuthGrant } from "../services/McpService";
 import { MCP_SCOPE_WRITE, OAuthGrant } from "../types/Mcp";
 import "../styles/oauthAuthorize.css";
+
+// The MCP guide in the repository: how to connect, the sign-in modes and every tool.
+const MCP_DOCS_URL = "https://github.com/0x3e4/pflanzn/blob/main/docs/mcp.md";
 
 export default function McpPanel() {
     const { domain, locale, mcpAuth } = useConfig();
@@ -58,7 +67,19 @@ export default function McpPanel() {
     return (
         <div className="users-panel">
             <h2>MCP</h2>
-            <p>Add this URL as a custom connector in Claude or another MCP client.</p>
+            <p>
+                Add this URL as a custom connector in Claude or another MCP client.{" "}
+                <a
+                    className="mcp-docs-link"
+                    href={MCP_DOCS_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="Setup, sign-in and tools (opens in a new tab)"
+                >
+                    Setup, sign-in and tools
+                    <FontAwesomeIcon icon={faArrowUpRightFromSquare} aria-hidden="true" />
+                </a>
+            </p>
 
             <div className="mcp-url-row">
                 <code>{serverUrl}</code>
@@ -78,8 +99,8 @@ export default function McpPanel() {
                 <p className="mcp-check warn">
                     <FontAwesomeIcon icon={faTriangleExclamation} />
                     <span>
-                        <code>/.well-known/oauth-protected-resource</code> doesn’t reach the backend. Check your
-                        reverse proxy.
+                        <code>/.well-known/oauth-protected-resource</code> doesn’t reach the backend. Check your reverse
+                        proxy.
                     </span>
                 </p>
             )}

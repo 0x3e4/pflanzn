@@ -94,6 +94,18 @@
     color: var(--status-ok-ink);
 }
 
+/* Link to the MCP guide on GitHub; the arrow says it leaves the app. */
+.mcp-docs-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.mcp-docs-link svg {
+    font-size: 0.75em;
+}
+
 .mcp-url-row {
     display: flex;
     gap: 8px;
