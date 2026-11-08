@@ -13,8 +13,9 @@ const savedTheme =
     (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
 document.documentElement.setAttribute("data-theme", savedTheme);
 
-const skeletonBase = savedTheme === "light" ? "#e0e0e0" : "#46484f";
-const skeletonHighlight = savedTheme === "light" ? "#f0f0f0" : "#5d616a";
+const rootStyle = getComputedStyle(document.documentElement);
+const skeletonBase = rootStyle.getPropertyValue("--skeleton-base").trim() || undefined;
+const skeletonHighlight = rootStyle.getPropertyValue("--skeleton-highlight").trim() || undefined;
 
 function render() {
     createRoot(document.getElementById("root")!).render(

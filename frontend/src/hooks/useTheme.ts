@@ -19,7 +19,9 @@ export function useTheme() {
 
         const metaThemeColor = document.querySelector('meta[name="theme-color"]');
         if (metaThemeColor) {
-            metaThemeColor.setAttribute("content", theme === "dark" ? "#2e6a31" : "#388e3c");
+            // The browser and installed-app chrome take the page ground, so the bar blends into the navbar.
+            const ground = getComputedStyle(document.documentElement).getPropertyValue("--background-color").trim();
+            if (ground) metaThemeColor.setAttribute("content", ground);
         }
     }, [theme]);
 

@@ -15,8 +15,8 @@
 
 /* Root Variables */
 :root {
-    --primary-color: #4caf50;
-    --secondary-color: #2e6a31;
+    --primary-color: #86b97c;
+    --secondary-color: #2f5e3a;
     --tertiary-color: #af4c4c;
     --quaternary-color: #6a2e2e;
     --quinary-color: #a9b3a2;
@@ -38,6 +38,8 @@
     --overlay-background: rgb(10 15 12 / 0.84);
     --input-background: #0f1612;
     --input-border: #46544a;
+    --skeleton-base: #26302a;
+    --skeleton-highlight: #344038;
 
     --font-body: "Inter Variable", "Inter", system-ui, sans-serif;
     /* Headings: a calligraphic book serif, the botanical half of the pair. */
@@ -58,9 +60,9 @@
     --neutral-rgb: 128 128 128;
     --ink-rgb: 16 23 18;
     /* Primary buttons: white on #4caf50 is 2.8:1, so the fill is a deeper green (5.1:1). */
-    --button-primary-bg: #2e7d32;
+    --button-primary-bg: #2f6a3e;
     --button-primary-ink: #fbfdfb;
-    --button-primary-hover: #1b5e20;
+    --button-primary-hover: #24532f;
     /* Watering is always blue: every water action, in lists, cards, plans and pages. */
     --water-bg: var(--octal-color);
     --water-ink: var(--text-on-fill);
@@ -85,8 +87,8 @@
 
 /* Light theme overrides */
 :root[data-theme="light"] {
-    --primary-color: #388e3c;
-    --secondary-color: #1b5e20;
+    --primary-color: #2f6b3a;
+    --secondary-color: #24532f;
     --tertiary-color: #c62828;
     --quaternary-color: #b71c1c;
     --quinary-color: #6d7768;
@@ -108,12 +110,14 @@
     --overlay-background: rgb(var(--light-rgb) / 0.92);
     --input-background: #f7f2e6;
     --input-border: #c9bea6;
+    --skeleton-base: #e6dfcf;
+    --skeleton-highlight: #f2ecdf;
 
     --focus-ring: #1d2a20;
     /* #388e3c fails 4.5:1 with both inks; the button takes a deeper green. */
-    --button-primary-bg: #2e7d32;
+    --button-primary-bg: #2f6a3e;
     --button-primary-ink: #fbfdfb;
-    --button-primary-hover: #1b5e20;
+    --button-primary-hover: #24532f;
     --status-due-bg: #c62828;
     --status-soon-bg: #f0c05a;
     --status-soon-text: #8a5d00;
@@ -337,6 +341,12 @@ button[aria-disabled="true"] {
     justify-content: center;
 }
 
+input,
+select,
+textarea {
+    font-family: inherit;
+}
+
 .editable-input,
 .editable-input-noauth {
     display: inline-block;
@@ -372,7 +382,7 @@ button[aria-disabled="true"] {
     padding: 0;
     border: none;
     white-space: pre-wrap;
-    min-height: 100px;
+    min-height: 1.5em;
     cursor: pointer;
     transition: background-color 0.2s ease-in-out;
     outline: none;
@@ -385,6 +395,7 @@ button[aria-disabled="true"] {
 }
 
 .editable-div.editing {
+    min-height: 100px;
     background-color: var(--background-color);
     border: 1px solid var(--primary-color);
     padding: 8px;

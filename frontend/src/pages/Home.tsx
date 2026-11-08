@@ -248,15 +248,16 @@ export default function Home() {
                                 </ul>
                             </section>
                         )}
-                        <dl className="home-figures">
-                            {figures.map(([value, label]) => (
-                                <div key={label}>
-                                    <dt>{label}</dt>
-                                    <dd>{loadingPlants ? <Skeleton width={40} /> : value}</dd>
-                                </div>
-                            ))}
-                        </dl>
                     </aside>
+
+                    <dl className="home-figures">
+                        {figures.map(([value, label]) => (
+                            <div key={label}>
+                                <dt>{label}</dt>
+                                <dd>{loadingPlants ? <Skeleton width={40} /> : value}</dd>
+                            </div>
+                        ))}
+                    </dl>
                 </div>
             </section>
 

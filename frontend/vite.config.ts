@@ -17,8 +17,8 @@ export default defineConfig(() => {
           name: 'Pflanzn',
           short_name: 'Pflanzn',
           description: 'Plant Management',
-          theme_color: '#4caf50',
-          background_color: '#2c2c2c',
+          theme_color: '#121a15',
+          background_color: '#121a15',
           display: 'standalone',
           icons: [
             { src: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },

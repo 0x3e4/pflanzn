@@ -20,9 +20,12 @@
     display: inline-block;
 }
 
+/* Tall portrait photos are cropped to a sensible height; the full-size view shows the whole frame. */
 .plant-carousel-image {
     width: 100%;
     height: auto;
+    max-height: min(560px, 75vh);
+    object-fit: cover;
     border-radius: 8px;
     display: block;
     outline: none;

@@ -4,8 +4,8 @@
     "description": "Plant Management",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#2c2c2c",
-    "theme_color": "#4caf50",
+    "background_color": "#121a15",
+    "theme_color": "#121a15",
     "icons": [
         {
             "src": "/icons/icon-192x192.png",

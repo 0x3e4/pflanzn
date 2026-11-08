@@ -174,8 +174,11 @@
     margin: 0 0 2px;
     color: var(--text-color);
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow-wrap: anywhere;
 }
 
 .plant-card p {
@@ -688,5 +691,27 @@
 
     .plants-container .water-plant-input-container .water-plant-datetime {
         justify-content: center;
+    }
+}
+
+/* Phone: the tag chips scroll as one row instead of leaving a chip alone on a second line. */
+@media (max-width: 600px) {
+    .plant-tag-filter {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        min-width: 0;
+        padding-right: 24px;
+        scrollbar-width: none;
+        -webkit-mask-image: linear-gradient(to right, black calc(100% - 24px), transparent);
+        mask-image: linear-gradient(to right, black calc(100% - 24px), transparent);
+    }
+
+    .plant-tag-filter::-webkit-scrollbar {
+        display: none;
+    }
+
+    .plant-tag-filter > * {
+        flex-shrink: 0;
+        white-space: nowrap;
     }
 }

@@ -1227,7 +1227,7 @@ export default function LocationDetails() {
                         <div className="activity-log-header">
                             <h3>Activity feed</h3>
                             {isLoggedIn && (
-                                <button className="notes-btn" onClick={handleOpenNotesModal} title="Add a note">
+                                <button className="notes-btn" onClick={handleOpenNotesModal} title="Add a note" aria-label="Add a note">
                                     <FontAwesomeIcon icon={faStickyNote} />
                                 </button>
                             )}

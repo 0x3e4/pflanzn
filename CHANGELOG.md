@@ -12,10 +12,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - A warmer look: green-black grounds in the dark theme and warm cream in the light one instead of neutral grey, Alegreya for headings and the wordmark, and a few drawn leaves across the top of each page. Layout, watering blue and the status colours are unchanged; every text colour meets WCAG AA in both themes.
 - README screenshots show the new look.
+- A deeper forest green for buttons, the active tag and the camera button instead of the bright Material green; links and highlights in a soft sage.
+- The installed app's title and status bar take the page ground instead of the old grey and green (manifest, `theme-color`), and loading placeholders are tinted to match.
+- Home: the collection figures sit in one row under the plants that need water, so a short list leaves no hole.
+- Plant cards show a long name on two lines before cutting it off; tall plant photos are cropped to a sensible height on the plant page.
+- Phone: the tag filter on the plants list scrolls as one row.
 - Fonts (Alegreya, Inter) are bundled with the app instead of loaded from Google Fonts, so they also work offline.
 - New frontend dependency releases are accepted after 7 days instead of 14 (`minimumReleaseAge` in `frontend/pnpm-workspace.yaml`).
 
 ### Fixed
+- A one-line plant description no longer leaves a large empty box under it.
+- Date and time fields use the app's font instead of the browser's.
+- The icon-only "Add a note" buttons have an accessible name.
 
 ### Security
 - Frontend build and test dependencies: follow-redirects 1.16.2, glob 14.0.3 and minimatch 11.0.3 (pnpm overrides). None of them ship in the image.

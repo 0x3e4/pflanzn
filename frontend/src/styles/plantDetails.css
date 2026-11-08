@@ -272,7 +272,7 @@ h3 {
 }
 
 .activity-icon.note {
-    background-color: var(--primary-color);
+    background-color: var(--button-primary-bg);
     color: var(--text-on-fill);
 }
 
