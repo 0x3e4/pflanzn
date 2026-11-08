@@ -17,7 +17,6 @@ export function manualChunks(id: string) {
     }
 
     if (id.includes('node_modules')) {
-        if (id.includes('chart.js')) return 'vendor-charts';
         if (id.includes('@fortawesome') || id.includes('@icons-pack/react-simple-icons')) return 'vendor-icons';
         if (id.includes('react-calendar')) return 'vendor-calendar';
         if (id.includes('react-toastify')) return 'vendor-toast';

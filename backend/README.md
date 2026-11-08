@@ -50,7 +50,7 @@ app/
 │   ├── users.py           # User management (admin)
 │   ├── tags.py            # Tag CRUD and plant-tag associations
 │   ├── share.py           # Token-based public share links
-│   ├── statistics.py      # Dashboard statistics
+│   ├── statistics.py      # Statistics: totals, and /activity (a year of care by day, 12 weeks manual vs rain, last 30 days, most cared for)
 │   ├── uploads.py         # Image serving (thumb/medium/original WebP variants)
 │   └── weather.py         # Weather config, current conditions, logs, auto-waterings
 ├── services/              # Business logic

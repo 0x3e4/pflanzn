@@ -76,6 +76,24 @@ than your threshold (`WEATHER_RAINFALL_THRESHOLD_MM`). The watering shows up in 
 coordinates under Manage → Weather, then pick it in the plant's *Weather zone* field. See
 [Configuration](../configuration.md#weather).
 
+## Statistics
+
+Manage → Statistics shows the collection at a glance:
+
+- **Totals** for plants, waterings, fertilizing, photos and identifications. Waterings,
+  fertilizing and photos also show the last 30 days against the 30 before.
+- **Watering right now**: how many plants are overdue, due today, due tomorrow, fine for now, or
+  have no schedule. *Overdue* and *Due today* open the plants list filtered to them.
+- **Care over the past year**: one square per day, darker (in the light theme) the more was
+  watered, fertilized or photographed. Hover a day for the details.
+- **Waterings per week** for the last twelve weeks, split into waterings by hand and by rain.
+- **Plants per tag** and **top species**, each opening the filtered plants list.
+- **Most cared for** in the last 90 days, counting only what someone did by hand, and the plants
+  **longest without water**.
+
+The calendar and the weekly chart have a *Show as table* view with the same numbers; the other
+charts print their numbers next to the bars.
+
 ## On your phone
 
 Pflanzn is a PWA: install it from the browser to get an app icon and a full-screen window. On a phone

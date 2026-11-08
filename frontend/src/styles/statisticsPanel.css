@@ -1,4 +1,6 @@
-/* Statistics Panel Styles */
+/* Statistics: figures, then cards. Charts are plain HTML in the dataviz specs:
+   thin marks, 2px surface gaps, 4px rounded data ends, hairline grids, text in
+   text tokens, colours from the validated --chart-* and --heat-* tokens. */
 .statistics-panel {
     padding: 2rem;
     max-width: 1200px;
@@ -12,89 +14,528 @@
     color: var(--text-color);
 }
 
-/* Figures: a number and what it counts, no tiles. */
-.stats-figures {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 16px;
-    margin: 0 0 2rem;
+.stats-error {
+    margin: 0 0 16px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--status-due-bg) 16%, transparent);
+    color: var(--text-color);
 }
 
-.stats-figures div {
+/* ── Figures ── */
+.stats-figures {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 20px 16px;
+    margin: 0 0 24px;
+}
+
+.stats-figure {
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
     gap: 2px;
     min-width: 0;
 }
 
-.stats-figures dt {
+/* Number, then what it counts, then the last 30 days. */
+.stats-figure dt {
+    order: 2;
     font-size: 0.9rem;
     color: var(--muted-text-color);
 }
 
-.stats-figures dd {
+.stats-figure dd {
     margin: 0;
+}
+
+.stats-figure-value {
+    order: 1;
     font-size: 2rem;
     font-weight: 800;
-    font-variant-numeric: tabular-nums;
+    line-height: 1.15;
     color: var(--text-color);
 }
 
-.stats-figures .stats-figure-text dd {
-    font-size: 1.35rem;
-    line-height: 1.6;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+.stats-figure-recent {
+    order: 3;
+    margin-top: 2px !important;
+    font-size: 0.8rem;
+    line-height: 1.35;
+    color: var(--muted-text-color);
 }
 
+/* ── Cards ── */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
     align-items: start;
 }
 
-.stats-grid .chart-section {
-    grid-column: span 2;
-    margin-top: 0;
+.stats-card {
+    min-width: 0;
+    padding: 20px;
+    border-radius: 10px;
+    background: var(--card-background);
+    border: 1px solid var(--card-border);
 }
 
-.stats-species h3 {
-    margin: 0 0 12px !important;
-    font-size: 1.15rem;
+.stats-card-wide {
+    grid-column: 1 / -1;
 }
 
-.stats-species-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.95rem;
+.stats-card-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 16px;
+    margin-bottom: 16px;
 }
 
-.stats-species-table th {
-    text-align: left;
-    font-weight: 600;
+.stats-card-head h3 {
+    margin: 0 !important;
+    font-size: 1.2rem;
+}
+
+.stats-note {
+    margin: 0;
     font-size: 0.85rem;
     color: var(--muted-text-color);
-    padding: 0 0 8px;
-    border-bottom: 1px solid var(--card-border);
-}
-
-.stats-species-table th:last-child,
-.stats-species-table td:last-child {
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-}
-
-.stats-species-table td {
-    padding: 8px 0;
-    border-bottom: 1px solid var(--card-border);
-    color: var(--text-color);
 }
 
 .stats-empty {
     margin: 0;
     color: var(--muted-text-color);
+}
+
+/* ── Legend and tooltip keys ── */
+.stats-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.9rem;
+}
+
+.stats-legend-inline {
+    margin: 0 0 14px;
+}
+
+.stats-legend li,
+.stats-legend a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-color);
+}
+
+.stats-legend a {
+    text-decoration: underline;
+    text-decoration-color: var(--card-border);
+    text-underline-offset: 4px;
+    font-weight: inherit;
+}
+
+.stats-legend a:hover {
+    text-decoration-color: currentColor;
+}
+
+.stats-legend strong {
+    font-variant-numeric: tabular-nums;
+}
+
+.stats-legend-label {
+    color: var(--muted-text-color);
+}
+
+.stats-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.stats-key-line {
+    display: inline-block;
+    width: 12px;
+    height: 3px;
+    border-radius: 2px;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.stats-tooltip {
+    position: fixed;
+    z-index: 1000;
+    pointer-events: none;
+    min-width: 140px;
+    max-width: 240px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--background-color);
+    border: 1px solid var(--card-border);
+    box-shadow: 0 8px 24px rgb(var(--shadow-rgb) / 0.35);
+    font-size: 0.85rem;
+}
+
+.stats-tooltip p {
+    margin: 0;
+}
+
+.stats-tooltip-title {
+    margin-bottom: 4px !important;
+    color: var(--muted-text-color);
+}
+
+.stats-tooltip-row strong {
+    font-variant-numeric: tabular-nums;
+    color: var(--text-color);
+}
+
+.stats-tooltip-row span:last-child {
+    color: var(--muted-text-color);
+}
+
+/* ── Watering status: a tall segmented bar ── */
+.stats-segmented {
+    display: flex;
+    gap: 2px;
+    height: 28px;
+}
+
+.stats-segment {
+    min-width: 6px;
+    border-radius: 4px;
+    transition: filter 0.15s ease;
+}
+
+.stats-segment:hover {
+    filter: brightness(1.15);
+}
+
+/* ── Care calendar ── */
+.stats-calendar-scroll {
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.stats-calendar {
+    --cell: 11px;
+    --cell-gap: 3px;
+    display: grid;
+    grid-template-columns: auto max-content;
+    grid-template-rows: auto auto;
+    column-gap: 8px;
+    row-gap: 6px;
+    width: max-content;
+    margin-inline: auto;
+}
+
+.stats-calendar-months {
+    grid-column: 2;
+    display: grid;
+    grid-template-columns: repeat(var(--weeks), var(--cell));
+    column-gap: var(--cell-gap);
+    font-size: 0.75rem;
+    color: var(--muted-text-color);
+}
+
+.stats-calendar-months span {
+    white-space: nowrap;
+}
+
+.stats-calendar-weekdays {
+    grid-column: 1;
+    grid-row: 2;
+    display: grid;
+    grid-template-rows: repeat(7, var(--cell));
+    row-gap: var(--cell-gap);
+    font-size: 0.7rem;
+    line-height: var(--cell);
+    color: var(--muted-text-color);
+}
+
+.stats-calendar-grid {
+    grid-column: 2;
+    grid-row: 2;
+    display: grid;
+    grid-template-rows: repeat(7, var(--cell));
+    grid-auto-columns: var(--cell);
+    grid-auto-flow: column;
+    gap: var(--cell-gap);
+}
+
+.stats-cell {
+    width: var(--cell, 11px);
+    height: var(--cell, 11px);
+    border-radius: 2px;
+}
+
+.stats-cell-pad {
+    visibility: hidden;
+}
+
+.stats-calendar-grid .stats-cell:hover {
+    outline: 1px solid var(--text-color);
+    outline-offset: 1px;
+}
+
+.stats-calendar-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    margin-top: 12px;
+}
+
+.stats-heat-key {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.75rem;
+    color: var(--muted-text-color);
+}
+
+.stats-heat-key span:first-child {
+    margin-right: 4px;
+}
+
+.stats-heat-key span:last-child {
+    margin-left: 4px;
+}
+
+/* ── Waterings per week: stacked columns ── */
+.stats-columns {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+    height: 220px;
+}
+
+.stats-columns-axis {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 18px 0 24px;
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted-text-color);
+    text-align: right;
+}
+
+.stats-columns-axis span {
+    line-height: 0;
+}
+
+.stats-columns-plot {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    padding: 18px 0 24px;
+}
+
+/* The grid covers exactly the drawing area: above the labels, below the values. */
+.stats-gridlines {
+    position: absolute;
+    inset: 18px 0 24px;
+    pointer-events: none;
+}
+
+.stats-gridline {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--chart-grid);
+    transform: translateY(0.5px);
+}
+
+.stats-column {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    min-width: 0;
+}
+
+.stats-column:hover .stats-column-stack {
+    filter: brightness(1.15);
+}
+
+.stats-column-stack {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: min(24px, 70%);
+    min-height: 0;
+}
+
+.stats-column-part {
+    min-height: 2px;
+}
+
+.stats-column-stack > .stats-column-part:nth-child(2) {
+    border-radius: 4px 4px 0 0;
+}
+
+/* The total on the cap, above the stack. */
+.stats-column-value {
+    position: absolute;
+    bottom: calc(100% + 3px);
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--text-color);
+}
+
+.stats-column-label {
+    position: absolute;
+    bottom: -22px;
+    font-size: 0.72rem;
+    white-space: nowrap;
+    color: var(--muted-text-color);
+}
+
+/* ── Horizontal bars ── */
+.stats-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0 0 12px;
+    padding: 0;
+    list-style: none;
+}
+
+.stats-bars li {
+    display: grid;
+    grid-template-columns: minmax(0, 40%) minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+}
+
+.stats-bar-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.92rem;
+    color: var(--text-color);
+    font-weight: inherit;
+}
+
+a.stats-bar-label:hover {
+    text-decoration: underline;
+}
+
+.stats-bar-track {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.stats-bar {
+    height: 12px;
+    min-width: 4px;
+    max-width: calc(100% - 3ch);
+    border-radius: 0 4px 4px 0;
+    background: var(--chart-bar);
+}
+
+.stats-bar-value {
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-color);
+}
+
+/* ── Plant lists ── */
+.stats-plant-list {
+    display: flex;
+    flex-direction: column;
+    margin: 0 0 8px;
+    padding: 0;
+    list-style: none;
+}
+
+.stats-plant-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--card-border);
+}
+
+.stats-plant-list li:last-child {
+    border-bottom: none;
+}
+
+.stats-plant-list a {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.stats-plant-list span {
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    color: var(--muted-text-color);
+    text-align: right;
+}
+
+/* ── Table views ── */
+.stats-table-view {
+    margin-top: 14px;
+    font-size: 0.9rem;
+}
+
+.stats-table-view summary {
+    cursor: pointer;
+    color: var(--muted-text-color);
+    width: max-content;
+}
+
+.stats-table-view summary:hover {
+    color: var(--text-color);
+}
+
+.stats-table {
+    width: 100%;
+    margin-top: 10px;
+    border-collapse: collapse;
+}
+
+.stats-table th,
+.stats-table td {
+    padding: 6px 8px 6px 0;
+    border-bottom: 1px solid var(--card-border);
+    text-align: left;
+    font-weight: 400;
+}
+
+.stats-table thead th {
+    font-size: 0.85rem;
+    color: var(--muted-text-color);
+}
+
+.stats-table td {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.stats-table thead th:not(:first-child) {
+    text-align: right;
 }
 
 @media (max-width: 1100px) {
@@ -105,90 +546,39 @@
     .stats-grid {
         grid-template-columns: minmax(0, 1fr);
     }
-
-    .stats-grid .chart-section {
-        grid-column: auto;
-    }
 }
 
 @media (max-width: 600px) {
+    .statistics-panel {
+        padding: 1rem;
+    }
+
+    /* The name gets its own line; the details go under it. */
+    .stats-plant-list li {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+
+    .stats-plant-list span {
+        text-align: left;
+    }
+
     .stats-figures {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-}
 
-/* Chart Section */
-.chart-section {
-    margin-top: 2rem;
-    padding: 1.5rem;
-    background-color: var(--background-color);
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgb(var(--shadow-rgb) / 0.3);
-    border: 1px solid var(--border-color);
-}
-
-.chart-section h3 {
-    margin-bottom: 1rem;
-    color: var(--text-color);
-    font-size: 1.3rem;
-    display: flex;
-    align-items: center;
-}
-
-.chart-container {
-    width: 100%;
-    height: 420px;
-    margin-top: 1rem;
-    background-color: var(--secondary-background-color);
-    border-radius: 6px;
-    padding: 10px;
-    box-sizing: border-box;
-    overflow: hidden;
-    position: relative;
-}
-
-.chart-loading {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    color: var(--text-color);
-    font-size: 1.1rem;
-    text-align: center;
-    flex-direction: column;
-}
-
-.chart-loading p {
-    margin: 0.5rem 0;
-    color: var(--text-color);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .statistics-panel {
-        padding: 1rem;
+    .stats-figure-value {
+        font-size: 1.6rem;
     }
 
-    .chart-container {
-        height: 320px;
-    }
-
-    .chart-section {
-        padding: 1rem;
-    }
-
-    .chart-section h3 {
-        font-size: 1.1rem;
+    .stats-card {
+        padding: 16px;
     }
 }
 
-@media (max-width: 480px) {
-    .statistics-panel {
-        padding: 0.5rem;
-    }
-
-    .chart-container {
-        height: 270px;
-        padding: 8px;
+@media (prefers-reduced-motion: reduce) {
+    .stats-segment {
+        transition: none;
     }
 }

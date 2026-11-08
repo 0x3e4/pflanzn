@@ -69,13 +69,24 @@ export default function Plants() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [allTags, setAllTags] = useState<Tag[]>([]);
-    const [selectedTagId, setSelectedTagId] = useState<number | null>(() => getViewPreferences().plants.selectedTagId);
+    // Links from the statistics page open the list filtered: ?needs_water=1 and ?tag=<name>
+    // (the tag is matched by name once the tags are loaded, in fetchTagsFromService).
+    const [searchParams] = useSearchParams();
+    const needsWaterParam = searchParams.get("needs_water") === "1";
+    const tagParam = searchParams.get("tag");
+    // Read once, when the tags arrive; a ref so the loader doesn't depend on it.
+    const linkedTagName = useRef(tagParam);
+    const [selectedTagId, setSelectedTagId] = useState<number | null>(() =>
+        needsWaterParam || tagParam ? null : getViewPreferences().plants.selectedTagId,
+    );
     const [archiveModalOpen, setArchiveModalOpen] = useState(false);
     const [unarchiveReason, setUnarchiveReason] = useState("");
     const [selectedPlantToUnarchive, setSelectedPlantToUnarchive] = useState<number | null>(null);
     const [isStretched, setIsStretched] = useState(() => getUiPreferences().defaultWidescreen);
     const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
-    const [needsWaterOnly, setNeedsWaterOnly] = useState<boolean>(() => getViewPreferences().plants.needsWaterOnly);
+    const [needsWaterOnly, setNeedsWaterOnly] = useState<boolean>(() =>
+        needsWaterParam ? true : tagParam ? false : getViewPreferences().plants.needsWaterOnly,
+    );
     const [viewMode, setViewMode] = useState<PlantsViewMode>(() => getViewPreferences().plants.viewMode);
     const [floorPlans, setFloorPlans] = useState<FloorPlan[] | null>(null);
     const [selectedFloorPlanId, setSelectedFloorPlanId] = useState<number | null>(
@@ -131,7 +142,6 @@ export default function Plants() {
     );
 
     const [searchTerm, setSearchTerm] = useState<string>("");
-    const [searchParams] = useSearchParams();
     const speciesFilter = searchParams.get("species");
     const location = useLocation();
     const navigate = useNavigate();
@@ -247,8 +257,13 @@ export default function Plants() {
             // If a persisted custom-tag filter points at a tag that no longer
             // exists, fall back to #all so the user isn't shown an empty list.
             // The specials (-1 archive, -2 untagged) and #all (null) are always valid.
+            const linkedTag = linkedTagName.current ? tags.find((t) => t.name === linkedTagName.current) : undefined;
             setSelectedTagId((current) =>
-                current !== null && current > 0 && !tags.some((t) => t.id === current) ? null : current,
+                linkedTag
+                    ? linkedTag.id
+                    : current !== null && current > 0 && !tags.some((t) => t.id === current)
+                      ? null
+                      : current,
             );
         } catch (err) {
             toast.error((err as Error).message);

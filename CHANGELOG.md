@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Statistics, rebuilt: the watering status of the whole collection (overdue, due today and tomorrow, fine, no schedule; the due parts open the filtered plants list), a year of care as a calendar, waterings per week for twelve weeks split into by hand and by rain, plants per tag and top species as bars, the most cared-for plants of the last 90 days and the plants longest without water. Totals now include fertilizing and show the last 30 days against the 30 before. Every chart has a table view; colours are validated for colour-blind readers in both themes. New endpoint `GET /api/statistics/activity`.
+- The plants list opens filtered from links: `?needs_water=1` and `?tag=<name>`.
 - Documentation site (MkDocs Material, in the app's colours and fonts, light and dark): getting started, a user guide for plants, locations and AI, MCP, access, configuration, architecture and the changelog. It ships as its own image, `ghcr.io/0x3e4/pflanzn-docs`, and is served both at `{DOMAIN}/docs/` (the frontend forwards it to the docs container, or to the docs on GitHub when there is none) and on a domain of its own. The compose example has the new `docs` service; `DOCS_UPSTREAM` and `DOCS_RESOLVER` on the frontend point elsewhere if needed.
 - The MCP guide has a screenshot of Manage → MCP, and the link there now opens `/docs/mcp/`.
 - MCP guide ([docs/mcp.md](https://github.com/0x3e4/pflanzn/blob/main/docs/mcp.md)): enabling the server, the three sign-in modes, connecting Claude, Claude Code and other clients, every tool with its access, and example prompts. Manage → MCP links to it.
@@ -30,6 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A one-line plant description no longer leaves a large empty box under it.
 - Date and time fields use the app's font instead of the browser's.
 - The icon-only "Add a note" buttons have an accessible name.
+
+### Removed
+- Chart.js: the statistics charts are plain HTML now, which drops the library from the frontend bundle.
 
 ### Security
 - Frontend build and test dependencies: follow-redirects 1.16.2, glob 14.0.3 and minimatch 11.0.3 (pnpm overrides). None of them ship in the image.

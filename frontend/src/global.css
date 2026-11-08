@@ -76,6 +76,23 @@
     --status-soon-text: #e0b24f;
     --status-ok-bg: #26332a;
     --status-ok-ink: #cdd3c3;
+    /* Statistics charts, validated with the dataviz checks against the card ground.
+       Waterings by hand and by rain (categorical pair), the care calendar (one-hue ramp,
+       empty then four steps, lighter = more in dark), and the watering-status bar. */
+    --chart-manual: #5466d6;
+    --chart-rain: #26a2bd;
+    --heat-0: rgb(242 234 216 / 0.07);
+    --heat-1: #3d6b47;
+    --heat-2: #57935f;
+    --heat-3: #7cb878;
+    --heat-4: #b0dd9f;
+    --chart-overdue: #c4554f;
+    --chart-today: #d9774f;
+    --chart-soon: #e0b24f;
+    --chart-ok: #4f9a5c;
+    --chart-none: rgb(242 234 216 / 0.2);
+    --chart-bar: #57935f;
+    --chart-grid: rgb(242 234 216 / 0.1);
     /* Harvest and season markers on the calendar and locations. */
     --season-color: #b8892d;
     --season-color-hover: #a8780f;
@@ -123,6 +140,20 @@
     --status-soon-text: #8a5d00;
     --status-ok-bg: #e9e2d0;
     --status-ok-ink: #3f4a40;
+    --chart-manual: #3949ab;
+    --chart-rain: #1b8fb0;
+    --heat-0: #e9e2d0;
+    --heat-1: #8bbd7e;
+    --heat-2: #5f9e61;
+    --heat-3: #3d7f4a;
+    --heat-4: #235430;
+    --chart-overdue: #c62828;
+    --chart-today: #d0602e;
+    --chart-soon: #e0a92e;
+    --chart-ok: #3f8a4b;
+    --chart-none: #d9cfba;
+    --chart-bar: #3d7f4a;
+    --chart-grid: rgb(var(--shadow-rgb) / 0.12);
     --leaf-ink: #2e5a35;
     --accent-cream: #7d5a17;
     --shadow-rgb: 74 60 32;

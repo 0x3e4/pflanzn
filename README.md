@@ -89,6 +89,7 @@ and on a domain of its own if you route one to it; both work at once. See
 | **Tracking** | Watering, fertilizing, image, and care-advice timelines with calendar view and per-activity colour coding. |
 | **Watering schedule** | Optional "water every N days" per plant. Due plants get a badge and show up under the automatic `#needs_water` filter, which combines with any tag (e.g. `#office` + `#needs_water`) — then *Water Plants* waters exactly those. |
 | **Mobile list view** | Plants and Locations switch between a photo grid and a compact list with one-tap water/upload buttons; the choice is remembered per device. |
+| **Statistics** | Watering status of the whole collection, a year of care as a calendar, waterings per week by hand and by rain, plants per tag and species, the most cared-for and the longest-unwatered plants. |
 | **Archive** | Plants can be archived with a reason instead of deleted — they drop out of the normal lists and stay reachable under the `#archive` filter, and can be restored at any time. |
 | **Identification** | One-shot PlantNet integration — accepts JPG / PNG / WebP / HEIC; the backend normalises uploads to JPEG before forwarding. |
 | **AI care advice** | Care advice and species descriptions; a generated description also fills in the watering interval when none is set. Optional integration with OpenAI, Claude, Mistral, HuggingFace, or a local Ollama instance — provider auto-detected from whichever API key is set. |
