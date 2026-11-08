@@ -10,8 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- New frontend dependency releases are accepted after 7 days instead of 14 (`minimumReleaseAge` in `frontend/pnpm-workspace.yaml`).
 
 ### Fixed
+
+### Security
+- Frontend build and test dependencies: follow-redirects 1.16.2, glob 14.0.3 and minimatch 11.0.3 (pnpm overrides). None of them ship in the image.
 
 ## [2.0.0] - 2026-11-07
 

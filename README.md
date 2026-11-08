@@ -69,7 +69,7 @@
 
 |     |     |
 | --- | --- |
-| **Catalogue** | Plants with photos, species info, care notes; tags and locations with GPS coordinates and an interactive Leaflet map. |
+| **Catalogue** | Plants with photos, species info, care notes; tags and locations with GPS coordinates and an interactive Leaflet map. Locations have their own tags, notes and harvest times. |
 | **Tracking** | Watering, fertilizing, image, and care-advice timelines with calendar view and per-activity colour coding. |
 | **Watering schedule** | Optional "water every N days" per plant. Due plants get a badge and show up under the automatic `#needs_water` filter, which combines with any tag (e.g. `#office` + `#needs_water`) — then *Water Plants* waters exactly those. |
 | **Mobile list view** | Plants and Locations switch between a photo grid and a compact list with one-tap water/upload buttons; the choice is remembered per device. |
@@ -79,7 +79,7 @@
 | **Floor plans** | Upload a plan of your home, place plants on it and see at a glance which ones need water. Pinch-zoom and tap-to-place on mobile; members only. Enabled by an admin under Manage → Floor plans. |
 | **MCP** | Optional [MCP](https://modelcontextprotocol.io) endpoint for Claude and other AI clients, secured with OAuth. |
 | **Auto-watering** | Outdoor plants with `reaches_rain=true` are auto-watered when Open-Meteo reports rainfall above your threshold. Optional OpenWeatherMap key for current-weather display. |
-| **PWA** | Installable on phone or desktop; Workbox runtime caching — CacheFirst for uploaded images, NetworkFirst (with a short network timeout) for plants, locations, profile, and statistics reads. |
+| **PWA** | Installable on phone or desktop; Workbox runtime caching — CacheFirst for uploaded images, NetworkFirst for plants, locations, profile, and statistics reads (the cache is only used when the network fails, so changes show at once). |
 | **Sharing** | Token-based public collection links with a dedicated read-only view. |
 | **Auth modes** | `no` (open), `local` (JWT + Argon2 + Redis sessions with theft detection), or `oidc` (external IdP). |
 | **Audit log** | Every write action and authentication event is recorded to an immutable log, viewable by admins under Manage → Audit with filters for action, entity, user, date, and free-text search. |
@@ -264,6 +264,7 @@ Who can read the collection depends on `AUTH_MODE` and `SHOW_PROTECTED_VIEW`:
 
 Plants, tags, notes, care advice and statistics have no visibility of their own:
 whoever may read the collection sees all of them. Photos follow the same rules.
+Read-only visitors don't see editing controls; each page shows a "Sign in to …" line instead.
 
 **Locations** carry a visibility status, set in the *Visibility* field of a location's
 detail page:
@@ -274,7 +275,7 @@ detail page:
 | `shared` | Logged-in users and share-link viewers |
 | `public` | Everyone who may read the collection — including anonymous visitors when `SHOW_PROTECTED_VIEW=false` |
 
-A location's photos are hidden along with it. With `AUTH_MODE=no` there are no logins,
+A location's photos, tags, notes and harvest times are hidden along with it. With `AUTH_MODE=no` there are no logins,
 so every location is visible to everyone regardless of its status.
 
 > [!NOTE]

@@ -28,7 +28,9 @@ Requires Node >= 24.
 
 ### Dependency freshness gate
 
-[pnpm-workspace.yaml](pnpm-workspace.yaml) sets `minimumReleaseAge: 20160` (14 days), so brand-new package releases are refused as a supply-chain precaution. An install can therefore fail with `ERR_PNPM_NO_MATURE_MATCHING_VERSION` on a dependency that was published too recently. Either wait out the window or add the package to `minimumReleaseAgeExclude` in the same file — note that excluding a package does **not** exempt its transitive dependencies, so unblocking one install may take several entries.
+[pnpm-workspace.yaml](pnpm-workspace.yaml) sets `minimumReleaseAge: 10080` (7 days), so brand-new package releases are refused as a supply-chain precaution. An install can therefore fail with `ERR_PNPM_NO_MATURE_MATCHING_VERSION` on a dependency that was published too recently. Either wait out the window or add the package to `minimumReleaseAgeExclude` in the same file — note that excluding a package does **not** exempt its transitive dependencies, so unblocking one install may take several entries. Only bypass the window for a critical vulnerability.
+
+Security fixes for transitive dependencies (pulled in by jsdom, eslint, workbox-build, axios …) are pinned through `pnpm.overrides` in [package.json](package.json), e.g. `"undici@<7.30.1": "^7.30.1"`. Drop an entry once the parent package ships the fixed version itself. Check with `pnpm audit`.
 
 ## Project Structure
 
@@ -55,6 +57,7 @@ src/
 │   ├── McpPanel.tsx
 │   ├── FloorPlanView.tsx, FloorPlansPanel.tsx
 │   ├── ErrorBoundary.tsx, OfflineBanner.tsx, LoadingOverlay.tsx
+│   ├── LoginHint.tsx         # "Sign in to …" line in place of actions signed-out visitors can't use
 │   └── ...
 ├── context/            # React Context providers
 │   ├── AuthContext.tsx
@@ -74,10 +77,14 @@ src/
 │   ├── McpService.ts
 │   ├── FloorPlanService.ts
 │   ├── authRedirect.ts
+│   ├── busyOverlay.ts        # withBusy(): global loading overlay for uploads and identification
+│   ├── floorPlanClusters.ts  # Groups floor-plan markers that would overlap
+│   ├── locationLocalImport.ts # One-time move of pre-2.0 location tags/notes/harvest times from localStorage to the API
 │   └── wateringSchedule.ts   # Due/overdue calculation for the per-plant watering interval
 ├── hooks/              # Custom React hooks
 │   ├── useModalA11y.ts       # Modal keyboard accessibility
 │   ├── useOnlineStatus.ts    # Online/offline detection
+│   ├── usePanZoom.ts         # Pan, pinch and wheel zoom for the floor plan
 │   ├── usePullToRefresh.ts   # Pull-to-refresh gesture
 │   └── useTheme.ts           # Dark/light theme toggle
 ├── types/              # TypeScript interfaces
@@ -95,5 +102,9 @@ src/
 - State management via React Context API (no Redux)
 - CSS variables for theming (dark/light mode), 768px responsive breakpoint
 - All modals use `useModalA11y` hook for keyboard accessibility
+- Signed-out visitors don't get write controls: render them only when `isLoggedIn` and show one `<LoginHint to="…" />` per page instead of buttons that answer "you must be logged in"
+- List pages load `fetchPlants()`, which asks for `GET /api/plants/?summary=true` (no watering/fertilizing/note/care-advice lists, `watering_count`/`fertilizing_count` instead); the plant page loads the full plant
+- Keep timestamps in state as ISO strings with an offset, as the API sends them (`last_watered` etc.); `getWateringStatus` parses them in the configured timezone
+- Type-check with `pnpm exec tsc -b` (what `pnpm run build` runs); the root `tsconfig.json` only holds project references, so `tsc -p .` checks nothing
 - Two tiers of preferences: `uiPreferences.ts` for account settings that sync to the backend, `viewPreferences.ts` for per-device list state (selected tag, `#needs_water` toggle, sort order, filter mode, grid/list view mode) that persists to localStorage only. Both normalise unknown/stale stored values back to defaults on read
 - Configuration is fetched from the backend at startup via `GET /api/config` and read through `useConfig()` (`AUTH_MODE`, `ENABLE_LOCATIONS`, `SHOW_PROTECTED_VIEW`, `DOMAIN`, `mcpEnabled`, …); `import.meta.env` is not used. Legacy `VITE_*` env names still resolve as backend fallbacks but are deprecated.

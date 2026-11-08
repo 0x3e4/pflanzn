@@ -1,6 +1,6 @@
 onlyBuiltDependencies:
   - '@fortawesome/fontawesome-svg-core'
-minimumReleaseAge: 20160
+minimumReleaseAge: 10080
 minimumReleaseAgeExclude:
   - '@rolldown/*'
   - rolldown

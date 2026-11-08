@@ -36,7 +36,7 @@ poetry run ruff check app/ --fix
 
 ```
 app/
-├── main.py                # FastAPI init, CORS, router registration, startup events
+├── main.py                # FastAPI init, CORS, router registration, lifespan startup (admin user, weather loop)
 ├── models.py              # SQLAlchemy models
 ├── schemas.py             # Pydantic request/response schemas
 ├── database.py            # DB connection, pooling, idempotent migrations
@@ -45,8 +45,8 @@ app/
 │   └── security.py        # JWT, Argon2, session management, token theft detection
 ├── api/routes/            # REST endpoints
 │   ├── auth.py            # Login, register, token refresh, OIDC
-│   ├── plants.py          # Plant CRUD, watering, fertilizing, notes, seasons
-│   ├── locations.py       # Location CRUD, photos, activities
+│   ├── plants.py          # Plant CRUD (list with ?summary=true), watering, fertilizing, notes, care advice, species description reuse
+│   ├── locations.py       # Location CRUD, photos, tags, notes, harvest times, import of old browser-only data
 │   ├── users.py           # User management (admin)
 │   ├── tags.py            # Tag CRUD and plant-tag associations
 │   ├── share.py           # Token-based public share links
@@ -59,7 +59,7 @@ app/
 │   ├── plantnet.py        # PlantNet species identification
 │   ├── prompt_config.py   # LLM prompt templates
 │   └── weather_service.py # Weather data fetching and auto-watering logic
-└── utils/                 # EXIF extraction, text cleaning
+└── utils/                 # EXIF extraction, text cleaning, utcnow() (naive UTC, as stored)
 ```
 
 ## Key Conventions
@@ -69,4 +69,6 @@ app/
 - All routes prefixed with `/api`
 - Image uploads generate 3 WebP variants: thumb (300px), medium (800px), original (2000px max)
 - Three auth modes: `no` (open), `local` (JWT), `oidc` (external provider)
-- Schema changes handled as idempotent migrations in `database.py`
+- New tables are created by `create_all` at startup; changes to existing tables are idempotent migrations in `database.py`
+- Timestamps are stored as naive UTC: use `app.utils.time.utcnow()`, not the deprecated `datetime.utcnow()`
+- Pydantic v2 style: `model_config = ConfigDict(...)`, `model_dump()`
