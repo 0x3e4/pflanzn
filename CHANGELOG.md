@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - With `AUTH_MODE=no` and MCP on, any website a visitor opened could send write calls to `/mcp` as a plain-text POST (no CORS preflight). `/mcp` now requires `Content-Type: application/json`, which every MCP client sends.
 - An `AUTH_MODE` that is none of `no`, `local`, `oidc` (a typo such as `locla`) skipped the SECRET_KEY check and the session binding while password login kept working. The backend now refuses to start with such a value.
 - The MCP consent page showed only the host of a redirect address, so a native-app address like `x-evil://claude.ai/cb` read as "claude.ai". Addresses that aren't http(s) are shown with their scheme now.
+- Signing out now deletes the app's offline copies of plants, locations, the profile, statistics and photos. Before, they stayed in the browser and could be read offline by the next person on a shared device.
 
 ## [2.1.0] - 2026-11-08
 

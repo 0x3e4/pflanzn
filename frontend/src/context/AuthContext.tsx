@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
 import apiClient from "../services/apiClient";
+import { clearOfflineCaches } from "../services/offlineCache";
 import { useConfig } from "./ConfigContext";
 import { syncUiPreferencesFromBackend } from "../config/uiPreferences";
 import { currentPath, oidcLoginUrl } from "../services/authRedirect";
@@ -134,6 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         setUser(null);
         setIsLoggedIn(false);
+        await clearOfflineCaches();
     };
 
     const authValue = useMemo(

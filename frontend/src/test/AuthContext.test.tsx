@@ -19,7 +19,7 @@ vi.mock("../context/ConfigContext", () => ({
     useConfig: () => ({ authMode: "local", showProtectedView: false, mcpLogin: "app" }),
 }));
 
-const wrapper =({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
 
 describe("AuthContext", () => {
     beforeEach(() => {
@@ -93,6 +93,23 @@ describe("AuthContext", () => {
 
         expect(result.current.user).toBeNull();
         expect(result.current.isLoggedIn).toBe(false);
+    });
+
+    it("logout deletes the offline copies of API reads and photos", async () => {
+        // Regression: plants, locations, the profile and photos stayed in the service-worker
+        // cache after logout, readable offline by the next person on a shared device.
+        const deleted: string[] = [];
+        vi.stubGlobal("caches", { delete: vi.fn(async (name: string) => deleted.push(name) > 0) });
+        mockGet.mockResolvedValue({ data: { id: 1, username: "u", email: "u@example.com", role: "user" } });
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+        await waitFor(() => expect(result.current.loading).toBe(false));
+        await act(async () => {
+            await result.current.logout();
+        });
+
+        expect(deleted.sort()).toEqual(["api-locations", "api-plants", "api-statistics", "api-user", "plant-images"]);
+        vi.unstubAllGlobals();
     });
 
     it("useAuth returns defaults when used outside provider", () => {
