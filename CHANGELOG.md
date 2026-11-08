@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - A warmer look: green-black grounds in the dark theme and warm cream in the light one instead of neutral grey, Alegreya for headings and the wordmark, and a few drawn leaves across the top of each page. Layout, watering blue and the status colours are unchanged; every text colour meets WCAG AA in both themes.
+- README screenshots show the new look.
 - Fonts (Alegreya, Inter) are bundled with the app instead of loaded from Google Fonts, so they also work offline.
 - New frontend dependency releases are accepted after 7 days instead of 14 (`minimumReleaseAge` in `frontend/pnpm-workspace.yaml`).
 
