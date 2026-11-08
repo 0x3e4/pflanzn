@@ -228,6 +228,13 @@ def _dispatch(payload: Any, request: Request, db: Session) -> Response:
 @router.post("")
 @router.post("/")
 async def mcp_endpoint(request: Request, db: Session = Depends(get_db)):
+    # MCP clients always send JSON. Requiring it keeps other websites out: a cross-site
+    # request with this content type needs a CORS preflight, which only DOMAIN passes.
+    # That matters with AUTH_MODE=no, where /mcp takes writes without a token.
+    media_type = request.headers.get("content-type", "").split(";")[0].strip().lower()
+    if media_type != "application/json":
+        return JSONResponse(_error(None, INVALID_REQUEST, "Content-Type must be application/json"),
+                            status_code=415)
     try:
         payload = json.loads(await request.body())
     except (ValueError, UnicodeDecodeError):

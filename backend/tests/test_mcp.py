@@ -168,6 +168,22 @@ class TestMcpProtocol:
         assert response.status_code == 202
         assert response.content == b""
 
+    @pytest.mark.parametrize("content_type", ["text/plain", "application/x-www-form-urlencoded", None])
+    def test_cross_site_simple_request_is_refused(self, client, content_type):
+        """Regression: with AUTH_MODE=no, /mcp parsed any body as JSON. A website could
+        send a text/plain POST (no CORS preflight) and run write tools; it just couldn't
+        read the reply."""
+        body = json.dumps(_rpc("tools/call", {"name": "water_plants", "arguments": {"plant_ids": [1]}}))
+        headers = {"Content-Type": content_type} if content_type else {}
+        with patch("app.services.mcp_tools.water_plants", side_effect=AssertionError("must not run")):
+            response = client.post("/mcp", content=body, headers=headers)
+        assert response.status_code == 415
+
+    def test_json_with_charset_is_accepted(self, client):
+        response = client.post("/mcp", content=json.dumps(_rpc("ping")),
+                               headers={"Content-Type": "application/json; charset=utf-8"})
+        assert response.status_code == 200
+
     def test_parse_error(self, client):
         response = client.post("/api/mcp", content=b"{not json", headers={"Content-Type": "application/json"})
         assert response.status_code == 400
