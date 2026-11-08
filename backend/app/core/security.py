@@ -275,6 +275,12 @@ def create_admin_user():
     try:
         admin_user = db.query(User).filter(User.role == "admin").first()
         if not admin_user:
+            # .env.example ships these empty: refuse rather than create an admin named ""
+            # with the password "", which anyone could log in as.
+            if not (settings.ADMIN_USER or "").strip() or not settings.ADMIN_PASSWORD:
+                raise RuntimeError(
+                    "AUTH_MODE=local and no admin yet: set ADMIN_USER, ADMIN_EMAIL and ADMIN_PASSWORD in .env"
+                )
             new_admin = User(
                 username=settings.ADMIN_USER,
                 email=settings.ADMIN_EMAIL,

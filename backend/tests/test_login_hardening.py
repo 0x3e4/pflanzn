@@ -144,3 +144,44 @@ class TestCookieSameSite:
         finally:
             monkeypatch.undo()
             importlib.reload(auth)
+
+
+class TestEmptyPasswords:
+    def test_empty_password_never_logs_in(self, client, mock_db):
+        """Regression: an admin bootstrapped with ADMIN_PASSWORD="" had a hash of the empty
+        string, so {"username": "", "password": ""} logged in as admin."""
+        mock_db.query.return_value.filter.return_value.first.return_value = _user(username="")
+
+        with patch("app.api.routes.auth.redis_client", _redis()), \
+             patch("app.api.routes.auth.verify_password", return_value=True):
+            response = client.post("/api/auth/login", json={"username": "", "password": ""})
+
+        assert response.status_code == 401
+
+    @pytest.mark.parametrize("admin_user, admin_password", [("", ""), ("admin", ""), ("  ", "secret")])
+    def test_no_admin_is_bootstrapped_from_empty_settings(self, admin_user, admin_password):
+        from app.core import security
+        from app.core.config import settings
+
+        db = MagicMock()
+        db.query.return_value.filter.return_value.first.return_value = None  # no admin yet
+        with patch.object(security, "AUTH_MODE", "local"), \
+             patch.object(security, "get_db", return_value=iter([db])), \
+             patch.object(settings, "ADMIN_USER", admin_user), \
+             patch.object(settings, "ADMIN_PASSWORD", admin_password):
+            with pytest.raises(RuntimeError, match="ADMIN_PASSWORD"):
+                security.create_admin_user()
+        db.add.assert_not_called()
+
+    def test_existing_admin_needs_no_bootstrap_settings(self):
+        from app.core import security
+        from app.core.config import settings
+
+        db = MagicMock()
+        db.query.return_value.filter.return_value.first.return_value = _user()  # an admin exists
+        with patch.object(security, "AUTH_MODE", "local"), \
+             patch.object(security, "get_db", return_value=iter([db])), \
+             patch.object(settings, "ADMIN_USER", ""), \
+             patch.object(settings, "ADMIN_PASSWORD", ""):
+            security.create_admin_user()
+        db.add.assert_not_called()

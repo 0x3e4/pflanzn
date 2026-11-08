@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+### Security
+- Location names (and the crop of a location) reached the map tooltips as HTML, so a member could put script into a name that ran for whoever hovered the marker, an admin included. They are text now. Leaflet, loaded from unpkg, is pinned with Subresource Integrity.
+- With `AUTH_MODE=local` and `ADMIN_USER`/`ADMIN_PASSWORD` left empty (as in `.env.example`), the first start created an admin named "" with the password "". The backend now refuses to start until they are set, and an empty password never logs in. Check for such an account: `SELECT id FROM users WHERE username = '';`
+
 ## [2.1.0] - 2026-11-08
 
 ### Added

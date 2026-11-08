@@ -201,7 +201,9 @@ def login(user_data: LoginRequest, request: Request, db: Session = Depends(get_d
         raise HTTPException(status_code=429, detail="Too many failed login attempts. Try again later.")
 
     stored_hash = user.password if user and user.password else _DUMMY_PASSWORD_HASH
-    password_ok = verify_password(user_data.password, stored_hash)
+    # An empty password never logs in, even for an account whose hash was made from ""
+    # (an admin bootstrapped with ADMIN_PASSWORD left empty). Verified anyway, for even timing.
+    password_ok = verify_password(user_data.password, stored_hash) and bool(user_data.password)
 
     if not user or not user.password or not password_ok:
         _record_login_failure(failure_key)
