@@ -113,8 +113,34 @@ export function HomeLately({ timezone, locale }: { timezone: string; locale: str
 
 const RHYTHM_WEEKS = 12;
 
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+
+const dayRows = (day: ActivityDay) =>
+    [
+        day.waterings > 0 && plural(day.waterings, "watering"),
+        day.fertilizings > 0 && plural(day.fertilizings, "fertilizing"),
+        day.photos > 0 && plural(day.photos, "photo"),
+    ].filter((row): row is string => Boolean(row));
+
+type TipSpot = { index: number; left: number; top: number };
+
+// Where a day's tooltip goes: above its square, kept inside the grid's width. Measured when
+// the day is chosen (an event), never while rendering.
+const TIP_HALF_WIDTH = 95;
+const tipSpot = (cell: HTMLElement, index: number): TipSpot => {
+    const width = cell.parentElement?.offsetWidth ?? 0;
+    const center = cell.offsetLeft + cell.offsetWidth / 2;
+    const left = Math.min(Math.max(center, TIP_HALF_WIDTH), Math.max(TIP_HALF_WIDTH, width - TIP_HALF_WIDTH));
+    return { index, left, top: cell.offsetTop };
+};
+
 export function HomeRhythm({ locale }: { locale: string }) {
     const [days, setDays] = useState<ActivityDay[] | null>(null);
+    // The day under the pointer or keyboard focus, and the one pinned by a tap (phones),
+    // each with where its tooltip goes (measured from the square when it is chosen).
+    const [hovered, setHovered] = useState<TipSpot | null>(null);
+    const [pinned, setPinned] = useState<TipSpot | null>(null);
+    const [focusIndex, setFocusIndex] = useState<number | null>(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -139,16 +165,36 @@ export function HomeRhythm({ locale }: { locale: string }) {
     if (days === null) return <Skeleton height={130} />;
     if (recent.length === 0) return null;
 
+    const todayIndex = recent.length - 1;
     const last30 = recent.slice(-30);
     const careDays = last30.filter((day) => careTotal(day) > 0).length;
-    const today = recent[recent.length - 1];
-    const weekStart = DateTime.fromISO(today.date).weekday - 1;
-    const thisWeek = recent.slice(-(weekStart + 1)).reduce((sum, day) => sum + day.waterings, 0);
-    const label = `Care on ${careDays} of the last ${last30.length} days; ${thisWeek} waterings this week.`;
-    const fmt = (iso: string) =>
+    const lastWeek = recent.slice(-7).reduce((sum, day) => sum + day.waterings, 0);
+    const summary = `Care on ${careDays} of the last ${last30.length} days; ${lastWeek} waterings in the last 7 days.`;
+    const shortDate = (iso: string) =>
         DateTime.fromISO(iso)
             .setLocale(locale || "en")
-            .toLocaleString(DateTime.DATE_MED);
+            .toLocaleString({ weekday: "short", day: "numeric", month: "short" });
+
+    const tip = hovered ?? pinned;
+    const shown = tip?.index ?? null;
+    const tabStop = focusIndex ?? todayIndex;
+
+    // Columns are weeks: left/right moves a week, up/down a day.
+    const onKeyDown = (event: React.KeyboardEvent, index: number) => {
+        if (event.key === "Escape") {
+            setPinned(null);
+            setHovered(null);
+            return;
+        }
+        const steps: Record<string, number> = { ArrowLeft: -7, ArrowRight: 7, ArrowUp: -1, ArrowDown: 1 };
+        let next: number | null = event.key in steps ? index + steps[event.key] : null;
+        if (event.key === "Home") next = 0;
+        if (event.key === "End") next = todayIndex;
+        if (next === null || next < 0 || next > todayIndex) return;
+        event.preventDefault();
+        setFocusIndex(next);
+        (event.currentTarget.parentElement?.children[next] as HTMLElement | undefined)?.focus();
+    };
 
     return (
         <section className="home-rhythm" aria-labelledby="home-rhythm">
@@ -158,29 +204,75 @@ export function HomeRhythm({ locale }: { locale: string }) {
                     <strong>{careDays}</strong> of the last {last30.length} days with care
                 </span>
                 <span>
-                    <strong>{thisWeek}</strong> {thisWeek === 1 ? "watering" : "waterings"} this week
+                    <strong>{lastWeek}</strong> {lastWeek === 1 ? "watering" : "waterings"} in the last 7 days
                 </span>
             </p>
-            <div className="home-rhythm-grid" role="img" aria-label={label}>
-                {recent.map((day) => {
-                    const total = careTotal(day);
-                    return (
-                        <span
-                            key={day.date}
-                            className="home-rhythm-cell"
-                            style={{ background: `var(--heat-${heatLevel(total, thresholds)})` }}
-                            title={
-                                total === 0
-                                    ? `${fmt(day.date)}: nothing logged`
-                                    : `${fmt(day.date)}: ${day.waterings} waterings, ${day.fertilizings} fertilizings, ${day.photos} photos`
-                            }
-                        />
-                    );
-                })}
+            <div className="home-rhythm-wrap">
+                <div
+                    className="home-rhythm-grid"
+                    role="group"
+                    aria-label={`${summary} Use the arrow keys to read a day.`}
+                    onPointerLeave={() => setHovered(null)}
+                >
+                    {recent.map((day, index) => {
+                        const rows = dayRows(day);
+                        const classes = ["home-rhythm-cell"];
+                        if (index === todayIndex) classes.push("is-today");
+                        if (index === shown) classes.push("is-active");
+                        return (
+                            <button
+                                key={day.date}
+                                type="button"
+                                className={classes.join(" ")}
+                                style={{ background: `var(--heat-${heatLevel(careTotal(day), thresholds)})` }}
+                                tabIndex={index === tabStop ? 0 : -1}
+                                aria-label={`${shortDate(day.date)}${index === todayIndex ? ", today" : ""}: ${
+                                    rows.length ? rows.join(", ") : "nothing logged"
+                                }`}
+                                aria-pressed={index === pinned?.index}
+                                onPointerEnter={(event) =>
+                                    event.pointerType === "mouse" && setHovered(tipSpot(event.currentTarget, index))
+                                }
+                                onFocus={(event) => {
+                                    setFocusIndex(index);
+                                    setHovered(tipSpot(event.currentTarget, index));
+                                }}
+                                onBlur={() => setHovered(null)}
+                                onClick={(event) => {
+                                    const spot = tipSpot(event.currentTarget, index);
+                                    setPinned((current) => (current?.index === index ? null : spot));
+                                }}
+                                onKeyDown={(event) => onKeyDown(event, index)}
+                            />
+                        );
+                    })}
+                </div>
+                {shown !== null && tip && (
+                    <div className="home-rhythm-tip" style={{ left: tip.left, top: tip.top }} aria-hidden>
+                        <p className="home-rhythm-tip-date">
+                            {shortDate(recent[shown].date)}
+                            {shown === todayIndex && ", today"}
+                        </p>
+                        {dayRows(recent[shown]).length ? (
+                            dayRows(recent[shown]).map((row) => <p key={row}>{row}</p>)
+                        ) : (
+                            <p className="home-rhythm-tip-empty">Nothing logged</p>
+                        )}
+                    </div>
+                )}
             </div>
-            <Link to="/manage?section=statistics" className="home-rhythm-more">
-                The whole year in Statistics
-            </Link>
+            <div className="home-rhythm-foot">
+                <span className="home-rhythm-key" aria-hidden>
+                    Less
+                    {[0, 1, 2, 3, 4].map((level) => (
+                        <span key={level} style={{ background: `var(--heat-${level})` }} />
+                    ))}
+                    More
+                </span>
+                <Link to="/manage?section=statistics" className="home-rhythm-more">
+                    The whole year in Statistics
+                </Link>
+            </div>
         </section>
     );
 }

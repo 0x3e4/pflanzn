@@ -14,7 +14,8 @@ recently photographed plants, and then three blocks:
 
 - **Lately**: what happened in the last two weeks across all plants. A "Water all" or a rainy day is
   one line; members also see who did it.
-- **Care rhythm**: the last twelve weeks, one square per day, darker the more care it got.
+- **Care rhythm**: the last twelve weeks, one square per day, darker the more care it got. Point
+  at a day, or tap it on a phone, to see what happened; the arrow keys move from day to day.
 - **Your areas**: your tags as tiles, with how many plants each has and how many need water.
 
 ## Watering schedule
