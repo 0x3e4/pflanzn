@@ -79,52 +79,6 @@
     color: var(--button-primary-ink);
 }
 
-.sidebar-info-item {
-    cursor: default !important;
-    background: transparent !important;
-    color: var(--text-color);
-    opacity: 0.8;
-}
-
-.sidebar-about {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    font-size: 0.875rem;
-}
-
-.sidebar-about-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 14px;
-}
-
-/* The arrow says the link leaves the app (a new tab). */
-.sidebar-about-links a {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 4px;
-}
-
-.sidebar-about-links svg {
-    font-size: 0.7em;
-}
-
-.sidebar-about a {
-    color: inherit;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-}
-
-.sidebar-about a:hover {
-    color: var(--text-color);
-}
-
-.sidebar-info-item:hover {
-    background: transparent !important;
-    color: var(--text-color) !important;
-}
-
 .logout-link {
     font-weight: bold;
 }

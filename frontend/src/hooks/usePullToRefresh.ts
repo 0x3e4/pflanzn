@@ -10,11 +10,30 @@ export function usePullToRefresh(ref: React.RefObject<HTMLElement | null>, onTri
 
         const indicator = document.getElementById("pull-indicator");
 
+        let startX = 0;
         let startY = 0;
         let currentY = 0;
+        // A touch that may become a pull; it only becomes one once it clearly moves down.
+        let candidate = false;
         let pulling = false;
         const TRIGGER_DISTANCE = 70;
         const MAX_PULL = 100;
+        // Movement before the gesture is decided, and how much more vertical than horizontal
+        // it must be. A sideways swipe that drifts down a few pixels stays a sideways swipe.
+        const DECIDE_DISTANCE = 10;
+        const VERTICAL_BIAS = 1.5;
+
+        // Inside a row that scrolls sideways (the tag chips, the care calendar), the touch
+        // belongs to that row: moving the page under it makes iOS drop the scroll.
+        function insideHorizontalScroller(target: HTMLElement | null) {
+            for (let node = target; node && node !== document.body; node = node.parentElement) {
+                if (node.scrollWidth > node.clientWidth + 1) {
+                    const overflowX = getComputedStyle(node).overflowX;
+                    if (overflowX === "auto" || overflowX === "scroll") return true;
+                }
+            }
+            return false;
+        }
 
         function getPageScrollTop() {
             return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
@@ -58,19 +77,31 @@ export function usePullToRefresh(ref: React.RefObject<HTMLElement | null>, onTri
                 }
             }
 
-            if (!isInsideAllowedZone || isInsideSwipeBlock) return;
+            if (!isInsideAllowedZone || isInsideSwipeBlock || insideHorizontalScroller(target)) return;
 
+            startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
-            pulling = true;
+            currentY = startY;
+            candidate = true;
+            pulling = false;
         }
 
         function handleTouchMove(e: TouchEvent) {
             const el = ref.current;
             if (!el) return;
-            if (!pulling) return;
+            if (!candidate && !pulling) return;
 
             currentY = e.touches[0].clientY;
             let dy = currentY - startY;
+
+            if (!pulling) {
+                const dx = e.touches[0].clientX - startX;
+                if (Math.abs(dx) < DECIDE_DISTANCE && Math.abs(dy) < DECIDE_DISTANCE) return;
+                candidate = false;
+                // Only a clear downward drag is a pull; anything else is left to the browser.
+                if (dy <= 0 || dy < Math.abs(dx) * VERTICAL_BIAS) return;
+                pulling = true;
+            }
 
             if (dy > 0) {
                 dy = Math.min(dy, MAX_PULL);
@@ -91,6 +122,7 @@ export function usePullToRefresh(ref: React.RefObject<HTMLElement | null>, onTri
 
         function handleTouchEnd() {
             const el = ref.current;
+            candidate = false;
             if (!el) return;
             if (!pulling) return;
 
@@ -126,14 +158,28 @@ export function usePullToRefresh(ref: React.RefObject<HTMLElement | null>, onTri
             }, 300);
         }
 
-        el.addEventListener("touchstart", handleTouchStart, { passive: false });
-        el.addEventListener("touchmove", handleTouchMove, { passive: false });
-        el.addEventListener("touchend", handleTouchEnd, { passive: false });
+        function handleTouchCancel() {
+            const el = ref.current;
+            candidate = false;
+            if (!el || !pulling) return;
+            pulling = false;
+            el.style.transition = "transform 0.3s ease";
+            el.style.transform = "translateY(0)";
+            resetIndicator();
+        }
+
+        // Passive: nothing here calls preventDefault, and a non-passive listener on the whole
+        // app makes iOS wait for it on every touch before it scrolls.
+        el.addEventListener("touchstart", handleTouchStart, { passive: true });
+        el.addEventListener("touchmove", handleTouchMove, { passive: true });
+        el.addEventListener("touchend", handleTouchEnd, { passive: true });
+        el.addEventListener("touchcancel", handleTouchCancel, { passive: true });
 
         return () => {
             el.removeEventListener("touchstart", handleTouchStart);
             el.removeEventListener("touchmove", handleTouchMove);
             el.removeEventListener("touchend", handleTouchEnd);
+            el.removeEventListener("touchcancel", handleTouchCancel);
         };
     }, [ref, onTrigger]);
 

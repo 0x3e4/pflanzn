@@ -18,6 +18,54 @@
     margin: 0 0 24px;
 }
 
+/* About, docs and version, above the support cards. */
+.support-about {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 24px;
+    margin: 0 0 20px;
+    padding: 14px 20px;
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    background: var(--card-background);
+}
+
+.support-card-icon--about {
+    color: var(--primary-color);
+}
+
+.support-about-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.95rem;
+}
+
+.support-about-links a {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    color: var(--text-color);
+    font-weight: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--card-border);
+    text-underline-offset: 3px;
+}
+
+.support-about-links a:hover {
+    text-decoration-color: currentColor;
+}
+
+/* The arrow says the link opens in a new tab. */
+.support-about-links svg {
+    font-size: 0.72em;
+}
+
 .support-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));

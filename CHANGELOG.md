@@ -8,14 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- A link to the documentation (`/docs/`) in the Manage sidebar, next to About and GitHub, and on the About page; both open in a new tab and say so with the external-link arrow.
+- A link to the documentation (`/docs/`) on the About page and in Manage → Support; it opens in a new tab and says so with the external-link arrow.
 
 ### Changed
+- Manage: About, the documentation, what's new, the source on GitHub and the version moved from the foot of the sidebar into Manage → Support. On a phone they no longer sit squeezed into the scrolling tab strip.
 - The frontend container is now the gateway: it forwards `/api`, `/mcp` and `/.well-known/oauth-*` to the backend and `/docs/` to the docs container, so the reverse proxy only needs the frontend (one `location /` block) and backend and docs need no published port. Upstreams are looked up per request, so a recreated backend is found again and the frontend starts without it. New frontend variables: `BACKEND_UPSTREAM` (default `http://pflanzn-backend:8000`), `TRUSTED_PROXIES` (whose `X-Forwarded-For` gives the client IP; default private networks), `MAX_UPLOAD_MB` and `UPSTREAM_RESOLVER`, which replaces `DOCS_RESOLVER`. **`DOCS_UPSTREAM` now defaults to `http://pflanzn-docs:80`**: give the docs service that alias (as in the compose example) or set it, otherwise `/docs` falls back to GitHub. A proxy that sends `/api` straight to the backend keeps working.
 - Compose example: backend and docs get the aliases `pflanzn-backend` and `pflanzn-docs` and no published port; the frontend listens on `127.0.0.1:4173` and only gets `DOMAIN` and `MAX_UPLOAD_MB` instead of the whole `.env`; Redis moves to the internal network with the database.
 - The MCP endpoint moves to `/mcp`, like Hecate's. `/api/mcp` keeps working, so existing connections stay connected; the OAuth metadata names whichever path the client used. **Reverse proxy:** forward `/mcp` to the backend as well (nginx: `location ~ ^/(api(/|$)|mcp/?$|\.well-known/oauth-)`), and don't rewrite it to `/api/mcp`.
 
 ### Fixed
+- iOS: the tag chips at the top of the plants list (and sideways swipes near the top of any page) could refuse to scroll or get stuck. The pull-to-refresh gesture took over any touch at the top of the page and moved the page under a sideways swipe that drifted down a few pixels; it now only starts on a clear downward drag, never inside a row that scrolls sideways, and no longer makes iOS wait on every touch.
 
 ### Security
 - Location names (and the crop of a location) reached the map tooltips as HTML, so a member could put script into a name that ran for whoever hovered the marker, an admin included. They are text now. Leaflet, loaded from unpkg, is pinned with Subresource Integrity.

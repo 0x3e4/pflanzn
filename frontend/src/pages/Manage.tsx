@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useConfig } from "../context/ConfigContext";
 import { toast } from "react-toastify";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { updateUser, updateUserPassword } from "../services/UserService";
 import StatisticsPanel from "../components/StatisticsPanel";
 import UsersPanel from "../components/UsersPanel";
@@ -20,11 +20,10 @@ import McpPanel from "../components/McpPanel";
 import FloorPlansPanel from "../components/FloorPlansPanel";
 import "../styles/manage.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowUpRightFromSquare, faPenToSquare, faUnlock } from "@fortawesome/free-solid-svg-icons";
+import { faPenToSquare, faUnlock } from "@fortawesome/free-solid-svg-icons";
 import { User } from "../types/User";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import { APP_VERSION } from "../config/appInfo";
 import { getUiPreferences, pushUserPreferences, updateUiPreferences } from "../config/uiPreferences";
 
 type ManageSection =
@@ -329,27 +328,6 @@ const Manage: React.FC = () => {
                         onClick={() => setActiveSection("support")}
                     >
                         Support
-                    </li>
-                    <li className="sidebar-info-item sidebar-about">
-                        <span className="sidebar-about-links">
-                            <Link to="/about">About</Link>
-                            {/* The docs site at /docs (the frontend forwards it to the docs container,
-                                or to the docs on GitHub when there is none). */}
-                            <a href="/docs/" target="_blank" rel="noreferrer" aria-label="Docs (opens in a new tab)">
-                                Docs
-                                <FontAwesomeIcon icon={faArrowUpRightFromSquare} aria-hidden="true" />
-                            </a>
-                            <a
-                                href="https://github.com/0x3e4/pflanzn"
-                                target="_blank"
-                                rel="noreferrer"
-                                aria-label="GitHub (opens in a new tab)"
-                            >
-                                GitHub
-                                <FontAwesomeIcon icon={faArrowUpRightFromSquare} aria-hidden="true" />
-                            </a>
-                        </span>
-                        <span>Version {APP_VERSION}</span>
                     </li>
 
                     {authMode !== "no" && (
