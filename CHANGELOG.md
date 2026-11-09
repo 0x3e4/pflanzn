@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+## [2.2.0] - 2026-11-09
+
+### Added
 - A link to the documentation (`/docs/`) on the About page and in Manage → Support; it opens in a new tab and says so with the external-link arrow.
 
 ### Changed
