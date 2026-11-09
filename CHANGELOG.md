@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- Phones get a 16px page margin instead of 32px on each side, like Manage already had, so a 390px phone shows 358px of content instead of 326px. The old phone rule never applied, because it came before the rule it was meant to override.
 
 ### Fixed
 

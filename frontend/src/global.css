@@ -227,11 +227,6 @@ main {
     h1 {
         font-size: 2rem !important;
     }
-
-    .container {
-        width: 100%;
-        max-width: 335px;
-    }
 }
 
 /* Links */
@@ -339,6 +334,15 @@ button[aria-disabled="true"] {
     isolation: isolate;
     box-shadow: 0px 0px 0px 1px color-mix(in srgb, var(--secondary-color) 30%, transparent);
     padding-bottom: 4rem;
+}
+
+/* Phones: a 16px gutter, like Manage. 32px on each side left a 390px phone with 326px
+   for content. After the rule above on purpose: an earlier media block loses to it (the
+   old max-width: 335px there never applied). */
+@media (max-width: 768px) {
+    .container {
+        padding: 20px 16px 4rem;
+    }
 }
 
 /* A few drawn leaves across the top of every page, fading out before the content gets busy. */
