@@ -45,7 +45,7 @@ type ManageSection =
     | "support";
 
 // Sections that may be opened directly via /manage?section=…
-const LINKABLE_SECTIONS: ManageSection[] = ["floorplans", "weather", "mcp", "customize"];
+const LINKABLE_SECTIONS: ManageSection[] = ["statistics", "floorplans", "weather", "mcp", "customize", "support"];
 
 const Manage: React.FC = () => {
     const { user, logout, fetchProfile, isLoggedIn } = useAuth();

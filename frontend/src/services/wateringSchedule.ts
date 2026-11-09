@@ -1,5 +1,6 @@
 import { DateTime } from "luxon";
 import { Plant } from "../types/Plant";
+import { relativeDay } from "./dates";
 
 export interface WateringStatus {
     intervalDays: number;
@@ -56,5 +57,5 @@ export const formatLastWateredShort = (lastWatered: Plant["last_watered"] | null
     if (!lastWatered) return "Never watered";
     const watered = toDateTime(lastWatered, timezone);
     if (!watered.isValid) return "Never watered";
-    return watered.toRelativeCalendar({ unit: "days" }) ?? watered.toRelative() ?? "";
+    return relativeDay(watered);
 };

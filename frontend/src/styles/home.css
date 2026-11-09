@@ -9,6 +9,7 @@
 
 .home-today,
 .home-recent,
+.home-more,
 .home-empty-state {
     width: 100%;
     max-width: 1100px;
@@ -326,7 +327,200 @@
     color: var(--muted-text-color);
 }
 
+/* ── Below the photos: Lately, Care rhythm, Your areas ── */
+.home-more {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: 40px;
+    align-items: start;
+}
+
+.home-more-side {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    min-width: 0;
+}
+
+.home-lately h2,
+.home-rhythm h2,
+.home-areas h2 {
+    margin: 0 0 12px;
+}
+
+.home-muted {
+    margin: 0;
+    color: var(--muted-text-color);
+}
+
+.home-lately-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.home-lately-item {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--card-border);
+}
+
+.home-lately-item:last-child {
+    border-bottom: none;
+}
+
+/* The plant page's activity colours: watering blue, fertilizing magenta, and so on. */
+.home-lately-icon {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    color: var(--text-on-fill);
+    background: var(--quinary-color);
+}
+
+.home-lately-icon.is-watering,
+.home-lately-icon.is-rain {
+    background: var(--octal-color);
+}
+
+.home-lately-icon.is-fertilizing {
+    background: var(--duodecimal-color);
+}
+
+.home-lately-icon.is-note {
+    background: var(--button-primary-bg);
+}
+
+.home-lately-icon.is-care_advice {
+    background: var(--decimal-color);
+}
+
+.home-lately-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.home-lately-plants a {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.home-lately-plants a:hover {
+    text-decoration: underline;
+}
+
+.home-lately-meta {
+    font-size: 0.88rem;
+    color: var(--muted-text-color);
+}
+
+.home-lately-detail {
+    font-size: 0.92rem;
+    color: var(--text-color);
+    overflow-wrap: anywhere;
+}
+
+/* Twelve weeks, a column per week, Monday at the top. */
+.home-rhythm-figures {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 20px;
+    margin: 0 0 12px;
+    font-size: 0.9rem;
+    color: var(--muted-text-color);
+}
+
+.home-rhythm-figures strong {
+    color: var(--text-color);
+    font-size: 1.05rem;
+}
+
+.home-rhythm-grid {
+    display: grid;
+    grid-template-rows: repeat(7, 1fr);
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 3px;
+    max-width: 360px;
+}
+
+.home-rhythm-cell {
+    aspect-ratio: 1;
+    border-radius: 3px;
+}
+
+.home-rhythm-more {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 0.88rem;
+    color: var(--muted-text-color);
+    font-weight: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.home-rhythm-more:hover {
+    color: var(--text-color);
+}
+
+/* Tags as areas: a tile each, opening the filtered plants list. */
+.home-areas-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.home-area {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 14px;
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    background: var(--card-background);
+    color: var(--text-color);
+    font-weight: inherit;
+    transition: border-color 0.15s ease;
+}
+
+.home-area:hover {
+    border-color: var(--primary-color);
+}
+
+.home-area-name {
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.home-area-count {
+    font-size: 0.88rem;
+    color: var(--muted-text-color);
+}
+
+.home-area-due {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--status-due-text);
+}
+
 @media (max-width: 900px) {
+    .home-more {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 32px;
+    }
+
     .home-today-grid {
         grid-template-columns: minmax(0, 1fr);
     }

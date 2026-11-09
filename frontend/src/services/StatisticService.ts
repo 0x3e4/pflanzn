@@ -51,6 +51,18 @@ export interface StatisticsActivity {
     mostCaredDays: number;
 }
 
+export interface RecentEvent {
+    type: "watering" | "fertilizing" | "photo" | "note" | "care_advice";
+    /** Local time (the configured TZ), ISO with offset. */
+    at: string;
+    plants: { id: number; name: string }[];
+    /** Who did it; only for members, never for share-link or public readers. */
+    by: string | null;
+    rain: boolean;
+    /** Note text, shortened. */
+    detail: string | null;
+}
+
 // Fetch plant statistics
 export const fetchStatistics = async (): Promise<StatisticsSummary> => {
     const response = await apiClient.get(`${API_BASE}/`);
@@ -60,5 +72,11 @@ export const fetchStatistics = async (): Promise<StatisticsSummary> => {
 // A year of care by day, twelve weeks of waterings, the last 30 days and the most cared-for plants.
 export const fetchActivity = async (): Promise<StatisticsActivity> => {
     const response = await apiClient.get(`${API_BASE}/activity`);
+    return response.data;
+};
+
+// What happened lately across the collection (the home page feed), newest first.
+export const fetchRecent = async (): Promise<{ days: number; events: RecentEvent[] }> => {
+    const response = await apiClient.get(`${API_BASE}/recent`);
     return response.data;
 };

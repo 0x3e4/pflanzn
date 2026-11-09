@@ -20,6 +20,8 @@ import { useAuth } from "../context/AuthContext";
 import { useShare } from "../context/ShareContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDroplet } from "@fortawesome/free-solid-svg-icons";
+import { HomeAreas, HomeLately, HomeRhythm } from "../components/HomeExtras";
+import { relativeDay } from "../services/dates";
 
 type HomeOverview = {
     active: number;
@@ -279,12 +281,23 @@ export default function Home() {
                                           />
                                       </span>
                                       <span>
-                                          {plant.name}, {DateTime.fromMillis(at).setZone(timezone).toRelativeCalendar()}
+                                          {plant.name}, {relativeDay(DateTime.fromMillis(at).setZone(timezone))}
                                       </span>
                                   </Link>
                               ))}
                     </div>
                 </section>
+            )}
+
+            {/* Below the photos: what happened lately, the care rhythm and the areas (tags). */}
+            {plants.length > 0 && (
+                <div className="home-more">
+                    <HomeLately timezone={timezone} locale={locale} />
+                    <div className="home-more-side">
+                        <HomeRhythm locale={locale} />
+                        <HomeAreas plants={plants} timezone={timezone} />
+                    </div>
+                </div>
             )}
 
             {recent.length === 0 && !loadingPlants && (

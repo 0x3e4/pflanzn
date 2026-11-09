@@ -9,8 +9,18 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 
 from app.core.config import settings
+from app.core.security import AUDIENCE_MEMBER, require_read_access
 from app.database import get_db
-from app.models import Plant, PlantFertilizing, PlantIdentification, PlantImage, PlantNote, PlantWatering
+from app.models import (
+    Plant,
+    PlantCareAdvice,
+    PlantFertilizing,
+    PlantIdentification,
+    PlantImage,
+    PlantNote,
+    PlantWatering,
+    User,
+)
 from app.utils.time import utcnow
 
 # Configure logging
@@ -285,3 +295,95 @@ def build_activity(db: Session, now_utc: datetime | None = None) -> dict:
 def get_activity(db: Session = Depends(get_db)):
     """Care activity over time for the statistics page (see build_activity)."""
     return build_activity(db)
+
+
+# ── What happened lately (the home page feed) ───────────────────────────────
+
+FEED_DAYS = 14
+FEED_LIMIT = 8
+# Waterings or photos by the same person (or the same rain check) this close together are
+# one event: "Water all" and a rainy day would otherwise fill the feed with single lines.
+GROUP_WINDOW = timedelta(minutes=2)
+NOTE_PREVIEW = 140
+
+
+def build_recent(db: Session, member: bool, now_utc: datetime | None = None,
+                 days: int = FEED_DAYS, limit: int = FEED_LIMIT) -> dict:
+    tz = _local_tz()
+    now_utc = now_utc or utcnow()
+    since = now_utc - timedelta(days=days)
+
+    rows = []  # (at, type, plant_id, user_id, rain, detail)
+    for at, plant_id, user_id, rainfall in (
+        db.query(PlantWatering.watered_at, PlantWatering.plant_id, PlantWatering.user_id, PlantWatering.rainfall_mm)
+        .join(Plant, PlantWatering.plant_id == Plant.id)
+        .filter(Plant.is_archived == False, PlantWatering.watered_at >= since)
+        .all()
+    ):
+        rows.append((at, "watering", plant_id, user_id, rainfall is not None, None))
+    for model, column, kind, text in (
+        (PlantFertilizing, PlantFertilizing.fertilized_at, "fertilizing", None),
+        (PlantImage, PlantImage.uploaded_at, "photo", None),
+        (PlantNote, PlantNote.created_at, "note", PlantNote.note_text),
+        (PlantCareAdvice, PlantCareAdvice.generated_at, "care_advice", None),
+    ):
+        columns = [column, model.plant_id, model.user_id] + ([text] if text is not None else [])
+        for row in (
+            db.query(*columns)
+            .join(Plant, model.plant_id == Plant.id)
+            .filter(Plant.is_archived == False, column >= since)
+            .all()
+        ):
+            detail = None
+            if text is not None and row[3]:
+                note = " ".join(row[3].split())
+                detail = note if len(note) <= NOTE_PREVIEW else note[: NOTE_PREVIEW - 1].rstrip() + "…"
+            rows.append((row[0], kind, row[1], row[2], False, detail))
+
+    rows = [r for r in rows if r[0] is not None]
+    rows.sort(key=lambda r: r[0], reverse=True)
+
+    groups: list[dict] = []
+    for at, kind, plant_id, user_id, rain, detail in rows:
+        last = groups[-1] if groups else None
+        if (
+            last is not None
+            and kind in ("watering", "fertilizing", "photo")
+            and last["type"] == kind
+            and last["_user"] == user_id
+            and last["rain"] == rain
+            and last["_oldest"] - at <= GROUP_WINDOW
+        ):
+            last["_oldest"] = at
+            if plant_id not in last["_ids"]:
+                last["_ids"].append(plant_id)
+            continue
+        if len(groups) == limit:
+            break
+        groups.append({"type": kind, "_at": at, "_oldest": at, "_ids": [plant_id], "_user": user_id,
+                       "rain": rain, "detail": detail})
+
+    plant_ids = {pid for g in groups for pid in g["_ids"]}
+    names = dict(db.query(Plant.id, Plant.name).filter(Plant.id.in_(plant_ids)).all()) if plant_ids else {}
+    user_ids = {g["_user"] for g in groups if g["_user"] is not None}
+    # Who did it is for members; share-link and public readers see what happened, not by whom.
+    users = dict(db.query(User.id, User.username).filter(User.id.in_(user_ids)).all()) if member and user_ids else {}
+
+    events = [
+        {
+            "type": g["type"],
+            "at": g["_at"].replace(tzinfo=timezone.utc).astimezone(tz).isoformat(),
+            "plants": [{"id": pid, "name": names.get(pid, f"#{pid}")} for pid in g["_ids"]],
+            "by": users.get(g["_user"]),
+            "rain": g["rain"],
+            "detail": g["detail"],
+        }
+        for g in groups
+    ]
+    return {"days": days, "events": events}
+
+
+@router.get("/recent")
+def get_recent(db: Session = Depends(get_db), audience: str = Depends(require_read_access)):
+    """What happened lately across the collection, for the home page (see build_recent)."""
+    return build_recent(db, member=audience == AUDIENCE_MEMBER)

@@ -15,6 +15,8 @@ import {
 } from "../services/StatisticService";
 import { fetchPlants } from "../services/PlantService";
 import { getWateringStatus } from "../services/wateringSchedule";
+import { careTotal, heatLevel, heatThresholds } from "../services/careHeat";
+import { relativeDay } from "../services/dates";
 import { useConfig } from "../context/ConfigContext";
 import { Plant } from "../types/Plant";
 import "../styles/statisticsPanel.css";
@@ -159,22 +161,6 @@ function WateringStatusBar({ parts, show, hide }: { parts: StatusPart[]; show: S
 }
 
 // ── Care calendar ──────────────────────────────────────────────────────────
-
-const careTotal = (day: ActivityDay) => day.waterings + day.fertilizings + day.photos;
-
-// Four steps from the quartiles of the days that had any care, so a busy rain day
-// doesn't flatten a quiet collection into one shade.
-function heatThresholds(days: ActivityDay[]): number[] {
-    const values = days
-        .map(careTotal)
-        .filter((n) => n > 0)
-        .sort((a, b) => a - b);
-    if (values.length === 0) return [1, 2, 3];
-    const at = (q: number) => values[Math.min(values.length - 1, Math.floor(q * values.length))];
-    return [at(0.25), at(0.5), at(0.75)];
-}
-
-const heatLevel = (n: number, [q1, q2, q3]: number[]) => (n === 0 ? 0 : n <= q1 ? 1 : n <= q2 ? 2 : n <= q3 ? 3 : 4);
 
 function CareCalendar({
     days,
@@ -486,7 +472,7 @@ function CaredList({ plants }: { plants: CaredPlant[] }) {
     );
 }
 
-function ThirstyList({ plants, timezone, locale }: { plants: Plant[]; timezone: string; locale: string }) {
+function ThirstyList({ plants, timezone }: { plants: Plant[]; timezone: string }) {
     const watered = plants
         .filter((plant) => plant.last_watered)
         .map((plant) => ({ plant, at: DateTime.fromISO(String(plant.last_watered), { zone: timezone }) }))
@@ -501,7 +487,7 @@ function ThirstyList({ plants, timezone, locale }: { plants: Plant[]; timezone: 
                 {watered.map(({ plant, at }) => (
                     <li key={plant.id}>
                         <Link to={`/plant/${plant.id}`}>{plant.name}</Link>
-                        <span>{at.setLocale(locale).toRelativeCalendar({ unit: "days" })}</span>
+                        <span>{relativeDay(at)}</span>
                     </li>
                 ))}
             </ol>
@@ -690,7 +676,7 @@ export default function StatisticsPanel() {
                 {card(
                     "stats-thirsty",
                     "Longest without water",
-                    plants ? <ThirstyList plants={active} timezone={timezone} locale={locale} /> : null,
+                    plants ? <ThirstyList plants={active} timezone={timezone} /> : null,
                 )}
             </div>
 

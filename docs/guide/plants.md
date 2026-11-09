@@ -10,7 +10,12 @@ description and a timeline of everything that happened to it.
 The home page answers one question: **what needs water today?** It lists every plant whose
 schedule is due, each with its own *Water* button, and *Water all* waters the whole list in one go.
 Next to it, *Coming up* shows the plants due next. Below are the collection figures and the most
-recently photographed plants.
+recently photographed plants, and then three blocks:
+
+- **Lately**: what happened in the last two weeks across all plants. A "Water all" or a rainy day is
+  one line; members also see who did it.
+- **Care rhythm**: the last twelve weeks, one square per day, darker the more care it got.
+- **Your areas**: your tags as tiles, with how many plants each has and how many need water.
 
 ## Watering schedule
 

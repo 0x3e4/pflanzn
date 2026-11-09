@@ -69,6 +69,8 @@
     --water-hover: var(--nonal-color);
     /* Watering status, the same everywhere: due (water now), soon, ok. */
     --status-due-bg: #af4c4c;
+    /* "Due" as text on the page, not on a badge: the badge red is too dark for small text here (2.8:1). */
+    --status-due-text: #e58a80;
     --status-due-ink: #fbfdfb;
     --status-soon-bg: #e0b24f;
     --status-soon-ink: #241a04;
@@ -136,6 +138,7 @@
     --button-primary-ink: #fbfdfb;
     --button-primary-hover: #24532f;
     --status-due-bg: #c62828;
+    --status-due-text: #b3261e;
     --status-soon-bg: #f0c05a;
     --status-soon-text: #8a5d00;
     --status-ok-bg: #e9e2d0;
