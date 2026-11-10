@@ -857,3 +857,11 @@
 .data-table tr.archived-row .editable-input {
     color: var(--muted-text-color);
 }
+
+/* The divider between profile details and the password form. (It used to get its spacing
+   from a global hr rule in about.css.) */
+.profile-info hr {
+    margin: 2rem 0;
+    border: none;
+    border-top: 1px solid var(--card-border);
+}
