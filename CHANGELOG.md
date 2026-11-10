@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Phones get a 16px page margin instead of 32px on each side, like Manage already had, so a 390px phone shows 358px of content instead of 326px. The old phone rule never applied, because it came before the rule it was meant to override.
 
 ### Fixed
+- Frontend tests failed on Node 25 and later, whose own global `localStorage` hides jsdom's; the test workers now run with `--no-experimental-webstorage` (Node 24 accepts it too).
 - Relative days ("today", "2 days ago") followed the browser's language, so a German browser showed "heute" and "gestern" in the English interface. They are always English now; absolute dates still follow `LOCALE`.
 
 ## [2.2.0] - 2026-11-09
