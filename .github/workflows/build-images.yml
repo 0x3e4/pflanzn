@@ -6,6 +6,8 @@ on:
       - main
     tags:
       - '[0-9]+.[0-9]+.[0-9]+*'
+      # No GHCR images for pre-release tags (2.3.0-beta.1).
+      - '!*-*'
   workflow_dispatch:
 
 env:

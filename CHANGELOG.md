@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Home: three blocks below the photos. *Lately* lists what happened in the last two weeks across all plants (waterings, rain, fertilizing, photos, notes, care advice), with a "Water all" or a rainy day as one line; members also see who did it. *Care rhythm* shows the last twelve weeks as a calendar with care days and the waterings of the last 7 days; hover, focus or tap a day for what happened (arrow keys move between days, a tap pins it on a phone). *Your areas* shows the tags as tiles with their plants and how many need water, each opening the filtered list. New endpoint `GET /api/statistics/recent`; `/manage?section=statistics` (and `support`) open those sections directly.
 
 ### Changed
+- Tags with a pre-release suffix (`2.3.0-beta.1`) no longer create a GitHub release or GHCR images; only plain `X.Y.Z` tags do.
 - About, rewritten: the version with links to the documentation, what's new and the source; the name in two columns (how to say it, what it means) instead of a narrow column with half the page empty; and nine feature cards for what Pflanzn does today, replacing the old six (which still mentioned basic authentication and missed Claude, MCP, the watering schedule, locations, floor plans, rain watering and statistics).
 - Phones get a 16px page margin instead of 32px on each side, like Manage already had, so a 390px phone shows 358px of content instead of 326px. The old phone rule never applied, because it came before the rule it was meant to override.
 
