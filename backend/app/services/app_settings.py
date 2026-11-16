@@ -17,6 +17,10 @@ logger = logging.getLogger(__name__)
 # key -> (type, default)
 SETTINGS: dict[str, tuple[type, Any]] = {
     "floor_plans_enabled": (bool, False),
+    # Notifications (need APPRISE_URL): reminders when due, a daily watering digest.
+    "notify_reminders": (bool, True),
+    "notify_watering": (bool, True),
+    "notify_watering_time": (str, "08:00"),
 }
 
 

@@ -28,6 +28,8 @@ from app.models import (
     WeatherLog,
     plant_tag_association,
 )
+from app.services import notifications as notification_service
+from app.services import reminders as reminder_service
 from app.services.mcp_oauth import SCOPE_READ, SCOPE_WRITE
 from app.utils.time import utcnow
 
@@ -201,6 +203,32 @@ def _arg_when(args: dict, name: str) -> datetime:
     return as_utc
 
 
+# A reminder given as a date only is sent at this local time.
+REMINDER_DEFAULT_HOUR = 9
+
+
+def _arg_remind_at(args: dict) -> Optional[datetime]:
+    """Optional reminder time (ISO 8601) -> naive UTC; a date alone means 09:00 in TZ."""
+    raw = args.get("remind_at")
+    if raw is None or raw == "":
+        return None
+    if not isinstance(raw, str):
+        raise ToolError("'remind_at' must be an ISO 8601 date or datetime")
+    text = raw.strip()
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        raise ToolError("'remind_at' must be an ISO 8601 date or datetime, e.g. 2026-05-01 or 2026-05-01T18:00")
+    if len(text) == 10:
+        parsed = parsed.replace(hour=REMINDER_DEFAULT_HOUR)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=LOCAL_TZ)
+    as_utc = parsed.astimezone(timezone.utc).replace(tzinfo=None)
+    if as_utc < utcnow() - timedelta(minutes=5):
+        raise ToolError("'remind_at' must not be in the past")
+    return as_utc
+
+
 def _get_plant(db: Session, plant_id: int) -> Plant:
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
@@ -344,7 +372,11 @@ def get_plant(ctx: ToolContext, args: dict) -> dict:
             for w in waterings
         ],
         "recent_fertilizings": [_iso(f.fertilized_at) for f in fertilizings],
-        "recent_notes": [{"id": n.id, "at": _iso(n.created_at), "text": n.note_text} for n in notes],
+        "recent_notes": [
+            {"id": n.id, "at": _iso(n.created_at), "text": n.note_text, "remind_at": _iso(n.remind_at)}
+            for n in notes
+        ],
+        "upcoming_reminders": [_reminder(n) for n in reminder_service.upcoming(db, 365, plant_id=plant.id)],
         "latest_care_advice": [{"at": _iso(a.generated_at), "text": a.advice_text[:4000]} for a in advice],
         "image_count": len(images),
         "recent_images": [{"image_id": i.id, "uploaded_at": _iso(i.uploaded_at)} for i in images[:10]],
@@ -417,8 +449,15 @@ def get_overview(ctx: ToolContext, args: dict) -> dict:
         key=lambda p: last_watered.get(p.id) or datetime.min,
     )[:10]
 
+    due_now = [
+        summary for summary in (_plant_summary(p, last_watered, last_fertilized) for p in plants)
+        if summary["needs_water"]
+    ]
     overview = {
         "active_plants": stats["totalPlants"],
+        "needs_water_now": [{"id": p["id"], "name": p["name"]} for p in due_now],
+        "reminders_next_7_days": [_reminder(n) for n in reminder_service.upcoming(ctx.db, 7)],
+        "notifications_configured": notification_service.configured(),
         "archived_plants": stats["archivedPlants"],
         "total_waterings": stats["totalWaterings"],
         "total_images": stats["totalImages"],
@@ -495,6 +534,98 @@ def list_locations(ctx: ToolContext, args: dict) -> dict:
     }
 
 
+def _reminder(note: PlantNote) -> dict:
+    return {
+        "note_id": note.id,
+        "plant_id": note.plant_id,
+        "plant": note.plant.name if note.plant else None,
+        "text": note.note_text,
+        "remind_at": _iso(note.remind_at),
+        "sent": note.reminded_at is not None,
+    }
+
+
+def list_reminders(ctx: ToolContext, args: dict) -> dict:
+    days_ahead = _arg_int(args, "days_ahead", 14, maximum=365)
+    days_back = _arg_int(args, "days_back", 0, minimum=0, maximum=365)
+    plant_id = None
+    if args.get("plant_id") is not None:
+        plant_id = _get_plant(ctx.db, _arg_int(args, "plant_id")).id
+    notes = reminder_service.upcoming(ctx.db, days_ahead, days_back, plant_id=plant_id)
+    return {
+        "timezone": settings.TZ,
+        "from": _iso(reminder_service.start_of_local_day(days_back)),
+        "days_ahead": days_ahead,
+        "notifications_configured": notification_service.configured(),
+        "count": len(notes),
+        "reminders": [_reminder(n) for n in notes],
+    }
+
+
+def get_watering_plan(ctx: ToolContext, args: dict) -> dict:
+    """When each scheduled plant is due in the next N days (overdue ones first)."""
+    days = _arg_int(args, "days", 7, maximum=60)
+    include_rain = _arg_bool(args, "include_rain_watered", True)
+    today = datetime.now(LOCAL_TZ).date()
+    last_watered = _last_dates(ctx.db, PlantWatering.watered_at, PlantWatering.plant_id)
+    plants = (ctx.db.query(Plant)
+              .filter(or_(Plant.is_archived == False, Plant.is_archived.is_(None)),  # noqa: E712
+                      Plant.watering_interval_days.isnot(None))
+              .order_by(Plant.name).all())
+    plan = []
+    for plant in plants:
+        if not include_rain and plant.is_outdoor and plant.reaches_rain:
+            continue
+        days_until, _ = _watering_due(plant.watering_interval_days, last_watered.get(plant.id), today)
+        if days_until is None or days_until > days:
+            continue
+        plan.append({
+            "plant_id": plant.id,
+            "plant": plant.name,
+            "due_on": (today + timedelta(days=days_until)).isoformat(),
+            "days_until_due": days_until,
+            "overdue": days_until < 0,
+            "watering_interval_days": plant.watering_interval_days,
+            "last_watered": _iso(last_watered.get(plant.id)),
+            "rain_counts": bool(plant.is_outdoor and plant.reaches_rain),
+        })
+    plan.sort(key=lambda item: (item["days_until_due"], item["plant"].lower()))
+    unscheduled = (ctx.db.query(func.count(Plant.id))
+                   .filter(or_(Plant.is_archived == False, Plant.is_archived.is_(None)),  # noqa: E712
+                           Plant.watering_interval_days.is_(None)).scalar())
+    return {
+        "today": today.isoformat(),
+        "days": days,
+        "timezone": settings.TZ,
+        "plan": plan,
+        "plants_without_schedule": unscheduled,
+    }
+
+
+def get_species_info(ctx: ToolContext, args: dict) -> dict:
+    """What Pl@ntNet and GBIF know about a plant's species."""
+    from app.services import plant_reference
+
+    plant = _get_plant(ctx.db, _arg_int(args, "plant_id"))
+    if not plant.species or plant.species.strip().lower() == "unknown":
+        raise ToolError(f"{plant.name} has no species yet. Set one with update_plant first.")
+    reference = plant_reference.lookup(ctx.db, plant.species)
+    if not reference:
+        return {"plant_id": plant.id, "species": plant.species, "found": False}
+    return {
+        "plant_id": plant.id,
+        "species": plant.species,
+        "found": True,
+        "scientific_name": reference.name,
+        "family": reference.family,
+        "genus": reference.genus,
+        "common_names": reference.common_names,
+        "plantnet_url": reference.url,
+        "wikipedia_url": reference.wikipedia_url,
+        "facts": reference.facts,
+    }
+
+
 # ==============================================================================
 # Write tools
 # ==============================================================================
@@ -523,11 +654,42 @@ def add_plant_note(ctx: ToolContext, args: dict) -> dict:
         plant_id=plant.id,
         note_text=_arg_str(args, "text", required=True, max_length=MAX_TEXT),
         created_at=utcnow(),
+        remind_at=_arg_remind_at(args),
         user_id=_user_id(ctx),
     )
     ctx.db.add(note)
     ctx.db.commit()
-    return {"note_id": note.id, "plant_id": plant.id, "plant": plant.name}
+    result = {"note_id": note.id, "plant_id": plant.id, "plant": plant.name}
+    if note.remind_at:
+        result["remind_at"] = _iso(note.remind_at)
+    return result
+
+
+def update_note(ctx: ToolContext, args: dict) -> dict:
+    """Change a note's text and/or its reminder; remind_at null turns a reminder back into a note."""
+    note_id = _arg_int(args, "note_id")
+    note = ctx.db.query(PlantNote).filter(PlantNote.id == note_id).first()
+    if not note:
+        raise ToolError(f"Note {note_id} not found. list_reminders and get_plant show note ids.")
+    changed = []
+    if "text" in args:
+        note.note_text = _arg_str(args, "text", required=True, max_length=MAX_TEXT)
+        changed.append("text")
+    if "remind_at" in args:
+        remind_at = _arg_remind_at(args)
+        if remind_at != note.remind_at:
+            note.remind_at = remind_at
+            note.reminded_at = None  # a moved reminder is sent again at its new time
+        changed.append("remind_at")
+    if not changed:
+        raise ToolError("Pass text and/or remind_at.")
+    ctx.db.commit()
+    return {
+        "note_id": note.id,
+        "plant_id": note.plant_id,
+        "updated": changed,
+        "remind_at": _iso(note.remind_at),
+    }
 
 
 def add_care_advice(ctx: ToolContext, args: dict) -> dict:
@@ -629,8 +791,8 @@ TOOLS: list[Tool] = [
     ),
     Tool(
         "get_plant", "Get plant details",
-        "Full details for one plant: description, tags, recent waterings/fertilizings/notes, latest care "
-        "advice and photo ids.",
+        "Full details for one plant: description, tags, recent waterings/fertilizings/notes, upcoming "
+        "reminders, latest care advice and photo ids.",
         get_plant,
         properties={
             "plant_id": _PLANT_ID,
@@ -653,8 +815,9 @@ TOOLS: list[Tool] = [
     Tool("list_tags", "List tags", "List all tags with the number of active plants using each.", list_tags),
     Tool(
         "get_overview", "Collection overview",
-        "Collection statistics, the plants that have gone longest without water, and the latest weather "
-        "check used for automatic rain watering.",
+        "Collection statistics, the plants that need water now, reminders of the next 7 days, the plants "
+        "that have gone longest without water, and the latest weather check used for automatic rain "
+        "watering.",
         get_overview,
     ),
     Tool(
@@ -666,6 +829,37 @@ TOOLS: list[Tool] = [
             "days": {"type": "integer", "minimum": 1, "maximum": 365, "default": 7},
             "plant_id": _PLANT_ID,
         },
+    ),
+    Tool(
+        "list_reminders", "List reminders",
+        "Reminders (notes with a remind_at) from the start of today until days_ahead, soonest first, "
+        "optionally for one plant; days_back also shows earlier ones. 'sent' says whether the "
+        "notification went out.",
+        list_reminders,
+        properties={
+            "days_ahead": {"type": "integer", "minimum": 1, "maximum": 365, "default": 14},
+            "days_back": {"type": "integer", "minimum": 0, "maximum": 365, "default": 0},
+            "plant_id": _PLANT_ID,
+        },
+    ),
+    Tool(
+        "get_watering_plan", "Watering plan",
+        "Which plants with a watering schedule are due in the next N days, overdue ones first, with the "
+        "date each is due. Plants without a schedule are only counted.",
+        get_watering_plan,
+        properties={
+            "days": {"type": "integer", "minimum": 1, "maximum": 60, "default": 7},
+            "include_rain_watered": {"type": "boolean", "default": True,
+                                     "description": "false leaves out outdoor plants that rain waters"},
+        },
+    ),
+    Tool(
+        "get_species_info", "Species info",
+        "What Pl@ntNet and GBIF know about a plant's species: scientific name, family, genus, common "
+        "names, traits and pests (facts), and links to Pl@ntNet and Wikipedia.",
+        get_species_info,
+        properties={"plant_id": _PLANT_ID},
+        required=["plant_id"],
     ),
     Tool(
         "list_locations", "List garden locations",
@@ -697,11 +891,36 @@ TOOLS: list[Tool] = [
     ),
     Tool(
         "add_plant_note", "Add note",
-        "Add a note to a plant's timeline (observations, repotting, pests, …).",
+        "Add a note to a plant's timeline (observations, repotting, pests, …). With remind_at the note "
+        "is also a reminder: it shows on that day in the plant's calendar and, if the server has "
+        "notifications set up, is sent then.",
         add_plant_note,
-        properties={"plant_id": _PLANT_ID, "text": {"type": "string", "maxLength": MAX_TEXT}},
+        properties={
+            "plant_id": _PLANT_ID,
+            "text": {"type": "string", "maxLength": MAX_TEXT},
+            "remind_at": {"type": "string",
+                          "description": "Optional ISO 8601 date or datetime in the future; without an "
+                                         "offset it is local time, a date alone means 09:00"},
+        },
         required=["plant_id", "text"],
         write=True,
+    ),
+    Tool(
+        "update_note", "Update note or reminder",
+        "Change a note's text, set or move its reminder, or remove the reminder (remind_at null). Notes are "
+        "never deleted. A moved reminder is sent again at its new time.",
+        update_note,
+        properties={
+            "note_id": {"type": "integer", "description": "From list_reminders or get_plant"},
+            "text": {"type": "string", "maxLength": MAX_TEXT},
+            "remind_at": {"type": ["string", "null"],
+                          "description": "ISO 8601 date or datetime in the future; without an offset it is "
+                                         "local time, a date alone means 09:00. null removes the reminder "
+                                         "(the note stays)."},
+        },
+        required=["note_id"],
+        write=True,
+        idempotent=True,
     ),
     Tool(
         "add_care_advice", "Save care advice",

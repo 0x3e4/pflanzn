@@ -56,9 +56,21 @@ Floor plans are switched on by an admin in the app (Manage → Floor plans), not
 | `CARE_WEB_SEARCH` | `true` | Claude and OpenAI may search the web for care advice (extra cost per request). |
 | `PLANTNET_API_KEY` | — | Species identification through Pl@ntNet. |
 | `PLANTNET_LANGUAGE` | `en` | Language of the Pl@ntNet species links. |
+| `PLANTNET_DAILY_LIMIT` | `500` | Identifications per day your Pl@ntNet key allows (500 on the free plan). Only for the display in Manage → Integrations; what is left comes from Pl@ntNet itself. |
 
 The provider keys are listed under [Identification & AI](guide/ai.md#providers). The MCP
 variables are explained in the [MCP guide](mcp.md#enabling-the-server).
+
+## Notifications
+
+| Variable | Default | What it controls |
+| --- | --- | --- |
+| `APPRISE_URL` | — | The [Apprise](notifications.md) server that sends reminders and the watering digest. Empty: notifications off. |
+| `APPRISE_KEY` | — | A configuration stored in Apprise; messages go to `/notify/{key}`. |
+| `APPRISE_TAG` | — | With `APPRISE_KEY`: only the URLs with this tag. |
+| `APPRISE_URLS` | — | Instead of a key: the notification URLs, comma or space separated. |
+
+What is sent, and when, is set under Manage → Integrations. See [Notifications](notifications.md).
 
 ## Weather
 

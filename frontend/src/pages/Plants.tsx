@@ -19,6 +19,8 @@ import "../styles/plants.css";
 import { toast } from "react-toastify";
 import { DateTime } from "luxon";
 import IdentifyResults from "../components/IdentifyResults";
+import PhotoDropOverlay from "../components/PhotoDropOverlay";
+import { DropTarget, usePhotoDrop } from "../hooks/usePhotoDrop";
 import EditableDiv from "../components/EditableDiv";
 import FloorPlanView from "../components/FloorPlanView";
 import { fetchFloorPlans } from "../services/FloorPlanService";
@@ -66,6 +68,8 @@ export default function Plants() {
     const [newPlant, setNewPlant] = useState({ name: "", species: "" });
     const [newPlantInterval, setNewPlantInterval] = useState("");
     const [file, setFile] = useState<File | null>(null);
+    // More photos dropped together with `file`: uploaded to the new plant after it.
+    const [extraFiles, setExtraFiles] = useState<File[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [allTags, setAllTags] = useState<Tag[]>([]);
@@ -176,6 +180,32 @@ export default function Plants() {
         }
     }, [location.state]);
 
+    // Photos dragged onto the page: onto a plant, they join it; anywhere else, they start a new one.
+    const canDropPhotos = isLoggedIn && !isShareAccess;
+    const handlePhotoDrop = async (photos: File[], target: DropTarget | null) => {
+        if (!photos.length) {
+            toast.warning("Only photos can be dropped here.");
+            return;
+        }
+        if (target) {
+            try {
+                for (const photo of photos) {
+                    await uploadPlantImage(target.plantId, photo);
+                }
+                toast.success(`${photos.length === 1 ? "Photo" : `${photos.length} photos`} added to ${target.name}.`);
+                fetchPlantsFromService();
+            } catch (err) {
+                toast.error(extractErrorMessage(err, "Failed to upload the photo."));
+            }
+            return;
+        }
+        setModalIdentifyResults(null);
+        setFile(photos[0]);
+        setExtraFiles(photos.slice(1));
+        setModalOpen(true);
+    };
+    const { dragging: draggingPhotos, target: dropTarget } = usePhotoDrop(canDropPhotos, handlePhotoDrop);
+
     useEffect(() => {
         const intent = (location.state as { floorPlan?: { plantId: number; planId?: number; place?: boolean } } | null)
             ?.floorPlan;
@@ -274,6 +304,7 @@ export default function Plants() {
         setNewPlant({ name: "", species: "" });
         setNewPlantInterval("");
         setFile(null);
+        setExtraFiles([]);
         setModalIdentifyResults(null);
         setModalOpen(false);
     };
@@ -281,6 +312,7 @@ export default function Plants() {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0] || null;
         setFile(selectedFile);
+        setExtraFiles([]);
         setModalIdentifyResults(null);
     };
 
@@ -300,10 +332,11 @@ export default function Plants() {
             );
             toast.success("Plant created!");
 
-            if (file) {
-                await uploadPlantImage(createdPlant.id, file);
-                toast.success("Image uploaded!");
+            const photos = file ? [file, ...extraFiles] : [];
+            for (const photo of photos) {
+                await uploadPlantImage(createdPlant.id, photo);
             }
+            if (photos.length) toast.success(photos.length === 1 ? "Image uploaded!" : `${photos.length} images uploaded!`);
 
             fetchPlantsFromService();
             resetModal();
@@ -598,6 +631,7 @@ export default function Plants() {
 
     return (
         <div className={`container plants-container${isStretched ? " plants-container--stretched" : ""}`}>
+            {draggingPhotos && <PhotoDropOverlay target={dropTarget} />}
             <div className="plants-header">
                 <h1>Plants</h1>
                 <button
@@ -848,7 +882,14 @@ export default function Plants() {
                               )[0];
                               const status = plant.is_archived ? null : wateringStatuses.get(plant.id);
                               return (
-                                  <div key={plant.id} className={`list-row${plant.is_archived ? " archived" : ""}`}>
+                                  <div
+                                      key={plant.id}
+                                      className={`list-row${plant.is_archived ? " archived" : ""}${
+                                          dropTarget?.plantId === plant.id ? " drop-target-active" : ""
+                                      }`}
+                                      data-drop-plant-id={plant.is_archived ? undefined : plant.id}
+                                      data-drop-plant-name={plant.name}
+                                  >
                                       <Link to={`/plant/${plant.id}`} className="list-row-link">
                                           <img
                                               src={
@@ -963,7 +1004,14 @@ export default function Plants() {
                                   : "Not watered yet";
                               const status = plant.is_archived ? null : wateringStatuses.get(plant.id);
                               return (
-                                  <div key={plant.id} className={`plant-card ${plant.is_archived ? "archived" : ""}`}>
+                                  <div
+                                      key={plant.id}
+                                      className={`plant-card ${plant.is_archived ? "archived" : ""}${
+                                          dropTarget?.plantId === plant.id ? " drop-target-active" : ""
+                                      }`}
+                                      data-drop-plant-id={plant.is_archived ? undefined : plant.id}
+                                      data-drop-plant-name={plant.name}
+                                  >
                                       <Link to={`/plant/${plant.id}`}>
                                           <div className="plant-image-container all-plants">
                                               {!imageLoaded && (
@@ -1111,7 +1159,9 @@ export default function Plants() {
                         >
                             <span className="file-input-button">Browse…</span>
                             <span className={`file-input-name ${file ? "" : "is-empty"}`}>
-                                {file ? file.name : "No file selected"}
+                                {file
+                                    ? `${file.name}${extraFiles.length ? ` + ${extraFiles.length} more` : ""}`
+                                    : "No file selected"}
                             </span>
                             <input
                                 ref={fileInputRef}

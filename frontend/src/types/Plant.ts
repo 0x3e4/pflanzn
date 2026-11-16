@@ -50,6 +50,9 @@ export interface PlantNote {
     id: number;
     note_text: string;
     created_at: string;
+    // Set: the note is a reminder for that moment (UTC ISO); reminded_at once it was sent.
+    remind_at?: string | null;
+    reminded_at?: string | null;
 }
 
 export interface PlantActivity {

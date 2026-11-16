@@ -5,7 +5,29 @@ All notable changes to Pflanzn will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.3.0-beta.2] - 2026-11-16
+
+### Added
+- Reminders: a note can have a *Remind me* date and time. Reminders show under *Reminders* above the activity feed (with a delete button) and as dashed days in the plant's calendar; click today or a later day in the calendar and choose *Add reminder* to start one. The MCP tool `add_plant_note` takes an optional `remind_at` (a date alone means 09:00). New columns `plant_notes.remind_at` and `reminded_at`, added on start.
+- Notifications through [Apprise](https://github.com/caronc/apprise-api): due reminders, and once a day at a set time the plants whose watering schedule says they need water. The compose example has an `apprise` service (`caronc/apprise:latest`, alias `pflanzn-apprise`, web UI on `127.0.0.1:8001`); an Apprise you already run works too. New variables `APPRISE_URL`, `APPRISE_KEY`, `APPRISE_TAG` and `APPRISE_URLS`; what is sent and when is set under the new **Manage → Integrations**, which also has *Send a test*. New endpoints `GET /api/notifications/status` and `POST /api/notifications/test` (admin).
+- Activity feed filter: chips for watering, rain, fertilizing, photos, notes and care advice narrow the feed (remembered per browser), so waterings no longer push everything else out of view. `GET /api/plants/{id}/activities` takes `?types=`.
+- Several AI providers at once: every provider with a key can be used, and with more than one, the AI buttons ask which (the last choice comes first); the care advice dialog has its own choice. `/api/config` lists them in `llm_providers`; the generate endpoints take `?provider=`.
+- Drag photos onto the plants list: dropped on a plant's card or row they are added to that plant, anywhere else *Add Plant* opens with them. A dashed frame shows where they will go.
+- The plant page shows what is known about the species under its name: the family (from GBIF), other common names and a link to Wikipedia. `GET /api/plants/{id}/plantnet` returns `family`, `genus`, `common_names` and `wikipedia_url`.
+- Pl@ntNet's daily allowance: admins see under Manage → Integrations how many identifications are left today; with fewer than 50 left, each identification says how many remain, and a used-up limit is reported as such (HTTP 429) instead of a generic failure. New endpoint `GET /api/identification/quota`, new variable `PLANTNET_DAILY_LIMIT` (default 500, display only).
+- Manage → Integrations also lists the configured AI providers and their models.
+- Home: *Reminders* in the side column lists the reminders of the next two weeks with their plant and time. New endpoint `GET /api/reminders?days=` (1 to 90, default 14).
+- MCP: `list_reminders` (reminders of the next N days, for all plants or one), `update_note` (change a note's text, move its reminder or remove it; nothing is deleted), `get_watering_plan` (when each scheduled plant is due in the next N days) and `get_species_info` (family, genus, common names, facts and links from Pl@ntNet and GBIF). `get_plant` now includes upcoming reminders and each note's `remind_at`; `get_overview` the plants that need water now, the reminders of the next 7 days and whether notifications are set up.
+
+### Changed
+- Audit log: the filters sit in one row on a wide screen instead of two full-width dropdowns, and the action and entity lists offer what actually occurs in the log (including `mcp.*` and `oauth.*`), from the new `GET /api/audit/facets`.
+- Past care advice appears in the activity feed again (folded), besides the Care advice block.
+
+### Fixed
+- The photo arrows on the plant page were drawn over the open *More* menu.
+- Notes in the activity feed showed their time in UTC as if it were local time.
+
+## [2.3.0-beta.1] - 2026-11-10
 
 ### Added
 - Home: three blocks below the photos. *Lately* lists what happened in the last two weeks across all plants (waterings, rain, fertilizing, photos, notes, care advice), with a "Water all" or a rainy day as one line; members also see who did it. *Care rhythm* shows the last twelve weeks as a calendar with care days and the waterings of the last 7 days; hover, focus or tap a day for what happened (arrow keys move between days, a tap pins it on a phone). *Your areas* shows the tags as tiles with their plants and how many need water, each opening the filtered list. New endpoint `GET /api/statistics/recent`; `/manage?section=statistics` (and `support`) open those sections directly.

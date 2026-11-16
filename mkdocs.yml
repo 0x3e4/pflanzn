@@ -97,6 +97,7 @@ nav:
       - Identification & AI: guide/ai.md
   - Integrations:
       - MCP Server: mcp.md
+      - Notifications: notifications.md
   - Administration:
       - Access & Visibility: access.md
       - Configuration: configuration.md

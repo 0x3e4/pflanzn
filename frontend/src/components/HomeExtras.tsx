@@ -4,6 +4,7 @@ import { DateTime } from "luxon";
 import Skeleton from "react-loading-skeleton";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+    faBell,
     faCamera,
     faCloudRain,
     faDroplet,
@@ -12,6 +13,7 @@ import {
     faWandMagicSparkles,
 } from "@fortawesome/free-solid-svg-icons";
 import { ActivityDay, RecentEvent, fetchActivity, fetchRecent } from "../services/StatisticService";
+import { UpcomingReminder, fetchUpcomingReminders } from "../services/ReminderService";
 import { careTotal, heatLevel, heatThresholds } from "../services/careHeat";
 import { relativeDay } from "../services/dates";
 import { getWateringStatus } from "../services/wateringSchedule";
@@ -105,6 +107,54 @@ export function HomeLately({ timezone, locale }: { timezone: string; locale: str
                     })}
                 </ol>
             )}
+        </section>
+    );
+}
+
+// ── Reminders ───────────────────────────────────────────────────────────────
+
+export const REMINDER_DAYS = 14;
+
+/** Reminders of the next two weeks, today's first (also the ones already sent today). */
+export function HomeReminders({ timezone, locale }: { timezone: string; locale: string }) {
+    const [reminders, setReminders] = useState<UpcomingReminder[] | null>(null);
+
+    useEffect(() => {
+        let cancelled = false;
+        fetchUpcomingReminders(REMINDER_DAYS)
+            .then((data) => !cancelled && setReminders(data))
+            .catch(() => !cancelled && setReminders([]));
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    // Nothing planned: no block at all, the side column stays as it was.
+    if (!reminders || reminders.length === 0) return null;
+
+    const when = (iso: string) => {
+        const at = DateTime.fromISO(iso, { zone: timezone }).setLocale(locale || "en");
+        const days = Math.round(at.startOf("day").diff(DateTime.now().setZone(timezone).startOf("day"), "days").days);
+        const day = days <= 1 ? relativeDay(at) : at.toFormat("ccc, d LLL");
+        return `${day}, ${at.toLocaleString(DateTime.TIME_SIMPLE)}`;
+    };
+
+    return (
+        <section className="home-reminders" aria-labelledby="home-reminders">
+            <h2 id="home-reminders">
+                <FontAwesomeIcon icon={faBell} aria-hidden="true" /> Reminders
+            </h2>
+            <ul>
+                {reminders.map((reminder) => (
+                    <li key={reminder.id} className={reminder.sent ? "is-sent" : undefined}>
+                        <span className="home-reminder-head">
+                            <Link to={`/plant/${reminder.plant_id}`}>{reminder.plant ?? `#${reminder.plant_id}`}</Link>
+                            <time dateTime={reminder.remind_at}>{when(reminder.remind_at)}</time>
+                        </span>
+                        <span className="home-reminder-text">{reminder.text}</span>
+                    </li>
+                ))}
+            </ul>
         </section>
     );
 }

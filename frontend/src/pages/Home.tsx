@@ -20,7 +20,7 @@ import { useAuth } from "../context/AuthContext";
 import { useShare } from "../context/ShareContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDroplet } from "@fortawesome/free-solid-svg-icons";
-import { HomeAreas, HomeLately, HomeRhythm } from "../components/HomeExtras";
+import { HomeAreas, HomeLately, HomeReminders, HomeRhythm } from "../components/HomeExtras";
 import { relativeDay } from "../services/dates";
 
 type HomeOverview = {
@@ -250,6 +250,7 @@ export default function Home() {
                                 </ul>
                             </section>
                         )}
+                        <HomeReminders timezone={timezone} locale={locale} />
                     </aside>
 
                     <dl className="home-figures">

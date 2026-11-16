@@ -24,6 +24,18 @@ def _require_audit_access(current_user: Optional[User]) -> None:
         raise HTTPException(status_code=403, detail="Admin access required")
 
 
+@router.get("/facets")
+def audit_facets(
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user),
+):
+    """The actions and entity types that occur in the log, for the filter dropdowns."""
+    _require_audit_access(current_user)
+    actions = [a for (a,) in db.query(AuditLog.action).distinct().all() if a]
+    entities = [e for (e,) in db.query(AuditLog.entity_type).distinct().all() if e]
+    return {"actions": sorted(actions), "entity_types": sorted(entities)}
+
+
 @router.get("/", response_model=AuditLogPage)
 def list_audit_logs(
     db: Session = Depends(get_db),

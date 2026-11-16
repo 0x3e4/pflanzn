@@ -21,6 +21,7 @@ import {
     faStickyNote,
     faWandMagicSparkles,
     faSeedling,
+    faBell,
 } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
@@ -35,6 +36,8 @@ interface Props {
     notes: PlantNote[];
     plantId: number;
     onChanged?: () => void;
+    // Today or a later day was picked: start a reminder for it (YYYY-MM-DD).
+    onAddReminder?: (date: string) => void;
 }
 
 interface TooltipPosition {
@@ -83,9 +86,19 @@ const EVENT_COLORS: Record<string, string> = {
     "image-day": "var(--quinary-color)",
     "advice-day": "var(--decimal-color)",
     "note-day": "var(--primary-color)",
+    "reminder-day": "var(--septimal-color)",
 };
 
-export default function LogCalendar({ waterings, fertilizings, images, careadvice, notes, plantId, onChanged }: Props) {
+export default function LogCalendar({
+    waterings,
+    fertilizings,
+    images,
+    careadvice,
+    notes,
+    plantId,
+    onChanged,
+    onAddReminder,
+}: Props) {
     const { isLoggedIn } = useAuth();
 
     const [localWaterings, setLocalWaterings] = useState<PlantWatering[]>(waterings);
@@ -182,6 +195,20 @@ export default function LogCalendar({ waterings, fertilizings, images, careadvic
         {} as Record<string, PlantNote[]>,
     );
 
+    // Reminders sit on the day they are due, not the day they were written.
+    const reminderDates = plantNotes.reduce(
+        (acc, note) => {
+            if (!note.remind_at) return acc;
+            const dateKey = formatDateKey(new Date(note.remind_at));
+            if (!acc[dateKey]) acc[dateKey] = [];
+            acc[dateKey].push(note);
+            return acc;
+        },
+        {} as Record<string, PlantNote[]>,
+    );
+    const todayKey = formatDateKey(new Date());
+    const canAddReminder = (dateKey: string) => Boolean(onAddReminder && isLoggedIn && dateKey >= todayKey);
+
     const fertilizedDates = localFertilizings.reduce(
         (acc, fertilizing) => {
             const dateKey = formatDateKey(new Date(fertilizing.fertilized_at));
@@ -199,6 +226,7 @@ export default function LogCalendar({ waterings, fertilizings, images, careadvic
         if (imageDates[dateKey]) types.push("image-day");
         if (adviceDates[dateKey]) types.push("advice-day");
         if (noteDates[dateKey]) types.push("note-day");
+        if (reminderDates[dateKey]) types.push("reminder-day");
         return types;
     };
 
@@ -229,7 +257,9 @@ export default function LogCalendar({ waterings, fertilizings, images, careadvic
             fertilizedDates[dateKey] ||
             imageDates[dateKey] ||
             adviceDates[dateKey] ||
-            noteDates[dateKey]
+            noteDates[dateKey] ||
+            reminderDates[dateKey] ||
+            canAddReminder(dateKey)
         ) {
             setHoveredDate(dateKey);
 
@@ -325,7 +355,9 @@ export default function LogCalendar({ waterings, fertilizings, images, careadvic
                 !fertilizedDates[hoveredDate] &&
                 !imageDates[hoveredDate] &&
                 !adviceDates[hoveredDate] &&
-                !noteDates[hoveredDate]) ||
+                !noteDates[hoveredDate] &&
+                !reminderDates[hoveredDate] &&
+                !canAddReminder(hoveredDate)) ||
             !tooltipPosition
         )
             return null;
@@ -470,6 +502,51 @@ export default function LogCalendar({ waterings, fertilizings, images, careadvic
                                     ))}
                                 </ul>
                             </>
+                        )}
+
+                        {reminderDates[hoveredDate] && (
+                            <>
+                                <strong>Reminders:</strong>
+                                <ul>
+                                    {reminderDates[hoveredDate].map((note) => (
+                                        <li className="watering-tooltip-item reminder-tooltip-item" key={note.id}>
+                                            <FontAwesomeIcon icon={faBell} className="reminder-icon" />
+                                            {new Date(note.remind_at!).toLocaleTimeString(locale, {
+                                                timeZone: timezone,
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                            })}{" "}
+                                            <span className="reminder-tooltip-text" title={note.note_text}>
+                                                {note.note_text}
+                                            </span>
+                                            {isLoggedIn ? (
+                                                <button
+                                                    className="watering-delete-btn"
+                                                    aria-label="Delete reminder"
+                                                    onClick={() => openDeleteModal("note", note.id)}
+                                                >
+                                                    <FontAwesomeIcon icon={faTrash} />
+                                                </button>
+                                            ) : null}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </>
+                        )}
+
+                        {canAddReminder(hoveredDate) && (
+                            <button
+                                type="button"
+                                className="calendar-add-reminder"
+                                onClick={() => {
+                                    const date = hoveredDate;
+                                    setHoveredDate(null);
+                                    setTooltipPosition(null);
+                                    onAddReminder?.(date);
+                                }}
+                            >
+                                <FontAwesomeIcon icon={faBell} /> Add reminder
+                            </button>
                         )}
                     </div>
                 }

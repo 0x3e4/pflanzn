@@ -148,14 +148,30 @@ class PlantCareAdviceResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class PlantNoteCreate(BaseModel):
-    note_text: str
+    note_text: str = Field(..., min_length=1, max_length=10000)
+    # Set: the note is a reminder for that moment. On update, sending null removes it.
+    remind_at: Optional[datetime] = None
+
+    @field_validator("remind_at")
+    @classmethod
+    def _naive_utc(cls, value: Optional[datetime]) -> Optional[datetime]:
+        """Stored as naive UTC like every other timestamp; a value without offset is UTC."""
+        if value is not None and value.tzinfo is not None:
+            value = value.astimezone(timezone.utc).replace(tzinfo=None)
+        return value
 
 class PlantNoteResponse(BaseModel):
     id: int
     note_text: str
     created_at: datetime
+    remind_at: Optional[datetime] = None
+    reminded_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer("remind_at", "reminded_at")
+    def _utc(self, value: Optional[datetime]) -> Optional[str]:
+        return _as_utc(value) if value is not None else None
 
 class ActivityResponse(BaseModel):
     id: str
@@ -439,6 +455,12 @@ class AuditLogPage(BaseModel):
     per_page: int
 
 
+class LlmProviderInfo(BaseModel):
+    id: str
+    label: str
+    model: str
+
+
 class AppConfigResponse(BaseModel):
     version: str
     tz: str
@@ -447,6 +469,8 @@ class AppConfigResponse(BaseModel):
     show_protected_view: bool
     enable_locations: bool
     llm_provider: str
+    # Every configured provider, the default first; the UI asks which one when there are several.
+    llm_providers: List[LlmProviderInfo] = []
     ai_enabled: bool
     identification_enabled: bool
     mcp_enabled: bool
@@ -490,6 +514,9 @@ class McpInfoResponse(BaseModel):
 
 class AppSettingsResponse(BaseModel):
     floor_plans_enabled: bool
+    notify_reminders: bool
+    notify_watering: bool
+    notify_watering_time: str
 
 
 class AppSettingsUpdate(BaseModel):
@@ -497,6 +524,9 @@ class AppSettingsUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     floor_plans_enabled: Optional[bool] = None
+    notify_reminders: Optional[bool] = None
+    notify_watering: Optional[bool] = None
+    notify_watering_time: Optional[str] = Field(None, pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
 
 
 class FloorPlanPlacement(BaseModel):

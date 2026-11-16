@@ -269,17 +269,35 @@ class TestClaudeCareHelper:
 class TestPlantNetEndpoint:
     def test_returns_the_link(self, client, mock_db):
         mock_db.query.return_value.filter.return_value.first.return_value = SimpleNamespace(species="Ficus elastica")
-        reference = PlantReference(FULL, "https://identify.plantnet.org/x")
+        reference = PlantReference(
+            FULL, "https://identify.plantnet.org/x",
+            facts="Common names\nRubberplant, Rubber tree\nTraits",
+            wikipedia_url="https://en.wikipedia.org/wiki/Ficus_elastica",
+            family="Moraceae", genus="Ficus",
+        )
         with patch("app.core.security.AUTH_MODE", "no"), \
              patch("app.api.routes.plants.plant_reference.lookup", return_value=reference):
             response = client.get("/api/plants/1/plantnet")
-        assert response.json() == {"name": FULL, "url": "https://identify.plantnet.org/x"}
+        assert response.json() == {
+            "name": FULL,
+            "url": "https://identify.plantnet.org/x",
+            "family": "Moraceae",
+            "genus": "Ficus",
+            "common_names": ["Rubberplant", "Rubber tree"],
+            "wikipedia_url": "https://en.wikipedia.org/wiki/Ficus_elastica",
+        }
+
+    def test_reference_cached_before_family_existed(self):
+        """Redis entries written before family/genus existed load with them empty."""
+        reference = PlantReference(**{"name": FULL, "url": "u", "facts": None, "wikipedia_url": None})
+        assert reference.family is None and reference.common_names == []
 
     def test_no_match(self, client, mock_db):
         mock_db.query.return_value.filter.return_value.first.return_value = SimpleNamespace(species="Gummibaum")
         with patch("app.core.security.AUTH_MODE", "no"), \
              patch("app.api.routes.plants.plant_reference.lookup", return_value=None):
-            assert client.get("/api/plants/1/plantnet").json() == {"name": None, "url": None}
+            assert client.get("/api/plants/1/plantnet").json() == {
+                "name": None, "url": None, "family": None, "genus": None, "common_names": [], "wikipedia_url": None}
 
 
 class TestOpenAICareHelper:

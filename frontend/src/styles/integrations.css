@@ -1,0 +1,120 @@
+/* Manage → Integrations: one card per service. */
+.integrations-panel .integration-card {
+    margin-top: 16px;
+    padding: 16px 18px;
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    background: var(--background-color);
+}
+
+.integration-card h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 8px;
+}
+
+.integration-card p {
+    margin: 8px 0;
+}
+
+.integration-muted {
+    color: var(--muted-text-color);
+    font-size: 0.9rem;
+}
+
+.integration-card code {
+    font-size: 0.85em;
+    overflow-wrap: anywhere;
+}
+
+.integration-facts {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 4px 14px;
+    margin: 0 0 4px;
+}
+
+.integration-facts dt {
+    color: var(--muted-text-color);
+}
+
+.integration-facts dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.integration-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 10px;
+}
+
+.integration-row .manage-setting-row + .integration-time {
+    margin-top: 16px;
+}
+
+.integration-time {
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--secondary-background-color);
+    color: var(--text-color);
+}
+
+.integration-test {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    font-size: 0.95rem;
+}
+
+.integration-meter {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--secondary-background-color);
+    border: 1px solid var(--card-border);
+    overflow: hidden;
+}
+
+.integration-meter span {
+    display: block;
+    height: 100%;
+    background: var(--primary-color);
+}
+
+.integration-meter span.is-low {
+    background: var(--tertiary-color);
+}
+
+.integration-providers {
+    margin: 0;
+    padding: 0;
+}
+
+.integration-providers li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+    padding: 6px 0;
+}
+
+.integration-providers li + li {
+    border-top: 1px solid var(--card-border);
+}
+
+.integration-providers span {
+    color: var(--muted-text-color);
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
+}
+
+.integration-providers em {
+    margin-left: auto;
+    color: var(--muted-text-color);
+    font-size: 0.8rem;
+    font-style: normal;
+}

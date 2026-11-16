@@ -11,7 +11,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.features import require_identification, require_llm
+from app.core.features import llm_provider_choice, require_identification, require_llm
 from app.core.security import (
     AUDIENCE_MEMBER,
     LOCATION_VISIBILITY_BY_AUDIENCE,
@@ -31,7 +31,7 @@ from app.schemas import (
     LocationUpdate,
 )
 from app.services.llm_client import LLMClient
-from app.services.plantnet import identify_species_via_plantnet
+from app.services.plantnet import PlantNetQuotaError, identify_species_via_plantnet, quota_status
 from app.utils.errors import public_error
 from app.utils.exif import extract_gps_coordinates
 from app.utils.uploads import MAX_PHOTO_PIXELS, UploadRejected, open_upload_image
@@ -330,13 +330,14 @@ def generate_location_description(
     _: None = Depends(ensure_feature_enabled),
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(require_write_access),
+    provider: Optional[str] = Depends(llm_provider_choice),
 ):
     location = db.query(Location).filter(Location.id == location_id).first()
     if not location:
         raise HTTPException(status_code=404, detail="Location not found")
 
     try:
-        llm = LLMClient()
+        llm = LLMClient(provider)
         description = llm.generate_location_description(
             location_name=location.name,
             item_name=location.item_name or "",
@@ -389,6 +390,8 @@ async def identify_location_item(
             mime_type="image/jpeg",
             filename=file.filename or "location_upload.jpg",
         )
+    except PlantNetQuotaError as exc:
+        raise HTTPException(status_code=429, detail=str(exc))
     except Exception as exc:
         logger.error(f"Error identifying location item via Pl@ntNet: {exc}")
         raise HTTPException(status_code=500, detail="Failed to communicate with Pl@ntNet API.")
@@ -415,7 +418,7 @@ async def identify_location_item(
                 }
             )
 
-        return {"identified_species": species_data}
+        return {"identified_species": species_data, "remaining_identifications": quota_status()["remaining"]}
 
     return {"identified_species": [], "message": "No species found"}
 

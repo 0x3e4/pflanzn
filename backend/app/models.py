@@ -158,6 +158,11 @@ class PlantNote(Base):
     plant_id = Column(Integer, ForeignKey("plants.id"), nullable=False)
     note_text = Column(Text, nullable=False)
     created_at = Column(DateTime, default=func.now())
+    # A note with remind_at is a reminder: it shows on that day in the calendar and, with
+    # notifications set up, is sent when it is due (reminded_at records that it was sent).
+    # Both naive UTC like the other timestamps.
+    remind_at = Column(DateTime, nullable=True)
+    reminded_at = Column(DateTime, nullable=True)
 
     user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
 
@@ -167,6 +172,7 @@ class PlantNote(Base):
     __table_args__ = (
         Index("idx_plant_notes_plant_id", "plant_id"),
         Index("idx_plant_notes_created_at", "created_at"),
+        Index("idx_plant_notes_remind_at", "remind_at"),
     )
 
 

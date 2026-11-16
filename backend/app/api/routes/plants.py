@@ -16,7 +16,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.config import settings
-from app.core.features import require_identification, require_llm
+from app.core.features import llm_provider_choice, require_identification, require_llm
 from app.core.security import require_write_access
 from app.database import get_db
 from app.models import (
@@ -54,7 +54,7 @@ from app.schemas import (
 )
 from app.services import plant_reference
 from app.services.llm_client import LLMClient
-from app.services.plantnet import PlantNetError, identify_species_via_plantnet
+from app.services.plantnet import PlantNetError, PlantNetQuotaError, identify_species_via_plantnet, quota_status
 from app.utils.errors import public_error
 from app.utils.time import utcnow
 from app.utils.uploads import IMAGE_VARIANTS, MAX_PHOTO_PIXELS, UploadRejected, open_upload_image
@@ -76,6 +76,16 @@ pillow_heif.register_heif_opener()
 load_dotenv()
 LOCAL_TZ = settings.TZ
 tz = ZoneInfo(LOCAL_TZ)
+
+# What the activity feed can be filtered by; "watering" is by hand, "rain" by the weather check.
+ACTIVITY_TYPES = {"watering", "rain", "fertilizing", "image_upload", "note", "care_advice"}
+
+
+def _utc_iso(value: Optional[datetime]) -> Optional[str]:
+    """A naive UTC timestamp as ISO with Z, so the browser doesn't read it as local time."""
+    if value is None:
+        return None
+    return value.replace(tzinfo=timezone.utc).isoformat().replace("+00:00", "Z")
 
 def _resolve_image_file(image_path: str) -> Optional[str]:
     """Resolve a stored image_path to an existing file on disk.
@@ -506,10 +516,12 @@ def identify_species(
 
             db.commit()
 
-            return {"identified_species": species_data}
+            return {"identified_species": species_data, "remaining_identifications": quota_status()["remaining"]}
 
         return {"identified_species": [], "message": "No species found"}
 
+    except PlantNetQuotaError as e:
+        raise HTTPException(status_code=429, detail=str(e))
     except PlantNetError as e:
         return {"identified_species": [], "message": str(e)}
     except Exception:
@@ -581,6 +593,8 @@ async def identify_species_from_image(
                 filename=file.filename or "uploaded_image"
             )
             logger.debug("Received response from Pl@ntNet API.")
+        except PlantNetQuotaError as e:
+            raise HTTPException(status_code=429, detail=str(e))
         except Exception as e:
             logger.error(f"Error contacting Pl@ntNet API: {str(e)}")
             raise HTTPException(status_code=500, detail="Failed to communicate with Pl@ntNet API.")
@@ -626,7 +640,7 @@ async def identify_species_from_image(
 
             db.commit()
 
-            return {"identified_species": species_data}
+            return {"identified_species": species_data, "remaining_identifications": quota_status()["remaining"]}
 
         else:
             logger.warning("No species identified from the image.")
@@ -685,6 +699,7 @@ async def generate_species_description_for_plant(
     plant_id: int,
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(require_write_access),
+    provider: Optional[str] = Depends(llm_provider_choice),
 ):
     """
     Generate and save a species description using a llm provider for a given plant.
@@ -701,7 +716,7 @@ async def generate_species_description_for_plant(
     species = plant.species
 
     try:
-        llm = LLMClient()
+        llm = LLMClient(provider)
         description, suggested_interval = split_watering_interval(
             llm.generate_species_description(common_name, species)
         )
@@ -1001,21 +1016,36 @@ def archive_plant(plant_id: int, data: ArchiveRequest, db: Session = Depends(get
 
 @router.get("/{plant_id}/plantnet")
 def get_plantnet_reference(plant_id: int, db: Session = Depends(get_db)):
-    """Pl@ntNet species page for the plant's species; url is null when none matches."""
+    """Pl@ntNet species page for the plant's species and what is known about it (family,
+    genus, common names, Wikipedia); everything null when no page matches."""
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
     reference = plant_reference.lookup(db, plant.species)
-    return {"name": reference.name, "url": reference.url} if reference else {"name": None, "url": None}
+    if not reference:
+        return {"name": None, "url": None, "family": None, "genus": None, "common_names": [], "wikipedia_url": None}
+    return {
+        "name": reference.name,
+        "url": reference.url,
+        "family": reference.family,
+        "genus": reference.genus,
+        "common_names": reference.common_names[:8],
+        "wikipedia_url": reference.wikipedia_url,
+    }
 
 @router.post("/{plant_id}/care_helper", dependencies=[Depends(require_llm)])
-def get_care_helper(plant_id: int, db: Session = Depends(get_db), current_user: Optional[User] = Depends(require_write_access)):
+def get_care_helper(
+    plant_id: int,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(require_write_access),
+    provider: Optional[str] = Depends(llm_provider_choice),
+):
     plant = db.query(Plant).filter(Plant.id == plant_id).first()
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
 
     try:
-        llm = LLMClient()
+        llm = LLMClient(provider)
         advice = llm.care_helper(db, plant_id)
         return {"message": "Care advice generated successfully", "advice": advice}
 
@@ -1028,7 +1058,12 @@ def get_plant_activities(
     plant_id: int,
     db: Session = Depends(get_db),
     limit: int = Query(20, le=50),
-    offset: int = Query(0, ge=0)
+    offset: int = Query(0, ge=0),
+    types: Optional[str] = Query(
+        None,
+        description="Comma-separated subset of: watering (by hand), rain, fertilizing, image_upload, "
+        "note, care_advice. Empty or missing: all of them.",
+    ),
 ):
     """
     Get activities for a specific plant.
@@ -1039,6 +1074,13 @@ def get_plant_activities(
     if not plant:
         raise HTTPException(status_code=404, detail="Plant not found")
 
+    wanted = {t.strip() for t in (types or "").split(",") if t.strip()}
+    unknown = wanted - ACTIVITY_TYPES
+    if unknown:
+        raise HTTPException(status_code=422, detail=f"Unknown activity type: {', '.join(sorted(unknown))}")
+    if not wanted:
+        wanted = set(ACTIVITY_TYPES)
+
     activities = []
 
     # Pre-load weather config for auto-watering info
@@ -1048,12 +1090,16 @@ def get_plant_activities(
         if wc:
             weather_zone_name = wc.city_name
 
-    # Get waterings for this plant
+    # Get waterings for this plant: by hand (user set) and by rain (no user)
+    watering_query = db.query(PlantWatering).filter(PlantWatering.plant_id == plant_id)
+    if "watering" not in wanted:
+        watering_query = watering_query.filter(PlantWatering.user_id.is_(None))
+    if "rain" not in wanted:
+        watering_query = watering_query.filter(PlantWatering.user_id.isnot(None))
     waterings = (
-        db.query(PlantWatering)
-        .filter(PlantWatering.plant_id == plant_id)
-        .order_by(PlantWatering.watered_at.desc())
-        .all()
+        watering_query.order_by(PlantWatering.watered_at.desc()).all()
+        if wanted & {"watering", "rain"}
+        else []
     )
 
     for watering in waterings:
@@ -1081,7 +1127,7 @@ def get_plant_activities(
         .filter(PlantFertilizing.plant_id == plant_id)
         .order_by(PlantFertilizing.fertilized_at.desc())
         .all()
-    )
+    ) if "fertilizing" in wanted else []
 
     for fertilizing in fertilizings:
         fertilizing.fertilized_at = fertilizing.fertilized_at.replace(tzinfo=timezone.utc).astimezone(tz)
@@ -1103,7 +1149,7 @@ def get_plant_activities(
         .filter(PlantImage.plant_id == plant_id)
         .order_by(PlantImage.uploaded_at.desc())
         .all()
-    )
+    ) if "image_upload" in wanted else []
 
     for image in images:
         image.uploaded_at = image.uploaded_at.replace(tzinfo=timezone.utc).astimezone(tz)
@@ -1127,7 +1173,7 @@ def get_plant_activities(
             .filter(PlantCareAdvice.plant_id == plant_id)
             .order_by(PlantCareAdvice.generated_at.desc())
             .all()
-        )
+        ) if "care_advice" in wanted else []
 
         for advice in care_advice:
             advice.generated_at = advice.generated_at.replace(tzinfo=timezone.utc).astimezone(tz)
@@ -1154,7 +1200,7 @@ def get_plant_activities(
             .filter(PlantNote.plant_id == plant_id)
             .order_by(PlantNote.created_at.desc())
             .all()
-        )
+        ) if "note" in wanted else []
 
         for note in notes:
             activities.append({
@@ -1166,8 +1212,9 @@ def get_plant_activities(
                     "note_id": note.id,
                     "note": note.note_text,
                     "user_name": note.created_by.username if note.created_by else None,
+                    "remind_at": _utc_iso(note.remind_at),
                 },
-                "timestamp": note.created_at.isoformat()
+                "timestamp": note.created_at.replace(tzinfo=timezone.utc).astimezone(tz).isoformat()
             })
     except Exception as e:
         # Table might not exist yet, continue without notes
@@ -1185,6 +1232,7 @@ def get_care_helper(
     user_message: Optional[str] = Form(None),
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(require_write_access),
+    provider: Optional[str] = Depends(llm_provider_choice),
 ):
     """
     Generate and store care advice for a plant using LLM.
@@ -1195,7 +1243,7 @@ def get_care_helper(
         raise HTTPException(status_code=404, detail="Plant not found")
 
     try:
-        llm = LLMClient()
+        llm = LLMClient(provider)
         logger.info(f"Generating care advice for plant {plant_id}")
         if user_message:
             logger.info(f"User message: {user_message}")
@@ -1297,6 +1345,7 @@ def create_plant_note(
         plant_id=plant_id,
         note_text=note_data.note_text,
         created_at=utcnow(),
+        remind_at=note_data.remind_at,
         user_id=(current_user.id if current_user else None),
     )
 
@@ -1355,6 +1404,9 @@ def update_plant_note(
         raise HTTPException(status_code=404, detail="Note not found")
 
     note.note_text = note_data.note_text
+    if "remind_at" in note_data.model_fields_set and note_data.remind_at != note.remind_at:
+        note.remind_at = note_data.remind_at
+        note.reminded_at = None  # a moved reminder is sent again at its new time
     db.commit()
     db.refresh(note)
 

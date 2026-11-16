@@ -17,7 +17,17 @@ import {
     fetchPlantActivities,
     createPlantNote,
     fetchPlantNotes,
+    deletePlantNote,
+    ActivityFilter,
+    PlantNetReference,
 } from "../services/PlantService";
+import {
+    ACTIVITY_FILTERS,
+    feedTypesParam,
+    readFeedTypes,
+    storeFeedTypes,
+    toggleFeedType,
+} from "../services/activityFilter";
 import { fetchTags, deleteTag } from "../services/TagService";
 import { fetchWeatherConfigs, WeatherConfig } from "../services/WeatherService";
 import { fetchFloorPlans } from "../services/FloorPlanService";
@@ -42,6 +52,7 @@ import {
     faTrashCanArrowUp,
     faCamera,
     faStickyNote,
+    faBell,
     faSeedling,
     faPlus,
     faMap,
@@ -57,6 +68,7 @@ import { toast } from "react-toastify";
 import LoadingOverlay from "../components/LoadingOverlay";
 import IdentifyResults from "../components/IdentifyResults";
 import CareAdviceText from "../components/CareAdviceText";
+import { useLlmProviderPicker } from "../components/LlmProviderPicker";
 import { useAuth } from "../context/AuthContext";
 import { useConfig } from "../context/ConfigContext";
 import { setOverlayOpen } from "../services/overlayControl";
@@ -77,6 +89,9 @@ const ACTIVITY_PAGE = 20;
 export default function PlantDetails() {
     const { isLoggedIn } = useAuth();
     const { tz: timezone, locale, llmProvider, identificationEnabled, floorPlansEnabled, authMode } = useConfig();
+    const { choose: chooseLlmProvider, picker: llmPicker, providers: llmProviders } = useLlmProviderPicker();
+    // The care advice dialog asks for the provider itself (a second dialog would be one too many).
+    const [careAdviceProvider, setCareAdviceProvider] = useState("");
     const { isShareAccess } = useShare();
     const canSeePlans = floorPlansEnabled && !isShareAccess && (authMode === "no" || isLoggedIn);
     const [floorPlans, setFloorPlans] = useState<FloorPlan[]>([]);
@@ -121,7 +136,7 @@ export default function PlantDetails() {
     const [careAdviceModalOpen, setCareAdviceModalOpen] = useState(false);
     const [careAdviceMessage, setCareAdviceMessage] = useState("");
     const [actionLoading, setActionLoading] = useState<ActionLoadingState>(null);
-    const [plantNet, setPlantNet] = useState<{ species: string; url: string | null } | null>(null);
+    const [plantNet, setPlantNet] = useState<{ species: string; reference: PlantNetReference } | null>(null);
     // Care advice entries opened in the activity feed (held here: the feed is re-created each render)
     const [expandedAdvice, setExpandedAdvice] = useState<Set<string>>(() => new Set());
     // Actions: "Water now" logs the current time unless a time was picked.
@@ -133,18 +148,36 @@ export default function PlantDetails() {
     const [hasMoreActivities, setHasMoreActivities] = useState(false);
     const [loadingMoreActivities, setLoadingMoreActivities] = useState(false);
     const [earlierAdviceOpen, setEarlierAdviceOpen] = useState(false);
+    // Which kinds of entries the feed shows (remembered per browser); waterings tend to crowd out the rest.
+    const [feedTypes, setFeedTypes] = useState<ActivityFilter[]>(readFeedTypes);
+    const feedTypesKey = feedTypesParam(feedTypes) ?? "";
+    const activityRequest = useRef(0);
+    // "Now" for the reminders list, ticking once a minute so a passed reminder drops off.
+    const [nowMs, setNowMs] = useState(() => Date.now());
+    useEffect(() => {
+        const timer = window.setInterval(() => setNowMs(Date.now()), 60_000);
+        return () => window.clearInterval(timer);
+    }, []);
+    // Notes modal: an optional "remind me" date and time (local, from the date/time inputs).
+    const [remindDate, setRemindDate] = useState("");
+    const [remindTime, setRemindTime] = useState("09:00");
 
     // Fetch plant and activites data on load
     useEffect(() => {
         if (plantId) {
             loadPlant();
-            loadActivities();
         }
         loadAvailableTags();
         fetchWeatherConfigs()
             .then(setWeatherConfigs)
             .catch(() => {});
     }, [plantId]);
+
+    // The feed loads on open and again whenever its filter changes.
+    useEffect(() => {
+        if (plantId) loadActivities();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [plantId, feedTypesKey]);
 
     // Link to the species on Pl@ntNet; looked up again when the species changes
     const species = plant?.species;
@@ -153,14 +186,19 @@ export default function PlantDetails() {
         let cancelled = false;
         fetchPlantNetReference(Number(plantId))
             .then((reference) => {
-                if (!cancelled) setPlantNet({ species, url: reference.url });
+                if (!cancelled) setPlantNet({ species, reference });
             })
             .catch(() => {});
         return () => {
             cancelled = true;
         };
     }, [plantId, species]);
-    const plantNetUrl = plantNet && plantNet.species === species ? plantNet.url : null;
+    const speciesReference = plantNet && plantNet.species === species ? plantNet.reference : null;
+    const plantNetUrl = speciesReference?.url ?? null;
+    // Other common names of the species, without the one the plant is already called.
+    const speciesAliases = (speciesReference?.common_names ?? [])
+        .filter((name) => name.toLowerCase() !== (plant?.name ?? "").toLowerCase())
+        .slice(0, 4);
 
     const loadPlant = async () => {
         try {
@@ -368,6 +406,8 @@ export default function PlantDetails() {
             toast.error("You must be logged in to update plants.");
             return;
         }
+        const provider = await chooseLlmProvider("Write description");
+        if (provider === null) return;
 
         setActionLoading({
             title: "Generating AI Description",
@@ -381,7 +421,7 @@ export default function PlantDetails() {
 
         try {
             // The server saves both; no second request, just take what it stored.
-            const result = await generatePlantDescription(Number(plantId));
+            const result = await generatePlantDescription(Number(plantId), provider);
             setPlant((current) =>
                 current
                     ? {
@@ -432,7 +472,11 @@ export default function PlantDetails() {
         });
 
         try {
-            const careAdviceEntry = await generateCareAdvice(Number(plantId), careAdviceMessage.trim() || undefined);
+            const careAdviceEntry = await generateCareAdvice(
+                Number(plantId),
+                careAdviceMessage.trim() || undefined,
+                careAdviceProvider || undefined,
+            );
 
             if (plant) {
                 setPlant({
@@ -564,15 +608,21 @@ export default function PlantDetails() {
     const loadActivities = async () => {
         if (!plantId) return;
 
+        // A filter clicked quickly twice: only the newest answer counts.
+        const request = ++activityRequest.current;
         setLoadingActivities(true);
         try {
-            const data = await fetchPlantActivities(Number(plantId), { limit: ACTIVITY_PAGE });
+            const data = await fetchPlantActivities(Number(plantId), {
+                limit: ACTIVITY_PAGE,
+                types: feedTypesParam(feedTypes),
+            });
+            if (request !== activityRequest.current) return;
             setActivities(data);
             setHasMoreActivities(data.length === ACTIVITY_PAGE);
         } catch {
-            toast.error("Failed to load activity log.");
+            if (request === activityRequest.current) toast.error("Failed to load activity log.");
         } finally {
-            setLoadingActivities(false);
+            if (request === activityRequest.current) setLoadingActivities(false);
         }
     };
 
@@ -584,6 +634,7 @@ export default function PlantDetails() {
             const data = await fetchPlantActivities(Number(plantId), {
                 limit: ACTIVITY_PAGE,
                 offset: activities.length,
+                types: feedTypesParam(feedTypes),
             });
             setActivities((current) => {
                 const seen = new Set(current.map((activity) => activity.id));
@@ -616,12 +667,31 @@ export default function PlantDetails() {
             return;
         }
 
+        // The date and time inputs are in the app's timezone, like every other time on the page.
+        let remindAt: string | null = null;
+        if (remindDate) {
+            const when = DateTime.fromISO(`${remindDate}T${remindTime || "09:00"}`, { zone: timezone });
+            if (!when.isValid) {
+                toast.error("That reminder date isn't valid.");
+                return;
+            }
+            if (when < DateTime.now().minus({ minutes: 1 })) {
+                toast.error("A reminder needs a time in the future.");
+                return;
+            }
+            remindAt = when.toUTC().toISO();
+        }
+
         try {
-            const note = await createPlantNote(Number(plantId), newNote.trim());
+            const note = await createPlantNote(Number(plantId), newNote.trim(), remindAt);
             setNotes([note, ...notes]);
             setPlant((p) => (p ? { ...p, notes: [note, ...(p.notes || [])] } : p));
             setNewNote("");
-            toast.success("Note created!");
+            setRemindDate("");
+            setNotesModalOpen(false);
+            toast.success(
+                remindAt ? `Reminder set for ${formatReminder(remindAt)}` : "Note created!",
+            );
 
             // Always refresh activity feed
             loadActivities();
@@ -690,11 +760,13 @@ export default function PlantDetails() {
         }
     };
 
-    const handleOpenNotesModal = () => {
+    // date (YYYY-MM-DD): opened from a calendar day, so the note starts as a reminder for that day.
+    const handleOpenNotesModal = (date?: string) => {
         if (!isLoggedIn) {
             toast.error("You must be logged in to manage notes.");
             return;
         }
+        setRemindDate(date ?? "");
         setNotesModalOpen(true);
         loadNotes();
     };
@@ -764,24 +836,85 @@ export default function PlantDetails() {
     }, [moreOpen]);
 
     const FEED_PREVIEW = 6;
-    // Every care advice lives in the Care advice block above the feed (the newest, then the earlier ones), not in it.
-    const feedActivities = activities.filter((activity) => activity.activity_type !== "care_advice");
+    // Earlier care advice is part of the plant's history too, so it shows here (collapsed) as well as above.
+    const feedActivities = activities;
+    // Rain only waters plants outside that reach it; elsewhere the chip would never match anything.
+    const feedFilters = ACTIVITY_FILTERS.filter(
+        (filter) => filter.id !== "rain" || (plant?.is_outdoor && plant?.reaches_rain),
+    );
+    const applyFeedTypes = (next: ActivityFilter[]) => {
+        // Every chip on this page selected is the same as "All" (an indoor plant has no rain chip).
+        const all = feedFilters.every((filter) => next.includes(filter.id));
+        const types = all ? ACTIVITY_FILTERS.map((filter) => filter.id) : next;
+        setFeedTypes(types);
+        storeFeedTypes(types);
+        setFeedExpanded(false);
+    };
+    const feedFiltered = feedTypes.length < ACTIVITY_FILTERS.length;
+    // Reminders still to come (a sent one drops off once its time has passed).
+    const upcomingReminders = (plant?.notes ?? [])
+        .filter((note) => note.remind_at && new Date(note.remind_at).getTime() > nowMs - 60_000)
+        .sort((a, b) => new Date(a.remind_at!).getTime() - new Date(b.remind_at!).getTime());
+    const handleDeleteReminder = async (noteId: number) => {
+        if (!plantId) return;
+        try {
+            await deletePlantNote(Number(plantId), noteId);
+            setPlant((p) => (p ? { ...p, notes: (p.notes || []).filter((n) => n.id !== noteId) } : p));
+            toast.success("Reminder deleted.");
+            loadActivities();
+        } catch (err) {
+            toast.error((err as Error).message || "Failed to delete the reminder.");
+        }
+    };
+    // From "All", a chip shows only that kind; after that, chips add and remove kinds.
+    const pickFeedType = (type: ActivityFilter) =>
+        applyFeedTypes(feedFiltered ? toggleFeedType(feedTypes, type) : [type]);
+    const formatReminder = (iso: string) =>
+        new Date(iso).toLocaleString(locale, {
+            timeZone: timezone,
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
 
     // A render function, not a component: defined in here it would remount on every render.
     const renderActivityFeed = () => (
         <div className="activity-log-container">
             <div className="activity-log-header">
-                <h3>Activity feed</h3>
+                <h3 id="activity-feed-heading">Activity feed</h3>
                 {isLoggedIn && (
                     <button
                         className="notes-btn"
-                        onClick={handleOpenNotesModal}
-                        title="Add a note"
-                        aria-label="Add a note"
+                        onClick={() => handleOpenNotesModal()}
+                        title="Add a note or reminder"
+                        aria-label="Add a note or reminder"
                     >
                         <FontAwesomeIcon icon={faStickyNote} />
                     </button>
                 )}
+            </div>
+            <div className="activity-filter" role="group" aria-label="Show in the activity feed">
+                <button
+                    type="button"
+                    className="activity-filter-chip"
+                    aria-pressed={!feedFiltered}
+                    onClick={() => applyFeedTypes(ACTIVITY_FILTERS.map((filter) => filter.id))}
+                >
+                    All
+                </button>
+                {feedFilters.map((filter) => (
+                    <button
+                        key={filter.id}
+                        type="button"
+                        className="activity-filter-chip"
+                        aria-pressed={feedFiltered && feedTypes.includes(filter.id)}
+                        onClick={() => pickFeedType(filter.id)}
+                    >
+                        {filter.label}
+                    </button>
+                ))}
             </div>
 
             <div className="activity-log-list">
@@ -802,7 +935,9 @@ export default function PlantDetails() {
                         ))}
                     </>
                 ) : feedActivities.length === 0 ? (
-                    <div className="activity-log-empty">No activities yet</div>
+                    <div className="activity-log-empty">
+                        {feedFiltered ? "Nothing of this kind yet" : "No activities yet"}
+                    </div>
                 ) : (
                     (feedExpanded ? feedActivities : feedActivities.slice(0, FEED_PREVIEW)).map((activity) => (
                         <div key={activity.id} className="activity-item">
@@ -839,6 +974,12 @@ export default function PlantDetails() {
                                     />
                                 ) : (
                                     <p className="activity-description">{getActivityDescription(activity)}</p>
+                                )}
+                                {activity.activity_type === "note" && activity.activity_data?.remind_at && (
+                                    <p className="activity-reminder">
+                                        <FontAwesomeIcon icon={faBell} aria-hidden="true" /> Reminder{" "}
+                                        {formatReminder(activity.activity_data.remind_at)}
+                                    </p>
                                 )}
                             </div>
                         </div>
@@ -920,6 +1061,7 @@ export default function PlantDetails() {
 
     return (
         <div className="container plant-details-container">
+            {llmPicker}
             {actionLoading && (
                 <LoadingOverlay
                     title={actionLoading.title}
@@ -980,6 +1122,33 @@ export default function PlantDetails() {
                                 </a>
                             )}
                         </span>
+                        {speciesReference &&
+                            (speciesReference.family || speciesAliases.length > 0 || speciesReference.wikipedia_url) && (
+                                <span className="plant-information-names plant-species-facts">
+                                    {speciesReference.family && (
+                                        <span>
+                                            <span className="plant-species-fact-label">Family</span>{" "}
+                                            {speciesReference.family}
+                                        </span>
+                                    )}
+                                    {speciesAliases.length > 0 && (
+                                        <span>
+                                            <span className="plant-species-fact-label">Also known as</span>{" "}
+                                            {speciesAliases.join(", ")}
+                                        </span>
+                                    )}
+                                    {speciesReference.wikipedia_url && (
+                                        <a
+                                            href={speciesReference.wikipedia_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            aria-label={`${plant.species} on Wikipedia (new tab)`}
+                                        >
+                                            Wikipedia <FontAwesomeIcon icon={faArrowUpRightFromSquare} aria-hidden="true" />
+                                        </a>
+                                    )}
+                                </span>
+                            )}
                         <span className="plant-information-names plant-status-line">
                             {(() => {
                                 const status = plant.is_archived ? null : getWateringStatus(plant, timezone);
@@ -1229,6 +1398,7 @@ export default function PlantDetails() {
                         careadvice={plant.care_advice}
                         notes={plant.notes}
                         plantId={plant.id}
+                        onAddReminder={plant.is_archived ? undefined : (date) => handleOpenNotesModal(date)}
                         onChanged={() => {
                             loadPlant();
                             loadActivities();
@@ -1542,6 +1712,32 @@ export default function PlantDetails() {
                         );
                     })()}
 
+                    {upcomingReminders.length > 0 && (
+                        <section className="plant-reminders" aria-labelledby="plant-reminders-heading">
+                            <h3 id="plant-reminders-heading">
+                                <FontAwesomeIcon icon={faBell} aria-hidden="true" /> Reminders
+                            </h3>
+                            <ul>
+                                {upcomingReminders.map((note) => (
+                                    <li key={note.id}>
+                                        <span className="plant-reminder-when">{formatReminder(note.remind_at!)}</span>
+                                        <span className="plant-reminder-text">{note.note_text}</span>
+                                        {isLoggedIn && (
+                                            <button
+                                                type="button"
+                                                className="plant-reminder-delete"
+                                                aria-label={`Delete reminder: ${note.note_text}`}
+                                                onClick={() => handleDeleteReminder(note.id)}
+                                            >
+                                                <FontAwesomeIcon icon={faTrash} />
+                                            </button>
+                                        )}
+                                    </li>
+                                ))}
+                            </ul>
+                        </section>
+                    )}
+
                     {renderActivityFeed()}
 
                     {plant.is_archived && plant.archive_reason && (
@@ -1631,10 +1827,10 @@ export default function PlantDetails() {
                         ref={notesModalRef}
                         role="dialog"
                         aria-modal="true"
-                        aria-label="Write a note about the plant"
+                        aria-label={remindDate ? "Set a reminder" : "Write a note about the plant"}
                     >
                         <div className="notes-modal-header">
-                            <span>Write a note about the plant</span>
+                            <span>{remindDate ? "Set a reminder" : "Write a note about the plant"}</span>
                         </div>
 
                         <div className="note-input-container">
@@ -1642,12 +1838,42 @@ export default function PlantDetails() {
                                 value={newNote}
                                 onChange={setNewNote}
                                 onSave={setNewNote}
-                                placeholder="Add a note about your plant..."
+                                placeholder={remindDate ? "What should you be reminded of?" : "Add a note about your plant..."}
                                 className="note-input"
                             />
+                            <fieldset className="note-reminder">
+                                <legend>
+                                    <FontAwesomeIcon icon={faBell} aria-hidden="true" /> Remind me
+                                </legend>
+                                <input
+                                    type="date"
+                                    aria-label="Reminder date"
+                                    value={remindDate}
+                                    min={DateTime.now().setZone(timezone).toISODate() ?? undefined}
+                                    onChange={(e) => setRemindDate(e.target.value)}
+                                />
+                                <input
+                                    type="time"
+                                    aria-label="Reminder time"
+                                    value={remindTime}
+                                    disabled={!remindDate}
+                                    onChange={(e) => setRemindTime(e.target.value)}
+                                />
+                                {remindDate && (
+                                    <button
+                                        type="button"
+                                        className="note-reminder-clear"
+                                        aria-label="No reminder"
+                                        onClick={() => setRemindDate("")}
+                                    >
+                                        <FontAwesomeIcon icon={faCircleXmark} />
+                                    </button>
+                                )}
+                            </fieldset>
                             <div className="note-actions">
                                 <button className="save-note-btn" onClick={handleCreateNote} disabled={!newNote.trim()}>
-                                    <FontAwesomeIcon icon={faPlus} /> Add Note
+                                    <FontAwesomeIcon icon={remindDate ? faBell : faPlus} />{" "}
+                                    {remindDate ? "Set reminder" : "Add Note"}
                                 </button>
                                 <button className="notes-modal-close" onClick={() => setNotesModalOpen(false)}>
                                     <FontAwesomeIcon icon={faCircleXmark} /> Cancel
@@ -1686,6 +1912,22 @@ export default function PlantDetails() {
                                     resize: "vertical",
                                 }}
                             />
+                            {llmProviders.length > 1 && (
+                                <label className="care-advice-provider">
+                                    <span>AI</span>
+                                    <select
+                                        value={careAdviceProvider || llmProviders[0].id}
+                                        onChange={(e) => setCareAdviceProvider(e.target.value)}
+                                    >
+                                        {llmProviders.map((provider) => (
+                                            <option key={provider.id} value={provider.id}>
+                                                {provider.label}
+                                                {provider.model ? ` (${provider.model})` : ""}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+                            )}
                             <div className="note-actions">
                                 <button className="save-note-btn" onClick={handleGenerateCareAdvice}>
                                     <FontAwesomeIcon icon={faWandMagicSparkles} /> Get AI Advice

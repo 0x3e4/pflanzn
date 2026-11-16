@@ -1,3 +1,9 @@
+export interface LlmProviderInfo {
+    id: string;
+    label: string;
+    model: string;
+}
+
 export interface AppConfig {
     tz: string;
     locale: string;
@@ -5,6 +11,8 @@ export interface AppConfig {
     showProtectedView: boolean;
     enableLocations: boolean;
     llmProvider: string;
+    // Every configured provider, the default first. With several, AI buttons ask which one.
+    llmProviders: LlmProviderInfo[];
     aiEnabled: boolean;
     identificationEnabled: boolean;
     mcpEnabled: boolean;
@@ -28,6 +36,7 @@ const DEFAULT_CONFIG: AppConfig = {
     showProtectedView: true,
     enableLocations: false,
     llmProvider: "",
+    llmProviders: [],
     aiEnabled: true,
     identificationEnabled: true,
     mcpEnabled: false,
@@ -51,6 +60,12 @@ export async function loadConfig(): Promise<AppConfig> {
         showProtectedView: !!data.show_protected_view,
         enableLocations: !!data.enable_locations,
         llmProvider: data.llm_provider || "",
+        // Older backends only name the default.
+        llmProviders: Array.isArray(data.llm_providers)
+            ? data.llm_providers
+            : data.llm_provider
+              ? [{ id: data.llm_provider, label: data.llm_provider, model: "" }]
+              : [],
         // Older backends don't send these; keep their behaviour (AI + identification on, MCP off).
         aiEnabled: data.ai_enabled ?? true,
         identificationEnabled: data.identification_enabled ?? true,

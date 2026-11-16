@@ -15,7 +15,12 @@ from the camera button, it opens a new plant with that species filled in. Past i
 kept under Manage → Identifications.
 
 Once a plant has a species, its page links to the species on Pl@ntNet, in the language set by
-`PLANTNET_LANGUAGE`.
+`PLANTNET_LANGUAGE`, and shows what is known about it below the name: the family (from GBIF), other
+common names and a link to Wikipedia. The care helper uses the same facts.
+
+Pl@ntNet's free plan allows 500 identifications a day per key. Admins see what is left today under
+**Manage → Integrations**; once fewer than 50 remain, every identification says how many are left,
+and when the limit is used up, identifying says so until it resets the next day.
 
 ![Species identification via Pl@ntNet](../images/planzn-identification.png){ width="320" }
 
@@ -54,6 +59,10 @@ save it to the same history. That works without any AI key on the server.
 | Hugging Face | `HUGGINGFACE_API_KEY`, `HUGGINGFACE_MODEL_NAME` |
 | Ollama (local) | `OLLAMA_URL`, `OLLAMA_MODEL_NAME` |
 
-Pflanzn uses the provider whose key is set. With several keys set, the order is
-openai, claude, mistralai, huggingface, ollama. `LLM_ENABLED=false` turns off the AI texts but
-keeps identification and MCP.
+Set the keys of as many providers as you like. With more than one, every AI button asks which one
+to use (the one picked last comes first), and the care advice dialog has a choice of its own. The
+default, listed first, is the first configured one in the order openai, claude, mistralai,
+huggingface, ollama. Manage → Integrations lists the configured providers and their models.
+
+With no provider configured, the AI buttons are hidden. `LLM_ENABLED=false` turns off the AI texts
+but keeps identification and MCP.

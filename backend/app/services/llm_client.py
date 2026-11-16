@@ -12,8 +12,10 @@ from app.services.openai import OpenAIClient
 
 class LLMClient:
 
-    def __init__(self):
-        provider = (settings.LLM_PROVIDER or "").lower()
+    def __init__(self, provider: Optional[str] = None):
+        """provider: one of settings.llm_providers; None or empty for the default."""
+        provider = (provider or settings.LLM_PROVIDER or "").lower()
+        self.provider = provider
         if provider == "huggingface":
             self.client = HuggingFaceClient()
         elif provider == "mistralai":

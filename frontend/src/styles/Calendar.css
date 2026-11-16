@@ -159,6 +159,40 @@
     color: var(--text-on-fill);
 }
 
+/* Reminder days: still to come, so drawn as a dashed outline rather than a filled day. */
+.react-calendar__tile.reminder-day {
+    outline: 2px dashed var(--primary-color);
+    outline-offset: -4px;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.reminder-tooltip-text {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.calendar-add-reminder {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px dashed var(--border-color);
+    background: transparent;
+    color: var(--text-color);
+    font: inherit;
+    cursor: pointer;
+}
+
+.calendar-add-reminder:hover,
+.calendar-add-reminder:focus-visible {
+    border-color: var(--primary-color);
+}
+
 .react-calendar__tile.season-day {
     background-color: var(--season-color);
     color: var(--season-ink);

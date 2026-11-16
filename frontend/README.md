@@ -54,7 +54,9 @@ src/
 │   ├── WeatherPanel.tsx, StatisticsPanel.tsx
 │   ├── LocationsPanel.tsx, PlantsPanel.tsx, UsersPanel.tsx, AuditPanel.tsx
 │   ├── TagsPanel.tsx, SharePanel.tsx, IdentificationsPanel.tsx, WateringsPanel.tsx
-│   ├── McpPanel.tsx
+│   ├── McpPanel.tsx, IntegrationsPanel.tsx  # Integrations: notifications, Pl@ntNet quota, AI providers
+│   ├── LlmProviderPicker.tsx  # "Which AI?" when the server has several providers
+│   ├── PhotoDropOverlay.tsx   # Dashed frame while photos are dragged onto the plants list
 │   ├── FloorPlanView.tsx, FloorPlansPanel.tsx
 │   ├── ErrorBoundary.tsx, OfflineBanner.tsx, LoadingOverlay.tsx
 │   ├── LoginHint.tsx         # "Sign in to …" line in place of actions signed-out visitors can't use
@@ -76,6 +78,10 @@ src/
 │   ├── AuditService.ts
 │   ├── McpService.ts
 │   ├── FloorPlanService.ts
+│   ├── NotificationService.ts # Notification status/test, Pl@ntNet quota
+│   ├── ReminderService.ts    # Upcoming reminders for the home page
+│   ├── activityFilter.ts     # Which kinds the plant activity feed shows (remembered per browser)
+│   ├── identificationQuota.ts # Tells the user when the daily Pl@ntNet allowance runs low
 │   ├── authRedirect.ts
 │   ├── busyOverlay.ts        # withBusy(): global loading overlay for uploads and identification
 │   ├── floorPlanClusters.ts  # Groups floor-plan markers that would overlap
@@ -84,6 +90,7 @@ src/
 ├── hooks/              # Custom React hooks
 │   ├── useModalA11y.ts       # Modal keyboard accessibility
 │   ├── useOnlineStatus.ts    # Online/offline detection
+│   ├── usePhotoDrop.ts       # Photos dragged onto a page, and the plant card under the pointer
 │   ├── usePanZoom.ts         # Pan, pinch and wheel zoom for the floor plan
 │   ├── usePullToRefresh.ts   # Pull-to-refresh gesture
 │   └── useTheme.ts           # Dark/light theme toggle

@@ -54,6 +54,23 @@ services:
         aliases:
           - pflanzn-docs
 
+  # Notifications, optional: Pflanzn posts reminders and the daily watering digest here and
+  # Apprise passes them on (Telegram, ntfy, Matrix, mail, …). Already running Apprise? Leave
+  # this service out and set APPRISE_URL in .env to yours. The web UI, to store your targets
+  # under APPRISE_KEY, is on localhost:8001.
+  apprise:
+    image: caronc/apprise:latest
+    pull_policy: always
+    restart: always
+    volumes:
+      - ./apprise/config:/config
+    ports:
+      - "127.0.0.1:8001:8000"
+    networks:
+      default:
+        aliases:
+          - pflanzn-apprise
+
   mariadb:
     image: mariadb:latest
     restart: always

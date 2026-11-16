@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.core.config import APP_VERSION, settings
+from app.core.config import APP_VERSION, LLM_PROVIDERS, settings
 from app.database import get_db
-from app.schemas import AppConfigResponse
+from app.schemas import AppConfigResponse, LlmProviderInfo
 from app.services import app_settings
 
 router = APIRouter()
@@ -24,6 +24,14 @@ def get_app_config(db: Session = Depends(get_db)):
         enable_locations=settings.ENABLE_LOCATIONS,
         # Empty when text generation is off, so the frontend hides every LLM button.
         llm_provider=(settings.LLM_PROVIDER or "") if settings.llm_available else "",
+        llm_providers=[
+            LlmProviderInfo(
+                id=pid,
+                label=LLM_PROVIDERS.get(pid, (None, pid))[1],
+                model=settings.llm_model_name(pid),
+            )
+            for pid in settings.llm_providers
+        ],
         ai_enabled=settings.AI_ENABLED,
         identification_enabled=settings.identification_available,
         mcp_enabled=settings.mcp_available,

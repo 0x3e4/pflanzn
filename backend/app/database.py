@@ -200,6 +200,21 @@ def _ensure_identifications_schema():
         _execute_ddl("ALTER TABLE plant_identifications ADD COLUMN scientific_name_full VARCHAR(255) NULL AFTER scientific_name")
 
 
+def _ensure_plant_notes_schema():
+    """Idempotent migration for plant_notes (reminders)."""
+    inspector = inspect(engine)
+    if "plant_notes" not in set(inspector.get_table_names()):
+        return  # create_all already handled it
+    columns = {column["name"] for column in inspector.get_columns("plant_notes")}
+    if "remind_at" not in columns:
+        _execute_ddl("ALTER TABLE plant_notes ADD COLUMN remind_at DATETIME NULL")
+    if "reminded_at" not in columns:
+        _execute_ddl("ALTER TABLE plant_notes ADD COLUMN reminded_at DATETIME NULL")
+    indexes = {index["name"] for index in inspector.get_indexes("plant_notes")}
+    if "idx_plant_notes_remind_at" not in indexes:
+        _execute_ddl("CREATE INDEX idx_plant_notes_remind_at ON plant_notes (remind_at)")
+
+
 def _ensure_audit_logs_schema():
     """Idempotent migration for the audit_logs table (indexes)."""
     inspector = inspect(engine)
@@ -247,4 +262,5 @@ def init_db():
     _ensure_users_schema()
     _ensure_audit_logs_schema()
     _ensure_identifications_schema()
+    _ensure_plant_notes_schema()
     logger.debug("Database tables ensured.")

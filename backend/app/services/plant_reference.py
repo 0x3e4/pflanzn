@@ -44,6 +44,21 @@ class PlantReference:
     url: str
     facts: Optional[str] = None
     wikipedia_url: Optional[str] = None
+    # From GBIF's match for the species (None when GBIF doesn't know it). Cached entries
+    # written before these existed simply lack them.
+    family: Optional[str] = None
+    genus: Optional[str] = None
+
+    @property
+    def common_names(self) -> list[str]:
+        """The names under "Common names" on the Pl@ntNet page, in its order."""
+        lines = (self.facts or "").splitlines()
+        if "Common names" not in lines:
+            return []
+        index = lines.index("Common names") + 1
+        if index >= len(lines):
+            return []
+        return [name.strip() for name in lines[index].split(",") if name.strip()]
 
 
 def species_url(full_name: str, language: Optional[str] = None) -> str:
@@ -95,14 +110,15 @@ def _identified_name(db: Session, species: str) -> Optional[str]:
     return row[0] if row else None
 
 
-def _gbif_name(client: httpx.Client, species: str) -> Optional[str]:
+def _gbif_match(client: httpx.Client, species: str) -> dict:
+    """GBIF's exact species match ({} if none): scientificName, family, genus, …"""
     response = client.get(GBIF_MATCH_URL, params={"name": species, "kingdom": "Plantae"})
     if response.status_code != 200:
-        return None
+        return {}
     match = response.json()
     if match.get("matchType") == "EXACT" and match.get("rank") in _SPECIES_RANKS:
-        return match.get("scientificName")
-    return None
+        return match
+    return {}
 
 
 def _cache_get(key: str) -> Optional[str]:
@@ -136,12 +152,16 @@ def lookup(db: Session, species: Optional[str]) -> Optional[PlantReference]:
     reference = None
     try:
         with httpx.Client(timeout=10, headers=_HEADERS) as client:
-            candidates = [_identified_name(db, species), _gbif_name(client, species), species]
+            gbif = _gbif_match(client, species)
+            candidates = [_identified_name(db, species), gbif.get("scientificName"), species]
             for name in dict.fromkeys(c for c in candidates if c):
                 response = client.get(species_url(name, "en"))
                 if response.status_code == 200:
                     facts, wikipedia_url = extract_facts(response.text)
-                    reference = PlantReference(name, species_url(name), facts, wikipedia_url)
+                    reference = PlantReference(
+                        name, species_url(name), facts, wikipedia_url,
+                        family=gbif.get("family"), genus=gbif.get("genus"),
+                    )
                     break
     except httpx.HTTPError as exc:
         # Not cached: the next request tries again.

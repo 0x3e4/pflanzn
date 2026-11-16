@@ -24,4 +24,7 @@ export interface FloorPlanUpdateInput {
 
 export interface AppSettings {
     floor_plans_enabled: boolean;
+    notify_reminders: boolean;
+    notify_watering: boolean;
+    notify_watering_time: string;
 }

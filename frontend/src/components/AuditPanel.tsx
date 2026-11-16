@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useConfig } from "../context/ConfigContext";
-import { fetchAuditLogs } from "../services/AuditService";
+import { fetchAuditFacets, fetchAuditLogs } from "../services/AuditService";
 import { AuditLog, AuditLogPage } from "../types/AuditLog";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -12,8 +12,8 @@ import "react-loading-skeleton/dist/skeleton.css";
 const PER_PAGE = 50;
 const COLUMN_COUNT = 8;
 
-// Hardcoded filter options (no distinct-values endpoint for v1)
-const ACTION_OPTIONS = [
+// Fallback filter options until the facets (what actually occurs in the log) have loaded
+const DEFAULT_ACTIONS = [
     "login",
     "login_failed",
     "logout",
@@ -25,7 +25,7 @@ const ACTION_OPTIONS = [
     "user.delete",
     "user.password_change",
 ];
-const ENTITY_OPTIONS = ["plant", "user", "tag", "location", "weather", "share", "auth"];
+const DEFAULT_ENTITIES = ["plant", "user", "tag", "location", "weather", "share", "auth"];
 
 const emptyPage: AuditLogPage = { items: [], total: 0, page: 1, per_page: PER_PAGE };
 
@@ -50,6 +50,24 @@ export default function AuditPanel() {
     const [q, setQ] = useState("");
     const [debouncedQ, setDebouncedQ] = useState("");
     const [expandedId, setExpandedId] = useState<number | null>(null);
+    const [actionOptions, setActionOptions] = useState<string[]>(DEFAULT_ACTIONS);
+    const [entityOptions, setEntityOptions] = useState<string[]>(DEFAULT_ENTITIES);
+
+    useEffect(() => {
+        let isActive = true;
+        fetchAuditFacets()
+            .then((facets) => {
+                if (!isActive) return;
+                if (facets.actions.length) setActionOptions(facets.actions);
+                if (facets.entity_types.length) setEntityOptions(facets.entity_types);
+            })
+            .catch(() => {
+                /* keep the defaults */
+            });
+        return () => {
+            isActive = false;
+        };
+    }, []);
 
     // Debounce free-text search so we don't fire a request per keystroke
     useEffect(() => {
@@ -122,13 +140,14 @@ export default function AuditPanel() {
             <div className="audit-filters">
                 <select
                     value={action}
+                    aria-label="Action"
                     onChange={(e) => {
                         setAction(e.target.value);
                         setPage(1);
                     }}
                 >
                     <option value="">All actions</option>
-                    {ACTION_OPTIONS.map((a) => (
+                    {actionOptions.map((a) => (
                         <option key={a} value={a}>
                             {a}
                         </option>
@@ -137,13 +156,14 @@ export default function AuditPanel() {
 
                 <select
                     value={entityType}
+                    aria-label="Entity"
                     onChange={(e) => {
                         setEntityType(e.target.value);
                         setPage(1);
                     }}
                 >
                     <option value="">All entities</option>
-                    {ENTITY_OPTIONS.map((ent) => (
+                    {entityOptions.map((ent) => (
                         <option key={ent} value={ent}>
                             {ent}
                         </option>
@@ -170,7 +190,8 @@ export default function AuditPanel() {
                 />
 
                 <input
-                    type="text"
+                    type="search"
+                    aria-label="Search path or user"
                     placeholder="Search path or user…"
                     value={q}
                     onChange={(e) => {

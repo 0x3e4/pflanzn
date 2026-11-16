@@ -45,18 +45,26 @@ app/
 │   └── security.py        # JWT, Argon2, session management, token theft detection
 ├── api/routes/            # REST endpoints
 │   ├── auth.py            # Login, register, token refresh, OIDC
-│   ├── plants.py          # Plant CRUD (list with ?summary=true), watering, fertilizing, notes, care advice, species description (generation also suggests a watering interval) and its reuse
+│   ├── plants.py          # Plant CRUD (list with ?summary=true), watering, fertilizing, notes and reminders, care advice, species description (generation also suggests a watering interval) and its reuse, the activity feed (?types= filter), the Pl@ntNet species reference
 │   ├── locations.py       # Location CRUD, photos, tags, notes, harvest times, import of old browser-only data
 │   ├── users.py           # User management (admin)
 │   ├── tags.py            # Tag CRUD and plant-tag associations
 │   ├── share.py           # Token-based public share links
 │   ├── statistics.py      # Statistics: totals, and /activity (a year of care by day, 12 weeks manual vs rain, last 30 days, most cared for) and /recent (the home page feed)
 │   ├── uploads.py         # Image serving (thumb/medium/original WebP variants)
+│   ├── notifications.py   # Notification status and a test message (admin)
+│   ├── identification.py  # Pl@ntNet identifications left today
+│   ├── reminders.py       # Upcoming reminders across all plants (home page)
+│   ├── audit.py           # Audit log and its filter values (/facets)
 │   └── weather.py         # Weather config, current conditions, logs, auto-waterings
 ├── services/              # Business logic
-│   ├── llm_client.py      # LLM factory pattern (OpenAI, Claude, Mistral, HuggingFace, Ollama)
+│   ├── llm_client.py      # LLM factory pattern (OpenAI, Claude, Mistral, HuggingFace, Ollama); the request may pick any configured provider
 │   ├── openai.py, anthropic.py, mistralai.py, huggingface.py, ollama.py
-│   ├── plantnet.py        # PlantNet species identification
+│   ├── plantnet.py        # PlantNet species identification, the daily quota (Redis)
+│   ├── plant_reference.py # Pl@ntNet species page, facts, GBIF family/genus (cached in Redis)
+│   ├── notifications.py   # Apprise: due reminders and the daily watering digest (loop in main.py)
+│   ├── reminders.py       # Upcoming reminders, shared by /api/reminders and MCP
+│   ├── mcp_tools.py       # The MCP tools (plants, care log, reminders, watering plan, species info)
 │   ├── prompt_config.py   # LLM prompt templates
 │   └── weather_service.py # Weather data fetching and auto-watering logic
 └── utils/                 # EXIF extraction, text cleaning, the watering interval in a generated description, utcnow() (naive UTC, as stored)

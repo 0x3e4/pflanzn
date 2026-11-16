@@ -6,6 +6,14 @@ from PIL import Image
 
 from app.models import FloorPlan, Plant, User
 
+# Every app setting with its default: what PUT /api/settings returns besides the key under test.
+ALL_SETTINGS = {
+    "floor_plans_enabled": False,
+    "notify_reminders": True,
+    "notify_watering": True,
+    "notify_watering_time": "08:00",
+}
+
 
 @pytest.fixture(autouse=True)
 def _env(tmp_path):
@@ -178,9 +186,10 @@ class TestSettings:
 
         override_dep(require_write_access, self._user("admin"))
         with patch("app.core.security.AUTH_MODE", "oidc"), \
-             patch("app.api.routes.settings.app_settings.update", return_value={"floor_plans_enabled": True}) as upd:
-            assert client.put("/api/settings", json={"floor_plans_enabled": True}).json() == {
-                "floor_plans_enabled": True}
+             patch("app.api.routes.settings.app_settings.update", return_value=dict(
+                 ALL_SETTINGS, floor_plans_enabled=True)) as upd:
+            assert client.put("/api/settings", json={"floor_plans_enabled": True}).json() == dict(
+                ALL_SETTINGS, floor_plans_enabled=True)
         upd.assert_called_once_with(upd.call_args.args[0], {"floor_plans_enabled": True})
 
     def test_unknown_keys_rejected(self, client):

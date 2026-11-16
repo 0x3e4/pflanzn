@@ -786,21 +786,30 @@
 }
 
 /* --- Audit Panel --- */
+/* One row when the panel is wide enough, wrapping into as many columns as fit otherwise
+   (the Manage sidebar takes part of the viewport, so this follows the panel, not the window).
+   The global select rule sets width: 100%, so the grid decides the width. */
 .audit-filters {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 10px;
-    flex-wrap: wrap;
     margin-bottom: 16px;
 }
 
 .audit-filters select,
 .audit-filters input {
-    background: var(--secondary-background-color);
+    background-color: var(--secondary-background-color);
     color: var(--text-color);
     border: 1px solid var(--border-color);
     border-radius: 6px;
     padding: 8px 10px;
     font-size: 0.9rem;
+    min-width: 0;
+    width: 100%;
+}
+
+.audit-filters select {
+    padding-right: 32px;
 }
 
 .audit-badge {

@@ -1,6 +1,7 @@
 import apiClient from "./apiClient";
 import { withBusy } from "./busyOverlay";
-import { Plant } from "../types/Plant";
+import { noteRemainingIdentifications } from "./identificationQuota";
+import { Plant, PlantNote } from "../types/Plant";
 import { PlantIdentification } from "../types/Identification";
 
 const API_BASE = "/plants";
@@ -44,7 +45,7 @@ export const identifyPlant = async (plantId: number) => {
         { title: "Identifying species", message: "Sending the latest photo to Pl@ntNet." },
         () => apiClient.post(`${API_BASE}/${plantId}/identify`),
     );
-    return response.data;
+    return noteRemainingIdentifications(response.data);
 };
 
 // Identify from uploaded image
@@ -60,7 +61,7 @@ export const identifyPlantFromImage = async (file: File) => {
             }),
     );
 
-    return response.data;
+    return noteRemainingIdentifications(response.data);
 };
 
 // Update plant
@@ -103,9 +104,12 @@ export interface GeneratedDescription {
     watering_interval_days: number | null;
 }
 
-export const generatePlantDescription = async (plantId: number): Promise<GeneratedDescription> => {
+export const generatePlantDescription = async (plantId: number, provider?: string): Promise<GeneratedDescription> => {
     // Models that think before answering can take a while.
-    const response = await apiClient.post(`${API_BASE}/${plantId}/generate_description`, undefined, { timeout: 180000 });
+    const response = await apiClient.post(`${API_BASE}/${plantId}/generate_description`, undefined, {
+        timeout: 180000,
+        params: provider ? { provider } : undefined,
+    });
     return response.data;
 };
 
@@ -113,6 +117,7 @@ export const generatePlantDescription = async (plantId: number): Promise<Generat
 export const generateCareAdvice = async (
     plantId: number,
     userMessage?: string,
+    provider?: string,
 ): Promise<{
     id: number;
     advice_text: string;
@@ -123,14 +128,25 @@ export const generateCareAdvice = async (
         formData.append("user_message", userMessage);
     }
     // Photos, thinking and web search can take a few minutes.
-    const response = await apiClient.post(`${API_BASE}/${plantId}/care_advice`, formData, { timeout: 300000 });
+    const response = await apiClient.post(`${API_BASE}/${plantId}/care_advice`, formData, {
+        timeout: 300000,
+        params: provider ? { provider } : undefined,
+    });
     return response.data;
 };
 
-// Pl@ntNet species page for the plant's species (url is null when none matches)
-export const fetchPlantNetReference = async (
-    plantId: number,
-): Promise<{ name: string | null; url: string | null }> => {
+export interface PlantNetReference {
+    name: string | null;
+    url: string | null;
+    // Older backends send only name and url.
+    family?: string | null;
+    genus?: string | null;
+    common_names?: string[];
+    wikipedia_url?: string | null;
+}
+
+// Pl@ntNet species page for the plant's species and what is known about it (url is null when none matches)
+export const fetchPlantNetReference = async (plantId: number): Promise<PlantNetReference> => {
     const response = await apiClient.get(`${API_BASE}/${plantId}/plantnet`);
     return response.data;
 };
@@ -266,42 +282,34 @@ export const bulkDeleteWaterings = async (ids: number[]): Promise<{ deleted: num
 };
 
 // Plant Notes CRUD
-export const createPlantNote = async (
-    plantId: number,
-    noteText: string,
-): Promise<{
-    id: number;
-    note_text: string;
-    created_at: string;
-}> => {
-    const response = await apiClient.post(`${API_BASE}/${plantId}/notes`, { note_text: noteText });
+// remindAt (UTC ISO): the note is also a reminder for that moment.
+export const createPlantNote = async (plantId: number, noteText: string, remindAt?: string | null): Promise<PlantNote> => {
+    const response = await apiClient.post(`${API_BASE}/${plantId}/notes`, {
+        note_text: noteText,
+        ...(remindAt ? { remind_at: remindAt } : {}),
+    });
     return response.data;
 };
 
 export const fetchPlantNotes = async (
     plantId: number,
     params: { limit?: number; offset?: number } = {},
-): Promise<
-    Array<{
-        id: number;
-        note_text: string;
-        created_at: string;
-    }>
-> => {
+): Promise<PlantNote[]> => {
     const response = await apiClient.get(`${API_BASE}/${plantId}/notes`, { params });
     return response.data;
 };
 
+// remindAt: undefined leaves the reminder as it is, null removes it.
 export const updatePlantNote = async (
     plantId: number,
     noteId: number,
     noteText: string,
-): Promise<{
-    id: number;
-    note_text: string;
-    created_at: string;
-}> => {
-    const response = await apiClient.put(`${API_BASE}/${plantId}/notes/${noteId}`, { note_text: noteText });
+    remindAt?: string | null,
+): Promise<PlantNote> => {
+    const response = await apiClient.put(`${API_BASE}/${plantId}/notes/${noteId}`, {
+        note_text: noteText,
+        ...(remindAt !== undefined ? { remind_at: remindAt } : {}),
+    });
     return response.data;
 };
 
@@ -310,11 +318,16 @@ export const deletePlantNote = async (plantId: number, noteId: number) => {
 };
 
 // Activities for calendar/activity log
+// What the activity feed can be narrowed to; "watering" is by hand, "rain" by the weather check.
+export type ActivityFilter = "watering" | "rain" | "fertilizing" | "image_upload" | "note" | "care_advice";
+
 export const fetchPlantActivities = async (
     plantId: number,
     params: {
         limit?: number;
         offset?: number;
+        // Comma-separated ActivityFilter values; missing means all.
+        types?: string;
     } = {},
 ): Promise<
     Array<{

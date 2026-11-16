@@ -46,6 +46,7 @@ import {
 import { extractErrorMessage } from "../services/apiClient";
 import { Location, LocationUpdateInput, SpotType, Visibility } from "../types/Location";
 import "../styles/locationDetails.css";
+import { useLlmProviderPicker } from "../components/LlmProviderPicker";
 
 type LocationIdentifyResult = { species: string; commonName: string; score: string; images: string[] };
 type ActionLoadingState = {
@@ -161,6 +162,7 @@ export default function LocationDetails() {
     const latestImage = sortedImages[0] || null;
 
     const { locale, tz: timezone, llmProvider, identificationEnabled } = useConfig();
+    const { choose: chooseLlmProvider, picker: llmPicker } = useLlmProviderPicker();
 
     const mapLocations = useMemo(() => {
         const byId = new Map<number, Location>();
@@ -613,6 +615,8 @@ export default function LocationDetails() {
             toast.warning("You must be logged in to generate an AI description.");
             return;
         }
+        const provider = await chooseLlmProvider("Write description");
+        if (provider === null) return;
 
         setGeneratingDescription(true);
         setActionLoading({
@@ -625,7 +629,7 @@ export default function LocationDetails() {
             ],
         });
         try {
-            const { description } = await generateLocationDescription(location.id);
+            const { description } = await generateLocationDescription(location.id, provider);
             setLocation((prev) => (prev ? { ...prev, description } : prev));
             toast.success("AI description generated.");
         } catch (error) {
@@ -830,6 +834,7 @@ export default function LocationDetails() {
 
     return (
         <div className="container location-details-page">
+            {llmPicker}
             {actionLoading && (
                 <LoadingOverlay
                     title={actionLoading.title}

@@ -980,11 +980,13 @@ body.modal-open {
     position: relative;
 }
 
+/* Above the photo carousel below it: its arrows sit at z-index 20 and come later in the page,
+   so at the same level they were drawn over the open menu. */
 .plant-more-menu {
     position: absolute;
     top: calc(100% + 6px);
     right: 0;
-    z-index: 20;
+    z-index: 50;
     width: max-content;
     min-width: 230px;
     padding: 6px;
@@ -1208,4 +1210,180 @@ body.modal-open {
 
 .description-actions .description-generate {
     margin-top: 12px;
+}
+
+/* Care advice dialog: which AI, when the server has several. */
+.care-advice-provider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    text-align: left;
+}
+
+.care-advice-provider span {
+    color: var(--muted-text-color);
+    font-size: 0.9rem;
+}
+
+.care-advice-provider select {
+    flex: 1;
+    padding: 8px 32px 8px 10px;
+    min-width: 0;
+}
+
+/* Activity feed filter: "All", or any mix of kinds (remembered per browser). */
+.activity-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 10px 0 12px;
+}
+
+.activity-filter-chip {
+    padding: 4px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--muted-text-color);
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.activity-filter-chip:hover {
+    border-color: var(--primary-color);
+    color: var(--text-color);
+}
+
+.activity-filter-chip[aria-pressed="true"] {
+    border-color: var(--button-primary-bg);
+    background: var(--button-primary-bg);
+    color: var(--button-primary-ink);
+}
+
+/* A note that is also a reminder. */
+.activity-reminder {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0 0;
+    color: var(--muted-text-color);
+    font-size: 0.85rem;
+}
+
+/* Notes dialog: optional "remind me" date and time. */
+.note-reminder {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    border: 1px dashed var(--border-color);
+    border-radius: 8px;
+    text-align: left;
+}
+
+.note-reminder legend {
+    padding: 0 4px;
+    color: var(--muted-text-color);
+    font-size: 0.9rem;
+}
+
+.note-reminder input {
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--background-color);
+    color: var(--text-color);
+    min-width: 0;
+}
+
+.note-reminder input[type="date"] {
+    flex: 1 1 140px;
+}
+
+.note-reminder-clear {
+    border: none;
+    background: none;
+    color: var(--muted-text-color);
+    cursor: pointer;
+    padding: 4px;
+}
+
+/* Reminders still to come, above the activity feed. */
+.plant-reminders {
+    margin-bottom: 20px;
+}
+
+.plant-reminders h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 8px;
+}
+
+.plant-reminders ul {
+    margin: 0;
+    padding: 0;
+    border: 1px dashed var(--border-color);
+    border-radius: 12px;
+}
+
+.plant-reminders li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+    padding: 10px 14px;
+}
+
+.plant-reminders li + li {
+    border-top: 1px solid var(--card-border);
+}
+
+.plant-reminder-when {
+    color: var(--muted-text-color);
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.plant-reminder-text {
+    flex: 1 1 200px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.plant-reminder-delete {
+    margin-left: auto;
+    border: none;
+    background: none;
+    color: var(--muted-text-color);
+    cursor: pointer;
+}
+
+/* What Pl@ntNet and GBIF know about the species, under its name. */
+.plant-species-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 14px;
+    color: var(--muted-text-color);
+    font-size: 0.85rem;
+}
+
+.plant-species-fact-label {
+    color: var(--muted-text-color);
+    opacity: 0.8;
+}
+
+.plant-species-facts a {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--muted-text-color);
+}
+
+.plant-species-facts a svg {
+    font-size: 0.75em;
 }

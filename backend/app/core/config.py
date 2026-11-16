@@ -55,6 +55,22 @@ def _detect_llm_provider() -> str:
     return ""
 
 
+# Every provider Pflanzn can talk to, in the order the default is picked, with what
+# configures it and how the UI names it.
+LLM_PROVIDERS: dict[str, tuple[str, str]] = {
+    # id: (env var that enables it, label)
+    "openai": ("OPENAI_API_KEY", "OpenAI"),
+    "claude": ("CLAUDE_API_KEY", "Claude"),
+    "mistralai": ("MISTRALAI_API_KEY", "Mistral AI"),
+    "huggingface": ("HUGGINGFACE_API_KEY", "Hugging Face"),
+    "ollama": ("OLLAMA_URL", "Ollama"),
+}
+
+
+def _configured_llm_providers() -> list[str]:
+    return [pid for pid, (env, _) in LLM_PROVIDERS.items() if os.getenv(env)]
+
+
 class Settings(BaseSettings):
     # App display / feature config (exposed at /api/config)
     TZ: str = os.getenv("TZ", "UTC")
@@ -86,6 +102,8 @@ class Settings(BaseSettings):
     REDIS_URL: str = os.getenv("REDIS_URL", "localhost")
     PLANTNET_API_KEY: str = os.getenv("PLANTNET_API_KEY")
     PLANTNET_LANGUAGE: str = os.getenv("PLANTNET_LANGUAGE", "en")
+    # Identifications per day the API key allows (500 on Pl@ntNet's free plan); only for display.
+    PLANTNET_DAILY_LIMIT: int = int(os.getenv("PLANTNET_DAILY_LIMIT") or 500)
     LLM_LANGUAGE: str = os.getenv("LLM_LANGUAGE", "german")
     HUGGINGFACE_API_KEY: str = os.getenv("HUGGINGFACE_API_KEY")
     HUGGINGFACE_MODEL_NAME: str = os.getenv("HUGGINGFACE_MODEL_NAME")
@@ -120,6 +138,13 @@ class Settings(BaseSettings):
     MCP_LOGIN_OIDC_URL: str = os.getenv("MCP_LOGIN_OIDC_URL", "")
     MCP_LOGIN_CLIENT_ID: str = os.getenv("MCP_LOGIN_CLIENT_ID", "")
     MCP_LOGIN_CLIENT_SECRET: str = os.getenv("MCP_LOGIN_CLIENT_SECRET", "")
+    # Notifications through an Apprise API server; off while APPRISE_URL is empty.
+    APPRISE_URL: str = os.getenv("APPRISE_URL", "")
+    # Either a configuration key stored in Apprise ...
+    APPRISE_KEY: str = os.getenv("APPRISE_KEY", "")
+    APPRISE_TAG: str = os.getenv("APPRISE_TAG", "")
+    # ... or the notification URLs themselves (comma or space separated).
+    APPRISE_URLS: str = os.getenv("APPRISE_URLS", "")
     AUDIT_ENABLED: bool = _truthy(os.getenv("AUDIT_ENABLED"), default=True)
     # Largest accepted request body (uploads), enforced before the body is parsed.
     MAX_UPLOAD_MB: int = int(os.getenv("MAX_UPLOAD_MB") or 30)
@@ -132,6 +157,27 @@ class Settings(BaseSettings):
     def llm_available(self) -> bool:
         """LLM text generation is on and a provider is configured."""
         return self.AI_ENABLED and self.LLM_ENABLED and bool(self.LLM_PROVIDER)
+
+    @property
+    def llm_providers(self) -> list[str]:
+        """Every provider with credentials, the default (LLM_PROVIDER) first. Empty when
+        text generation is off. The user picks one of these per request."""
+        if not self.llm_available:
+            return []
+        configured = _configured_llm_providers()
+        default = (self.LLM_PROVIDER or "").lower()
+        if default and default not in configured:
+            configured.insert(0, default)  # explicit LLM_PROVIDER without a known key var
+        return [default] + [p for p in configured if p != default] if default else configured
+
+    def llm_model_name(self, provider: str) -> str:
+        return {
+            "openai": self.OPENAI_MODEL_NAME,
+            "claude": self.CLAUDE_MODEL_NAME,
+            "mistralai": self.MISTRALAI_MODEL_NAME,
+            "huggingface": self.HUGGINGFACE_MODEL_NAME,
+            "ollama": self.OLLAMA_MODEL_NAME,
+        }.get(provider) or ""
 
     @property
     def identification_available(self) -> bool:

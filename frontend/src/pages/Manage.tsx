@@ -18,6 +18,7 @@ import WeatherPanel from "../components/WeatherPanel";
 import SupportPanel from "../components/SupportPanel";
 import McpPanel from "../components/McpPanel";
 import FloorPlansPanel from "../components/FloorPlansPanel";
+import IntegrationsPanel from "../components/IntegrationsPanel";
 import "../styles/manage.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPenToSquare, faUnlock } from "@fortawesome/free-solid-svg-icons";
@@ -39,13 +40,22 @@ type ManageSection =
     | "waterings"
     | "customize"
     | "weather"
+    | "integrations"
     | "share"
     | "mcp"
     | "floorplans"
     | "support";
 
 // Sections that may be opened directly via /manage?section=…
-const LINKABLE_SECTIONS: ManageSection[] = ["statistics", "floorplans", "weather", "mcp", "customize", "support"];
+const LINKABLE_SECTIONS: ManageSection[] = [
+    "statistics",
+    "floorplans",
+    "weather",
+    "integrations",
+    "mcp",
+    "customize",
+    "support",
+];
 
 const Manage: React.FC = () => {
     const { user, logout, fetchProfile, isLoggedIn } = useAuth();
@@ -299,6 +309,14 @@ const Manage: React.FC = () => {
                     >
                         Weather
                     </li>
+                    {(authMode === "no" || user?.role === "admin") && (
+                        <li
+                            className={`sidebar-subsection ${activeSection === "integrations" ? "active" : ""}`}
+                            onClick={() => setActiveSection("integrations")}
+                        >
+                            Integrations
+                        </li>
+                    )}
                     {showShare && user?.role === "admin" && (
                         <li
                             className={`sidebar-subsection ${activeSection === "share" ? "active" : ""}`}
@@ -428,6 +446,10 @@ const Manage: React.FC = () => {
                 {activeSection === "share" && showShare && user?.role === "admin" && <SharePanel />}
 
                 {activeSection === "weather" && <WeatherPanel />}
+
+                {activeSection === "integrations" && (authMode === "no" || user?.role === "admin") && (
+                    <IntegrationsPanel />
+                )}
 
                 {activeSection === "mcp" && mcpEnabled && <McpPanel />}
 

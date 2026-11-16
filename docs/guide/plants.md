@@ -18,6 +18,9 @@ recently photographed plants, and then three blocks:
   at a day, or tap it on a phone, to see what happened; the arrow keys move from day to day.
 - **Your areas**: your tags as tiles, with how many plants each has and how many need water.
 
+Next to *Coming up*, **Reminders** lists the reminders of the next two weeks (see
+[Timeline, calendar and notes](#timeline-calendar-and-notes)), each with its plant and time.
+
 ## Watering schedule
 
 Give a plant a watering interval ("water every N days") and Pflanzn works out when it is due from
@@ -51,16 +54,32 @@ On a plant's page:
 On the plants list, each card has the same quick buttons for watering, adding a photo and
 identifying.
 
+You can also **drag photos** from your computer onto the plants list. A dashed frame shows where
+they go: drop them on a plant's card (or row) and they are added to that plant; drop them anywhere
+else and *Add Plant* opens with them, ready to identify. All photos dropped at once go to the new
+plant.
+
 ![Plant page: watering status, Water now, Fertilize, Add photo and More, the photo timeline and the activity feed](../images/pflanzn-plant.png)
 
 ## Timeline, calendar and notes
 
-The **activity feed** on the plant page lists waterings, fertilizing, photos and notes, newest
-first. It shows the latest six and loads older ones on demand. The note button above it adds a
-note, for observations, repotting, pests or anything else.
+The **activity feed** on the plant page lists waterings, fertilizing, photos, notes and care
+advice, newest first. It shows the latest six and loads older ones on demand. Waterings tend to
+crowd out the rest, so the chips above the feed narrow it down: pick *Notes* to see only notes,
+then add more kinds, or *All* to see everything again. Plants outside that get rain have a separate
+*Rain* chip, so the rain waterings can be hidden while your own stay. The browser remembers your
+choice.
+
+The note button above the feed adds a note, for observations, repotting, pests or anything else.
+Give it a **Remind me** date and time and the note is also a **reminder**: it shows under
+*Reminders* above the feed and as a dashed day in the calendar, and if
+[notifications](../notifications.md) are set up, it is sent when it is due. Click today or a later
+day in the calendar and choose *Add reminder* to start one for that day. An assistant connected
+over [MCP](../mcp.md) can set reminders too.
 
 AI care advice has its own block above the feed: the newest is open, the earlier ones are under
-*Earlier advice*. The **calendar** shows all of it by day, each kind of activity in its own colour.
+*Earlier advice*; the feed lists them too, folded. The **calendar** shows all of it by day, each
+kind of activity in its own colour.
 
 ## Tags, views and search
 

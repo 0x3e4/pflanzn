@@ -11,10 +11,13 @@ from app.api.routes import (
     audit,
     auth,
     floor_plans,
+    identification,
     locations,
     mcp,
+    notifications,
     oauth,
     plants,
+    reminders,
     share,
     statistics,
     tags,
@@ -116,6 +119,8 @@ app.include_router(uploads.router, prefix="/api/uploads", tags=["Uploads"], depe
 app.include_router(plants.router, prefix="/api/plants", tags=["Plants"], dependencies=collection_read_gate)
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(audit.router, prefix="/api/audit", tags=["Audit"])
+app.include_router(reminders.router, prefix="/api/reminders", tags=["Reminders"], dependencies=collection_read_gate)
+app.include_router(identification.router, prefix="/api/identification", tags=["Identification"], dependencies=collection_read_gate)
 app.include_router(statistics.router, prefix="/api/statistics", tags=["Statistics"], dependencies=collection_read_gate)
 app.include_router(tags.router, prefix="/api/tags", tags=["Tags"], dependencies=collection_read_gate)
 if settings.ENABLE_LOCATIONS:
@@ -125,6 +130,7 @@ app.include_router(weather.router, prefix="/api/weather", tags=["Weather"])
 # Members-only and switchable at runtime (admin setting), see floor_plans.require_floor_plans.
 app.include_router(floor_plans.router, prefix="/api/floor-plans", tags=["Floor plans"])
 app.include_router(settings_route.router, prefix="/api/settings", tags=["Settings"])
+app.include_router(notifications.router, prefix="/api/notifications", tags=["Notifications"])
 # MCP for external AI clients, authorized through Pflanzn's own OAuth server. Both
 # answer 404 unless MCP_ENABLED (and AI_ENABLED); OAuth also needs AUTH_MODE != no.
 app.include_router(mcp.router, prefix="/mcp", tags=["MCP"])
@@ -154,9 +160,35 @@ async def _weather_check_loop():
             logger.error(f"Weather check loop error: {e}")
 
 
+async def _notification_loop():
+    """Sends due reminders and the daily watering digest through Apprise, once a minute."""
+    from app.services import notifications as notification_service
+
+    while True:
+        await asyncio.sleep(60)
+        try:
+            db = SessionLocal()
+            try:
+                # Blocking HTTP and DB calls: off the event loop.
+                await asyncio.to_thread(notification_service.run_once, db)
+            finally:
+                db.close()
+        except Exception as e:
+            logger.error(f"Notification loop error ({type(e).__name__}): {e}")
+
+
 def startup_event():
     if settings.AUTH_MODE == "local":
         create_admin_user()
+
+    if settings.APPRISE_URL:
+        from app.services.notifications import configured as notifications_configured
+
+        asyncio.get_event_loop().create_task(_notification_loop())
+        if notifications_configured():
+            logger.info("Notifications through Apprise enabled")
+        else:
+            logger.info("APPRISE_URL is set, but neither APPRISE_KEY nor APPRISE_URLS: no notifications are sent")
 
     if settings.WEATHER_ENABLED:
         asyncio.get_event_loop().create_task(_weather_check_loop())

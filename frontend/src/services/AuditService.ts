@@ -13,3 +13,14 @@ export const fetchAuditLogs = async (params: AuditQuery = {}): Promise<AuditLogP
         throw error;
     }
 };
+
+export interface AuditFacets {
+    actions: string[];
+    entity_types: string[];
+}
+
+// The actions and entity types that occur in the log, for the filter dropdowns (Admin only)
+export const fetchAuditFacets = async (): Promise<AuditFacets> => {
+    const response = await apiClient.get<AuditFacets>(`${API_BASE}/facets`);
+    return response.data;
+};

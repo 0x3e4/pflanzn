@@ -1,4 +1,5 @@
 import apiClient from "./apiClient";
+import { noteRemainingIdentifications } from "./identificationQuota";
 import { withBusy } from "./busyOverlay";
 import { Location, LocationCreateInput, LocationUpdateInput, LocationImage } from "../types/Location";
 
@@ -76,13 +77,17 @@ export const identifyLocationFromImage = async (
                 headers: { "Content-Type": "multipart/form-data" },
             }),
     );
-    return response.data;
+    return noteRemainingIdentifications(response.data);
 };
 
-export const generateLocationDescription = async (locationId: number): Promise<{ description: string }> => {
+export const generateLocationDescription = async (
+    locationId: number,
+    provider?: string,
+): Promise<{ description: string }> => {
     // Models that think before answering can take a while.
     const response = await apiClient.post<{ description: string }>(`${API_BASE}/${locationId}/generate_description`, undefined, {
         timeout: 180000,
+        params: provider ? { provider } : undefined,
     });
     return response.data;
 };

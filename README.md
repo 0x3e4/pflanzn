@@ -86,13 +86,14 @@ and on a domain of its own if you route one to it; both work at once. See
 |     |     |
 | --- | --- |
 | **Catalogue** | Plants with photos, species info, care notes; tags and locations with GPS coordinates and an interactive Leaflet map. Locations have their own tags, notes and harvest times. |
-| **Tracking** | Watering, fertilizing, image, and care-advice timelines with calendar view and per-activity colour coding. |
+| **Tracking** | Watering, fertilizing, image, note and care-advice timelines with calendar view and per-activity colour coding; the activity feed filters by kind. Drag photos onto the plants list to add them to a plant or start a new one. |
+| **Reminders & notifications** | A note with a date is a reminder, shown in the calendar. With an [Apprise](https://github.com/caronc/apprise-api) server (one is in the compose example), due reminders and a daily "needs water" digest reach Telegram, ntfy, Matrix, mail and many more. |
 | **Watering schedule** | Optional "water every N days" per plant. Due plants get a badge and show up under the automatic `#needs_water` filter, which combines with any tag (e.g. `#office` + `#needs_water`) — then *Water Plants* waters exactly those. |
 | **Mobile list view** | Plants and Locations switch between a photo grid and a compact list with one-tap water/upload buttons; the choice is remembered per device. |
 | **Statistics** | Watering status of the whole collection, a year of care as a calendar, waterings per week by hand and by rain, plants per tag and species, the most cared-for and the longest-unwatered plants. |
 | **Archive** | Plants can be archived with a reason instead of deleted — they drop out of the normal lists and stay reachable under the `#archive` filter, and can be restored at any time. |
-| **Identification** | One-shot PlantNet integration — accepts JPG / PNG / WebP / HEIC; the backend normalises uploads to JPEG before forwarding. |
-| **AI care advice** | Care advice and species descriptions; a generated description also fills in the watering interval when none is set. Optional integration with OpenAI, Claude, Mistral, HuggingFace, or a local Ollama instance — provider auto-detected from whichever API key is set. |
+| **Identification** | One-shot PlantNet integration — accepts JPG / PNG / WebP / HEIC; the backend normalises uploads to JPEG before forwarding. The plant page shows the species' family, other names and Wikipedia; admins see the daily Pl@ntNet allowance under Manage → Integrations. |
+| **AI care advice** | Care advice and species descriptions; a generated description also fills in the watering interval when none is set. Optional integration with OpenAI, Claude, Mistral, HuggingFace, or a local Ollama instance — every provider with a key can be used, and with several the AI buttons ask which. |
 | **Floor plans** | Upload a plan of your home, place plants on it and see at a glance which ones need water. Pinch-zoom and tap-to-place on mobile; members only. Enabled by an admin under Manage → Floor plans. |
 | **MCP** | Optional [MCP](https://modelcontextprotocol.io) endpoint for Claude and other AI clients, secured with OAuth. |
 | **Auto-watering** | Outdoor plants with `reaches_rain=true` are auto-watered when Open-Meteo reports rainfall above your threshold. Optional OpenWeatherMap key for current-weather display. |
@@ -278,8 +279,9 @@ Everything is driven through environment variables — see [.env.example](.env.e
 | **Redis** | `REDIS_URL` |
 | **Features** | `ENABLE_LOCATIONS`, `AUDIT_ENABLED`, `ENABLE_API_DOCS` (default `false`), `MAX_UPLOAD_MB` (default `30`) |
 | **AI** | `AI_ENABLED`, `LLM_ENABLED`, `CARE_WEB_SEARCH` (Claude and OpenAI, default `true`), `MCP_ENABLED`, `MCP_OAUTH_ISSUER`, `MCP_OAUTH_AUDIENCE`, `MCP_LOGIN_*` |
-| **Identification** | `PLANTNET_API_KEY`, `PLANTNET_LANGUAGE` |
-| **AI providers (optional)** | `LLM_LANGUAGE`, `OPENAI_API_KEY` / `OPENAI_MODEL_NAME`, `CLAUDE_API_KEY` / `CLAUDE_MODEL_NAME` / `CLAUDE_EFFORT` (`low` to `max`, empty = the model's default), `MISTRALAI_API_KEY` / `MISTRALAI_API_URL` / `MISTRALAI_MODEL_NAME`, `HUGGINGFACE_API_KEY` / `HUGGINGFACE_MODEL_NAME`, `OLLAMA_URL` / `OLLAMA_MODEL_NAME`. Provider auto-detected from whichever key is set; priority `openai > claude > mistralai > huggingface > ollama`. |
+| **Identification** | `PLANTNET_API_KEY`, `PLANTNET_LANGUAGE`, `PLANTNET_DAILY_LIMIT` (default `500`, display only) |
+| **Notifications** | `APPRISE_URL`, `APPRISE_KEY` / `APPRISE_TAG` or `APPRISE_URLS` |
+| **AI providers (optional)** | `LLM_LANGUAGE`, `OPENAI_API_KEY` / `OPENAI_MODEL_NAME`, `CLAUDE_API_KEY` / `CLAUDE_MODEL_NAME` / `CLAUDE_EFFORT` (`low` to `max`, empty = the model's default), `MISTRALAI_API_KEY` / `MISTRALAI_API_URL` / `MISTRALAI_MODEL_NAME`, `HUGGINGFACE_API_KEY` / `HUGGINGFACE_MODEL_NAME`, `OLLAMA_URL` / `OLLAMA_MODEL_NAME`. Every provider with a key is offered; the default follows `openai > claude > mistralai > huggingface > ollama`. |
 | **Weather** | `WEATHER_ENABLED`, `WEATHER_CHECK_INTERVAL_HOURS`, `WEATHER_RAINFALL_THRESHOLD_MM`, `OPENWEATHERMAP_API_KEY` (optional) |
 
 > [!NOTE]

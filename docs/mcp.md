@@ -150,15 +150,19 @@ The assistant picks the tools on its own from your question. You never name one 
 | Tool | Access | What it does |
 | --- | --- | --- |
 | `list_plants` | read | Plants with tags, outdoor flags, watering schedule and last watering and fertilizing. Filters by name, tag, indoor/outdoor and "needs water". |
-| `get_plant` | read | One plant in full: description, tags, recent waterings, fertilizing, notes, latest care advice, photo ids. |
+| `get_plant` | read | One plant in full: description, tags, recent waterings, fertilizing, notes, upcoming reminders, latest care advice, photo ids. |
 | `get_plant_photo` | read | A photo of a plant, so the assistant can look at it. |
 | `list_tags` | read | All tags with the number of plants using each. |
-| `get_overview` | read | Collection figures, the plants longest without water, and the latest rain check. |
+| `get_overview` | read | Collection figures, the plants that need water now, reminders of the next 7 days, the plants longest without water, and the latest rain check. |
+| `get_watering_plan` | read | When each plant with a watering schedule is due in the next N days (default 7), overdue ones first. |
+| `list_reminders` | read | Reminders from today until N days ahead (default 14), for all plants or one, and whether each was sent. |
+| `get_species_info` | read | What Pl@ntNet and GBIF know about a plant's species: family, genus, common names, traits and pests, links. |
 | `get_recent_activity` | read | The care log of the last N days, for all plants or one. |
 | `list_locations` | read | Garden locations with coordinates and descriptions (when locations are enabled). |
 | `water_plants` | **write** | Log a watering for one or more plants, now or at a given time. |
 | `fertilize_plants` | **write** | Log fertilizing for one or more plants. |
-| `add_plant_note` | **write** | Add a note to a plant's timeline. |
+| `add_plant_note` | **write** | Add a note to a plant's timeline; with `remind_at` it is also a reminder (a date alone means 09:00). |
+| `update_note` | **write** | Change a note's text, set or move its reminder, or remove the reminder (`remind_at: null`). Notes are never deleted. |
 | `add_care_advice` | **write** | Save care advice the assistant wrote, into the plant's care advice history. |
 | `create_plant` | **write** | Add a plant with species, description, tags and watering interval. Photos are added in the app. |
 | `update_plant` | **write** | Change name, species, description, outdoor/rain flags or watering interval. |
@@ -183,6 +187,10 @@ advice Pflanzn generated itself. This works without `LLM_PROVIDER` or any API ke
 - *Add a new plant: Calathea orbifolia, tag it living room, water every 5 days.*
 - *Look at the rubber plant's history and photo, write care advice and save it.*
 - *Archive the basil, it didn't survive the winter.*
+- *What do I have to water this week?*
+- *Remind me on Saturday to repot the fern.*
+- *Which reminders are coming up? Move the fertilizer one to next Monday.*
+- *Tell me about the species of my rubber plant.*
 
 > [!TIP]
 > **Keep it behind TLS**
