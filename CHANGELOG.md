@@ -5,7 +5,15 @@ All notable changes to Pflanzn will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.3.0-beta.2] - 2026-11-16
+## [Unreleased]
+
+### Added
+
+### Changed
+
+### Fixed
+
+## [2.3.0] - 2026-11-16
 
 > [!IMPORTANT]
 > **The frontend container now listens on port 8080 instead of 4173.** Change the port mapping in
@@ -29,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Home: *Reminders* in the side column lists the reminders of the next two weeks with their plant and time. New endpoint `GET /api/reminders?days=` (1 to 90, default 14).
 - Manage → Customize has many more settings, stored with your account: theme (system, light or dark; the navigation button now saves it too), compact density, reduce motion, the start page (Home, Plants or Locations), the view and sort Plants and Locations start with, which Home sections are shown, which types the activity feed shows at first, the date format, 12- or 24-hour clock and first day of the week, the image quality of photos (automatic, data saver or high), and, with more than one AI provider, the provider the AI buttons use without asking.
 - MCP: `list_reminders` (reminders of the next N days, for all plants or one), `update_note` (change a note's text, move its reminder or remove it; nothing is deleted), `get_watering_plan` (when each scheduled plant is due in the next N days) and `get_species_info` (family, genus, common names, facts and links from Pl@ntNet and GBIF). `get_plant` now includes upcoming reminders and each note's `remind_at`; `get_overview` the plants that need water now, the reminders of the next 7 days and whether notifications are set up.
+- Home: three blocks below the photos. *Lately* lists what happened in the last two weeks across all plants (waterings, rain, fertilizing, photos, notes, care advice), with a "Water all" or a rainy day as one line; members also see who did it. *Care rhythm* shows the last twelve weeks as a calendar with care days and the waterings of the last 7 days; hover, focus or tap a day for what happened (arrow keys move between days, a tap pins it on a phone). *Your areas* shows the tags as tiles with their plants and how many need water, each opening the filtered list. New endpoint `GET /api/statistics/recent`; `/manage?section=statistics` (and `support`) open those sections directly.
 
 ### Changed
 - Compose example: MariaDB and Redis are pinned (`mariadb:12.3.3`, the LTS series, and `redis:8.10.3`) instead of `latest`, so a pull never upgrades the database behind your back; MariaDB upgrades its system tables itself after you raise the version (`MARIADB_AUTO_UPGRADE`). **If you followed the old example**, check which MariaDB your data runs on (`docker compose exec mariadb mariadb --version`; `latest` was 13.0 in November 2026) and pin that version or a newer one: MariaDB can't move back to an older version.
@@ -39,6 +48,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Frontend image: nginx is pinned to `1.31.8-alpine` instead of the floating `1.31-alpine`, so a rebuild can't reuse an older cached base image.
 - The frontend sends a Content Security Policy, a Permissions-Policy and `Cross-Origin-Opener-Policy` with the app, and `index.html` is revalidated on every load. Showing Pflanzn in a frame now needs `FRAME_ANCESTORS` (see the note at the top).
 - Manage is wider on desktop (up to 1760px instead of 1200px), so the audit log, plants, users and waterings tables fit on larger and 2K/4K screens. Profile, Customize, Weather, Integrations, MCP and Support keep a reading width of 960px.
+- Tags with a pre-release suffix (`2.3.0-beta.1`) no longer create a GitHub release or GHCR images; only plain `X.Y.Z` tags do.
+- About, rewritten: the version with links to the documentation, what's new and the source; the name in two columns (how to say it, what it means) instead of a narrow column with half the page empty; and nine feature cards for what Pflanzn does today, replacing the old six (which still mentioned basic authentication and missed Claude, MCP, the watering schedule, locations, floor plans, rain watering and statistics).
+- Phones get a 16px page margin instead of 32px on each side, like Manage already had, so a 390px phone shows 358px of content instead of 326px. The old phone rule never applied, because it came before the rule it was meant to override.
 
 ### Fixed
 - The photo arrows on the plant page were drawn over the open *More* menu.
@@ -46,18 +58,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `nosniff` and the Referrer-Policy were missing on the build assets, the service worker and the web app manifest (a location's own `add_header` had dropped them).
 - A wide table in Manage (such as the audit log) pushed the page past the edge of the window instead of scrolling inside the table.
 - Notes in the activity feed showed their time in UTC as if it were local time.
-
-## [2.3.0-beta.1] - 2026-11-10
-
-### Added
-- Home: three blocks below the photos. *Lately* lists what happened in the last two weeks across all plants (waterings, rain, fertilizing, photos, notes, care advice), with a "Water all" or a rainy day as one line; members also see who did it. *Care rhythm* shows the last twelve weeks as a calendar with care days and the waterings of the last 7 days; hover, focus or tap a day for what happened (arrow keys move between days, a tap pins it on a phone). *Your areas* shows the tags as tiles with their plants and how many need water, each opening the filtered list. New endpoint `GET /api/statistics/recent`; `/manage?section=statistics` (and `support`) open those sections directly.
-
-### Changed
-- Tags with a pre-release suffix (`2.3.0-beta.1`) no longer create a GitHub release or GHCR images; only plain `X.Y.Z` tags do.
-- About, rewritten: the version with links to the documentation, what's new and the source; the name in two columns (how to say it, what it means) instead of a narrow column with half the page empty; and nine feature cards for what Pflanzn does today, replacing the old six (which still mentioned basic authentication and missed Claude, MCP, the watering schedule, locations, floor plans, rain watering and statistics).
-- Phones get a 16px page margin instead of 32px on each side, like Manage already had, so a 390px phone shows 358px of content instead of 326px. The old phone rule never applied, because it came before the rule it was meant to override.
-
-### Fixed
 - Frontend tests failed on Node 25 and later, whose own global `localStorage` hides jsdom's; the test workers now run with `--no-experimental-webstorage` (Node 24 accepts it too).
 - Relative days ("today", "2 days ago") followed the browser's language, so a German browser showed "heute" and "gestern" in the English interface. They are always English now; absolute dates still follow `LOCALE`.
 
