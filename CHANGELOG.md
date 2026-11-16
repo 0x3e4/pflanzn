@@ -17,15 +17,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pl@ntNet's daily allowance: admins see under Manage → Integrations how many identifications are left today; with fewer than 50 left, each identification says how many remain, and a used-up limit is reported as such (HTTP 429) instead of a generic failure. New endpoint `GET /api/identification/quota`, new variable `PLANTNET_DAILY_LIMIT` (default 500, display only).
 - Manage → Integrations also lists the configured AI providers and their models.
 - Home: *Reminders* in the side column lists the reminders of the next two weeks with their plant and time. New endpoint `GET /api/reminders?days=` (1 to 90, default 14).
+- Manage → Customize has many more settings, stored with your account: theme (system, light or dark; the navigation button now saves it too), compact density, reduce motion, the start page (Home, Plants or Locations), the view and sort Plants and Locations start with, which Home sections are shown, which types the activity feed shows at first, the date format, 12- or 24-hour clock and first day of the week, the image quality of photos (automatic, data saver or high), and, with more than one AI provider, the provider the AI buttons use without asking.
 - MCP: `list_reminders` (reminders of the next N days, for all plants or one), `update_note` (change a note's text, move its reminder or remove it; nothing is deleted), `get_watering_plan` (when each scheduled plant is due in the next N days) and `get_species_info` (family, genus, common names, facts and links from Pl@ntNet and GBIF). `get_plant` now includes upcoming reminders and each note's `remind_at`; `get_overview` the plants that need water now, the reminders of the next 7 days and whether notifications are set up.
 
 ### Changed
 - Compose example: MariaDB and Redis are pinned (`mariadb:12.3.3`, the LTS series, and `redis:8.10.3`) instead of `latest`, so a pull never upgrades the database behind your back; MariaDB upgrades its system tables itself after you raise the version (`MARIADB_AUTO_UPGRADE`). **If you followed the old example**, check which MariaDB your data runs on (`docker compose exec mariadb mariadb --version`; `latest` was 13.0 in November 2026) and pin that version or a newer one: MariaDB can't move back to an older version.
 - Audit log: the filters sit in one row on a wide screen instead of two full-width dropdowns, and the action and entity lists offer what actually occurs in the log (including `mcp.*` and `oauth.*`), from the new `GET /api/audit/facets`.
 - Past care advice appears in the activity feed again (folded), besides the Care advice block.
+- Photos in the Plants and Locations grids and the main photo on a plant or location page load in a larger size on high-resolution screens (HiDPI, 2K, 4K) instead of being scaled up from the small preview. *Data saver* under Customize keeps the old sizes.
+- Signing in without a link to return to opens the start page (Home unless changed under Customize) instead of always Plants.
+- Manage is wider on desktop (up to 1760px instead of 1200px), so the audit log, plants, users and waterings tables fit on larger and 2K/4K screens. Profile, Customize, Weather, Integrations, MCP and Support keep a reading width of 960px.
 
 ### Fixed
 - The photo arrows on the plant page were drawn over the open *More* menu.
+- The audit log and share link expiry dates ignored the configured `LOCALE` and used the browser's language.
+- A wide table in Manage (such as the audit log) pushed the page past the edge of the window instead of scrolling inside the table.
 - Notes in the activity feed showed their time in UTC as if it were local time.
 
 ## [2.3.0-beta.1] - 2026-11-10

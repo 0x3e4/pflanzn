@@ -1,4 +1,5 @@
 import { ActivityFilter } from "./PlantService";
+import { getUiPreferences } from "../config/uiPreferences";
 
 export const ACTIVITY_FILTERS: { id: ActivityFilter; label: string }[] = [
     { id: "watering", label: "Watering" },
@@ -13,7 +14,8 @@ export const ALL_ACTIVITY_TYPES: ActivityFilter[] = ACTIVITY_FILTERS.map((f) => 
 
 const STORAGE_KEY = "pflanzn.activityFeedTypes";
 
-/** The feed types this browser last showed (all of them the first time). */
+/** The feed types this browser last showed (the account default from Manage → Customize
+ *  the first time, which is all of them unless changed). */
 export function readFeedTypes(): ActivityFilter[] {
     try {
         const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
@@ -24,7 +26,7 @@ export function readFeedTypes(): ActivityFilter[] {
     } catch {
         /* unreadable or blocked storage: show everything */
     }
-    return [...ALL_ACTIVITY_TYPES];
+    return [...getUiPreferences().activityTypes];
 }
 
 export function storeFeedTypes(types: ActivityFilter[]) {

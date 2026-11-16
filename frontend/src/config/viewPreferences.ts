@@ -1,9 +1,11 @@
 import { SpotType } from "../types/Location";
+import { getUiPreferences } from "./uiPreferences";
 
 // Per-device view state for the list pages. Unlike uiPreferences.ts this is
 // localStorage-only (no backend sync) — it remembers filter/sort selections so
 // they survive page navigation, which is a per-device concern, not an account
-// setting.
+// setting. A device that has not chosen a view or sort yet starts with the
+// account defaults from Manage → Customize (uiPreferences.ts).
 
 export type PlantsSortOption =
     | "lastWateredDesc"
@@ -92,8 +94,17 @@ const DEFAULT_VIEW_PREFERENCES: ViewPreferences = {
 const normalizeViewMode = (raw: unknown, fallback: ListViewMode): ListViewMode =>
     raw === "grid" || raw === "list" ? raw : fallback;
 
+// The built-in defaults with the account's chosen view and sort.
+const defaults = (): ViewPreferences => {
+    const ui = getUiPreferences();
+    return {
+        plants: { ...DEFAULT_VIEW_PREFERENCES.plants, viewMode: ui.plantsView, sortBy: ui.plantsSort },
+        locations: { ...DEFAULT_VIEW_PREFERENCES.locations, viewMode: ui.locationsView, sortBy: ui.locationsSort },
+    };
+};
+
 const normalizePlants = (raw: Partial<PlantsViewPreferences> | null | undefined): PlantsViewPreferences => {
-    const d = DEFAULT_VIEW_PREFERENCES.plants;
+    const d = defaults().plants;
 
     // Accept null and any integer (incl. the -1/-2 specials and positive ids).
     // Validity of a positive custom-tag id is checked in the page once tags load.
@@ -112,7 +123,7 @@ const normalizePlants = (raw: Partial<PlantsViewPreferences> | null | undefined)
         filterMode: raw?.filterMode === "name" || raw?.filterMode === "species" ? raw.filterMode : d.filterMode,
         selectedFilterValue: typeof raw?.selectedFilterValue === "string" ? raw.selectedFilterValue : null,
         needsWaterOnly: raw?.needsWaterOnly === true,
-        viewMode: raw?.viewMode === "plan" ? "plan" : normalizeViewMode(raw?.viewMode, "grid"),
+        viewMode: raw?.viewMode === "plan" ? "plan" : normalizeViewMode(raw?.viewMode, d.viewMode as ListViewMode),
         selectedFloorPlanId:
             typeof raw?.selectedFloorPlanId === "number" && Number.isInteger(raw.selectedFloorPlanId)
                 ? raw.selectedFloorPlanId
@@ -121,7 +132,7 @@ const normalizePlants = (raw: Partial<PlantsViewPreferences> | null | undefined)
 };
 
 const normalizeLocations = (raw: Partial<LocationsViewPreferences> | null | undefined): LocationsViewPreferences => {
-    const d = DEFAULT_VIEW_PREFERENCES.locations;
+    const d = defaults().locations;
     return {
         selectedSpotType: SPOT_TYPES.includes(raw?.selectedSpotType as SpotType | "all")
             ? (raw!.selectedSpotType as SpotType | "all")
@@ -145,13 +156,9 @@ export const getViewPreferences = (): ViewPreferences => {
 
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) {
-            return DEFAULT_VIEW_PREFERENCES;
-        }
-
-        return normalize(JSON.parse(raw) as Partial<ViewPreferences>);
+        return normalize(raw ? (JSON.parse(raw) as Partial<ViewPreferences>) : null);
     } catch {
-        return DEFAULT_VIEW_PREFERENCES;
+        return defaults();
     }
 };
 

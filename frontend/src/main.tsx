@@ -6,12 +6,10 @@ import App from "./App.tsx";
 import { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { loadConfig } from "./services/config";
+import { initDocumentPreferences } from "./config/uiPreferences";
 
-// Apply theme before render to avoid flash
-const savedTheme =
-    localStorage.getItem("pflanzn-theme") ||
-    (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
-document.documentElement.setAttribute("data-theme", savedTheme);
+// Apply theme, density and motion before render to avoid a flash.
+initDocumentPreferences();
 
 const rootStyle = getComputedStyle(document.documentElement);
 const skeletonBase = rootStyle.getPropertyValue("--skeleton-base").trim() || undefined;

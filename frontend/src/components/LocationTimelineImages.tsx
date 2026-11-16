@@ -9,6 +9,8 @@ import { useAuth } from "../context/AuthContext";
 import { useConfig } from "../context/ConfigContext";
 import { deleteLocationImage } from "../services/LocationService";
 import "../styles/locationTimelineImages.css";
+import { mainPhotoSource } from "../services/imageSources";
+import { useUiPreferences } from "../hooks/useUiPreferences";
 
 interface LocationTimelineImagesProps {
     locationId: number;
@@ -17,6 +19,7 @@ interface LocationTimelineImagesProps {
 }
 
 export default function LocationTimelineImages({ locationId, images, onChanged }: LocationTimelineImagesProps) {
+    const { imageQuality } = useUiPreferences();
     const { isLoggedIn } = useAuth();
     const { locale, tz: timezone } = useConfig();
 
@@ -264,9 +267,7 @@ export default function LocationTimelineImages({ locationId, images, onChanged }
                     </div>
 
                     <img
-                        src={`/api/uploads/${activeImage.image_path}?size=medium`}
-                        srcSet={`/api/uploads/${activeImage.image_path}?size=thumb 300w, /api/uploads/${activeImage.image_path}?size=medium 800w`}
-                        sizes="(max-width: 768px) 100vw, 800px"
+                        {...mainPhotoSource(activeImage.image_path, imageQuality)}
                         alt="Location"
                         className="location-carousel-image"
                         loading="lazy"

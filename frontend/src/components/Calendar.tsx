@@ -26,6 +26,8 @@ import {
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 import { useConfig } from "../context/ConfigContext";
+import { calendarTypeFor } from "../config/uiPreferences";
+import { useUiPreferences } from "../hooks/useUiPreferences";
 import { setOverlayOpen } from "../services/overlayControl";
 
 interface Props {
@@ -127,6 +129,7 @@ export default function LogCalendar({
     }, [waterings, fertilizings, images, careadvice, notes]);
 
     const { locale, tz: timezone } = useConfig();
+    const { weekStart } = useUiPreferences();
 
     const formatDateKey = (date: Date) => {
         const formatter = new Intl.DateTimeFormat(locale, {
@@ -558,6 +561,7 @@ export default function LogCalendar({
         <div className="watering-calendar">
             <Calendar
                 locale={locale}
+                calendarType={calendarTypeFor(weekStart)}
                 tileClassName={tileClassName}
                 tileContent={tileContent}
                 onActiveStartDateChange={() => {

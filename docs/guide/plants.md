@@ -96,8 +96,8 @@ The plants list:
   by name, or by species after a click on the switch next to the search box.
 - **Sorts** by last watered, next watering, latest photo or id, either way round.
 - **Shows** a photo grid, a compact list or, with [floor plans](locations.md#floor-plans) on, the
-  plan. The expand button widens the page on a large screen (Manage → Customize makes that the
-  default).
+  plan. The expand button widens the page on a large screen. Manage → Customize sets which view,
+  sort and width a device starts with; what you pick on the page is remembered on that device.
 - **Water shown plants** waters every plant the current filter shows, at a time you pick.
 
 View, filter and sort are remembered per device.

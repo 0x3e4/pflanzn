@@ -201,6 +201,12 @@
 }
 
 /* The figures sit under the due list, the side column spans both rows: no hole under a short list. */
+/* Coming up and Reminders both hidden under Manage → Customize: no side column. */
+.home-today-grid--no-side .home-due,
+.home-today-grid--no-side .home-figures {
+    grid-column: 1 / -1;
+}
+
 .home-side {
     grid-column: 3;
     grid-row: 1 / span 2;
@@ -333,6 +339,11 @@
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
     gap: 40px;
     align-items: start;
+}
+
+/* Lately or the side column hidden under Manage → Customize: one column. */
+.home-more--single {
+    grid-template-columns: minmax(0, 1fr);
 }
 
 .home-more-side {

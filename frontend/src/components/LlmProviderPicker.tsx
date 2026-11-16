@@ -5,6 +5,7 @@ import { faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
 import { useConfig } from "../context/ConfigContext";
 import { useModalA11y } from "../hooks/useModalA11y";
 import { LlmProviderInfo } from "../services/config";
+import { useUiPreferences } from "../hooks/useUiPreferences";
 import "../styles/llmPicker.css";
 
 const LAST_CHOICE_KEY = "pflanzn.llmProvider";
@@ -34,13 +35,21 @@ export function orderProviders(providers: LlmProviderInfo[], last: string | null
 
 type Pending = { action: string; resolve: (provider: string | null | undefined) => void };
 
+/** The provider set under Manage → Customize, if it is still configured. */
+export function preferredProvider(providers: LlmProviderInfo[], preferred: string): string | undefined {
+    return providers.some((p) => p.id === preferred) ? preferred : undefined;
+}
+
 /**
  * Asks which AI provider to use when the server has several. `choose(action)` resolves
  * with the chosen id, `undefined` when there is only one (the server's default applies)
- * and `null` when the person cancels. Render `picker` somewhere in the component.
+ * and `null` when the person cancels. A default provider chosen under Manage → Customize
+ * is used without asking. Render `picker` somewhere in the component.
  */
 export function useLlmProviderPicker() {
     const { llmProviders } = useConfig();
+    const { llmProvider: preferred } = useUiPreferences();
+    const fixed = preferredProvider(llmProviders, preferred);
     const [pending, setPending] = useState<Pending | null>(null);
     const pendingRef = useRef<Pending | null>(null);
 
@@ -56,13 +65,14 @@ export function useLlmProviderPicker() {
     const choose = useCallback(
         (action: string): Promise<string | null | undefined> => {
             if (llmProviders.length <= 1) return Promise.resolve(undefined);
+            if (fixed) return Promise.resolve(fixed);
             return new Promise((resolve) => {
                 const next = { action, resolve };
                 pendingRef.current = next;
                 setPending(next);
             });
         },
-        [llmProviders.length],
+        [llmProviders.length, fixed],
     );
 
     const ordered = orderProviders(llmProviders, readLastChoice());
@@ -106,5 +116,5 @@ export function useLlmProviderPicker() {
           )
         : null;
 
-    return { choose, picker, providers: llmProviders };
+    return { choose, picker, providers: llmProviders, preferred: fixed };
 }

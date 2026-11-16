@@ -60,8 +60,9 @@ save it to the same history. That works without any AI key on the server.
 | Ollama (local) | `OLLAMA_URL`, `OLLAMA_MODEL_NAME` |
 
 Set the keys of as many providers as you like. With more than one, every AI button asks which one
-to use (the one picked last comes first), and the care advice dialog has a choice of its own. The
-default, listed first, is the first configured one in the order openai, claude, mistralai,
+to use (the one picked last comes first), and the care advice dialog has a choice of its own.
+Under Manage → Customize → *AI provider* each person can pick one to use without being asked
+(the care advice dialog then starts with it). The server's default, listed first, is the first configured one in the order openai, claude, mistralai,
 huggingface, ollama. Manage → Integrations lists the configured providers and their models.
 
 With no provider configured, the AI buttons are hidden. `LLM_ENABLED=false` turns off the AI texts

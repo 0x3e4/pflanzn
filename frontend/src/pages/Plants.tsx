@@ -60,6 +60,12 @@ import {
     wateringBadgeVariant,
 } from "../services/wateringSchedule";
 import "../styles/listView.css";
+import { previewSource } from "../services/imageSources";
+import { useUiPreferences } from "../hooks/useUiPreferences";
+
+// A grid card is about this wide (auto-fill columns of 240px and up), so the browser picks
+// the 300px thumb on ordinary screens and the 800px one on HiDPI ones.
+const CARD_WIDTH = 300;
 
 export default function Plants() {
     const [plants, setPlants] = useState<Plant[]>([]);
@@ -136,6 +142,7 @@ export default function Plants() {
     const [filtersOpen, setFiltersOpen] = useState(false);
     const { isShareAccess } = useShare();
     const { tz: timezone, identificationEnabled, floorPlansEnabled, authMode } = useConfig();
+    const { imageQuality } = useUiPreferences();
     // Floor plans show the inside of someone's home: members only (the API enforces it too).
     const canSeePlans = floorPlansEnabled && !isShareAccess && (authMode === "no" || isLoggedIn);
     const canEditPlans = authMode === "no" || isLoggedIn;
@@ -336,7 +343,8 @@ export default function Plants() {
             for (const photo of photos) {
                 await uploadPlantImage(createdPlant.id, photo);
             }
-            if (photos.length) toast.success(photos.length === 1 ? "Image uploaded!" : `${photos.length} images uploaded!`);
+            if (photos.length)
+                toast.success(photos.length === 1 ? "Image uploaded!" : `${photos.length} images uploaded!`);
 
             fetchPlantsFromService();
             resetModal();
@@ -1024,11 +1032,9 @@ export default function Plants() {
                                                   />
                                               )}
                                               <img
-                                                  src={
-                                                      latestImage
-                                                          ? `/api/uploads/${latestImage.image_path}?size=thumb`
-                                                          : "/placeholder-plant.webp"
-                                                  }
+                                                  {...(latestImage
+                                                      ? previewSource(latestImage.image_path, imageQuality, CARD_WIDTH)
+                                                      : { src: "/placeholder-plant.webp" })}
                                                   alt={plant.name}
                                                   className="plant-image"
                                                   loading="lazy"

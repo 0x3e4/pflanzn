@@ -12,6 +12,16 @@
     padding: 20px;
     box-shadow: 2px 0 8px rgb(var(--shadow-rgb) / 0.3);
     z-index: 10;
+    flex: 0 0 auto;
+}
+
+/* Desktop: Manage is mostly tables (audit, plants, users, waterings), so it gets more
+   room than the 1200px of the other pages. Capped so a 4K screen at 100% scaling still
+   gets a centred page instead of rows stretched across 3800px. */
+@media (min-width: 1201px) {
+    .profile-container.container {
+        max-width: 1760px;
+    }
 }
 .profile-sidebar h3 {
     margin-top: 0;
@@ -89,6 +99,9 @@
 /* Main content */
 .profile-main-content {
     flex-grow: 1;
+    /* Without this a wide table pushes the whole page past the viewport instead of
+       scrolling inside its .table-scroll-wrapper. */
+    min-width: 0;
     background-color: var(--secondary-background-color);
     display: flex;
     flex-direction: column;
@@ -123,8 +136,114 @@
     font-size: 1.5rem;
 }
 
+/* Forms and prose (see NARROW_SECTIONS in Manage.tsx) keep a reading width. */
+.profile-main-content--narrow > * {
+    max-width: 960px;
+}
+
 .manage-customize-panel {
     max-width: 760px;
+}
+
+/* Customize: one group per topic, separated by a hairline. */
+.customize-group {
+    padding: 20px 0 24px;
+    border-top: 1px solid var(--border-color);
+}
+
+.customize-group:first-of-type {
+    margin-top: 8px;
+}
+
+.customize-group h3 {
+    margin: 0 0 8px;
+    font-size: 1.15rem;
+}
+
+.customize-group-intro {
+    margin: 0 0 4px;
+    color: var(--muted-text-color);
+}
+
+.customize-field {
+    display: grid;
+    grid-template-columns: minmax(0, 200px) minmax(0, 320px);
+    align-items: center;
+    gap: 6px 16px;
+    margin-top: 14px;
+}
+
+.customize-field select {
+    background-color: var(--secondary-background-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px 32px 8px 10px;
+    width: 100%;
+}
+
+.customize-choices {
+    border: none;
+    padding: 0;
+    margin: 14px 0 0;
+    display: grid;
+    grid-template-columns: minmax(0, 200px) minmax(0, 1fr);
+    gap: 6px 16px;
+    align-items: start;
+}
+
+/* Floated, the legend becomes an ordinary grid item: the first column. */
+.customize-choices legend {
+    float: left;
+    padding: 0;
+    padding-top: 2px;
+}
+
+.customize-choices-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+}
+
+.customize-choices-options label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.customize-choices-options input {
+    accent-color: var(--primary-color);
+    margin: 4px 0 0;
+    width: 16px;
+    height: 16px;
+}
+
+/* Choices with an explanation stack, one per line. */
+.customize-choices-options:has(.customize-choice-with-hint) {
+    flex-direction: column;
+}
+
+.customize-choices-options small {
+    display: block;
+    color: var(--muted-text-color);
+}
+
+.customize-checks {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    column-gap: 16px;
+}
+
+.customize-checks .manage-setting-row {
+    margin-top: 10px;
+}
+
+@media (max-width: 600px) {
+    .customize-field,
+    .customize-choices {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
 
 .manage-setting-row {

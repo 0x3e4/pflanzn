@@ -25,7 +25,7 @@ import { faPenToSquare, faUnlock } from "@fortawesome/free-solid-svg-icons";
 import { User } from "../types/User";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import { getUiPreferences, pushUserPreferences, updateUiPreferences } from "../config/uiPreferences";
+import CustomizePanel from "../components/CustomizePanel";
 
 type ManageSection =
     | "profile"
@@ -45,6 +45,17 @@ type ManageSection =
     | "mcp"
     | "floorplans"
     | "support";
+
+// Forms and prose keep a reading width; tables, map, statistics and floor plans use
+// the whole (wide) Manage container.
+const NARROW_SECTIONS: ReadonlySet<ManageSection> = new Set([
+    "profile",
+    "customize",
+    "weather",
+    "integrations",
+    "mcp",
+    "support",
+]);
 
 // Sections that may be opened directly via /manage?section=…
 const LINKABLE_SECTIONS: ManageSection[] = [
@@ -78,7 +89,6 @@ const Manage: React.FC = () => {
         newPassword: "",
         confirmPassword: "",
     });
-    const [defaultWidescreen, setDefaultWidescreen] = useState(() => getUiPreferences().defaultWidescreen);
 
     useEffect(() => {
         const loadProfile = async () => {
@@ -169,20 +179,6 @@ const Manage: React.FC = () => {
         } catch {
             toast.error("Failed to update password.");
         }
-    };
-
-    const handleDefaultWidescreenChange = async (enabled: boolean) => {
-        setDefaultWidescreen(enabled);
-        updateUiPreferences({ defaultWidescreen: enabled });
-        if (authMode !== "no" && isLoggedIn) {
-            try {
-                await pushUserPreferences({ defaultWidescreen: enabled });
-            } catch {
-                toast.error("Saved locally, but failed to sync to your account.");
-                return;
-            }
-        }
-        toast.success(`Default widescreen ${enabled ? "enabled" : "disabled"}.`);
     };
 
     if (loading) {
@@ -356,7 +352,9 @@ const Manage: React.FC = () => {
                 </ul>
             </aside>
 
-            <div className="profile-main-content">
+            <div
+                className={`profile-main-content${NARROW_SECTIONS.has(activeSection) ? " profile-main-content--narrow" : ""}`}
+            >
                 {activeSection === "profile" && authMode !== "no" && (
                     <div className="profile-info">
                         <h2>User Details</h2>
@@ -457,26 +455,7 @@ const Manage: React.FC = () => {
 
                 {activeSection === "support" && <SupportPanel />}
 
-                {activeSection === "customize" && (
-                    <div className="profile-info manage-customize-panel">
-                        <h2>Customize</h2>
-                        <p>Override layout defaults used across the app.</p>
-
-                        <label className="manage-setting-row">
-                            <input
-                                type="checkbox"
-                                checked={defaultWidescreen}
-                                onChange={(e) => handleDefaultWidescreenChange(e.target.checked)}
-                            />
-                            <span>Enable widescreen by default for Plants and Locations</span>
-                        </label>
-
-                        <small className="manage-setting-hint">
-                            You can still collapse the page width with the expand/collapse icon directly in Plants and
-                            Locations.
-                        </small>
-                    </div>
-                )}
+                {activeSection === "customize" && <CustomizePanel />}
             </div>
         </div>
     );

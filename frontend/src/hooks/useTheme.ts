@@ -1,33 +1,20 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
+import { resolveTheme } from "../config/uiPreferences";
+import { useSaveUiPreferences, useUiPreferences } from "./useUiPreferences";
 
-type Theme = "dark" | "light";
-
-function getInitialTheme(): Theme {
-    const stored = localStorage.getItem("pflanzn-theme") as Theme | null;
-    if (stored === "dark" || stored === "light") return stored;
-
-    if (window.matchMedia("(prefers-color-scheme: light)").matches) return "light";
-    return "dark";
-}
-
+/**
+ * The theme on screen. The setting itself (light, dark or follow the system) is an
+ * account preference, applied to <html data-theme> by uiPreferences.ts; the navbar
+ * toggle switches to the opposite of what is shown and saves that choice.
+ */
 export function useTheme() {
-    const [theme, setThemeState] = useState<Theme>(getInitialTheme);
-
-    useEffect(() => {
-        document.documentElement.setAttribute("data-theme", theme);
-        localStorage.setItem("pflanzn-theme", theme);
-
-        const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-        if (metaThemeColor) {
-            // The browser and installed-app chrome take the page ground, so the bar blends into the navbar.
-            const ground = getComputedStyle(document.documentElement).getPropertyValue("--background-color").trim();
-            if (ground) metaThemeColor.setAttribute("content", ground);
-        }
-    }, [theme]);
+    const { theme: preference } = useUiPreferences();
+    const save = useSaveUiPreferences();
+    const theme = resolveTheme(preference);
 
     const toggleTheme = useCallback(() => {
-        setThemeState((prev) => (prev === "dark" ? "light" : "dark"));
-    }, []);
+        void save({ theme: theme === "dark" ? "light" : "dark" });
+    }, [save, theme]);
 
     return { theme, toggleTheme };
 }

@@ -11,6 +11,8 @@ import { setOverlayOpen } from "../services/overlayControl";
 import { useModalA11y } from "../hooks/useModalA11y";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import { mainPhotoPreloadUrl, mainPhotoSource } from "../services/imageSources";
+import { useUiPreferences } from "../hooks/useUiPreferences";
 
 interface TimelineImagesProps {
     images: PlantImage[];
@@ -20,6 +22,7 @@ interface TimelineImagesProps {
 }
 
 export default function TimelineImages({ images, plantId, onChanged }: TimelineImagesProps) {
+    const { imageQuality } = useUiPreferences();
     const { isLoggedIn } = useAuth();
     const { locale, tz: timezone } = useConfig();
 
@@ -227,9 +230,9 @@ export default function TimelineImages({ images, plantId, onChanged }: TimelineI
                 handleImageError(activeImage.id);
                 setCurrentImageLoaded(true);
             };
-            img.src = `/api/uploads/${activeImage.image_path}?size=medium`;
+            img.src = mainPhotoPreloadUrl(activeImage.image_path, imageQuality);
         }
-    }, [activeImage]);
+    }, [activeImage, imageQuality]);
 
     useEffect(() => {
         if (fullSizeModalOpen || deleteModalOpen) {
@@ -442,9 +445,7 @@ export default function TimelineImages({ images, plantId, onChanged }: TimelineI
                     {/* Main image */}
                     <img
                         className="plant-carousel-image"
-                        src={`/api/uploads/${activeImage.image_path}?size=medium`}
-                        srcSet={`/api/uploads/${activeImage.image_path}?size=thumb 300w, /api/uploads/${activeImage.image_path}?size=medium 800w`}
-                        sizes="(max-width: 768px) 100vw, 800px"
+                        {...mainPhotoSource(activeImage.image_path, imageQuality)}
                         alt="Plant Image"
                         tabIndex={-1}
                         style={{ visibility: currentImageLoaded ? "visible" : "hidden" }}

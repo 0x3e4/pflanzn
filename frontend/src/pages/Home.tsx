@@ -22,6 +22,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDroplet } from "@fortawesome/free-solid-svg-icons";
 import { HomeAreas, HomeLately, HomeReminders, HomeRhythm } from "../components/HomeExtras";
 import { relativeDay } from "../services/dates";
+import { useUiPreferences } from "../hooks/useUiPreferences";
+import { HomeSection } from "../config/uiPreferences";
 
 type HomeOverview = {
     active: number;
@@ -49,6 +51,9 @@ export default function Home() {
     const { isLoggedIn } = useAuth();
     const { isShareAccess } = useShare();
     const canWater = !isShareAccess && (authMode === "no" || isLoggedIn);
+    const { homeHidden, imageQuality } = useUiPreferences();
+    // Sections can be hidden under Manage → Customize.
+    const shows = (section: HomeSection) => !homeHidden.includes(section);
     const [plants, setPlants] = useState<Plant[]>([]);
     const [loadingPlants, setLoadingPlants] = useState(true);
     const [watering, setWatering] = useState<Set<number>>(() => new Set());
@@ -140,6 +145,10 @@ export default function Home() {
               ? "Every plant is watered"
               : "Your plants";
 
+    const showComingUp = shows("comingUp") && comingUp.length > 0;
+    const hasSide = showComingUp || shows("reminders");
+    const showMoreSide = shows("rhythm") || shows("areas");
+
     const figures: [number, string][] = [
         [overview.active, "plants"],
         [overview.species, "species"],
@@ -174,7 +183,7 @@ export default function Home() {
                         ))}
                 </div>
 
-                <div className="home-today-grid">
+                <div className={`home-today-grid${hasSide ? "" : " home-today-grid--no-side"}`}>
                     <div className="home-due">
                         {loadingPlants ? (
                             [...Array(3)].map((_, i) => <Skeleton key={i} height={64} borderRadius={10} />)
@@ -234,37 +243,43 @@ export default function Home() {
                         )}
                     </div>
 
-                    <aside className="home-side">
-                        {comingUp.length > 0 && (
-                            <section className="home-coming-up" aria-labelledby="home-coming-up">
-                                <h2 id="home-coming-up">Coming up</h2>
-                                <ul>
-                                    {comingUp.map(({ plant, status }) => (
-                                        <li key={plant.id}>
-                                            <Link to={`/plant/${plant.id}`}>{plant.name}</Link>
-                                            <span className={`home-when home-when--${wateringBadgeVariant(status)}`}>
-                                                {formatWateringDue(status)}
-                                            </span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </section>
-                        )}
-                        <HomeReminders timezone={timezone} locale={locale} />
-                    </aside>
+                    {hasSide && (
+                        <aside className="home-side">
+                            {showComingUp && (
+                                <section className="home-coming-up" aria-labelledby="home-coming-up">
+                                    <h2 id="home-coming-up">Coming up</h2>
+                                    <ul>
+                                        {comingUp.map(({ plant, status }) => (
+                                            <li key={plant.id}>
+                                                <Link to={`/plant/${plant.id}`}>{plant.name}</Link>
+                                                <span
+                                                    className={`home-when home-when--${wateringBadgeVariant(status)}`}
+                                                >
+                                                    {formatWateringDue(status)}
+                                                </span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </section>
+                            )}
+                            {shows("reminders") && <HomeReminders timezone={timezone} locale={locale} />}
+                        </aside>
+                    )}
 
-                    <dl className="home-figures">
-                        {figures.map(([value, label]) => (
-                            <div key={label}>
-                                <dt>{label}</dt>
-                                <dd>{loadingPlants ? <Skeleton width={40} /> : value}</dd>
-                            </div>
-                        ))}
-                    </dl>
+                    {shows("figures") && (
+                        <dl className="home-figures">
+                            {figures.map(([value, label]) => (
+                                <div key={label}>
+                                    <dt>{label}</dt>
+                                    <dd>{loadingPlants ? <Skeleton width={40} /> : value}</dd>
+                                </div>
+                            ))}
+                        </dl>
+                    )}
                 </div>
             </section>
 
-            {(loadingPlants || recent.length > 0) && (
+            {shows("recent") && (loadingPlants || recent.length > 0) && (
                 <section className="home-recent" aria-labelledby="home-recent">
                     <h2 id="home-recent">Recently photographed</h2>
                     <div className="home-recent-grid">
@@ -276,7 +291,7 @@ export default function Home() {
                                   <Link key={plant.id} to={`/plant/${plant.id}`} className="home-recent-item">
                                       <span className="home-recent-frame">
                                           <img
-                                              src={thumb(plant, "medium") ?? ""}
+                                              src={thumb(plant, imageQuality === "saver" ? "thumb" : "medium") ?? ""}
                                               alt={plant.name}
                                               className="home-plant-image"
                                           />
@@ -291,17 +306,19 @@ export default function Home() {
             )}
 
             {/* Below the photos: what happened lately, the care rhythm and the areas (tags). */}
-            {plants.length > 0 && (
-                <div className="home-more">
-                    <HomeLately timezone={timezone} locale={locale} />
-                    <div className="home-more-side">
-                        <HomeRhythm locale={locale} />
-                        <HomeAreas plants={plants} timezone={timezone} />
-                    </div>
+            {plants.length > 0 && (shows("lately") || showMoreSide) && (
+                <div className={`home-more${shows("lately") && showMoreSide ? "" : " home-more--single"}`}>
+                    {shows("lately") && <HomeLately timezone={timezone} locale={locale} />}
+                    {showMoreSide && (
+                        <div className="home-more-side">
+                            {shows("rhythm") && <HomeRhythm locale={locale} />}
+                            {shows("areas") && <HomeAreas plants={plants} timezone={timezone} />}
+                        </div>
+                    )}
                 </div>
             )}
 
-            {recent.length === 0 && !loadingPlants && (
+            {shows("recent") && recent.length === 0 && !loadingPlants && (
                 <section className="home-empty-state">
                     <h2>No plant photos yet</h2>
                     <p>Add a photo to a plant and it shows up here.</p>

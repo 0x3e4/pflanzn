@@ -211,6 +211,44 @@ h4 {
     }
 }
 
+/* The same, switched on under Manage → Customize regardless of the system setting. */
+html[data-reduce-motion],
+html[data-reduce-motion] *,
+html[data-reduce-motion] *::before,
+html[data-reduce-motion] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+}
+
+/* Compact density (Manage → Customize): tighter tables, list rows and smaller cards,
+   so more fits on a screen. The selectors outrank the per-page rules they adjust. */
+html[data-density="compact"] .data-table th,
+html[data-density="compact"] .data-table td {
+    padding: 6px 12px;
+    height: 40px;
+}
+
+html[data-density="compact"] .list-row {
+    min-height: 56px;
+    padding: 4px 10px 4px 6px;
+}
+
+html[data-density="compact"] .list-row-thumb {
+    width: 44px;
+    height: 44px;
+}
+
+/* Phones keep their two-column grid. */
+@media (min-width: 769px) {
+    html[data-density="compact"] .plants-list,
+    html[data-density="compact"] .locations-list {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 1rem;
+    }
+}
+
 #root {
     display: flex;
     flex-direction: column;

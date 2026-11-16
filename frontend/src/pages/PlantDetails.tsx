@@ -89,7 +89,12 @@ const ACTIVITY_PAGE = 20;
 export default function PlantDetails() {
     const { isLoggedIn } = useAuth();
     const { tz: timezone, locale, llmProvider, identificationEnabled, floorPlansEnabled, authMode } = useConfig();
-    const { choose: chooseLlmProvider, picker: llmPicker, providers: llmProviders } = useLlmProviderPicker();
+    const {
+        choose: chooseLlmProvider,
+        picker: llmPicker,
+        providers: llmProviders,
+        preferred: preferredLlmProvider,
+    } = useLlmProviderPicker();
     // The care advice dialog asks for the provider itself (a second dialog would be one too many).
     const [careAdviceProvider, setCareAdviceProvider] = useState("");
     const { isShareAccess } = useShare();
@@ -475,7 +480,7 @@ export default function PlantDetails() {
             const careAdviceEntry = await generateCareAdvice(
                 Number(plantId),
                 careAdviceMessage.trim() || undefined,
-                careAdviceProvider || undefined,
+                careAdviceProvider || preferredLlmProvider || undefined,
             );
 
             if (plant) {
@@ -689,9 +694,7 @@ export default function PlantDetails() {
             setNewNote("");
             setRemindDate("");
             setNotesModalOpen(false);
-            toast.success(
-                remindAt ? `Reminder set for ${formatReminder(remindAt)}` : "Note created!",
-            );
+            toast.success(remindAt ? `Reminder set for ${formatReminder(remindAt)}` : "Note created!");
 
             // Always refresh activity feed
             loadActivities();
@@ -1123,7 +1126,9 @@ export default function PlantDetails() {
                             )}
                         </span>
                         {speciesReference &&
-                            (speciesReference.family || speciesAliases.length > 0 || speciesReference.wikipedia_url) && (
+                            (speciesReference.family ||
+                                speciesAliases.length > 0 ||
+                                speciesReference.wikipedia_url) && (
                                 <span className="plant-information-names plant-species-facts">
                                     {speciesReference.family && (
                                         <span>
@@ -1144,7 +1149,8 @@ export default function PlantDetails() {
                                             rel="noopener noreferrer"
                                             aria-label={`${plant.species} on Wikipedia (new tab)`}
                                         >
-                                            Wikipedia <FontAwesomeIcon icon={faArrowUpRightFromSquare} aria-hidden="true" />
+                                            Wikipedia{" "}
+                                            <FontAwesomeIcon icon={faArrowUpRightFromSquare} aria-hidden="true" />
                                         </a>
                                     )}
                                 </span>
@@ -1838,7 +1844,9 @@ export default function PlantDetails() {
                                 value={newNote}
                                 onChange={setNewNote}
                                 onSave={setNewNote}
-                                placeholder={remindDate ? "What should you be reminded of?" : "Add a note about your plant..."}
+                                placeholder={
+                                    remindDate ? "What should you be reminded of?" : "Add a note about your plant..."
+                                }
                                 className="note-input"
                             />
                             <fieldset className="note-reminder">
@@ -1916,7 +1924,7 @@ export default function PlantDetails() {
                                 <label className="care-advice-provider">
                                     <span>AI</span>
                                     <select
-                                        value={careAdviceProvider || llmProviders[0].id}
+                                        value={careAdviceProvider || preferredLlmProvider || llmProviders[0].id}
                                         onChange={(e) => setCareAdviceProvider(e.target.value)}
                                     >
                                         {llmProviders.map((provider) => (

@@ -33,6 +33,8 @@ import "../styles/locations.css";
 import { getUiPreferences } from "../config/uiPreferences";
 import { getViewPreferences, ListViewMode, updateLocationsViewPreferences } from "../config/viewPreferences";
 import "../styles/listView.css";
+import { previewSource } from "../services/imageSources";
+import { useUiPreferences } from "../hooks/useUiPreferences";
 
 const spotTypeLabels: Record<SpotType, string> = {
     field: "Field",
@@ -45,9 +47,14 @@ const spotTypeLabels: Record<SpotType, string> = {
 type LocationSortOption = "updatedDesc" | "updatedAsc" | "createdDesc" | "createdAsc" | "nameAsc" | "nameDesc";
 type LocationIdentifyResult = { species: string; commonName: string; score: string; images: string[] };
 
+// A grid card is about this wide (auto-fill columns of 240px and up), so the browser picks
+// the 300px thumb on ordinary screens and the 800px one on HiDPI ones.
+const CARD_WIDTH = 300;
+
 export default function Locations() {
     const { isLoggedIn } = useAuth();
     const { identificationEnabled } = useConfig();
+    const { imageQuality } = useUiPreferences();
     const [locations, setLocations] = useState<Location[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -662,15 +669,15 @@ export default function Locations() {
                         const hasCoordinates = location.latitude !== null && location.longitude !== null;
                         const latestImage = getLatestImage(location);
                         const coverImage = latestImage
-                            ? `/api/uploads/${latestImage.image_path}?size=thumb`
-                            : "/placeholder-plant.webp";
+                            ? previewSource(latestImage.image_path, imageQuality, CARD_WIDTH)
+                            : { src: "/placeholder-plant.webp" };
 
                         return (
                             <article className="location-card" key={location.id}>
                                 <Link to={`/location/${location.id}`} className="location-card-main-link">
                                     <div className="location-image-container">
                                         <img
-                                            src={coverImage}
+                                            {...coverImage}
                                             alt={location.name}
                                             className="location-image"
                                             loading="lazy"

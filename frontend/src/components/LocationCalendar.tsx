@@ -10,6 +10,8 @@ import { LocationImage, LocationNote, LocationSeasonEvent } from "../types/Locat
 import { deleteLocationImage } from "../services/LocationService";
 import { useAuth } from "../context/AuthContext";
 import { useConfig } from "../context/ConfigContext";
+import { calendarTypeFor } from "../config/uiPreferences";
+import { useUiPreferences } from "../hooks/useUiPreferences";
 import { setOverlayOpen } from "../services/overlayControl";
 
 interface LocationCalendarProps {
@@ -94,6 +96,7 @@ export default function LocationCalendar({
 }: LocationCalendarProps) {
     const { isLoggedIn } = useAuth();
     const { locale, tz: timezone } = useConfig();
+    const { weekStart } = useUiPreferences();
     const [hoveredDate, setHoveredDate] = useState<string | null>(null);
     const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition | null>(null);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -335,6 +338,7 @@ export default function LocationCalendar({
         <div className="watering-calendar location-calendar-section">
             <Calendar
                 locale={locale}
+                calendarType={calendarTypeFor(weekStart)}
                 tileClassName={tileClassName}
                 onActiveStartDateChange={() => {
                     setHoveredDate(null);

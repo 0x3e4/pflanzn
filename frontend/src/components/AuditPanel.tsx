@@ -37,7 +37,7 @@ function statusClass(status: number | null): string {
 }
 
 export default function AuditPanel() {
-    const { authMode } = useConfig();
+    const { authMode, locale, tz } = useConfig();
     const { user, isLoggedIn } = useAuth();
 
     const [data, setData] = useState<AuditLogPage>(emptyPage);
@@ -237,13 +237,19 @@ export default function AuditPanel() {
                                 data.items.map((log) => (
                                     <Fragment key={log.id}>
                                         <tr>
-                                            <td>{new Date(log.created_at).toLocaleString()}</td>
+                                            <td>{new Date(log.created_at).toLocaleString(locale, { timeZone: tz })}</td>
                                             <td>{log.username ?? "—"}</td>
                                             <td>
                                                 <span className="audit-badge action">{log.action}</span>
                                             </td>
                                             <td>{renderEntity(log)}</td>
-                                            <td>{log.method ? <span className="audit-badge method">{log.method}</span> : "—"}</td>
+                                            <td>
+                                                {log.method ? (
+                                                    <span className="audit-badge method">{log.method}</span>
+                                                ) : (
+                                                    "—"
+                                                )}
+                                            </td>
                                             <td>
                                                 {log.status_code != null ? (
                                                     <span className={`audit-badge ${statusClass(log.status_code)}`}>

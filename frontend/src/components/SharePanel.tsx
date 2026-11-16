@@ -26,7 +26,7 @@ export default function SharePanel() {
     const { modalRef } = useModalA11y({ isOpen: modalOpen, onClose: closeModal });
     const [newAlias, setNewAlias] = useState("");
     const [newExpiry, setNewExpiry] = useState<number | null>(null);
-    const { domain: configDomain } = useConfig();
+    const { domain: configDomain, locale, tz } = useConfig();
     const domain = configDomain || window.location.origin;
 
     const loadLinks = async () => {
@@ -91,7 +91,7 @@ export default function SharePanel() {
         const date = new Date(expiresAt);
         const now = new Date();
         if (date < now) return "Expired";
-        return date.toLocaleString();
+        return date.toLocaleString(locale, { timeZone: tz });
     };
 
     const isExpired = (expiresAt: string | null) => {
@@ -111,82 +111,89 @@ export default function SharePanel() {
 
             <div className="table-container">
                 <div className="table-scroll-wrapper">
-                <table className="data-table">
-                    <thead>
-                        <tr>
-                            <th>Alias</th>
-                            <th>Link</th>
-                            <th>Expires</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loading ? (
-                            [...Array(3)].map((_, index) => (
-                                <tr key={`share-skeleton-${index}`}>
-                                    <td>
-                                        <Skeleton />
-                                    </td>
-                                    <td>
-                                        <Skeleton />
-                                    </td>
-                                    <td>
-                                        <Skeleton width={100} />
-                                    </td>
-                                    <td className="action-buttons">
-                                        <Skeleton circle width={30} height={30} />
-                                        <Skeleton circle width={30} height={30} />
-                                    </td>
-                                </tr>
-                            ))
-                        ) : links.length === 0 ? (
+                    <table className="data-table">
+                        <thead>
                             <tr>
-                                <td colSpan={4} style={{ textAlign: "center", opacity: 0.6 }}>
-                                    No share links yet. Create one to get started.
-                                </td>
+                                <th>Alias</th>
+                                <th>Link</th>
+                                <th>Expires</th>
+                                <th></th>
                             </tr>
-                        ) : (
-                            links.map((link) => (
-                                <tr key={link.id} style={{ opacity: isExpired(link.expires_at) ? 0.5 : 1 }}>
-                                    <td>{link.alias}</td>
-                                    <td
-                                        style={{
-                                            maxWidth: "300px",
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
-                                        }}
-                                    >
-                                        {getShareUrl(link)}
-                                    </td>
-                                    <td>{formatExpiry(link.expires_at)}</td>
-                                    <td className="action-buttons">
-                                        <button
-                                            className="update-btn"
-                                            onClick={() => copyToClipboard(link)}
-                                            title="Copy link"
-                                        >
-                                            <FontAwesomeIcon icon={faCopy} />
-                                        </button>
-                                        <button
-                                            className="delete-btn"
-                                            onClick={() => handleDelete(link)}
-                                            title="Delete"
-                                        >
-                                            <FontAwesomeIcon icon={faTrash} />
-                                        </button>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                [...Array(3)].map((_, index) => (
+                                    <tr key={`share-skeleton-${index}`}>
+                                        <td>
+                                            <Skeleton />
+                                        </td>
+                                        <td>
+                                            <Skeleton />
+                                        </td>
+                                        <td>
+                                            <Skeleton width={100} />
+                                        </td>
+                                        <td className="action-buttons">
+                                            <Skeleton circle width={30} height={30} />
+                                            <Skeleton circle width={30} height={30} />
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : links.length === 0 ? (
+                                <tr>
+                                    <td colSpan={4} style={{ textAlign: "center", opacity: 0.6 }}>
+                                        No share links yet. Create one to get started.
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                            ) : (
+                                links.map((link) => (
+                                    <tr key={link.id} style={{ opacity: isExpired(link.expires_at) ? 0.5 : 1 }}>
+                                        <td>{link.alias}</td>
+                                        <td
+                                            style={{
+                                                maxWidth: "300px",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            {getShareUrl(link)}
+                                        </td>
+                                        <td>{formatExpiry(link.expires_at)}</td>
+                                        <td className="action-buttons">
+                                            <button
+                                                className="update-btn"
+                                                onClick={() => copyToClipboard(link)}
+                                                title="Copy link"
+                                            >
+                                                <FontAwesomeIcon icon={faCopy} />
+                                            </button>
+                                            <button
+                                                className="delete-btn"
+                                                onClick={() => handleDelete(link)}
+                                                title="Delete"
+                                            >
+                                                <FontAwesomeIcon icon={faTrash} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
             {modalOpen && (
                 <div className="modal-overlay" onClick={closeModal}>
-                    <div className="modal-content" ref={modalRef} role="dialog" aria-modal="true" aria-label="Create share link" onClick={(e) => e.stopPropagation()}>
+                    <div
+                        className="modal-content"
+                        ref={modalRef}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Create share link"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <span className="close" onClick={() => setModalOpen(false)}>
                             &times;
                         </span>

@@ -40,7 +40,8 @@ const Login: React.FC = () => {
         try {
             await login(username, password);
             toast.success("Login successful!");
-            navigate(next ?? "/plants");
+            // Without a ?next, "/" leads to the start page chosen under Manage → Customize.
+            navigate(next ?? "/");
         } catch (error) {
             // Surfaces the lockout message (429) as well as plain bad credentials.
             toast.error(extractErrorMessage(error, "Invalid credentials or login failed."));

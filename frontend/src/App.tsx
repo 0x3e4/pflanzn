@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Plants from "./pages/Plants";
@@ -24,6 +24,13 @@ import { ProtectedRoute } from "./components/Protection";
 import AuthSplash from "./components/AuthSplash";
 import ErrorBoundary from "./components/ErrorBoundary";
 import OfflineBanner from "./components/OfflineBanner";
+import { takeStartPagePath } from "./config/startPage";
+
+// "/" opens the start page chosen under Manage → Customize the first time per page load.
+function StartPage({ showLocations }: { showLocations: boolean }) {
+    const [target] = useState(() => takeStartPagePath(showLocations));
+    return target === "/" ? <Home /> : <Navigate to={target} replace />;
+}
 
 function AppLayout() {
     const config = useConfig();
@@ -81,7 +88,7 @@ function AppLayout() {
                                 path="/"
                                 element={
                                     <ProtectedRoute>
-                                        <Home />
+                                        <StartPage showLocations={showLocations} />
                                     </ProtectedRoute>
                                 }
                             />
