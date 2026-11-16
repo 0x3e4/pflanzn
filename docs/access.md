@@ -10,7 +10,8 @@
 | `local` | Accounts in Pflanzn: JWT, Argon2 password hashes, Redis-backed sessions with theft detection (IP and browser are checked). The first admin comes from `ADMIN_USER`, `ADMIN_EMAIL` and `ADMIN_PASSWORD`. |
 | `oidc` | Sign-in through your identity provider (authentik, Keycloak, Zitadel, …) with `OIDC_PROVIDER_URL`, `OIDC_CLIENT_ID` and `OIDC_CLIENT_SECRET`. Accounts are matched by email, verified by default (`OIDC_REQUIRE_VERIFIED_EMAIL`). |
 
-Admins manage users under Manage → Users.
+Admins manage users under Manage → Users. What else admins and members see in Manage is listed
+under [Manage](manage.md).
 
 ## Who can read the collection
 
@@ -56,5 +57,6 @@ private later may still show on a device that already loaded it.
 ## Audit log
 
 Every write and every sign-in event is recorded in an immutable log (`AUDIT_ENABLED`). Admins read
-it under Manage → Audit, with filters for action, entity, user and date, and a free-text search.
+it under Manage → Audit, with filters for action and entity (offering what actually occurs in the
+log), a date range, and a search over path and user.
 Writes made through [MCP](mcp.md) are logged with the account and the plants they touched.

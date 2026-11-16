@@ -73,8 +73,8 @@
 
 ## Documentation
 
-The full documentation (getting started, a user guide, MCP, access, configuration and
-architecture) lives in [docs/](docs/) and is built into its own image,
+The full documentation (getting started, a user guide, MCP, notifications, Manage, access,
+configuration and architecture) lives in [docs/](docs/) and is built into its own image,
 `ghcr.io/0x3e4/pflanzn-docs`. Run it next to the app and it is served at **`{DOMAIN}/docs/`**,
 and on a domain of its own if you route one to it; both work at once. See
 [Documentation site](docs/getting-started.md#documentation-site).

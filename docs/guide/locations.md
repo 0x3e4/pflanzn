@@ -12,6 +12,9 @@ has its own map. *Use my location* fills in the coordinates from your phone's po
 **Harvest times.** Note what can be harvested at a location and when, for example a crop or herb
 with its date. Harvest times show up in the location's calendar, next to its photos and notes.
 
+**Identify crop.** Take a photo at the spot and Pl@ntNet names what grows there; pick a result to
+set it as the location's crop or herb.
+
 **Description.** Write your own, or let the AI write one with seasonal advice on what to look for
 at that spot (see [Identification & AI](ai.md)).
 

@@ -46,6 +46,9 @@ also fills in a watering interval, as long as the plant doesn't have one yet (se
 On a plant's page:
 
 - **Water now** logs a watering for this moment. *Watered earlier? Set the time* logs one in the past.
+- The **watering schedule** field ("Water every N days") sets or clears the interval.
+- **Environment**: *Outdoor plant*, *Reaches rain* and the *Weather zone* decide whether
+  [rain counts as watering](#rain-counts-as-watering).
 - **Fertilize** logs fertilizing.
 - **Add photo** adds a photo to the plant's photo timeline. JPG, PNG, WebP and HEIC are accepted;
   every upload is stored in three sizes.
@@ -79,13 +82,25 @@ over [MCP](../mcp.md) can set reminders too.
 
 AI care advice has its own block above the feed: the newest is open, the earlier ones are under
 *Earlier advice*; the feed lists them too, folded. The **calendar** shows all of it by day, each
-kind of activity in its own colour.
+kind of activity in its own colour. Click a day to see what happened then, with the time of each
+entry; members can delete a wrong entry there (a watering logged twice, a photo on the wrong plant).
 
 ## Tags, views and search
 
-Tags group plants however you like, by room, by light or by owner. The plants list filters by tag,
-searches by name and species, and sorts. It switches between a photo grid and a compact list, and
-the choice is remembered per device.
+Tags group plants however you like, by room, by light or by owner. Add and remove them at the top
+of a plant's page; Manage → Tags renames and deletes them.
+
+The plants list:
+
+- **Filters** by tag (the chips at the top, `#needs_water` and `#archive` included) and **searches**
+  by name, or by species after a click on the switch next to the search box.
+- **Sorts** by last watered, next watering, latest photo or id, either way round.
+- **Shows** a photo grid, a compact list or, with [floor plans](locations.md#floor-plans) on, the
+  plan. The expand button widens the page on a large screen (Manage → Customize makes that the
+  default).
+- **Water shown plants** waters every plant the current filter shows, at a time you pick.
+
+View, filter and sort are remembered per device.
 
 ## Archive
 

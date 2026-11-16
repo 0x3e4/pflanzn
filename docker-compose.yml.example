@@ -71,10 +71,16 @@ services:
         aliases:
           - pflanzn-apprise
 
+  # Pinned on purpose: a database is upgraded when you choose to, never by a pull. 12.3 is the
+  # LTS series (supported until 2029). Raise the version step by step; MariaDB can't go back
+  # to an older version, so if your data was created by a newer one (`mariadb:latest` was
+  # 13.0 in November 2026), keep that version: docker compose exec mariadb mariadb --version
   mariadb:
-    image: mariadb:latest
+    image: mariadb:12.3.3
     restart: always
     environment:
+      # After raising the version, the next start upgrades the system tables by itself.
+      MARIADB_AUTO_UPGRADE: "1"
       MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-${DB_PASSWORD:-change_me}}
       MARIADB_DATABASE: ${DB_NAME:-plants_db}
       MARIADB_USER: ${DB_USER:-root}
@@ -90,9 +96,10 @@ services:
     networks:
       - db
 
-  # Sessions and OAuth state: only the backend needs it, so it lives on the internal network.
+  # Sessions, OAuth state and caches: only the backend needs it, so it lives on the internal
+  # network. Pinned like the database, so an upgrade only happens when you raise the version.
   redis:
-    image: redis:latest
+    image: redis:8.10.3
     restart: always
     networks:
       - db

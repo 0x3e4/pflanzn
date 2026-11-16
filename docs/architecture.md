@@ -2,15 +2,16 @@
 
 Pflanzn is a React single-page app talking to a FastAPI backend. The backend stores everything in
 MariaDB and on disk, keeps sessions and OAuth state in Redis, and reaches out to Pl@ntNet, an AI
-provider and the weather services only when those features are on.
+provider, the weather services and Apprise only when those features are on.
 
 | Part | What it does |
 | --- | --- |
 | **Frontend** | React 19 PWA, served by nginx on port 4173. Reads its settings from `/api/config`. Also the gateway: forwards `/api`, `/mcp` and `/.well-known/oauth-*` to the backend and `/docs/` to the docs container. |
-| **Backend** | FastAPI on Python 3.14, port 8000: the REST API under `/api`, the MCP server at `/mcp` (and the older `/api/mcp`) with its OAuth server, the weather loop and the image pipeline. |
-| **MariaDB** | Plants, waterings, notes, care advice, users, the audit log. New tables and columns are added on start. |
-| **Redis** | Sessions (with theft detection), OAuth requests and codes, rate limits. |
-| **Uploads** | Photos on disk under `plants/`, `identifications/` and `locations/`, each stored as WebP in three sizes. |
+| **Backend** | FastAPI on Python 3.14, port 8000: the REST API under `/api`, the MCP server at `/mcp` (and the older `/api/mcp`) with its OAuth server, two background loops (the rain check, and once a minute the notifications) and the image pipeline. |
+| **MariaDB** | Plants, waterings, notes and reminders, care advice, users, app settings, the audit log. New tables and columns are added on start. |
+| **Redis** | Sessions (with theft detection), OAuth requests and codes, rate limits, the Pl@ntNet species facts (a week) and today's identification allowance, and which day's watering digest went out. |
+| **Uploads** | Photos on disk under `plants/`, `identifications/` and `locations/`, each stored as WebP in three sizes, and floor plans under `floorplans/`. |
+| **Apprise** | Optional. Receives reminders and the watering digest from the backend and sends them on. See [Notifications](notifications.md). |
 | **Docs** | This site, built with MkDocs Material and served by nginx on port 80. Optional. |
 
 ## Requests
@@ -20,7 +21,8 @@ Browser ──► reverse proxy ──► frontend :4173 ─┬─ the app
                                               ├─ /api/*, /mcp, /.well-known/oauth-* ──► backend :8000 ─┬─ MariaDB
                                               │                                                         ├─ Redis
                                               │                                                         ├─ uploads (disk)
-                                              │                                                         └─ Pl@ntNet, AI, Open-Meteo
+                                              │                                                         ├─ Pl@ntNet, GBIF, AI, Open-Meteo
+                                              │                                                         └─ Apprise ──► Telegram, ntfy, mail, …
                                               └─ /docs/* ──► docs :80
 ```
 
@@ -52,7 +54,9 @@ plans are never cached.
 | Serving | nginx alpine (multi-stage Dockerfiles) |
 | Auth | JWT (HS256), Argon2, OIDC (authlib), OAuth 2.1 for MCP |
 | Identification | Pl@ntNet |
-| AI | OpenAI, Claude, Mistral, Hugging Face, Ollama (each optional) |
+| Species facts | Pl@ntNet species pages, GBIF (family, genus) |
+| AI | OpenAI, Claude, Mistral, Hugging Face, Ollama (each optional; several at once) |
 | Weather | Open-Meteo (rain, no key), OpenWeatherMap (optional, current weather) |
+| Notifications | Apprise API (optional) |
 | Docs | MkDocs Material |
 | Deployment | Docker Compose, images on GHCR built by GitHub Actions |

@@ -68,7 +68,26 @@
     align-items: center;
     gap: 8px;
     margin-top: 6px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 999px;
+    background: var(--button-primary-bg);
+    color: var(--button-primary-ink);
+    font: inherit;
     font-size: 0.95rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.integration-test:hover:not(:disabled) {
+    background: var(--button-primary-hover);
+}
+
+.integration-test:disabled {
+    opacity: 0.6;
+    cursor: progress;
 }
 
 .integration-meter {

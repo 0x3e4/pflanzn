@@ -24,12 +24,19 @@ data it has already loaded stays readable offline.
 
 -   :material-leaf-circle: **Identification & AI**
 
-    Identify a species from a photo, and let an AI write care advice and descriptions.
+    Identify a species from a photo, read up on it, and let the AI of your choice write care
+    advice and descriptions.
     → [Identification & AI](guide/ai.md)
+
+-   :material-bell-ring-outline: **Reminders & notifications**
+
+    Turn a note into a reminder, see the next two weeks on the home page, and get reminders and a
+    daily "needs water" message on Telegram, ntfy, mail and more. → [Notifications](notifications.md)
 
 -   :material-robot-outline: **MCP server**
 
-    Ask Claude or another assistant which plants need water, and let it log the watering.
+    Ask Claude or another assistant which plants need water, let it log the watering, plan the
+    week or set a reminder.
     → [MCP Server](mcp.md)
 
 -   :material-shield-account: **Access & sharing**
@@ -53,8 +60,8 @@ data resets every four hours. To run your own, start with [Getting Started](gett
 
 - **Self-hosted.** Your plants, photos and history stay on your server.
 - **No telemetry.** No tracking, no ads.
-- **Optional extras.** Identification, AI, weather and MCP each switch on with a key or a flag, and
-  the app works fully without them.
+- **Optional extras.** Identification, AI, weather, notifications and MCP each switch on with a key
+  or a flag, and the app works fully without them.
 
 The source is on [GitHub](https://github.com/0x3e4/pflanzn). Bug reports and pull requests are
 welcome.

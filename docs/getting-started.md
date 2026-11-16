@@ -1,8 +1,8 @@
 # Getting Started
 
 Pflanzn runs as a few containers: the **backend** (FastAPI), the **frontend** (the app, served by
-nginx), **MariaDB** and **Redis**. A fifth, the **docs** container, serves this site and is
-optional. Prebuilt images are published to the GitHub Container Registry, so there is nothing to
+nginx), **MariaDB** and **Redis**. Two more are optional: the **docs** container serves this site,
+and **Apprise** sends [notifications](notifications.md). Prebuilt images are published to the GitHub Container Registry, so there is nothing to
 build.
 
 ## Requirements
@@ -27,6 +27,10 @@ ones are explained under [Configuration](configuration.md).
 
 With `AUTH_MODE=local`, set `ADMIN_USER`, `ADMIN_EMAIL` and `ADMIN_PASSWORD` before the first start.
 The backend then creates that admin account.
+
+Don't need notifications? Remove the `apprise` service from `docker-compose.yml` and leave
+`APPRISE_URL` empty. Already run Apprise elsewhere? Remove the service and point `APPRISE_URL` at
+yours.
 
 ## Reverse proxy
 
@@ -121,6 +125,12 @@ docker compose up -d
 
 The database schema updates itself on start. Check the [Changelog](changelog.md) for anything
 that needs your attention.
+
+MariaDB and Redis are pinned to a version in the compose example (`mariadb:12.3.3`, an LTS, and
+`redis:8.10.3`), so `docker compose pull` never upgrades the database by surprise. Raise them
+yourself when you want to, after a backup; MariaDB then upgrades its system tables on the next start.
+MariaDB can't go back to an older version, so never pin one older than your data was created
+with. Check it with `docker compose exec mariadb mariadb --version`.
 
 ## Local development
 

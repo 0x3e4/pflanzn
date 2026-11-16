@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MCP: `list_reminders` (reminders of the next N days, for all plants or one), `update_note` (change a note's text, move its reminder or remove it; nothing is deleted), `get_watering_plan` (when each scheduled plant is due in the next N days) and `get_species_info` (family, genus, common names, facts and links from Pl@ntNet and GBIF). `get_plant` now includes upcoming reminders and each note's `remind_at`; `get_overview` the plants that need water now, the reminders of the next 7 days and whether notifications are set up.
 
 ### Changed
+- Compose example: MariaDB and Redis are pinned (`mariadb:12.3.3`, the LTS series, and `redis:8.10.3`) instead of `latest`, so a pull never upgrades the database behind your back; MariaDB upgrades its system tables itself after you raise the version (`MARIADB_AUTO_UPGRADE`). **If you followed the old example**, check which MariaDB your data runs on (`docker compose exec mariadb mariadb --version`; `latest` was 13.0 in November 2026) and pin that version or a newer one: MariaDB can't move back to an older version.
 - Audit log: the filters sit in one row on a wide screen instead of two full-width dropdowns, and the action and entity lists offer what actually occurs in the log (including `mcp.*` and `oauth.*`), from the new `GET /api/audit/facets`.
 - Past care advice appears in the activity feed again (folded), besides the Care advice block.
 

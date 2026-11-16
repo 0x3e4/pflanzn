@@ -156,7 +156,7 @@ export default function IntegrationsPanel() {
                                 ? "None needs water right now."
                                 : `${notify.plants_due_now} need${notify.plants_due_now === 1 ? "s" : ""} water right now.`}
                         </p>
-                        <button type="button" className="add-btn integration-test" onClick={test} disabled={sending}>
+                        <button type="button" className="integration-test" onClick={test} disabled={sending}>
                             <FontAwesomeIcon icon={faPaperPlane} /> {sending ? "Sending…" : "Send a test"}
                         </button>
                     </>

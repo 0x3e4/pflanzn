@@ -99,6 +99,7 @@ nav:
       - MCP Server: mcp.md
       - Notifications: notifications.md
   - Administration:
+      - Manage: manage.md
       - Access & Visibility: access.md
       - Configuration: configuration.md
       - Architecture: architecture.md
