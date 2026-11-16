@@ -92,6 +92,7 @@ These are set on the **frontend** container, not the backend.
 | `TRUSTED_PROXIES` | private networks | Addresses or CIDRs whose `X-Forwarded-For` gives the client IP. Set it to your proxy; `none` turns it off. |
 | `MAX_UPLOAD_MB` | `30` | Largest upload passed on to the backend; keep it equal to the backend's. |
 | `UPSTREAM_RESOLVER` | `127.0.0.11` | DNS server nginx uses to find backend and docs (Docker's own by default). |
+| `FRAME_ANCESTORS` | `'none'` | Who may show Pflanzn in a frame (the CSP `frame-ancestors` value), e.g. `'self' https://homeassistant.example.com` for a dashboard. By default nobody. |
 
 > [!NOTE]
 > Older `VITE_*` names (`VITE_DOMAIN`, `VITE_AUTH_MODE`, …) still work as fallbacks, but they are

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.3.0-beta.2] - 2026-11-16
 
+> [!IMPORTANT]
+> **The frontend container now listens on port 8080 instead of 4173.** Change the port mapping in
+> your compose file to `127.0.0.1:8080:8080` and point your reverse proxy at `localhost:8080`
+> (a proxy in Docker: the frontend container on port 8080). To keep your proxy as it is, map the old
+> host port instead: `127.0.0.1:4173:8080`.
+>
+> Also new: Pflanzn can no longer be shown in a frame by default. To embed it (e.g. in a Home
+> Assistant dashboard), set `FRAME_ANCESTORS` on the frontend container, e.g.
+> `'self' https://ha.example.com`.
+
 ### Added
 - Reminders: a note can have a *Remind me* date and time. Reminders show under *Reminders* above the activity feed (with a delete button) and as dashed days in the plant's calendar; click today or a later day in the calendar and choose *Add reminder* to start one. The MCP tool `add_plant_note` takes an optional `remind_at` (a date alone means 09:00). New columns `plant_notes.remind_at` and `reminded_at`, added on start.
 - Notifications through [Apprise](https://github.com/caronc/apprise-api): due reminders, and once a day at a set time the plants whose watering schedule says they need water. The compose example has an `apprise` service (`caronc/apprise:latest`, alias `pflanzn-apprise`, web UI on `127.0.0.1:8001`); an Apprise you already run works too. New variables `APPRISE_URL`, `APPRISE_KEY`, `APPRISE_TAG` and `APPRISE_URLS`; what is sent and when is set under the new **Manage → Integrations**, which also has *Send a test*. New endpoints `GET /api/notifications/status` and `POST /api/notifications/test` (admin).
@@ -26,11 +36,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Past care advice appears in the activity feed again (folded), besides the Care advice block.
 - Photos in the Plants and Locations grids and the main photo on a plant or location page load in a larger size on high-resolution screens (HiDPI, 2K, 4K) instead of being scaled up from the small preview. *Data saver* under Customize keeps the old sizes.
 - Signing in without a link to return to opens the start page (Home unless changed under Customize) instead of always Plants.
+- Frontend image: nginx is pinned to `1.31.8-alpine` instead of the floating `1.31-alpine`, so a rebuild can't reuse an older cached base image.
+- The frontend sends a Content Security Policy, a Permissions-Policy and `Cross-Origin-Opener-Policy` with the app, and `index.html` is revalidated on every load. Showing Pflanzn in a frame now needs `FRAME_ANCESTORS` (see the note at the top).
 - Manage is wider on desktop (up to 1760px instead of 1200px), so the audit log, plants, users and waterings tables fit on larger and 2K/4K screens. Profile, Customize, Weather, Integrations, MCP and Support keep a reading width of 960px.
 
 ### Fixed
 - The photo arrows on the plant page were drawn over the open *More* menu.
 - The audit log and share link expiry dates ignored the configured `LOCALE` and used the browser's language.
+- `nosniff` and the Referrer-Policy were missing on the build assets, the service worker and the web app manifest (a location's own `add_header` had dropped them).
 - A wide table in Manage (such as the audit log) pushed the page past the edge of the window instead of scrolling inside the table.
 - Notes in the activity feed showed their time in UTC as if it were local time.
 

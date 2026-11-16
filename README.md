@@ -111,7 +111,7 @@ and on a domain of its own if you route one to it; both work at once. See
 flowchart LR
     User([User / Browser])
 
-    subgraph Frontend["Frontend · React 19 / Vite / nginx :4173"]
+    subgraph Frontend["Frontend · React 19 / Vite / nginx :8080"]
         SPA[PWA SPA]
     end
 
@@ -168,7 +168,7 @@ Caddy:
 
 ```caddyfile
 plants.example.com {
-    reverse_proxy localhost:4173
+    reverse_proxy localhost:8080
 }
 ```
 
@@ -176,7 +176,7 @@ nginx:
 
 ```nginx
 location / {
-    proxy_pass http://localhost:4173;
+    proxy_pass http://localhost:8080;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
@@ -195,6 +195,7 @@ container:
 | `TRUSTED_PROXIES` | private networks | Addresses or CIDRs (comma-separated) whose `X-Forwarded-For` is believed, for the client IP in the audit log and the rate limits. Set it to your proxy's address; `none` turns it off. |
 | `MAX_UPLOAD_MB` | `30` | The largest upload the frontend passes on; keep it equal to the backend's. |
 | `UPSTREAM_RESOLVER` | `127.0.0.11` | The DNS server for those names (Docker's own). Change it outside Docker. |
+| `FRAME_ANCESTORS` | `'none'` | Who may show Pflanzn in a frame (the CSP `frame-ancestors` value), e.g. `'self' https://homeassistant.example.com` for a dashboard. By default nobody. |
 
 > [!IMPORTANT]
 > On a Docker network shared with other apps, use names only Pflanzn has, like the
@@ -351,7 +352,7 @@ prompts.
 | Database | MariaDB |
 | Cache | Redis (sessions, OAuth state) |
 | Frontend | React 19, TypeScript 6, Vite 8, React Router v7, pnpm |
-| Production serving | nginx alpine (multi-stage Dockerfile, served on port 4173) |
+| Production serving | nginx alpine (multi-stage Dockerfile, served on port 8080) |
 | Auth | JWT (HS256), Argon2, OIDC (authlib), Redis-backed sessions with IP + User-Agent theft detection |
 | Identification | PlantNet (HEIC / WebP / PNG / JPG accepted; normalised to JPEG before forwarding) |
 | AI care helper | OpenAI · Claude · Mistral · HuggingFace · Ollama (factory-pattern, each optional) |

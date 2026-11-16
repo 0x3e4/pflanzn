@@ -43,7 +43,7 @@ Caddy:
 
 ```caddyfile
 plants.example.com {
-    reverse_proxy localhost:4173
+    reverse_proxy localhost:8080
 }
 ```
 
@@ -51,7 +51,7 @@ nginx:
 
 ```nginx
 location / {
-    proxy_pass http://localhost:4173;
+    proxy_pass http://localhost:8080;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
@@ -70,11 +70,18 @@ container:
 | `TRUSTED_PROXIES` | private networks | Addresses or CIDRs (comma-separated) whose `X-Forwarded-For` is believed, for the client IP in the audit log and the rate limits. Set it to your proxy's address; `none` turns it off. |
 | `MAX_UPLOAD_MB` | `30` | The largest upload the frontend passes on; keep it equal to the backend's. |
 | `UPSTREAM_RESOLVER` | `127.0.0.11` | The DNS server for those names (Docker's own). Change it outside Docker. |
+| `FRAME_ANCESTORS` | `'none'` | Who may show Pflanzn in a frame (the CSP `frame-ancestors` value), e.g. `'self' https://homeassistant.example.com` for a dashboard. By default nobody. |
 
 > [!IMPORTANT]
 > On a Docker network shared with other apps, use names only Pflanzn has, like the
 > `pflanzn-backend` and `pflanzn-docs` aliases in the compose example. A bare `backend` can resolve
 > to another app's container.
+
+The frontend also sends the security headers for the app itself: a Content Security Policy
+(scripts only from Pflanzn and, for the maps, Leaflet from unpkg.com), `nosniff`, a
+Referrer-Policy, a Permissions-Policy (only the position, for locations and weather zones) and
+`Cross-Origin-Opener-Policy`. Your proxy doesn't need to add them; `Strict-Transport-Security`
+belongs on the proxy, where TLS ends.
 
 The old layout still works: a proxy that sends `/api`, `/mcp` and `/.well-known/oauth-*` straight to
 the backend's port 8000 (and everything else to the frontend) needs no change.
@@ -112,7 +119,7 @@ Images are built on every push to `main` and on every version tag:
 | Image | Contents |
 | --- | --- |
 | `ghcr.io/0x3e4/pflanzn-backend` | The API, the weather loop and the image pipeline |
-| `ghcr.io/0x3e4/pflanzn-frontend` | The app, served by nginx on port 4173 |
+| `ghcr.io/0x3e4/pflanzn-frontend` | The app, served by nginx on port 8080 |
 | `ghcr.io/0x3e4/pflanzn-docs` | This documentation, served by nginx on port 80 |
 
 `main` builds get the `latest` and `main-<sha>` tags; releases get `X.Y.Z`, `X.Y` and `X`. For

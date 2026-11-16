@@ -1,7 +1,7 @@
 # The frontend is also the gateway: /api, /mcp and the OAuth discovery documents go to the
 # backend, /docs to the docs container. So the reverse proxy only needs this container, and
 # backend and docs need no port and no place on the proxy's network.
-# BACKEND_UPSTREAM, DOCS_UPSTREAM, UPSTREAM_RESOLVER and MAX_UPLOAD_MB are filled in by the
+# BACKEND_UPSTREAM, DOCS_UPSTREAM, UPSTREAM_RESOLVER, MAX_UPLOAD_MB and FRAME_ANCESTORS are filled in by the
 # nginx image on start (envsubst on /etc/nginx/templates). The client IP comes from
 # the real_ip settings that docker-entrypoint.d/15-real-ip.sh writes from TRUSTED_PROXIES.
 
@@ -11,8 +11,14 @@ map $http_x_forwarded_proto $forwarded_proto {
     ""      $scheme;
 }
 
+# Who may show the app in a frame: the CSP frame-ancestors value (security-headers.conf).
+# 'none' by default; e.g. FRAME_ANCESTORS="'self' https://homeassistant.example.com" for a dashboard.
+map "" $frame_ancestors {
+    default "${FRAME_ANCESTORS}";
+}
+
 server {
-    listen 4173;
+    listen 8080;
     # Relative redirects, so /docs → /docs/ keeps the host and scheme the proxy used.
     absolute_redirect off;
     server_name _;
@@ -34,21 +40,25 @@ server {
         application/manifest+json
         image/svg+xml;
 
-    # Hashed build assets — cache forever
+    # Hashed build assets — cache forever. Every location that serves the app includes the
+    # security headers itself: a location's own add_header drops the server's.
     location /assets/ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
         try_files $uri =404;
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
     }
 
     # PWA artifacts that must always be fresh so updates roll out
-    location = /sw.js              { add_header Cache-Control "no-cache"; try_files $uri =404; }
-    location = /registerSW.js      { add_header Cache-Control "no-cache"; try_files $uri =404; }
-    location = /workbox-config.js  { add_header Cache-Control "no-cache"; try_files $uri =404; }
+    location ~ ^/(sw|registerSW|workbox-config)\.js$ {
+        try_files $uri =404;
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "no-cache" always;
+    }
     location = /manifest.webmanifest {
-        add_header Cache-Control "no-cache";
         types { } default_type application/manifest+json;
         try_files $uri =404;
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "no-cache" always;
     }
 
     # Backend: the API, MCP and the OAuth discovery documents. The upstream is looked up per
@@ -95,13 +105,13 @@ server {
         return 302 https://github.com/0x3e4/pflanzn/tree/main/docs;
     }
 
-    # SPA fallback — serve index.html for any unmatched route
+    # SPA fallback — serve index.html for any unmatched route. Revalidated on every load
+    # (as are the icons and manifest.json here), so a new release reaches installed apps.
     location / {
         try_files $uri $uri/ /index.html;
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "no-cache" always;
     }
 
-    # Light hardening
     server_tokens off;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 }

@@ -6,7 +6,7 @@ provider, the weather services and Apprise only when those features are on.
 
 | Part | What it does |
 | --- | --- |
-| **Frontend** | React 19 PWA, served by nginx on port 4173. Reads its settings from `/api/config`. Also the gateway: forwards `/api`, `/mcp` and `/.well-known/oauth-*` to the backend and `/docs/` to the docs container. |
+| **Frontend** | React 19 PWA, served by nginx on port 8080. Reads its settings from `/api/config`. Also the gateway: forwards `/api`, `/mcp` and `/.well-known/oauth-*` to the backend and `/docs/` to the docs container. |
 | **Backend** | FastAPI on Python 3.14, port 8000: the REST API under `/api`, the MCP server at `/mcp` (and the older `/api/mcp`) with its OAuth server, two background loops (the rain check, and once a minute the notifications) and the image pipeline. |
 | **MariaDB** | Plants, waterings, notes and reminders, care advice, users, app settings, the audit log. New tables and columns are added on start. |
 | **Redis** | Sessions (with theft detection), OAuth requests and codes, rate limits, the Pl@ntNet species facts (a week) and today's identification allowance, and which day's watering digest went out. |
@@ -17,7 +17,7 @@ provider, the weather services and Apprise only when those features are on.
 ## Requests
 
 ```text
-Browser ──► reverse proxy ──► frontend :4173 ─┬─ the app
+Browser ──► reverse proxy ──► frontend :8080 ─┬─ the app
                                               ├─ /api/*, /mcp, /.well-known/oauth-* ──► backend :8000 ─┬─ MariaDB
                                               │                                                         ├─ Redis
                                               │                                                         ├─ uploads (disk)
