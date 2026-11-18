@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+
+### Fixed
+
+## [2.3.1] - 2026-11-18
+
+### Added
+
+### Changed
 - Frontend and docs images are based on `nginx:alpine-slim` instead of `nginx:alpine`: Pflanzn uses none of the extra modules (njs, image-filter, xslt, geoip, perl) or curl, so the images are smaller and carry fewer packages. Template rendering with `envsubst` works as before.
 
 ### Fixed

@@ -2,7 +2,7 @@
 # here and for the docs image (docs/Dockerfile installs from the same poetry.lock).
 [tool.poetry]
 name = "pflanzn-docs"
-version = "2.3.0"
+version = "2.3.1"
 description = "Documentation site for Pflanzn, the self-hostable plant manager."
 authors = ["Raphael Koller"]
 package-mode = false
