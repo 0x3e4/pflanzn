@@ -51,7 +51,7 @@ plans are never cached.
 | Database | MariaDB |
 | Cache | Redis |
 | Frontend | React 19, TypeScript 6, Vite 8, React Router 7, pnpm |
-| Serving | nginx alpine (multi-stage Dockerfiles) |
+| Serving | nginx alpine-slim (multi-stage Dockerfiles) |
 | Auth | JWT (HS256), Argon2, OIDC (authlib), OAuth 2.1 for MCP |
 | Identification | Pl@ntNet |
 | Species facts | Pl@ntNet species pages, GBIF (family, genus) |

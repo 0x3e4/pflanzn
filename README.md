@@ -208,8 +208,8 @@ the backend's port 8000 (and everything else to the frontend) needs no change.
 Prebuilt images are published to GHCR on every push to `main` and on every semver tag (`X.Y.Z`) by [build-images.yml](.github/workflows/build-images.yml):
 
 - `ghcr.io/0x3e4/pflanzn-backend`
-- `ghcr.io/0x3e4/pflanzn-frontend` (multi-stage build → nginx alpine; the gateway: forwards `/api`, `/mcp` and `/.well-known/oauth-*` to the backend and `/docs/` to the docs container)
-- `ghcr.io/0x3e4/pflanzn-docs` (MkDocs Material → nginx alpine, optional)
+- `ghcr.io/0x3e4/pflanzn-frontend` (multi-stage build → nginx alpine-slim; the gateway: forwards `/api`, `/mcp` and `/.well-known/oauth-*` to the backend and `/docs/` to the docs container)
+- `ghcr.io/0x3e4/pflanzn-docs` (MkDocs Material → nginx alpine-slim, optional)
 
 `main` builds get the `latest` and `main-<sha>` tags; release builds get `X.Y.Z`, `X.Y`, and `X` tags. For production, pin to an explicit semver tag — see [SECURITY.md](SECURITY.md) for the supported-version policy.
 
@@ -352,7 +352,7 @@ prompts.
 | Database | MariaDB |
 | Cache | Redis (sessions, OAuth state) |
 | Frontend | React 19, TypeScript 6, Vite 8, React Router v7, pnpm |
-| Production serving | nginx alpine (multi-stage Dockerfile, served on port 8080) |
+| Production serving | nginx alpine-slim (multi-stage Dockerfile, served on port 8080) |
 | Auth | JWT (HS256), Argon2, OIDC (authlib), Redis-backed sessions with IP + User-Agent theft detection |
 | Identification | PlantNet (HEIC / WebP / PNG / JPG accepted; normalised to JPEG before forwarding) |
 | AI care helper | OpenAI · Claude · Mistral · HuggingFace · Ollama (factory-pattern, each optional) |

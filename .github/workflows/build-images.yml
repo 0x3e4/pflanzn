@@ -36,7 +36,7 @@ jobs:
             file: ""
             target: runtime
             title: Pflanzn Frontend
-            description: React 19 + Vite PWA — plant catalogue, timeline/calendar, GPS-aware locations with Leaflet map, share links, and runtime config from /api/config. Served by nginx alpine.
+            description: React 19 + Vite PWA — plant catalogue, timeline/calendar, GPS-aware locations with Leaflet map, share links, and runtime config from /api/config. Served by nginx alpine-slim.
           - component: docs
             # From the repo root: mkdocs.yml and CHANGELOG.md live there
             # (docs/Dockerfile.dockerignore keeps the context to those and docs/).
@@ -44,7 +44,7 @@ jobs:
             file: ./docs/Dockerfile
             target: ""
             title: Pflanzn Docs
-            description: The Pflanzn documentation site (MkDocs Material), served by nginx alpine at / and /docs/. Built with mkdocs build --strict.
+            description: The Pflanzn documentation site (MkDocs Material), served by nginx alpine-slim at / and /docs/. Built with mkdocs build --strict.
     steps:
       - name: Checkout repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0

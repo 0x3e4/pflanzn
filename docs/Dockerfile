@@ -22,7 +22,7 @@ ARG DOCS_SITE_URL
 RUN mkdocs build --strict --site-dir /site
 
 # Pinned like the frontend image: the floating tag can lag behind a security release.
-FROM nginx:1.31.9-alpine
+FROM nginx:1.31.9-alpine-slim
 # The nginx tag is rebuilt only now and then; Alpine fixes land in between,
 # so take them at build time.
 RUN apk upgrade --no-cache
