@@ -2,7 +2,7 @@
 ARG NODE_VERSION=24
 # Pinned: a floating tag is not enough, a build reuses a cached older base image. Take a
 # newer patch release once it is at least 7 days old.
-ARG NGINX_VERSION=1.31.8-alpine
+ARG NGINX_VERSION=1.31.9-alpine
 
 # ---------- Builder ----------
 FROM node:${NODE_VERSION}-slim AS builder

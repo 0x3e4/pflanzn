@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+### Security
+- Frontend and docs images updated to nginx `1.31.9-alpine` (from `1.31.8`), the fix for the HTTP/2 use-after-free and `send_window` underflow (CVE-2026-123633, CVE-2026-123007, both critical). Pflanzn's own nginx configs don't enable HTTP/2, so the shipped containers weren't exposed. **If your reverse proxy is nginx with HTTP/2** (`listen 443 ssl http2` or `http2 on`), update it to 1.30.7 / 1.31.9 or later, or turn HTTP/2 off until you can. The docs image is now pinned too, because `1.31-alpine` still pointed at 1.31.8.
+
 ## [2.3.0] - 2026-11-16
 
 > [!IMPORTANT]
